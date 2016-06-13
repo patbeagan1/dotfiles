@@ -319,3 +319,7 @@ argnum () {
 manif () {
     lynx http://tldp.org/LDP/abs/html/comparison-ops.html;
 }
+track-logs () {
+    tail -f $(for i in `file /var/log/* | grep text | sed s/:.*$//`; do echo $i; done)
+}
+
