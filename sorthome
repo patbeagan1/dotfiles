@@ -46,7 +46,7 @@ chkmk tmp
 #===================================================
 graphics=(".png" ".PNG" ".gif" ".jpg" ".jpeg" ".svg" ".webm")
 txt=(".txt" ".pdf" ".odt" ".doc" ".docx" ".rtf" )
-web=(".html" ".mhtml" ".js" ".json" ".css" ".csv" )
+web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
 audio=(".mp3" ".wav" ".mid" ".ogg");
 chkmk med
 movefiles med/audio audio[@]

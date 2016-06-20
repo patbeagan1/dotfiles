@@ -322,4 +322,6 @@ manif () {
 track-logs () {
     tail -f $(for i in `file /var/log/* | grep text | sed s/:.*$//`; do echo $i; done)
 }
-
+make-bash-book(){
+    cat /usr/share/man/man1/bash.1 | groff -man -Tps >top.ps
+}
