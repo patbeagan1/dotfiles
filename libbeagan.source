@@ -322,6 +322,22 @@ manif () {
 track-logs () {
     tail -f $(for i in `file /var/log/* | grep text | sed s/:.*$//`; do echo $i; done)
 }
-make-bash-book(){
+manbook(){
     cat $1 | groff -man -Tps >book.ps
+}
+realconf ()
+{
+    cat $1 | grep --color=auto -v '#' | grep --color=auto -v '^$'
+}
+lastmod ()
+{
+    if [ `uname` = "Darwin" ]; then
+        find . -type f -print0 | xargs -0 stat -f "%m %N" | sort -rn | head -5 | cut -f2- -d" ";
+    else
+        if [ `uname` = "Linux" ]; then
+            find $1 -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head;
+        else
+            echo 'No suitable command for this system.';
+        fi;
+    fi
 }
