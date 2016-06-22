@@ -57,7 +57,7 @@ movefiles med/html web[@]
 #===================================================
 #OPS BLOCK
 ops=(".iso" ".img")
-zip=(".zip" ".gz" ".bz2" ".xz" ".ZIP" ".rar")
+zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
 mis=("")
 movefiles BIG ops[@]
 movefiles BIG/zip zip[@]

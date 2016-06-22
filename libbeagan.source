@@ -341,3 +341,7 @@ lastmod ()
         fi;
     fi
 }
+lastfield ()
+{
+    awk -F "/" '{print $NF}'
+}
