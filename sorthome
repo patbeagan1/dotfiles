@@ -48,11 +48,13 @@ graphics=(".png" ".PNG" ".gif" ".jpg" ".jpeg" ".svg" ".webm")
 txt=(".txt" ".pdf" ".odt" ".doc" ".docx" ".rtf" )
 web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
 audio=(".mp3" ".wav" ".mid" ".ogg");
+video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm")
 chkmk med
 movefiles med/audio audio[@]
 movefiles med/pic graphics[@]
 movefiles med/text txt[@]
 movefiles med/html web[@]
+movefiles med/video video[@]
 
 #===================================================
 #OPS BLOCK
