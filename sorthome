@@ -60,9 +60,11 @@ movefiles med/video video[@]
 #OPS BLOCK
 ops=(".iso" ".img")
 zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
+packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg")
 mis=("")
 movefiles BIG ops[@]
 movefiles BIG/zip zip[@]
+movefiles BIG/packages packages[@]
 movefiles misc mis[@]
 
 for file in $myhomedir/bin/*.sh; do
@@ -78,7 +80,9 @@ mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
 for i in $myhomedir/med/*; do
-	mkdir -p $i/old/`date | sed 's/ /-/g'` && find $i/ -depth 1 -type f -mtime +30 -exec mv {} $i/old/`date | sed 's/ /-/g'` \;
+	mkdir -p $i/old/`date | sed 's/ /-/g'`
+	find $i/ -depth 1 -type f -mtime +30 -exec mv {} $i/old/`date | sed 's/ /-/g'` \;
+        #tar czvf $i/old/`date | sed 's/ /-/g'`.tar.gz $i/old/`date | sed 's/ /-/g'`	
 done
 
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
