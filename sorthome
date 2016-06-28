@@ -80,11 +80,14 @@ mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
 for i in $myhomedir/med/*; do
-	mkdir -p $i/old/`date | sed 's/ /-/g'`
-	find $i/ -depth 1 -type f -mtime +30 -exec mv {} $i/old/`date | sed 's/ /-/g'` \;
-        #tar czvf $i/old/`date | sed 's/ /-/g'`.tar.gz $i/old/`date | sed 's/ /-/g'`	
+	d=`date | sed 's/ /-/g'`
+	mkdir -p $i/old/$d
+	find $i -maxdepth 1 -type f -mtime +30 -exec mv {} $i/old/$d \;
+        cd $i/old/$d	
+	if [ ! `find . -prune -empty -type d` ]; then
+		zip ../$d.zip * && rm *
+	fi
 done
-
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
 
 echo "Done cleaning. If a file appears lost, check Misc."
