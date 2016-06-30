@@ -81,6 +81,7 @@ svn() {
 
 #record the local history
 rec() {
+    script ~/Downloads/typescript-`date | sed 's/ /-/g'`.log
     history > ~/Downloads/"$(echo "history-`date`.log" | sed s/\ /_/g)"
 }
 
@@ -350,4 +351,9 @@ fullpath () {
       /*) printf '%s\n' "$1";;
       *) printf '%s\n' "$PWD/$1";;
     esac
+}
+refresh(){
+	if [ -f ~/.bash_profile ]; then source ~/.bash_profile; fi
+	if [ -f ~/.bashrc ]; then source ~/.bashrc; fi
+	if [ -f ~/.bash_aliases ]; then source ~/.bash_aliases; fi
 }
