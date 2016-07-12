@@ -38,9 +38,11 @@ movefiles bin code[@]
 #===================================================
 config=(".pem" ".crt" ".key" ".conf" ".rc");
 log=(".log")
+db=(".db" ".db3" ".sqlite" ".sqlite3" ".index")
 movefiles etc config[@]
 chkmk var
 movefiles var/log log[@]
+movefiles var/db db[@]
 chkmk mnt
 chkmk tmp
 #===================================================
@@ -82,12 +84,16 @@ done
 for i in $myhomedir/med/*; do
 	d=`date | sed 's/ /-/g'`
 	mkdir -p $i/old/$d
-	find $i -maxdepth 1 -type f -mtime +30 -exec mv {} $i/old/$d \;
+	find $i -maxdepth 1 -type f -mtime +60 -exec mv {} $i/old/$d \;
         cd $i/old/$d	
 	if [ ! `find . -prune -empty -type d` ]; then
 		zip ../$d.zip * && rm *
 	fi
 done
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
+
+for i in $myhomedir/med/pic/old/*; do 
+	mv $i $(echo $i | sed 's/.zip/.cbz/g')
+done
 
 echo "Done cleaning. If a file appears lost, check Misc."
