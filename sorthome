@@ -36,7 +36,7 @@ code+=(".sh" ".pl" ".scpt" ".applescript")
 movefiles bin code[@]
 
 #===================================================
-config=(".pem" ".crt" ".key" ".conf" ".rc");
+config=(".cf" ".pem" ".crt" ".key" ".conf" ".rc");
 log=(".log")
 db=(".db" ".db3" ".sqlite" ".sqlite3" ".index")
 movefiles etc config[@]
@@ -49,7 +49,7 @@ chkmk tmp
 graphics=(".png" ".PNG" ".gif" ".jpg" ".jpeg" ".svg" ".webm")
 txt=(".txt" ".pdf" ".odt" ".doc" ".docx" ".rtf" )
 web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
-audio=(".mp3" ".wav" ".mid" ".ogg");
+audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
 video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm")
 chkmk med
 movefiles med/audio audio[@]
@@ -59,13 +59,15 @@ movefiles med/html web[@]
 movefiles med/video video[@]
 
 #===================================================
-#OPS BLOCK
 ops=(".iso" ".img")
 zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
 packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg")
+comics=(".cbz" ".cbr")
 mis=("")
-movefiles BIG ops[@]
+chkmk BIG
+movefiles BIG/OS ops[@]
 movefiles BIG/zip zip[@]
+movefiles BIG/comics comics[@]
 movefiles BIG/packages packages[@]
 movefiles misc mis[@]
 
@@ -93,7 +95,7 @@ done
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
 
 for i in $myhomedir/med/pic/old/*; do 
-	mv $i $(echo $i | sed 's/.zip/.cbz/g')
+	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
 done
 
 echo "Done cleaning. If a file appears lost, check Misc."
