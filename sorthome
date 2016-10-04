@@ -83,7 +83,7 @@ for file in $myhomedir/med/pics/audioclip-*; do
 mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
-for i in $myhomedir/med/*; do
+for i in $myhomedir/med/{html,text,pic,video}; do
 	d=`date | sed 's/ /-/g'`
 	mkdir -p $i/old/$d
 	find $i -maxdepth 1 -type f -mtime +60 -exec mv {} $i/old/$d \;
@@ -94,8 +94,8 @@ for i in $myhomedir/med/*; do
 done
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
 
-for i in $myhomedir/med/pic/old/*; do 
-	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
-done
+#for i in $myhomedir/med/pic/old/*; do 
+#	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
+#done
 
 echo "Done cleaning. If a file appears lost, check Misc."
