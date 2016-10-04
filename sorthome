@@ -2,7 +2,7 @@
 
 #===================================================
 dumpdir="$HOME/Downloads/"
-myhomedir="$HOME/bgn/"
+myhomedir="$HOME/Downloads/MyHome/"
 
 dumpdir+="/"
 myhomedir+="/"
