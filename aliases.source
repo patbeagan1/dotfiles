@@ -23,3 +23,10 @@ alias lsg='ls | grep -i '
 alias lynx='lynx -accept_all_cookies'
 shopt -s histappend
 alias jc="j c"
+
+
+##Git specific
+alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
+alias git-view2='git log --graph --oneline --decorate --all'
+alias gv='gitview2'
+
