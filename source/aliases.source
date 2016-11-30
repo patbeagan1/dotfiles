@@ -4,6 +4,10 @@ alias showFinderLocation='defaults write com.apple.finder _FXShowPosixPathInTitl
 alias hideFinderLocation='defaults write com.apple.finder _FXShowPosixPathInTitle -bool NO && killall Finder'
 alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
 alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
+export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\$ "
+export CLICOLOR=1
+export LSCOLORS=exfxcxdxbxexexabagacad
+alias ls='ls -GFh'
 
 ##Generic
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
@@ -28,5 +32,5 @@ alias jc="j c"
 ##Git specific
 alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
 alias git-view2='git log --graph --oneline --decorate --all'
-alias gv='gitview2'
+alias gv='git-view2'
 
