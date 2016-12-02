@@ -8,6 +8,16 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+git-squash () 
+{ 
+    TIME=$(date +%s);
+    BRANCH=$(git rev-parse --abbrev-ref HEAD);
+    git branch -m $BRANCH.$TIME;
+    git checkout master;
+    git checkout -b $BRANCH;
+    git merge --squash $BRANCH.$TIME;
+    git status
+}
 show_path(){
     echo $PATH | sed "s/:/&\n/g"
 }
