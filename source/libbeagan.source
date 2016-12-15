@@ -17,10 +17,14 @@ git-squash ()
     git merge --squash $BRANCH.$TIME;
     git status
 }
+
+flatten(){
+    mkdir flattened_files && find . -exec cp -n $(echo '{}') flattened_files \;
+}
+
 show_path(){
     echo $PATH | sed "s/:/&\n/g"
 }
-
 lastlog(){
     cd /var/log; less $(ls -1t | head -1)
 }
