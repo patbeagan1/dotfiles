@@ -8,9 +8,12 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
-
 flatten(){
     mkdir flattened_files && find . -exec cp -n $(echo '{}') flattened_files \;
+}
+
+show_path(){
+    echo $PATH | sed "s/:/&\n/g"
 }
 lastlog(){
     cd /var/log; less $(ls -1t | head -1)
