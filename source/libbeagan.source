@@ -9,7 +9,7 @@
 
 bcommit()
 {
-    git commit -am "$(branch): $1"
+    git commit -am "$(git branch): $@"
 }
 
 gitflux()
