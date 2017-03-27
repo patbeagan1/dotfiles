@@ -7,9 +7,21 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+bcommit()
+{
+    git commit -am "$(branch): $1"
+}
+
+gitflux()
+{
+    for i in $(git ls-tree -r $(git rev-parse --abbrev-ref HEAD) --name-only); do
+        echo $(git log --oneline $i | wc -l) $i; 
+    done
+}
+
 revnum()
 {
-git rev-list --count HEAD
+    git rev-list --count HEAD
 }
 
 git-squash () 
