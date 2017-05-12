@@ -7,6 +7,11 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+gitfile()
+{
+    git status --porcelain | sed s/^...//
+}
+
 deeplink()
 {
     adb shell am start -a android.intent.action.VIEW -d "$1"
