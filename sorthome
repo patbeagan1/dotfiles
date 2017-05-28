@@ -83,7 +83,7 @@ for file in $myhomedir/med/pics/audioclip-*; do
 mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
-for i in $myhomedir/med/{html,text,pic,video}; do
+for i in $myhomedir/med/pic; do
 	d=`date | sed 's/ /-/g'`
 	mkdir -p $i/old/$d
 	find $i -maxdepth 1 -type f -mtime +60 -exec mv {} $i/old/$d \;
