@@ -33,7 +33,7 @@ deeplink()
 
 bcommit()
 {
-    git commit -am "$bcommit-format"
+    git commit -am "$(bcommit-format)"
 }
 
 bcommit-format()
