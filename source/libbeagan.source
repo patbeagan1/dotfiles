@@ -7,7 +7,6 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
-
 pause()
 {
     read -p "$*"
