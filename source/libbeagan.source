@@ -44,7 +44,7 @@ git commit -am "pt$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed
 
 $@
 
-https://admin.wayfair.com/tracker/views/142.php?prtid=$(echo $(getbranch | sed 's/[^0-9]//g')" 
+https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')" 
 }
 
 gitflux()
