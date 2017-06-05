@@ -7,6 +7,7 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+
 pause()
 {
     read -p "$*"
@@ -33,7 +34,7 @@ deeplink()
 
 bcommit()
 {
-    git commit -am $(bcommitformat)
+    git commit -am "$(bcommitformat)"
 }
 
 bcommitformat()
