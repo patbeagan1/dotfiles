@@ -33,10 +33,10 @@ deeplink()
 
 bcommit()
 {
-    git commit -am $(bcommit-format)
+    git commit -am $(bcommitformat)
 }
 
-bcommit-format()
+bcommitformat()
 {
     #git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
     echo "pt$(echo $(git rev-parse --abbrev-ref HEAD) | sed 's/[^0-9]//g')$(echo $(git rev-parse --abbrev-ref HEAD) | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
