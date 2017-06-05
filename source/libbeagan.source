@@ -32,18 +32,19 @@ deeplink()
     adb shell am start -a android.intent.action.VIEW -d "$1"
 }
 
-getbranch()
-{
-    printf $(git rev-parse --abbrev-ref HEAD)
-}
 bcommit()
 {
-    #git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "pt$(getbranch | sed 's/[^0-9]//g')$( getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
+    getbranch()
+    {
+        printf $(git rev-parse --abbrev-ref HEAD)
+    }
+    # Don't indent this, it's taking the literal characters.
+    # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
+git commit -am "pt$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
 
 $@
 
-https://admin.wayfair.com/tracker/views/142.php?prtid=$(echo $(git rev-parse --abbrev-ref HEAD) | sed 's/[^0-9]//g')" 
+https://admin.wayfair.com/tracker/views/142.php?prtid=$(echo $(getbranch | sed 's/[^0-9]//g')" 
 }
 
 gitflux()
