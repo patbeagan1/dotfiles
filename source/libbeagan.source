@@ -39,7 +39,7 @@ bcommit()
     }
     # Don't indent this, it's taking the literal characters.
     # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "pt$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
+git commit -am "PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
 $(echo)
 $@
 $(echo)
