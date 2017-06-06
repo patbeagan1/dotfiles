@@ -46,6 +46,24 @@ $(echo)
 https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')" 
 }
 
+bcommit-fix()
+{
+    getbranch(){
+        printf $(git rev-parse --abbrev-ref HEAD)
+    }   
+
+    gettitle(){
+        echo PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
+        echo
+    }
+
+    getfooter(){
+        echo; printf https://admin.wayfair.com/tracker/views/142.php?PrtID=$(getbranch | sed 's/[^0-9]//g')
+    }
+
+    cat  <(gettitle) $1 <(getfooter)
+}
+
 gitflux()
 {
     for i in $(git ls-tree -r $(git rev-parse --abbrev-ref HEAD) --name-only); do
