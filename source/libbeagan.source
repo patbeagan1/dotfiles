@@ -43,6 +43,7 @@ reset_origin()
     echo    
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
+        git fetch &&
         git reset --hard origin/$(getbranch)
     fi
 }
