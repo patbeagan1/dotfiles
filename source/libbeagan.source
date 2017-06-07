@@ -31,6 +31,22 @@ deeplink()
     adb shell am start -a android.intent.action.VIEW -d "$1"
 }
 
+reset_origin()
+{
+    getbranch()
+    {
+        printf $(git rev-parse --abbrev-ref HEAD)
+    }
+    
+    echo This is a hard reset.
+    read -p "Are you sure you want to check out origin/$(getbranch)? " -n 1 -r
+    echo    
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        git reset --hard origin/$(getbranch)
+    fi
+}
+
 bcommit()
 {
     getbranch()
