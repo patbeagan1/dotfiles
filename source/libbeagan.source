@@ -7,6 +7,26 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+lookbehind(){
+    printf "((?!%s).)*" "$1"
+}
+
+resquash()
+{
+    if [ $# -ne 1 ]; then
+        echo "You must supply the base branch as an argument."
+        echo "Usage: resquash <base_branch>"
+    else
+        a="$(getbranch)"
+        b="$(getbranch)_old"
+        git branch -m "$b"
+        git co "$1"
+        reset_origin
+        git co -b "$a"
+        git merge --squash "$b"    
+    fi
+}
+
 pause()
 {
     read -p "$*"
@@ -29,6 +49,11 @@ gitfile()
 deeplink()
 {
     adb shell am start -a android.intent.action.VIEW -d "$1"
+}
+
+getbranch()
+{
+    printf $(git rev-parse --abbrev-ref HEAD)
 }
 
 reset_origin()
