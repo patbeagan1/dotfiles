@@ -7,18 +7,38 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+mergetest()
+{ 
+    git merge --no-commit --no-ff "$1"; git merge --abort; 
+    echo "Merge aborted"; 
+}
+
+#amergetest()
+#{
+#    a=$(mergetest $1)
+#    if [ grep -q "conflict" $(echo "$a") ] then
+#        osascript -e 'display notification "Merge conflicts in branch $1" with title "MergeTest"'
+#    fi
+#}
+
 lookbehind(){
     printf "((?!%s).)*" "$1"
 }
 
 resquash()
 {
+    get_longest_matching_branch()
+    {
+        echo "$(git branch | grep $(getbranch) |  awk '{ print length($0) " " $0; }' $file | sort -r -n | cut -d ' ' -f 2- | head -1 )" |\
+        sed 's/[[:blank:]]//g' | sed 's/*//g'
+    }
+
     if [ $# -ne 1 ]; then
         echo "You must supply the base branch as an argument."
         echo "Usage: resquash <base_branch>"
     else
         a="$(getbranch)"
-        b="$(getbranch)_old"
+        b="$(get_longest_matching_branch)_old"
         git branch -m "$b"
         git co "$1"
         reset_origin

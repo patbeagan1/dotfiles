@@ -36,6 +36,7 @@ alias lynx='lynx -accept_all_cookies'
 shopt -s histappend
 alias jc="j c"
 alias lb="last_branch"
+alias ks="kotlinc-jvm"
 
 ##Git specific
 alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
