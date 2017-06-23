@@ -7,6 +7,13 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+appletoast () 
+{
+    title="$1"
+    body="$2"
+    osascript -e 'on run {body, title}' -e 'display notification {body} with title {title}' -e 'end run'  "$body" "$title"
+}
+
 mergetest()
 { 
     git merge --no-commit --no-ff "$1"; git merge --abort; 
