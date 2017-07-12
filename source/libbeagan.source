@@ -25,7 +25,7 @@ lookbehind(){
     printf "((?!%s).)*" "$1"
 }
 
-resquash()
+resquash_old()
 {
     get_longest_matching_branch()
     {
