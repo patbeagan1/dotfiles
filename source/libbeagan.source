@@ -46,6 +46,7 @@ resquash()
     else
         a="$(getbranch)"
         b="$(get_longest_matching_branch)_old"
+        printf "%s -> %s\n" "$a" "$b"
         git branch -m "$b"
         git co "$1"
         reset_origin
@@ -108,7 +109,7 @@ bcommit()
     }
     # Don't indent this, it's taking the literal characters.
     # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
+git commit -am "PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/PT//g' | sed 's/fb-//g' | sed 's/[0-9]//g')
 $(echo)
 $@
 $(echo)
