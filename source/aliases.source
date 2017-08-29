@@ -37,6 +37,8 @@ shopt -s histappend
 alias jc="j c"
 alias lb="last_branch"
 alias ks="kotlinc-jvm"
+alias bcommit_hist='history | grep bcommit'
+alias lifecycle='open https://i.stack.imgur.com/1llRw.png'
 
 ##Git specific
 alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
