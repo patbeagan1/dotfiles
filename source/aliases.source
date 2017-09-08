@@ -35,8 +35,9 @@ alias lsg='ls | grep -i '
 alias lynx='lynx -accept_all_cookies'
 shopt -s histappend
 alias jc="j c"
-alias lb="last_branch"
 alias ks="kotlinc-jvm"
+alias lb="last_branch"
+alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias lifecycle='open https://i.stack.imgur.com/1llRw.png'
 
