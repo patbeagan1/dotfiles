@@ -7,6 +7,20 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+server ()
+{
+    if [ $# -lt 1 ]; then
+        port="$1"
+        if [ -z "$port" ]; then
+            port="8000"
+        fi 
+        echo Running server on "$port" 
+        python -m SimpleHTTPServer "$port"
+    else
+        echo Too many arguments. 
+    fi
+}
+
 git_time ()
 {
     git log --pretty=format:"%h%x09%an%x09%ad%x09%s" --all --since=2.months.ago --author-date-order --author=pbeagan
