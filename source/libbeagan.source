@@ -7,6 +7,33 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+git_time ()
+{
+    git log --pretty=format:"%h%x09%an%x09%ad%x09%s" --all --since=2.months.ago --author-date-order --author=pbeagan
+}
+
+tocamelcase ()
+{
+    echo "$1" | perl -pe 's/(^|_)./uc($&)/ge;s/_//g'
+}
+
+tosnakecase ()
+{
+    echo "$1" | perl -pe 's/([a-z0-9])([A-Z])/$1_\L$2/g' 
+}
+
+alias show_lifecycle='show lifecycle'
+alias show_versions='show versions'
+show ()
+{
+    if [ "$1" == "lifecycle" ]; then
+        open https://i.stack.imgur.com/1llRw.png
+    fi
+    if [ "$1" == "versions" ]; then
+        open https://static.seekingalpha.com/uploads/2017/9/19553521_15051189837723_rId9.png    
+    fi
+}
+
 appletoast () 
 {
     title="$1"
