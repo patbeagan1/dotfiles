@@ -9,7 +9,7 @@
 
 server ()
 {
-    if [ $# -lt 1 ]; then
+    if [ $# -lt 2 ]; then
         port="$1"
         if [ -z "$port" ]; then
             port="8000"
