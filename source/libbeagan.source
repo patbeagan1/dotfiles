@@ -7,6 +7,15 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+open ()
+{
+    if [ "$(uname)" == "Linux" ]; then
+        gnome-open "$@"
+    elif [ "$(uname)" == "darwin" ]; then
+        open "$@"
+    else echo "This command is not supported."; fi
+}
+
 server ()
 {
     if [ $# -lt 2 ]; then
