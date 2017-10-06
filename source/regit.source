@@ -25,6 +25,7 @@ resquash ()
     else
         a="$(getbranch)";
         b="$(get_longest_matching_branch)_old";
+        previous_commit="$(git last)"
         printf "%s -> %s\\n" "$a" "$b";
         read -p "Is the above backup branch named correctly?" -n 1 -r;
         echo;
@@ -39,6 +40,8 @@ resquash ()
                 fi;
             fi;
         fi;
+        echo "The previous commit was:"
+        echo "$previous_commit"
     fi
 }
 

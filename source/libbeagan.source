@@ -38,6 +38,7 @@ tosnakecase ()
 
 alias show_lifecycle='show lifecycle'
 alias show_versions='show versions'
+alias show_patterns='show patterns'
 show ()
 {
     if [ "$1" == "lifecycle" ]; then
@@ -45,6 +46,9 @@ show ()
     fi
     if [ "$1" == "versions" ]; then
         open https://static.seekingalpha.com/uploads/2017/9/19553521_15051189837723_rId9.png    
+    fi
+    if [ "$1" == "patterns" ]; then
+        open https://i.pinimg.com/736x/5c/33/8e/5c338e86d098eb9955703b00dd3f20ea--programming-patterns-programming-languages.jpg
     fi
 }
 
