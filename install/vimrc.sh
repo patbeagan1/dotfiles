@@ -15,6 +15,9 @@ set expandtab
 let g:NERDTreeWinPos = "left"
 autocmd VimEnter * NERDTree
 autocmd VimEnter * wincmd p
+" Exit vim if NERDTree is the last buffer remaining
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
 
 EOF
 
