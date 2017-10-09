@@ -11,9 +11,9 @@ open ()
 {
     if [ "$(uname)" == "Linux" ]; then
         gnome-open "$@"
-    else
-        command open "$@"
-    fi
+    elif [ "$(uname)" == "Darwin" ]; then
+        open "$@"
+    else echo "This command is not supported."; fi
 }
 
 server ()
