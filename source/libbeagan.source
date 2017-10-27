@@ -7,6 +7,16 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+kr () 
+{
+    java -jar "$1"
+}
+
+kc ()
+{
+        kotlinc "$1" -include-runtime -d out.jar
+}
+
 trim ()
 {
         sed $'s/^[ \t]*//;s/[ \t]*$//'
