@@ -7,6 +7,21 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+kr () 
+{
+    java -jar "$1"
+}
+
+kc ()
+{
+        kotlinc "$1" -include-runtime -d out.jar
+}
+
+trim ()
+{
+        sed $'s/^[ \t]*//;s/[ \t]*$//'
+}
+
 open ()
 {
     if [ "$(uname)" == "Linux" ]; then
@@ -54,10 +69,19 @@ show ()
         open https://i.stack.imgur.com/1llRw.png
     fi
     if [ "$1" == "versions" ]; then
-        open https://static.seekingalpha.com/uploads/2017/9/19553521_15051189837723_rId9.png    
+        open https://source.android.com/source/build-numbers#platform-code-names-versions-api-levels-and-ndk-releases 
     fi
     if [ "$1" == "patterns" ]; then
         open https://i.pinimg.com/736x/5c/33/8e/5c338e86d098eb9955703b00dd3f20ea--programming-patterns-programming-languages.jpg
+    fi
+}
+
+appletoaststatus () 
+{
+    if [ $? -eq 0 ]; then 
+        appletoast "$0" "Finished!"
+    else 
+        appletoast "$0" "FAILURE"; 
     fi
 }
 
@@ -163,7 +187,7 @@ bcommit()
     }
     # Don't indent this, it's taking the literal characters.
     # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | sed 's/fb-//g' | sed 's/pt//g' | sed 's/PT//g' | tr '-' ' ' | tr '_' ' ' | sed 's/[0-9]//g')
+git commit -am "PT$(getbranch | sed 's/[^0-9]//g') $(getbranch | sed 's/^lb-//g' | sed 's/^fb-//g' | sed 's/^pt//g' | sed 's/^PT//g' | tr '-' ' ' | tr '_' ' ' | sed 's/[0-9]//g')
 $(echo)
 $@
 $(echo)

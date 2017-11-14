@@ -39,6 +39,7 @@ alias ks="kotlinc-jvm"
 alias lb="last_branch"
 alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
+alias vi-raw='vi -u NONE'
 
 ##Git specific
 

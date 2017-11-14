@@ -31,7 +31,7 @@ function movefiles {
 code=(".py" ".pyc" ".pyo")
 code+=( ".c" ".cpp" ".out")
 code+=( ".hs" )
-code+=(".java" ".class")
+code+=(".java" ".class" ".kt" ".ks" ".kts")
 code+=(".sh" ".pl" ".scpt" ".applescript")
 movefiles bin code[@]
 
