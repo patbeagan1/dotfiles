@@ -7,6 +7,14 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+alias argcheck='argcheck_base "$#"'
+argcheck_base () 
+{ 
+    if [ "$1" -ne "$2" ]; then
+        echo "Illegal number of parameters";
+    fi
+}
+
 kr () 
 {
     java -jar "$1"
