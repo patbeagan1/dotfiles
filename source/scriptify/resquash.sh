@@ -44,4 +44,4 @@ resquash ()
         echo "$previous_commit";
     fi
 }
-if [[ $0 != "-bash" ]]; then resquash; fi
+if [[ $0 != "-bash" ]]; then resquash "$@"; fi
