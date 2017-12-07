@@ -19,6 +19,7 @@ alias slp='pmset sleepnow'
 
 ##Generic
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
+alias hnote='cd ~; note; cd -'
 alias note='cat >> $(echo note-$(date +"%b%e::%T")).txt << EOF'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 alias egrep='egrep --color=auto'
@@ -38,7 +39,7 @@ alias lynx='lynx -accept_all_cookies'
 shopt -s histappend
 alias jc="j c"
 alias ks="kotlinc-jvm"
-alias lb="last_branch"
+alias lb="last_branch | tail -10"
 alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias vi-raw='vi -u NONE'
