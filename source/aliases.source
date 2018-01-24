@@ -43,6 +43,7 @@ alias lb="last_branch | tail -10"
 alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias vi-raw='vi -u NONE'
+alias releases='git branch -r | grep release | tail'
 
 ##Git specific
 

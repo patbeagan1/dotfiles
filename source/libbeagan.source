@@ -104,6 +104,9 @@ show ()
     if [ "$1" == "cat" ]; then
         open https://static.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg
     fi
+    if [ "$1" == "chair" ]; then
+        open https://secure.img1-fg.wfcdn.com/im/60980607/resize-h800%5Ecompr-r85/2899/28992811/Chrisanna+Wingback+Chair.jpg
+    fi
 }
 
 appletoaststatus () 
@@ -217,11 +220,37 @@ bcommit()
     }
     # Don't indent this, it's taking the literal characters.
     # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "PT$(getbranch | sed 's/[^0-9]//g') $(getbranch | sed 's/^lb-//g' | sed 's/^fb-//g' | sed 's/^pt//g' | sed 's/^PT//g' | tr '-' ' ' | tr '_' ' ' | sed 's/[0-9]//g')
+prefix="$(getbranch |\
+sed 's/^lb-.*/PT/g' |\
+sed 's/^fb-.*/PT/g' |\
+sed 's/^fabric-.*/NOTICKET Fabric/g' |\
+sed 's/^pt.*/PT/g' |\
+sed 's/^PT.*/PT/g')"
+
+number="$(getbranch | sed 's/[^0-9]//g')"
+
+title="$(getbranch |\
+sed 's/^lb-//g' |\
+sed 's/^fb-//g' |\
+sed 's/^fabric-//g' |\
+sed 's/^pt//g' |\
+sed 's/^PT//g' |\
+tr '-' ' ' |\
+tr '_' ' ' |\
+sed 's/[0-9]//g' |\
+sed 's/^ //g')
 $(echo)
 $@
 $(echo)
-https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')" 
+$(if [[ $(getbranch) != "fabric-"* ]] ; then
+    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g') 
+else
+    echo Fabric $(getbranch | sed 's/[^0-9]//g')
+fi)
+"
+commitText="$prefix$number $title"
+echo "$commitText"
+git commit -am "$commitText"
 }
 
 bcommit-fix()
