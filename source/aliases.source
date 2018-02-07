@@ -44,6 +44,9 @@ alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias vi-raw='vi -u NONE'
 alias releases='git branch -r | grep release | tail'
+curr () {
+    git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
+}
 
 ##Git specific
 
