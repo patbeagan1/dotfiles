@@ -18,6 +18,7 @@ export LSCOLORS=exfxcxdxbxexexabagacad
 alias slp='pmset sleepnow'
 
 ##Generic
+alias comment=': <<EOF'
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
 alias hnote='cd ~; note; cd -'
 alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
@@ -43,7 +44,7 @@ alias lb="last_branch | tail -10"
 alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias vi-raw='vi -u NONE'
-alias releases='git branch -r | grep release | tail'
+alias releases='git branch -r | grep release | tail | sed s/^ *origin\///\'
 curr () {
     git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
 }
@@ -63,7 +64,7 @@ git config --global alias.st status
 git config --global alias.unstage 'reset HEAD --'
 git config --global alias.last 'log -1 HEAD'
 git config --global alias.visual '!gitk'
-git config --global alias.mergetest '!f(){ git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted"; };f '
+git config --global alias.mergetest '!f(){ git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted"; };f' 
 git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 
 last_branch(){ git branch --sort=committerdate; }
