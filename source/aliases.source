@@ -18,6 +18,10 @@ export LSCOLORS=exfxcxdxbxexexabagacad
 alias slp='pmset sleepnow'
 
 ##Generic
+alias ...="../.."
+alias ....="../../.."
+alias .....="../../../.."
+alias findempty="find . -type f -empty "
 alias fe='for it in '
 alias comment=': <<EOF'
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
