@@ -17,14 +17,20 @@ resquash ()
     };
     function get_longest_matching_branch ()
     {
-        echo "$(git branch | grep $(getbranch) |  awk '{ print length($0) " " $0; }' $file | sort -r -n | cut -d ' ' -f 2- | head -1 )" | sed 's/[[:blank:]]//g' | sed 's/*//g'
+        git for-each-ref --shell --format='%(refname)' refs/heads/ | grep --color=auto "${1}" | awk '{print length, $0}'|sort -nr|head -1 | cut -d" " -f2 | sed 's/.*\///' | tr "'" " " | tr -d " "
     };
     function perform_squash ()
     {
         git branch -m "$b";
         git checkout "$1";
         if [ "$(getbranch)" = "$1" ]; then
-            reset_origin;
+            printf "Reset base branch with its origin first?"
+            read
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                reset_origin;
+            else
+                was_last_reset_successful="true"
+            fi
             if [ "$was_last_reset_successful" = "true" ]; then
                 git checkout -b "$a";
                 git merge --squash "$b";
@@ -45,7 +51,7 @@ resquash ()
         echo "Usage: resquash <base_branch>";
     else
         a="$(getbranch)";
-        b="$(get_longest_matching_branch)_old";
+        b="$(get_longest_matching_branch "${a}")_old";
         previous_commit="$(git log -2)"
         printf "%s -> %s\\n" "$a" "$b";
         read -p "Is the above backup branch named correctly?" -n 1 -r;
