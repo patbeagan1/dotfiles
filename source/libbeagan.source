@@ -7,6 +7,11 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+pasteToEmulator ()
+{
+    adb shell input text "${1}"
+}
+
 gitsync () 
 {
     git fetch origin "$1":"$1"
@@ -26,7 +31,8 @@ scriptify ()
             echo This is an alias.;
         else
             type "$1" | tail -n +2 | tee "$1".sh && chmod 755 "$1".sh;
-            echo "if [[ \$0 != \"-bash\" ]]; then $1 \"\$@\"; fi" >> "$1".sh;
+            echo >> "$1".sh
+            echo "if [[ \"\$1\" = \"-e\" ]]; then shift; $1 \"\$@\"; fi" >> "$1".sh;
         fi;
     fi
 }
@@ -247,24 +253,40 @@ tr '-' ' ' |\
 tr '_' ' ' |\
 sed 's/[0-9]//g' |\
 sed 's/^ //g')
-$(echo)
-$(
+
+"
+
+body="$(
 echo $@ |\
 sed 's/BULLET/\
 - /g' |\
 sed 's/NEWLINE/\
 /g'
 )
-$(echo)
-$(if [[ $(getbranch) != "fabric-"* ]] ; then
+
+"
+
+adminUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
     echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g') 
 else
     echo Fabric $(getbranch | sed 's/[^0-9]//g')
 fi)
 "
-commitText="$prefix$number $title"
+commitText="$prefix$number $title$body$adminUrl"
 echo "$commitText"
 git commit -am "$commitText"
+echo
+echo Use the below as a template for your Ticket.
+echo --------------------------------------------
+echo 
+echo "$body"
+echo "**This is ready for QA.**";
+echo
+echo Branch: $(getbranch);
+echo MR: TBD;
+echo FT: TBD;
+echo ACC:
+echo - TBD
 
 else echo "There are numbers in \"$@\", fix your commit message first.";
 fi
