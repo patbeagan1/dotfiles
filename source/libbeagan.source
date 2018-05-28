@@ -333,8 +333,10 @@ git-squash ()
     git status
 }
 
-flatten(){
-    mkdir flattened_files && find . -exec cp -n $(echo '{}') flattened_files \;
+flatten ()
+{
+    test -d __flattened_files || mkdir __flattened_files;
+    which gmv > /dev/null && find "$1" -type f -exec gmv --backup=numbered $(echo '{}') __flattened_files \;
 }
 
 show_path(){
