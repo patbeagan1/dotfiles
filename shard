@@ -1,13 +1,14 @@
-shard () 
-{ 
-    function perform_shard () 
-    { 
+shard ()
+{
+    function perform_shard ()
+    {
         for i in $(find . -maxdepth 1 ! -name shard -type f);
         do
             a="$(md5sum $i | sed 's/ .*//g')";
             b=$(echo "${a:0:1}");
             mkdir -p "$b";
-            mv "$i" "$b";
+            if isMac; then gmv --backup=numbered "$i" "$b"; fi
+            if isLinux; then mv --backup=numbered "$i" "$b"; fi
         done
     };
     if [ $# -ne 1 ]; then
