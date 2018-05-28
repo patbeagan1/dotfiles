@@ -7,45 +7,65 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+cputemp () {
+  if isMac; then
+    c=$(iStats | grep 'CPU temp' | sed s/[a-zA-Z\ :]*// | sed s/°.*//)
+    echo "9*$c/5+32" | bc -l
+  fi
+}
+
+machinetype () {
+    unameOut="$(uname -s)"
+      case "${unameOut}" in
+        Linux*)     machine=Linux;;
+        Darwin*)    machine=Mac;;
+        CYGWIN*)    machine=Cygwin;;
+        MINGW*)     machine=MinGw;;
+        *)          machine="UNKNOWN:${unameOut}"
+      esac
+      echo ${machine}
+}
+
+isMac () {
+  if [ "Mac" = $(machinetype) ]; then return 0; else return 1; fi
+}
+
+isLinux () {
+  if [ "Linux" = $(machinetype) ]; then return 0; else return 1; fi
+}
+
+isCygwin () {
+  if [ "Cygwin" = $(machinetype) ]; then return 0; else return 1; fi
+}
+
+isMinGw () {
+  if [ "MinGw" = $(machinetype) ]; then return 0; else return 1; fi
+}
+
 pasteToEmulator ()
 {
     adb shell input text "${1}"
 }
 
-gitsync () 
+gitsync ()
 {
     git fetch origin "$1":"$1"
-}    
+}
 
-lll () 
+lll ()
 {
     if [ $(uname) = "Darwin" ]; then ls -lT; else ls -l --full-time; fi
 }
 
-scriptify ()
-{
-    if [[ "$(type "$1")" == *"is a shell builtin" ]]; then
-        echo This is a shell builtin.;
-    else
-        if [[ "$(type "$1")" == *"is aliased to"* ]]; then
-            echo This is an alias.;
-        else
-            type "$1" | tail -n +2 | tee "$1".sh && chmod 755 "$1".sh;
-            echo >> "$1".sh
-            echo "if [[ \"\$1\" = \"-e\" ]]; then shift; $1 \"\$@\"; fi" >> "$1".sh;
-        fi;
-    fi
-}
-
 alias argcheck='argcheck_base "$#"'
-argcheck_base () 
-{ 
+argcheck_base ()
+{
     if [ "$1" -ne "$2" ]; then
         echo "Illegal number of parameters";
     fi
 }
 
-kr () 
+kr ()
 {
     java -jar "$1"
 }
@@ -75,11 +95,11 @@ server ()
         port="$1"
         if [ -z "$port" ]; then
             port="8000"
-        fi 
-        echo Running server on "$port" 
+        fi
+        echo Running server on "$port"
         python -m SimpleHTTPServer "$port"
     else
-        echo Too many arguments. 
+        echo Too many arguments.
     fi
 }
 
@@ -95,7 +115,7 @@ tocamelcase ()
 
 tosnakecase ()
 {
-    echo "$1" | perl -pe 's/([a-z0-9])([A-Z])/$1_\L$2/g' 
+    echo "$1" | perl -pe 's/([a-z0-9])([A-Z])/$1_\L$2/g'
 }
 
 alias show_lifecycle='show lifecycle'
@@ -107,7 +127,7 @@ show ()
         open https://i.stack.imgur.com/1llRw.png
     fi
     if [ "$1" == "versions" ]; then
-        open https://source.android.com/source/build-numbers#platform-code-names-versions-api-levels-and-ndk-releases 
+        open https://source.android.com/source/build-numbers#platform-code-names-versions-api-levels-and-ndk-releases
     fi
     if [ "$1" == "patterns" ]; then
         open https://i.pinimg.com/736x/5c/33/8e/5c338e86d098eb9955703b00dd3f20ea--programming-patterns-programming-languages.jpg
@@ -120,16 +140,16 @@ show ()
     fi
 }
 
-appletoaststatus () 
+appletoaststatus ()
 {
-    if [ $? -eq 0 ]; then 
+    if [ $? -eq 0 ]; then
         appletoast "$0" "Finished!"
-    else 
-        appletoast "$0" "FAILURE"; 
+    else
+        appletoast "$0" "FAILURE";
     fi
 }
 
-appletoast () 
+appletoast ()
 {
     title="$1"
     body="$2"
@@ -137,9 +157,9 @@ appletoast ()
 }
 
 mergetest()
-{ 
-    git merge --no-commit --no-ff "$1"; git merge --abort; 
-    echo "Merge aborted"; 
+{
+    git merge --no-commit --no-ff "$1"; git merge --abort;
+    echo "Merge aborted";
 }
 
 #amergetest()
@@ -173,7 +193,7 @@ resquash_old()
         git co "$1"
         reset_origin
         git co -b "$a"
-        git merge --squash "$b"    
+        git merge --squash "$b"
     fi
 }
 
@@ -212,10 +232,10 @@ reset_origin()
     {
         printf $(git rev-parse --abbrev-ref HEAD)
     }
-    
+
     echo This is a hard reset.
     read -p "Are you sure you want to check out origin/$(getbranch)? " -n 1 -r
-    echo    
+    echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         git fetch &&
@@ -225,7 +245,7 @@ reset_origin()
 
 bcommit()
 {
-    if [ $(echo "$@" | grep -c .*[0-9].*) -eq 0 ]; then    
+    if [ $(echo "$@" | grep -c .*[0-9].*) -eq 0 ]; then
     #continue if there are no numbers in commit string. Else is at bottom.
 
     getbranch()
@@ -267,7 +287,7 @@ sed 's/NEWLINE/\
 "
 
 adminUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
-    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g') 
+    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')
 else
     echo Fabric $(getbranch | sed 's/[^0-9]//g')
 fi)
@@ -278,7 +298,7 @@ git commit -am "$commitText"
 echo
 echo Use the below as a template for your Ticket.
 echo --------------------------------------------
-echo 
+echo
 echo "$body"
 echo "**This is ready for QA.**";
 echo
@@ -296,7 +316,7 @@ bcommit-fix()
 {
     getbranch(){
         printf $(git rev-parse --abbrev-ref HEAD)
-    }   
+    }
 
     gettitle(){
         echo PT$(getbranch | sed 's/[^0-9]//g')$(getbranch | tr '_' ' ' | sed 's/pt//g' | sed 's/[0-9]//g')
@@ -313,7 +333,7 @@ bcommit-fix()
 gitflux()
 {
     for i in $(git ls-tree -r $(git rev-parse --abbrev-ref HEAD) --name-only); do
-        echo $(git log --oneline $i | wc -l) $i; 
+        echo $(git log --oneline $i | wc -l) $i;
     done
 }
 
@@ -322,8 +342,8 @@ revnum()
     git rev-list --count HEAD
 }
 
-git-squash () 
-{ 
+git-squash ()
+{
     TIME=$(date +%s);
     BRANCH=$(git rev-parse --abbrev-ref HEAD);
     git branch -m $BRANCH.$TIME;
@@ -346,13 +366,13 @@ lastlog(){
     cd /var/log; less $(ls -1t | head -1)
 }
 
-rederr () 
-{ 
+rederr ()
+{
         "$@" 2>&1 1>&3 | sed "s,.*,\033[31m&\e[0m," 1>&2
 } 3>&1
 
 notabs(){
-    if [ $# -lt 2 ]; then 
+    if [ $# -lt 2 ]; then
         echo "Usage: notabs <file> <num spaces to use>"
     else
         n=""
@@ -519,7 +539,7 @@ serve_directory () {
 #mplayer -ao pcm -vo null -vc dummy -dumpaudio -dumpfile <output-file> <input-file>
 
 #interprets arithmetic operations
-math () { 
+math () {
     echo "$*" | bc -l;
 }
 

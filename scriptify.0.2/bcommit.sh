@@ -18,7 +18,7 @@ echo $@ |sed 's/BULLET/\
 
 ";
         adminUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
-    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g') 
+    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')
 else
     echo Fabric $(getbranch | sed 's/[^0-9]//g')
 fi)
@@ -44,3 +44,5 @@ fi)
 }
 
 if [[ "$1" = "-e" ]]; then shift; bcommit "$@"; fi
+usage () { echo Print this usage text.; }
+if [[ "$1" = "-h" ]]; then printf "Usage: %s [-e|-h]\n\n-e\tExecute this as a script instead of as a function.\n-h\t$(usage)\n" "$0"; fi
