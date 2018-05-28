@@ -7,6 +7,21 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+pasteToEmulator ()
+{
+    adb shell input text "${1}"
+}
+
+gitsync () 
+{
+    git fetch origin "$1":"$1"
+}    
+
+lll () 
+{
+    if [ $(uname) = "Darwin" ]; then ls -lT; else ls -l --full-time; fi
+}
+
 scriptify ()
 {
     if [[ "$(type "$1")" == *"is a shell builtin" ]]; then
@@ -16,7 +31,8 @@ scriptify ()
             echo This is an alias.;
         else
             type "$1" | tail -n +2 | tee "$1".sh && chmod 755 "$1".sh;
-            echo "if [[ \$0 != \"-bash\" ]]; then $1 \"\$@\"; fi" >> "$1".sh;
+            echo >> "$1".sh
+            echo "if [[ \"\$1\" = \"-e\" ]]; then shift; $1 \"\$@\"; fi" >> "$1".sh;
         fi;
     fi
 }
@@ -95,6 +111,12 @@ show ()
     fi
     if [ "$1" == "patterns" ]; then
         open https://i.pinimg.com/736x/5c/33/8e/5c338e86d098eb9955703b00dd3f20ea--programming-patterns-programming-languages.jpg
+    fi
+    if [ "$1" == "cat" ]; then
+        open https://static.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg
+    fi
+    if [ "$1" == "chair" ]; then
+        open https://secure.img1-fg.wfcdn.com/im/60980607/resize-h800%5Ecompr-r85/2899/28992811/Chrisanna+Wingback+Chair.jpg
     fi
 }
 
@@ -203,17 +225,71 @@ reset_origin()
 
 bcommit()
 {
+    if [ $(echo "$@" | grep -c .*[0-9].*) -eq 0 ]; then    
+    #continue if there are no numbers in commit string. Else is at bottom.
+
     getbranch()
     {
         printf $(git rev-parse --abbrev-ref HEAD)
     }
     # Don't indent this, it's taking the literal characters.
     # git commit -am "$(git rev-parse --abbrev-ref HEAD): $(echo $@)"
-git commit -am "PT$(getbranch | sed 's/[^0-9]//g') $(getbranch | sed 's/^lb-//g' | sed 's/^fb-//g' | sed 's/^pt//g' | sed 's/^PT//g' | tr '-' ' ' | tr '_' ' ' | sed 's/[0-9]//g')
-$(echo)
-$@
-$(echo)
-https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')" 
+prefix="$(getbranch |\
+sed 's/^lb-.*/PT/g' |\
+sed 's/^fb-.*/PT/g' |\
+sed 's/^fabric-.*/NOTICKET Fabric/g' |\
+sed 's/^pt.*/PT/g' |\
+sed 's/^PT.*/PT/g')"
+
+number="$(getbranch | sed 's/[^0-9]//g')"
+
+title="$(getbranch |\
+sed 's/^lb-//g' |\
+sed 's/^fb-//g' |\
+sed 's/^fabric-//g' |\
+sed 's/^pt//g' |\
+sed 's/^PT//g' |\
+tr '-' ' ' |\
+tr '_' ' ' |\
+sed 's/[0-9]//g' |\
+sed 's/^ //g')
+
+"
+
+body="$(
+echo $@ |\
+sed 's/BULLET/\
+- /g' |\
+sed 's/NEWLINE/\
+/g'
+)
+
+"
+
+adminUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
+    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g') 
+else
+    echo Fabric $(getbranch | sed 's/[^0-9]//g')
+fi)
+"
+commitText="$prefix$number $title$body$adminUrl"
+echo "$commitText"
+git commit -am "$commitText"
+echo
+echo Use the below as a template for your Ticket.
+echo --------------------------------------------
+echo 
+echo "$body"
+echo "**This is ready for QA.**";
+echo
+echo Branch: $(getbranch);
+echo MR: TBD;
+echo FT: TBD;
+echo ACC:
+echo - TBD
+
+else echo "There are numbers in \"$@\", fix your commit message first.";
+fi
 }
 
 bcommit-fix()
