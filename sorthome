@@ -4,26 +4,45 @@
 dumpdir="$HOME/Downloads/"
 myhomedir="$HOME/Downloads/MyHome/"
 
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --local)
+    dumpdir="`pwd`"
+    myhomedir="`pwd`/MyHome"
+    shift # past argument
+    ;;
+    *)
+    shift;
+    ;;
+esac
+done
+
 dumpdir+="/"
 myhomedir+="/"
 #===================================================
 
 echo `date`
 echo "Cleaning up the $dumpdir folder..."
-if [ ! -d $myhomedir ]; then mkdir $myhomedir; fi
+if [ ! -d "$myhomedir" ]; then mkdir "$myhomedir"; fi
 
 #===================================================
 function chkmk {
-        cd $myhomedir
-        if [ ! -d $1 ]; then echo Creating $1; mkdir $1; fi
+        cd "$myhomedir"
+        if [ ! -d "$1" ]; then 
+            echo Creating "$1"; 
+            mkdir "$1"; 
+        else
+            echo Visiting "$1";
+        fi
 }
 function movefiles {
-        chkmk $1
+        chkmk "$1"
         declare -a temp=("${!2}")
         for i in "${temp[@]}"; do
-                # breaks mac compat# mv --backup=numbered ~/Downloads/*$i ~/Downloads/MyHome/$1 2>/dev/null
-		mv $dumpdir*$i $myhomedir$1 2>/dev/null
-		# echo $dumpdir*$i
+            mv "$dumpdir"*"$i" "$myhomedir""$1" 2>/dev/null
         done
 }
 
@@ -31,7 +50,7 @@ function movefiles {
 code=(".py" ".pyc" ".pyo")
 code+=( ".c" ".cpp" ".out")
 code+=( ".hs" )
-code+=(".java" ".class" ".kt" ".ks" ".kts")
+code+=(".java" ".class" ".kt" ".ks" ".kts" ".jar")
 code+=(".sh" ".pl" ".scpt" ".applescript")
 movefiles bin code[@]
 
@@ -45,18 +64,23 @@ movefiles var/log log[@]
 movefiles var/db db[@]
 chkmk mnt
 chkmk tmp
+
 #===================================================
-graphics=(".png" ".PNG" ".gif" ".jpg" ".jpeg" ".svg" ".webm")
-txt=(".txt" ".pdf" ".odt" ".doc" ".docx" ".rtf" )
+graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
+txt=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
 web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
 audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
-video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm")
+video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
+links=(".url")
+emu=(".gbc" ".gba" ".sav")
 chkmk med
 movefiles med/audio audio[@]
 movefiles med/pic graphics[@]
 movefiles med/text txt[@]
 movefiles med/html web[@]
 movefiles med/video video[@]
+movefiles med/bookmarks links[@]
+movefiles med/emu emu[@]
 
 #===================================================
 ops=(".iso" ".img")
@@ -71,18 +95,25 @@ movefiles BIG/comics comics[@]
 movefiles BIG/packages packages[@]
 movefiles misc mis[@]
 
-for file in $myhomedir/bin/*.sh; do
-mv -- "$file" $(echo "$file" | sed 's/.sh//') 2>/dev/null
-done
+#=========Cleaning up individual files==============
 
+#It turns out that syntax coloring on shell files is really useful
+#for file in $myhomedir/bin/*.sh; do
+#mv -- "$file" $(echo "$file" | sed 's/.sh//') 2>/dev/null
+#done
+
+# Sometimes downloading audio clips from facebook relabels them with 2 exts
 for file in $myhomedir/med/audio/*.mp3.mp3; do
 mv -- "$file" "${file%.mp3}" 2>/dev/null
 done
 
+# Sometimes downloading audio clips from FB makes them jpgs 
 for file in $myhomedir/med/pics/audioclip-*; do
 mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
+## Optional zipping of old files
+## in practice, this is more trouble than it's worth.
 #for i in $myhomedir/med/pic; do
 #	d=`date | sed 's/ /-/g'`
 #	mkdir -p $i/old/$d
@@ -93,10 +124,13 @@ done
 #	fi
 #done
 
+# Removing empty directories in med
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
 
+# Comickifying old photo galleries automatically is also more trouble than it's worth, since they can be large.
 #for i in $myhomedir/med/pic/old/*; do 
 #	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
 #done
 
+#===================================================
 echo "Done cleaning. If a file appears lost, check Misc."
