@@ -1,4 +1,4 @@
-#/bin/bash 
+#/bin/bash
 
 #===================================================
 dumpdir="$HOME/Downloads/"
@@ -31,9 +31,9 @@ if [ ! -d "$myhomedir" ]; then mkdir "$myhomedir"; fi
 #===================================================
 function chkmk {
         cd "$myhomedir"
-        if [ ! -d "$1" ]; then 
-            echo Creating "$1"; 
-            mkdir "$1"; 
+        if [ ! -d "$1" ]; then
+            echo Creating "$1";
+            mkdir "$1";
         else
             echo Visiting "$1";
         fi
@@ -47,6 +47,7 @@ function movefiles {
 }
 
 #===================================================
+# /bin for executables and source code.
 code=(".py" ".pyc" ".pyo")
 code+=( ".c" ".cpp" ".out")
 code+=( ".hs" )
@@ -55,62 +56,91 @@ code+=(".sh" ".pl" ".scpt" ".applescript")
 movefiles bin code[@]
 
 #===================================================
+# /etc: Config files, like which are commonly found in /etc on the machine
 config=(".cf" ".pem" ".crt" ".key" ".conf" ".rc");
-log=(".log")
-db=(".db" ".db3" ".sqlite" ".sqlite3" ".index")
 movefiles etc config[@]
+
+#===================================================
+# Creating the /var directory, for files which are intended to change a lot
 chkmk var
+
+log=(".log")
 movefiles var/log log[@]
+
+db=(".db" ".db3" ".sqlite" ".sqlite3" ".index")
 movefiles var/db db[@]
+
+#===================================================
+# /med is where the vast majority of the content is going to end up.
+# files here are sorted accoording to their extensions.
+chkmk med
+
+graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
+movefiles med/pic graphics[@]
+
+txt=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
+movefiles med/text txt[@]
+
+web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
+movefiles med/html web[@]
+
+audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
+movefiles med/audio audio[@]
+
+video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
+movefiles med/video video[@]
+
+links=(".url")
+movefiles med/bookmarks links[@]
+
+emu=(".gbc" ".gba" ".sav")
+movefiles med/emu emu[@]
+
+#===================================================
+# /BIG is for things that shouldn't be backed up, since they are too large
+chkmk BIG
+
+ops=(".iso" ".img")
+movefiles BIG/OS ops[@]
+
+zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
+movefiles BIG/zip zip[@]
+
+packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg")
+movefiles BIG/packages packages[@]
+
+comics=(".cbz" ".cbr")
+movefiles BIG/comics comics[@]
+
+#===================================================
+# /mnt and /tmp are convenience directories
+## /mnt tends to be useful for integration with `tmsu`, while tmp is for
 chkmk mnt
 chkmk tmp
 
 #===================================================
-graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
-txt=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
-web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
-audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
-video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
-links=(".url")
-emu=(".gbc" ".gba" ".sav")
-chkmk med
-movefiles med/audio audio[@]
-movefiles med/pic graphics[@]
-movefiles med/text txt[@]
-movefiles med/html web[@]
-movefiles med/video video[@]
-movefiles med/bookmarks links[@]
-movefiles med/emu emu[@]
-
-#===================================================
-ops=(".iso" ".img")
-zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
-packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg")
-comics=(".cbz" ".cbr")
+# /misc is for things that shoudn't go elsewhere - check here for folders, since they can't be sorted automatically.
 mis=("")
-chkmk BIG
-movefiles BIG/OS ops[@]
-movefiles BIG/zip zip[@]
-movefiles BIG/comics comics[@]
-movefiles BIG/packages packages[@]
 movefiles misc mis[@]
 
+#===================================================
 #=========Cleaning up individual files==============
-
-#It turns out that syntax coloring on shell files is really useful
-#for file in $myhomedir/bin/*.sh; do
-#mv -- "$file" $(echo "$file" | sed 's/.sh//') 2>/dev/null
-#done
+#===================================================
 
 # Sometimes downloading audio clips from facebook relabels them with 2 exts
 for file in $myhomedir/med/audio/*.mp3.mp3; do
 mv -- "$file" "${file%.mp3}" 2>/dev/null
 done
 
-# Sometimes downloading audio clips from FB makes them jpgs 
+# Sometimes downloading audio clips from FB makes them jpgs
 for file in $myhomedir/med/pics/audioclip-*; do
 mv -- "$file" $myhomedir/misc 2>/dev/null
 done
+
+# It turns out that syntax coloring on shell files is really useful
+#for file in $myhomedir/bin/*.sh; do
+#mv -- "$file" $(echo "$file" | sed 's/.sh//') 2>/dev/null
+#done
 
 ## Optional zipping of old files
 ## in practice, this is more trouble than it's worth.
@@ -118,19 +148,21 @@ done
 #	d=`date | sed 's/ /-/g'`
 #	mkdir -p $i/old/$d
 #	find $i -maxdepth 1 -type f -mtime +60 -exec mv {} $i/old/$d \;
-#        cd $i/old/$d	
+#        cd $i/old/$d
 #	if [ ! `find . -prune -empty -type d` ]; then
 #		zip ../$d.zip * && rm *
 #	fi
 #done
 
-# Removing empty directories in med
-find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
+
 
 # Comickifying old photo galleries automatically is also more trouble than it's worth, since they can be large.
-#for i in $myhomedir/med/pic/old/*; do 
+#for i in $myhomedir/med/pic/old/*; do
 #	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
 #done
+
+# Removing empty directories in med
+find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
 
 #===================================================
 echo "Done cleaning. If a file appears lost, check Misc."
