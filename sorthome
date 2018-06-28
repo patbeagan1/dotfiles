@@ -40,10 +40,26 @@ function chkmk {
 }
 function movefiles {
         chkmk "$1"
+        cd "$dumpdir"
         declare -a temp=("${!2}")
         for i in "${temp[@]}"; do
-            mv "$dumpdir"*"$i" "$myhomedir""$1" 2>/dev/null
+          files=(*"$i")
+
+          # I was running into problems when moving a large number of files
+          # the official docs just said to run mv in batches to get over the glob rescrictions
+          local stepSize=100
+          for ((i=0; i<${#files[*]}; i+=$stepSize)); do
+            if [ ${#files[*]} -gt $stepSize ]; then
+              echo Batch "$i"
+            fi
+            if [ "$(uname -s)" = "Darwin" ]; then
+              gmv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+            else
+              mv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+            fi
+          done
         done
+        cd -
 }
 
 #===================================================
