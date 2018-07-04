@@ -6,18 +6,18 @@ myhomedir="$HOME/Downloads/MyHome/"
 
 while [[ $# -gt 0 ]]
 do
-key="$1"
+  key="$1"
 
-case $key in
+  case $key in
     --local)
-    dumpdir="`pwd`"
-    myhomedir="`pwd`/MyHome"
-    shift # past argument
-    ;;
+      dumpdir="`pwd`"
+      myhomedir="`pwd`/MyHome"
+      shift # past argument
+      ;;
     *)
-    shift;
-    ;;
-esac
+      shift;
+      ;;
+  esac
 done
 
 dumpdir+="/"
@@ -30,36 +30,41 @@ if [ ! -d "$myhomedir" ]; then mkdir "$myhomedir"; fi
 
 #===================================================
 function chkmk {
-        cd "$myhomedir"
-        if [ ! -d "$1" ]; then
-            echo Creating "$1";
-            mkdir "$1";
-        else
-            echo Visiting "$1";
-        fi
+  cd "$myhomedir"
+  if [ ! -d "$1" ]; then
+    echo Creating "$1";
+    mkdir "$1";
+  else
+    echo Visiting "$1";
+  fi
 }
 function movefiles {
-        chkmk "$1"
-        cd "$dumpdir"
-        declare -a temp=("${!2}")
-        for i in "${temp[@]}"; do
-          files=(*"$i")
+  chkmk "$1"
+  cd "$dumpdir"
+  declare -a temp=("${!2}")
+  for i in "${temp[@]}"; do
 
-          # I was running into problems when moving a large number of files
-          # the official docs just said to run mv in batches to get over the glob rescrictions
-          local stepSize=100
-          for ((i=0; i<${#files[*]}; i+=$stepSize)); do
-            if [ ${#files[*]} -gt $stepSize ]; then
-              echo Batch "$i"
-            fi
-            if [ "$(uname -s)" = "Darwin" ]; then
-              gmv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
-            else
-              mv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
-            fi
-          done
-        done
-        cd -
+    # grabbing all the files in the current directory, putting them into array
+    files=()
+    while IFS= read -d $'\0' -r file ; do
+      files=("${files[@]}" "$file")
+    done < <(find . -maxdepth 1 -name "*$i" ! -path "./MyHome" ! -path '.'  -print0)
+
+    # I was running into problems when moving a large number of files
+    # the official docs just said to run mv in batches to get over the glob rescrictions
+    local stepSize=100
+    for ((i=0; i<${#files[*]}; i+=$stepSize)); do
+      if [ ${#files[*]} -gt $stepSize ]; then
+        echo Batch "$i"
+      fi
+      if [ "$(uname -s)" = "Darwin" ]; then
+        gmv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+      else
+        mv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+      fi
+    done
+  done
+  cd -
 }
 
 #===================================================
@@ -145,12 +150,12 @@ movefiles misc mis[@]
 
 # Sometimes downloading audio clips from facebook relabels them with 2 exts
 for file in $myhomedir/med/audio/*.mp3.mp3; do
-mv -- "$file" "${file%.mp3}" 2>/dev/null
+  mv -- "$file" "${file%.mp3}" 2>/dev/null
 done
 
 # Sometimes downloading audio clips from FB makes them jpgs
 for file in $myhomedir/med/pics/audioclip-*; do
-mv -- "$file" $myhomedir/misc 2>/dev/null
+  mv -- "$file" $myhomedir/misc 2>/dev/null
 done
 
 # It turns out that syntax coloring on shell files is really useful
