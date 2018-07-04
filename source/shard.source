@@ -12,7 +12,7 @@ shard ()
           temp="$(md5 $i)"
           a="${temp##* }"
         else
-          echo Unsupported OS && exit 1
+          echo Unsupported OS && return 1
         fi
 
         ## Minifying hashsum
