@@ -114,7 +114,7 @@ movefiles med/video video[@]
 links=(".url")
 movefiles med/bookmarks links[@]
 
-emu=(".gbc" ".gba" ".sav")
+emu=(".gbc" ".gba" ".sav" ".fds" ".gb" ".nes" ".ngc" ".ngp" ".rom" ".smc" ".srm" ".tgc" ".z64" ".bin")
 movefiles med/emu emu[@]
 
 #===================================================
