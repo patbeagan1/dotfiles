@@ -14,6 +14,7 @@ echo " $(date +"%H:%M:%S")$(parse_git_branch)" | tr "\n" " "
 export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\[\033[32m\]\$(ps_padding)\[\033[00m\]\$ "
 export CLICOLOR=1
 export LSCOLORS=exfxcxdxbxexexabagacad
+export LSCOLORS=Exfxcxdxbxegedabagacad # Brighter colors in this one.
 #alias ls='ls -Fh --color=auto'
 alias slp='pmset sleepnow'
 
