@@ -7,6 +7,16 @@
 #TO USE:
 #if you type "source libbeagan" into a bash terminal, all of these functions will be available to you.
 
+updatedev () {
+    git fetch origin dev:dev
+}
+alias devup='updatedev'
+alias devpull='updatedev && git merge dev'
+
+findcolors ()
+{
+    ag '"#[a-zA-Z\d]+"'
+}
 pdf2jpg () {
 # the first param has to be a pdf, like test.pdf.
 convert           \
