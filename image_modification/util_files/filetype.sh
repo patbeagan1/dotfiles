@@ -1,0 +1,4 @@
+filetype () 
+{ 
+    file * | sed s/,.*//
+}
