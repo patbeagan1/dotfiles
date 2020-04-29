@@ -99,11 +99,14 @@ chkmk med
 graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
 movefiles med/pic graphics[@]
 
-txt=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
-movefiles med/text txt[@]
+pdf=(".pdf")
+movefiles med/pdf pdf[@]
+
+doc=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
+movefiles med/doc doc[@]
 
 web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
-movefiles med/html web[@]
+movefiles med/web web[@]
 
 audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
 movefiles med/audio audio[@]
@@ -127,7 +130,7 @@ movefiles BIG/OS ops[@]
 zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
 movefiles BIG/zip zip[@]
 
-packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg")
+packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg" ".apk" ".app")
 movefiles BIG/packages packages[@]
 
 comics=(".cbz" ".cbr")
