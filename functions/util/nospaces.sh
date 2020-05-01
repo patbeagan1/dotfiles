@@ -1,0 +1,4 @@
+nospaces () 
+{ 
+    rename 'y/ /_/' *
+}
