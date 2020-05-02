@@ -1,84 +1,68 @@
-source ./functions/shard.sh
-source ./functions/util/binlink.sh
-source ./functions/util/notabs.sh
-source ./functions/util/rec.sh
-source ./functions/util/isLinux.sh
-source ./functions/util/hl.sh
-source ./functions/util/loop.sh
-source ./functions/util/peek.sh
-source ./functions/util/lookbehind.sh
-source ./functions/util/pause.sh
-source ./functions/util/lastfield.sh
-source ./functions/util/open.sh
-source ./functions/util/dictionary.sh
-source ./functions/util/killport.sh
-source ./functions/util/revnum.sh
-source ./functions/util/checkcrlf.sh
-source ./functions/util/compare.sh
-source ./functions/util/show.sh
-source ./functions/util/server.sh
-source ./functions/util/lsfuncs.sh
-source ./functions/util/argnum.sh
-source ./functions/util/editlast.sh
-source ./functions/util/dequote.sh
-source ./functions/util/machinetype.sh
-source ./functions/util/diffall.sh
-source ./functions/util/appletoaststatus.sh
-source ./functions/util/lll.sh
-source ./functions/util/nospaces.sh
-source ./functions/util/isMinGw.sh
-source ./functions/util/quote.sh
-source ./functions/util/appletoast.sh
-source ./functions/util/isMac.sh
-source ./functions/util/tp.sh
-source ./functions/util/trim.sh
-source ./functions/util/cputemp.sh
-source ./functions/util/isCygwin.sh
-source ./functions/util/weather.sh
-source ./functions/refresh.sh
-source ./functions/last_commits_with_string.sh
-source ./functions/file_management/comic.sh
-source ./functions/file_management/fullpath.sh
-source ./functions/file_management/flatten.sh
-source ./functions/file_management/filetype.sh
-source ./functions/math/mean.sh
-source ./functions/math/median.sh
-source ./functions/math/math.sh
-source ./functions/math/sum.sh
-source ./functions/math/variance.sh
-source ./functions/sysadmin/manif.sh
-source ./functions/sysadmin/tosnakecase.sh
-source ./functions/sysadmin/speedtest.sh
-source ./functions/sysadmin/tocamelcase.sh
-source ./functions/sysadmin/rederr.sh
-source ./functions/sysadmin/manbook.sh
-source ./functions/sysadmin/lsdaemons.sh
-source ./functions/sysadmin/lastlog.sh
-source ./functions/sysadmin/report.sh
-source ./functions/sysadmin/psp.sh
-source ./functions/sysadmin/lastmod.sh
-source ./functions/sysadmin/timeclock.sh
-source ./functions/sysadmin/manbash.sh
-source ./functions/sysadmin/release.sh
-source ./functions/sysadmin/sdk.sh
-source ./functions/sysadmin/mountcd.sh
-source ./functions/sysadmin/realconf.sh
-source ./functions/vcs/gitflux.sh
-source ./functions/vcs/mergetest.sh
-source ./functions/vcs/tcommit.sh
-source ./functions/vcs/resquash.sh
-source ./functions/vcs/gitfile.sh
-source ./functions/vcs/curr.sh
-source ./functions/vcs/svn.sh
-source ./functions/vcs/getbranch.sh
-source ./functions/vcs/bcommit.sh
-source ./functions/vcs/gitsync.sh
-source ./functions/vcs/repick.sh
-source ./functions/android/pasteToEmulator.sh
-source ./functions/android/deeplink.sh
-source ./functions/myip.sh
-source ./functions/dev/kc.sh
-source ./functions/dev/kr.sh
-source ./functions/dev/jj.sh
-source ./functions/flatten.sh
-source ./functions/scriptify.sh
+parse_git_branch() 
+{
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+    git rev-list --count HEAD 2> /dev/null
+}
+
+ps_padding() 
+{
+    echo " $(date +"%H:%M:%S")$(parse_git_branch)" | tr "\n" " "
+}
+
+release () 
+{ 
+    echo release-v4."$1"; 
+}
+
+curr () 
+{
+    git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
+}
+
+last_branch()
+{ 
+    git branch --sort=committerdate;
+}
+
+lsfuncs () 
+{ 
+    echo $(set | grep \(\) | grep -v =) | sed s/\(\)//g | sed s/\ \ /\ /g
+}
+
+refresh () 
+{ 
+    currentDir=$(pwd);
+    if [ -f ~/.bash_profile ]; then
+        source ~/.bash_profile;
+    fi;
+    if [ -f ~/.bashrc ]; then
+        source ~/.bashrc;
+    fi;
+    if [ -f ~/.bash_aliases ]; then
+        source ~/.bash_aliases;
+    fi;
+    cd $currentDir
+}
+
+scriptify ()
+{
+    if [[ "$(type "$1")" == *"is a shell builtin" ]]; then
+        echo This is a shell builtin.;
+    else
+        if [[ "$(type "$1")" == *"is aliased to"* ]]; then
+            echo This is an alias.;
+        else
+            # Printing out the contents of the function to a file and making it executable
+            type "$1" | tail -n +2 | tee "$1".sh && chmod 755 "$1".sh;
+            echo >> "$1".sh
+            echo "$1" '"$@"' >> "$1".sh
+
+            # Optionally, this code will make the function executable if the -e flag is passed into it.
+            # -----
+            # echo "if [[ \"\$1\" = \"-e\" ]]; then shift; $1 \"\$@\"; fi" >> "$1".sh;
+            # echo 'usage () { echo Print this usage text.; }' >> "$1".sh;
+            # echo "if [[ \"\$1\" = \"-h\" ]]; then printf \"Usage: %s [-e|-h]\n\n-e\tExecute this as a script instead of as a function.\n-h\t"'$(usage)'"\n\" \"\$0\"; fi" >> "$1".sh;
+        fi;
+    fi
+}
+

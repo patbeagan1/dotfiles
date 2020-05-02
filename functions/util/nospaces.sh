@@ -1,4 +1,0 @@
-nospaces () 
-{ 
-    rename 'y/ /_/' *
-}

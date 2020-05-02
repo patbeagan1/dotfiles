@@ -5,13 +5,7 @@ alias showFinderLocation='defaults write com.apple.finder _FXShowPosixPathInTitl
 alias hideFinderLocation='defaults write com.apple.finder _FXShowPosixPathInTitle -bool NO && killall Finder'
 alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
 alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
-parse_git_branch() {
-    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
-    git rev-list --count HEAD 2> /dev/null
-}
-ps_padding() {
-echo " $(date +"%H:%M:%S")$(parse_git_branch)" | tr "\n" " "
-}
+
 export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\[\033[32m\]\$(ps_padding)\[\033[00m\]\$ "
 export CLICOLOR=1
 export LSCOLORS=exfxcxdxbxexexabagacad
@@ -51,10 +45,6 @@ alias lb="last_branch | tail -10"
 alias lbb="last_branch | grep -v old"
 alias bcommit_hist='history | grep bcommit'
 alias vi-raw='vi -u NONE'
-release () { echo release-v4."$1"; }
-curr () {
-    git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
-}
 
 ##Git specific
 alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
@@ -73,4 +63,3 @@ git config --global alias.visual '!gitk'
 git config --global alias.mergetest '!f(){ git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted"; };f' 
 git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 
-last_branch(){ git branch --sort=committerdate; }

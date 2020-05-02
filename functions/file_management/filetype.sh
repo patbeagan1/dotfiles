@@ -1,4 +1,0 @@
-filetype () 
-{ 
-    file * | sed s/,.*//
-}
