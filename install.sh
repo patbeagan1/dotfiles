@@ -3,7 +3,9 @@
 . ./source-alias.sh
 . ./source-git-completion.bash
 . ./source-git-config.sh
-. ./source-settings-libraries.sh
+. ./source-internal-libraries.sh
+. ./source-external-scripts.sh
+. ./source-external-resources.sh
 . ./source-settings.sh
 . ./source-random.sh
 . ./source-cache.sh

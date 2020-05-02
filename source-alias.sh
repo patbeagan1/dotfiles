@@ -6,7 +6,8 @@ git diff origin/master
 #########################
 
 alias manif="lynx -accept_all_cookies http://tldp.org/LDP/abs/html/comparison-ops.html"
-alias my_ip="curl http://ipecho.net/plain; echo"
+alias ip_remote="curl http://ipecho.net/plain; echo"
+alias ip="echo Remote/Local; ip_remote; ip_local"
 alias weather="curl http://wttr.in/Boston"
 alias wiki="lynx -accept_all_cookies -accept_all_cookies http://en.wikipedia.org/wiki/Special:Search?search=$(echo $@ | sed 's/ /+/g')"
 alias dict="curl dict://dict.org/d:"
@@ -84,6 +85,7 @@ alias dirs="ls -al | grep '^d'"
 ### Generic ###
 ###############
 
+alias reload="exec ${SHELL} -l"
 alias cd..="cd .."
 alias ..="cd .."
 alias mkdir="mkdir -pv"
@@ -110,13 +112,18 @@ alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
 alias hnote='cd ~; note; cd -'
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
 
+alias g="git"
 alias gpom="git push origin master"
 alias gs="git status"
 alias gb="git branch"
 alias gco="git checkout"
 
+alias ip_local="ipconfig getifaddr en0"
+alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
+
 ### MISC
 alias h="history"
+alias week='date +%V'
 alias dush="du -sh"
 alias bcommit_hist='history | grep bcommit'
 alias fuck='eval $(thefuck $(fc -ln -1)); history -r'
@@ -125,3 +132,17 @@ alias ks="kotlinc-jvm"
 alias vi-raw='vi -u NONE'
 alias wget="wget -c"
 alias histg="history | grep"
+
+# macOS has no `md5sum`, so use `md5` as a fallback
+command -v md5sum > /dev/null || alias md5sum="md5"
+
+# macOS has no `sha1sum`, so use `shasum` as a fallback
+command -v sha1sum > /dev/null || alias sha1sum="shasum"
+
+# URL-encode strings
+alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
+
+# Intuitive map function
+# For example, to list all directories that contain a certain file:
+# find . -name .gitattributes | map dirname
+alias map="xargs -n1"
