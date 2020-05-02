@@ -1,36 +1,28 @@
-parse_git_branch() 
-{
-    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
-    git rev-list --count HEAD 2> /dev/null
-}
-
-ps_padding() 
-{
-    echo " $(date +"%H:%M:%S")$(parse_git_branch)" | tr "\n" " "
-}
-
-release () 
-{ 
-    echo release-v4."$1"; 
-}
-
-curr () 
+curr ()
 {
     git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
 }
 
 last_branch()
-{ 
+{
     git branch --sort=committerdate;
 }
 
-lsfuncs () 
-{ 
-    echo $(set | grep \(\) | grep -v =) | sed s/\(\)//g | sed s/\ \ /\ /g
+lsfuncs ()
+{
+    local a=`echo $(set | grep \(\) | grep -v =) | sed s/\(\)//g | sed s/\ \ /\ /g`
+    multiline.sh "$a"
 }
 
-refresh () 
-{ 
+check_return ()
+{
+    local a=$?;
+    echo $a;
+    return $a
+}
+
+refresh ()
+{
     currentDir=$(pwd);
     if [ -f ~/.bash_profile ]; then
         source ~/.bash_profile;
@@ -53,10 +45,15 @@ scriptify ()
             echo This is an alias.;
         else
             # Printing out the contents of the function to a file and making it executable
-            type "$1" | tail -n +2 | tee "$1".sh && chmod 755 "$1".sh;
-            echo >> "$1".sh
-            echo "$1" '"$@"' >> "$1".sh
-
+            echo '#!/bin/bash' >> "$1".sh &&
+            if test $?; then
+                chmod 755 "$1".sh;
+                echo >> "$1".sh
+                type "$1" | tail -n +2 | cat
+                type "$1" | tail -n +2 >> "$1".sh
+                echo >> "$1".sh
+                echo "$1" '"$@"' >> "$1".sh
+            fi
             # Optionally, this code will make the function executable if the -e flag is passed into it.
             # -----
             # echo "if [[ \"\$1\" = \"-e\" ]]; then shift; $1 \"\$@\"; fi" >> "$1".sh;
