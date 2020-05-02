@@ -1,9 +1,11 @@
 #!/bin/bash 
 
+. $LIB_MACHINE_TYPES
+
 lll () 
 { 
-    if [ $(uname) = "Darwin" ]; then
-        ls --color=auto -lT;
+    if isMac; then
+        ls
     else
         ls --color=auto -l --full-time;
     fi

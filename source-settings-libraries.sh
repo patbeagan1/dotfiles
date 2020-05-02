@@ -1,0 +1,40 @@
+
+########################################################
+### Libraries that are included in the current repo: ###
+########################################################
+
+LIBBEAGAN="$HOME/libbeagan"
+export LIB_MACHINE_TYPES="$LIBBEAGAN/source-machine-types.sh"
+export LIB_RANDOM="$LIBBEAGAN/source-random.sh"
+export LIB_CACHE="$LIBBEAGAN/source-cache.sh"
+
+################################
+### External scripts, cached ###
+################################
+
+. $LIB_CACHE
+export SCRIPT_CACHE=~/.script_cache
+mkdir -p "$SCRIPT_CACHE"
+export PATH=$PATH:"$SCRIPT_CACHE"
+fill_script_cache () { cache_get_as_exec "$SCRIPT_CACHE"/"$1".ext.sh "$2"; }
+#END SETUP
+
+fill_script_cache curl-basic-auth "https://raw.githubusercontent.com/temptemp3/linuxhint.com/master/curl-basic-auth.sh"
+fill_script_cache random-ips "https://raw.githubusercontent.com/temptemp3/linuxhint.com/master/random-ips.sh"
+
+fill_script_cache img_flicker "https://www.imagemagick.org/Usage/scripts/flicker_cmp"
+fill_script_cache img_histogram "https://www.imagemagick.org/Usage/scripts/im_histogram"
+fill_script_cache img_zoom_blur "http://www.fmwconcepts.com/imagemagick/downloadcounter.php?scriptname=zoomblur&dirname=zoomblur"
+fill_script_cache img_wiggle "http://www.fmwconcepts.com/imagemagick/downloadcounter.php?scriptname=wiggle&dirname=wiggle"
+
+########################################################
+### External static imports, for convenience, cached ###
+########################################################
+
+export IMG_CACHE=~/.img_cache
+mkdir -p "$IMG_CACHE"
+fill_img_cache () { cache_get "$IMG_CACHE"/"$1" "$2"; }
+#END SETUP
+
+fill_img_cache scenic.jpg "http://images.hdrsoft.com/images/contest/realistic_prize1_spring2015.jpg"
+fill_img_cache parallel.jpg "https://i.imgur.com/mmdO5bx.png"

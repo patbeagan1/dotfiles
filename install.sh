@@ -2,4 +2,11 @@
 . ./source-functions.sh
 . ./source-alias.sh
 . ./source-git-completion.bash
-. ./source-export-vars.sh
+. ./source-git-config.sh
+. ./source-settings-libraries.sh
+. ./source-settings.sh
+. ./source-random.sh
+. ./source-cache.sh
+
+# When testing out new code please do it in the playground!
+. ./playground-source.sh

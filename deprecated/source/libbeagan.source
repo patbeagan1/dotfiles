@@ -523,11 +523,6 @@ jj () {
     javac ${1}; java $(echo ${1} | sed s/\.java// );
 }
 
-#looks up the proposed term on the terminal version of wikipedia
-wiki () {
-    lynx -accept_all_cookies http://en.wikipedia.org/wiki/Special:Search?search=$(echo $@ | sed 's/ /+/g');
-}
-
 #installs homebrew on an OSX system
 install-homebrew () {
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
@@ -644,11 +639,6 @@ ps-diff () {
     diff <(lsof -p $1) <(sleep 10; lsof -p $1);
 }
 
-#looks up the word in the dictionary
-dictionary () {
-    curl dict://dict.org/d:$1;
-}
-
 #check the ssl cert dates on a site
 ssl-cert-date () {
     echo | openssl s_client -connect $1:443 2>/dev/null |openssl x509 -dates -noout;
@@ -701,11 +691,6 @@ show-matrix () {
 #show dd progress
 #sudo dd if=/dev/sdc bs=4096 | pv -s 2G | sudo dd bs=4096 of=~/USB_BLACK_BACKUP.IMG
 
-#weather
-weather () {
-    curl http://wttr.in/Boston;
-}
-
 #time prompt
 tp () {
     PS1='\[\e]0;\w\a\]\n\[\e[00;33m\][\d \A \[\e[01;35m\]\w\[\e[00;33m\]]\[\e[0m\]$(__git_ps1 " \[\033[1;32m\](%s)\[\033[0m\]") $(__awsenv_ps1)\n\$ ';
@@ -730,10 +715,6 @@ argnum () {
     echo
 }
 
-#show the man page for if. It's a pain.
-manif () {
-    lynx http://tldp.org/LDP/abs/html/comparison-ops.html;
-}
 track-logs () {
     tail -f $(for i in `file /var/log/* | grep text | sed s/:.*$//`; do echo $i; done)
 }

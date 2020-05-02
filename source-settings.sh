@@ -1,7 +1,7 @@
 export MYHOME=$HOME/Downloads/MyHome
 
-# Terminal settings
 ps_padding()
+# Does the formatting for the terminal prompt
 {
     parse_git_branch()
     {
@@ -11,15 +11,13 @@ ps_padding()
     echo " $(date +"%H:%M:%S")$(parse_git_branch)" | tr "\n" " "
 }
 
+# Terminal settings
 export PS1="\[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\[\033[32m\]\$(ps_padding)\[\033[00m\]\$ "
 export CLICOLOR=1
 export LSCOLORS=exfxcxdxbxexexabagacad
-export LSCOLORS=Exfxcxdxbxegedabagacad # Brighter colors in this one.
+export LSCOLORS=Exfxcxdxbxegedabagacad # Brighter colors in this one. Last one wins.
 export HISTTIMEFORMAT="%F %T "
 shopt -s histappend
-
-# common functions that some of the scripts depend on
-export LIB_MACHINE_TYPES="/Users/pbeagan/libbeagan/source-machine-types.sh"
 
 # adding the script directories to the path
 export PATH=$PATH:~/libbeagan/scripts
