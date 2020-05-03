@@ -406,19 +406,6 @@ git-squash ()
     git status
 }
 
-flatten ()
-{
-    test -d __flattened_files || mkdir __flattened_files;
-    if isMac; then
-        which gmv > /dev/null && 
-        find "$1" -type f -exec gmv --backup=numbered $(echo '{}') __flattened_files \;
-    elif isLinux; then 
-        find "$1" -type f -exec mv --backup=numbered $(echo '{}') __flattened_files \; 
-    else
-        echo Unsupported OS && return
-    fi
-}
-
 show_path(){
     echo $PATH | sed "s/:/&\n/g"
 }

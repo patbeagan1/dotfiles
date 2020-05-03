@@ -1,17 +1,17 @@
-curr ()
-{
-    git fetch && git branch -a | grep release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
-}
-
-last_branch()
-{
-    git branch --sort=committerdate;
-}
 
 lsfuncs ()
 {
     local a=`echo $(set | grep \(\) | grep -v =) | sed s/\(\)//g | sed s/\ \ /\ /g`
     multiline.sh "$a"
+}
+
+appletoaststatus () 
+{ 
+    if [ $? -eq 0 ]; then
+        appletoast.sh "$0" "Finished!";
+    else
+        appletoast.sh "$0" "FAILURE";
+    fi
 }
 
 check_return ()
