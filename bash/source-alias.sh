@@ -1,6 +1,4 @@
 
-git diff origin/master
-
 #########################
 ### 3rd party service ###
 #########################
@@ -132,6 +130,7 @@ alias ks="kotlinc-jvm"
 alias vi-raw='vi -u NONE'
 alias wget="wget -c"
 alias histg="history | grep"
+alias jslint='npm run lint --silent -- --frail'
 
 # macOS has no `md5sum`, so use `md5` as a fallback
 command -v md5sum > /dev/null || alias md5sum="md5"

@@ -5,5 +5,5 @@ This is a collection of bash functions which are included in the hopes that they
 All of the scripts can be used by running the following command from your terminal, as long as you are in a bash shell.
 
 ```
-# source ./install/import-config
+# source ./install.sh
 ```
