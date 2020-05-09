@@ -1,6 +1,5 @@
 
 export LIBBEAGAN="$HOME/libbeagan"
-git diff origin/master
 
 # adding the script directories to the path
 export PATH=$PATH:$LIBBEAGAN/scripts
@@ -14,21 +13,23 @@ export PATH=$PATH:$LIBBEAGAN/scripts/android
 export PATH=$PATH:$LIBBEAGAN/scripts/dev
 
 # sourcing bash libraries
-. $LIBBEAGAN/bash/lib/source-internal-libraries.sh
-. $LIBBEAGAN/bash/lib/sourcelib-cache.sh
-. $LIBBEAGAN/bash/lib/sourcelib-machine-types.sh
-. $LIBBEAGAN/bash/lib/sourcelib-random.sh
-. $LIBBEAGAN/bash/source-alias.sh
-. $LIBBEAGAN/bash/source-functions.sh
-. $LIBBEAGAN/bash/source-git-completion.bash
-. $LIBBEAGAN/bash/source-settings.sh
+source $LIBBEAGAN/bash/lib/sourcelib-cache.sh
+source $LIBBEAGAN/bash/lib/sourcelib-machine-types.sh
+source $LIBBEAGAN/bash/lib/sourcelib-random.sh
+source $LIBBEAGAN/bash/source-alias.sh
+source $LIBBEAGAN/bash/source-functions.sh
+source $LIBBEAGAN/bash/source-git-completion.bash
+source $LIBBEAGAN/bash/source-settings.sh
 
 # setting up terminal prompt
-. $LIBBEAGAN/bash/prompts/source-prompt-1.sh
+source $LIBBEAGAN/bash/prompts/source-prompt-1.sh
 
-# setting up external resources and shell agnostic config files
-. $LIBBEAGAN/shared/external-resources.sh
-. $LIBBEAGAN/shared/source-git-config.sh
+# setting up external resources
+$LIBBEAGAN/bash/external-resources.sh
+
+# shell agnostic files
+source $LIBBEAGAN/shared/source-git-config.sh
+source $LIBBEAGAN/shared/source-alias-shared.sh
 
 # When testing out new code please do it in the playground!
-. $LIBBEAGAN/playground-source.sh
+source $LIBBEAGAN/playground-source.sh
