@@ -23,6 +23,7 @@ export PROMPT="%F{cyan}%n%F{white}@%F{green}$(ipconfig getifaddr en0):%F{yellow}
 # DISABLE_UPDATE_PROMPT="true"
 # export UPDATE_ZSH_DAYS=13
 
+CASE_SENSITIVE="true"
 # COMPLETION_WAITING_DOTS="true"
 plugins=(git)
 
