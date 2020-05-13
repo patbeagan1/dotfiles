@@ -72,8 +72,8 @@ alias gco="git checkout"
 alias l.='ls -d .* --color=auto'
 alias l='ls -F'
 alias la='ls -A'
-alias lb="last_branch | tail -10"
-alias lbb="last_branch | grep -v old"
+alias lb="last_branch.sh | tail -10"
+alias lbb="last_branch.sh | grep -v old"
 alias ll="ls -lhA"
 alias lla='ls -la'
 alias lr='ls -ralt'
