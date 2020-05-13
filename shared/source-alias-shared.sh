@@ -84,6 +84,7 @@ alias lt='ls | rev | sort | rev'
 alias sl="ls"
 alias ralt='ls -ralt'
 alias dirs="ls -al | grep '^d'"
+alias peek="peek.sh"
 
 ##################
 ### Unix utils ###
