@@ -124,6 +124,7 @@ alias hnote='cd ~; note; cd -'
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
 
 ### MISC
+alias jam='java -jar '
 alias h="history"
 alias week='date +%V'
 alias dush="du -sh"

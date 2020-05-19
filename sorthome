@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 #===================================================
 dumpdir="$HOME/Downloads/"
@@ -96,29 +96,32 @@ movefiles var/db db[@]
 # files here are sorted accoording to their extensions.
 chkmk med
 
-graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
-movefiles med/pic graphics[@]
-
-pdf=(".pdf")
-movefiles med/pdf pdf[@]
-
-doc=(".txt" ".TXT" ".pdf" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
-movefiles med/doc doc[@]
-
-web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
-movefiles med/web web[@]
-
 audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
 movefiles med/audio audio[@]
 
-video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
-movefiles med/video video[@]
+doc=(".txt" ".TXT" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
+movefiles med/doc doc[@]
+
+emu=(".gbc" ".gba" ".sav" ".fds" ".gb" ".nes" ".ngc" ".ngp" ".rom" ".smc" ".srm" ".tgc" ".z64" ".bin")
+movefiles med/emu emu[@]
+
+graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
+movefiles med/pic graphics[@]
 
 links=(".url")
 movefiles med/bookmarks links[@]
 
-emu=(".gbc" ".gba" ".sav" ".fds" ".gb" ".nes" ".ngc" ".ngp" ".rom" ".smc" ".srm" ".tgc" ".z64" ".bin")
-movefiles med/emu emu[@]
+models=(".obj")
+movefiles med/models models[@]
+
+pdf=(".pdf")
+movefiles med/pdf pdf[@]
+
+video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
+movefiles med/video video[@]
+
+web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
+movefiles med/web web[@]
 
 #===================================================
 # /BIG is for things that shouldn't be backed up, since they are too large
