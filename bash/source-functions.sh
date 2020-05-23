@@ -5,8 +5,8 @@ lsfuncs ()
     multiline.sh "$a"
 }
 
-appletoaststatus () 
-{ 
+appletoaststatus ()
+{
     if [ $? -eq 0 ]; then
         appletoast.sh "$0" "Finished!";
     else
@@ -59,7 +59,12 @@ scriptify ()
             echo '#!/bin/bash' >> "$1".sh &&
             if test $?; then
                 chmod 755 "$1".sh;
-                echo >> "$1".sh
+                cat << EOF >> "$1".sh
+
+set -euo pipefail
+IFS=$'\n\t'
+
+EOF
                 type "$1" | tail -n +2 | cat
                 type "$1" | tail -n +2 >> "$1".sh
                 echo >> "$1".sh
@@ -77,7 +82,7 @@ scriptify ()
 function extract {
     # function Extract for common file formats
     # https://github.com/xvoland/Extract
-    
+
     SAVEIFS=$IFS
     IFS="$(printf '\n\t')"
     if [ -z "$1" ]; then
@@ -149,10 +154,10 @@ function extract {
     IFS=$SAVEIFS
 }
 
-if [ ${#} -eq 0 ]  
-then 
-true 
-else 
-exit 1 # wrong args 
-fi 
+if [ ${#} -eq 0 ]
+then
+true
+else
+exit 1 # wrong args
+fi
 

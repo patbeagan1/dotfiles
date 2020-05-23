@@ -36,6 +36,7 @@ alias convert_list_type="convert -list type"                # list of all image 
 alias convert_list_virtual="convert -list virtual-pixel"    # list of all -virtual-pixel options
 
 alias img_resize_to_web="mogrify -resize 690\> *.png"
+alias img_identify='identify -verbose'
 alias img_jpgdir_to_gif="convert -delay 20 -loop 0 *.jpg myimage.gif"
 
 ####################
@@ -81,6 +82,7 @@ alias lsd='ls --group-directories-first'
 alias lsg='ls | grep -i '
 alias lsl="ls -lhFA | less"
 alias lt='ls | rev | sort | rev'
+alias ldu='du -sh * | sort -h'
 alias sl="ls"
 alias ralt='ls -ralt'
 alias dirs="ls -al | grep '^d'"
@@ -91,9 +93,15 @@ alias peek="peek.sh"
 ##################
 
 alias mkdir="mkdir -pv"
+alias cpv='rsync -ah --info=progress2' # use like cp, but with a progress bar
 
 alias findempty="find . -type f -empty "
 alias fhere="find . -name "
+
+alias herefile='cat << EOF >>'
+alias comment=': <<EOF'
+
+alias strictmode='set -euo pipefail'
 
 alias search=grep
 alias grep='grep --color=auto'
@@ -118,12 +126,22 @@ alias qp="ps auxwww|more"
 alias nu="who|wc -l"
 alias tulpn="netstat -tulpn"
 
-alias comment=': <<EOF'
 alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
 alias hnote='cd ~; note; cd -'
 alias nscript="cat <<EOF | tee node$(date +%s).js | node"
 
+### Python
+alias ve='python3 -m venv ./venv'
+alias va='source ./venv/bin/activate'
+alias venv='ve; va'
+
+### AWS
+# make a new bucket # aws s3 mb s3://beastey-wedding
+# see all buckets # aws s3 ls
+# push local files to aws # aws s3 sync engagement_full s3://beastey-wedding
+
 ### MISC
+alias mnt='mount | grep -E ^/dev | column -t'
 alias jam='java -jar '
 alias h="history"
 alias week='date +%V'
