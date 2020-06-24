@@ -1,0 +1,51 @@
+#<maybe-spy>
+
+# Microsoft uses this server to redirect
+# mistyped URLs to search engines. They
+# log all such errors.
+127.0.0.1 auto.search.msn.com  
+
+# Verisign has joined the game
+127.0.0.1 sitefinder.verisign.com	
+
+# of trying to hijack mistyped
+# URLs to their site.
+# May break iOS Game Center.
+127.0.0.1 sitefinder-idn.verisign.com	
+
+# This may interfere with some streaming
+# video on sites such as cbc.ca
+127.0.0.1 s0.2mdn.net		
+
+# This may interefere with www.sears.com
+# and potentially other sites.
+127.0.0.1 ad.doubleclick.net   
+
+# Likewise, this may interfere with some
+# sites.
+127.0.0.1 media.fastclick.net	
+127.0.0.1 cdn.fastclick.net	
+
+# may interfere with ebay
+127.0.0.1 ebay.doubleclick.net		
+
+# breaks some sites
+127.0.0.1 google-analytics.com			
+127.0.0.1 ssl.google-analytics.com
+127.0.0.1 www.google-analytics.l.google.com
+
+# There are reports that this may mess
+# up CSS on livejournal
+127.0.0.1 stat.livejournal.com		
+
+# This has been known cause
+# problems with NPR.org
+127.0.0.1 stats.surfaid.ihost.com	
+
+# breaks some sites
+127.0.0.1 www.google-analytics.com		
+
+# Seems to interfere with the functioning of imeem.com
+127.0.0.1 ads.imeem.com		
+
+#</maybe-spy>
