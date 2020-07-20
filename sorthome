@@ -4,6 +4,13 @@
 dumpdir="$HOME/Downloads/"
 myhomedir="$HOME/Downloads/MyHome/"
 
+help () {
+  echo
+  echo "Sorts the $dumpdir directory into $myhomedir."
+  echo "If you would rather sort the current directory, use with --local instead."
+  echo
+}
+
 while [[ $# -gt 0 ]]
 do
   key="$1"
@@ -13,6 +20,10 @@ do
       dumpdir="`pwd`"
       myhomedir="`pwd`/MyHome"
       shift # past argument
+      ;;
+    -h)
+      help
+      exit
       ;;
     *)
       shift;
@@ -29,7 +40,7 @@ echo "Cleaning up the $dumpdir folder..."
 if [ ! -d "$myhomedir" ]; then mkdir "$myhomedir"; fi
 
 #===================================================
-function chkmk {
+chkmk () {
   cd "$myhomedir"
   if [ ! -d "$1" ]; then
     echo Creating "$1";
@@ -38,7 +49,8 @@ function chkmk {
     echo Visiting "$1";
   fi
 }
-function movefiles {
+
+movefiles () {
   chkmk "$1"
   cd "$dumpdir"
   declare -a temp=("${!2}")
@@ -48,7 +60,7 @@ function movefiles {
     files=()
     while IFS= read -d $'\0' -r file ; do
       files=("${files[@]}" "$file")
-    done < <(find . -maxdepth 1 -name "*$i" ! -path "./MyHome" ! -path '.'  -print0)
+    done < <(find . -maxdepth 1 -type f -name "*$i" ! -path "./MyHome" ! -path '.'  -print0)
 
     # I was running into problems when moving a large number of files
     # the official docs just said to run mv in batches to get over the glob rescrictions
@@ -64,21 +76,22 @@ function movefiles {
       fi
     done
   done
-  cd -
+  cd - > /dev/null
 }
 
 #===================================================
 # /bin for executables and source code.
-code=(".py" ".pyc" ".pyo")
-code+=( ".c" ".cpp" ".out")
-code+=( ".hs" )
-code+=(".java" ".class" ".kt" ".ks" ".kts" ".jar")
-code+=(".sh" ".pl" ".scpt" ".applescript")
+code=(
+  ".py" ".pyc" ".pyo"
+  ".c" ".cpp" ".out"
+  ".hs" 
+  ".java" ".class" ".kt" ".ks" ".kts" ".jar"
+  ".sh" ".pl" ".scpt" ".applescript")
 movefiles bin code[@]
 
 #===================================================
 # /etc: Config files, like which are commonly found in /etc on the machine
-config=(".cf" ".pem" ".crt" ".key" ".conf" ".rc");
+config=(".cf" ".pem" ".crt" ".key" ".conf" ".rc")
 movefiles etc config[@]
 
 #===================================================
@@ -99,54 +112,97 @@ chkmk med
 audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
 movefiles med/audio audio[@]
 
-doc=(".txt" ".TXT" ".odt" ".doc" ".docx" ".rtf" ".ppt" ".pptx" ".xls" ".xlsx")
+doc=(
+  ".txt" ".TXT" 
+  ".odt" 
+  ".doc" ".docx" ".DOC"
+  ".rtf" 
+  ".pages"
+  ".ppt" ".pptx" 
+  ".xls" ".xlsx" 
+  ".md")
 movefiles med/doc doc[@]
 
-emu=(".gbc" ".gba" ".sav" ".fds" ".gb" ".nes" ".ngc" ".ngp" ".rom" ".smc" ".srm" ".tgc" ".z64" ".bin")
+emu=(
+  ".gb" ".gbc" ".gba" # gameboy, gb color, gb advance
+  ".sav" ".fds" 
+  ".nes" ".ngc" 
+  ".ngp" 
+  ".rom" 
+  ".smc" # super nintendo
+  ".srm" 
+  ".tgc" 
+  ".z64" 
+  "(USA).7z" "(USA).zip" # these are common line endings for zipped roms
+  ".bin")
 movefiles med/emu emu[@]
 
-graphics=(".png" ".PNG" ".gif" ".GIF" ".JPG" ".jpg" ".jpeg" ".svg")
+graphics=(
+  ".png" ".PNG" 
+  ".gif" ".GIF" 
+  ".JPG" ".jpg" ".jpeg" 
+  ".svg")
 movefiles med/pic graphics[@]
 
 links=(".url")
 movefiles med/bookmarks links[@]
 
-models=(".obj")
+models=(".obj" ".mtl")
 movefiles med/models models[@]
 
-pdf=(".pdf")
+pdf=(".pdf" ".PDF")
 movefiles med/pdf pdf[@]
 
 video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
 movefiles med/video video[@]
 
-web=(".html" ".htm" ".mhtml" ".js" ".json" ".css" ".csv" )
+data=(".csv" ".xml" ".json" ".yaml" ".plist" ".sql" ".graphml")
+movefiles med/data data[@]
+
+web=(".html" ".htm" ".mhtml" ".js" ".css")
 movefiles med/web web[@]
 
 #===================================================
 # /BIG is for things that shouldn't be backed up, since they are too large
 chkmk BIG
 
-ops=(".iso" ".img")
+ops=(
+  ".iso" ".img")
 movefiles BIG/OS ops[@]
 
-zip=(".zip" ".gz" ".tgz" ".tar" ".bz2" ".xz" ".ZIP" ".rar")
+zip=(
+  ".zip" ".ZIP" 
+  ".tar" ".gz" ".tgz" 
+  ".bz2" 
+  ".xz" 
+  ".rar" 
+  ".7z")
 movefiles BIG/zip zip[@]
 
-packages=(".rpm" ".deb" ".dmg" ".msi" ".dpkg" ".apk" ".app")
+packages=(
+  ".rpm" ".deb" 
+  ".dmg" ".app"
+  ".msi" 
+  ".dpkg" 
+  ".apk")
 movefiles BIG/packages packages[@]
 
 comics=(".cbz" ".cbr")
 movefiles BIG/comics comics[@]
 
-#===================================================
-# /mnt and /tmp are convenience directories
-## /mnt tends to be useful for integration with `tmsu`, while tmp is for
+# a convenient location to temporarily mount other drives
 chkmk mnt
+
+# analogous to /tmp
 chkmk tmp
 
-#===================================================
-# /misc is for things that shoudn't go elsewhere - check here for folders, since they can't be sorted automatically.
+# Projects - Things I've made, not code related.
+chkmk proj
+chkmk proj/Art
+chkmk proj/Music
+chkmk proj/Writing
+
+# Miscellaneous - all unmatched files go here
 mis=("")
 movefiles misc mis[@]
 
@@ -163,30 +219,6 @@ done
 for file in $myhomedir/med/pics/audioclip-*; do
   mv -- "$file" $myhomedir/misc 2>/dev/null
 done
-
-# It turns out that syntax coloring on shell files is really useful
-#for file in $myhomedir/bin/*.sh; do
-#mv -- "$file" $(echo "$file" | sed 's/.sh//') 2>/dev/null
-#done
-
-## Optional zipping of old files
-## in practice, this is more trouble than it's worth.
-#for i in $myhomedir/med/pic; do
-#	d=`date | sed 's/ /-/g'`
-#	mkdir -p $i/old/$d
-#	find $i -maxdepth 1 -type f -mtime +60 -exec mv {} $i/old/$d \;
-#        cd $i/old/$d
-#	if [ ! `find . -prune -empty -type d` ]; then
-#		zip ../$d.zip * && rm *
-#	fi
-#done
-
-
-
-# Comickifying old photo galleries automatically is also more trouble than it's worth, since they can be large.
-#for i in $myhomedir/med/pic/old/*; do
-#	mv $i $(echo $i | sed 's/.zip/.cbz/g') 2>/dev/null
-#done
 
 # Removing empty directories in med
 find $myhomedir/med -type d -empty -prune -exec rmdir {} \;

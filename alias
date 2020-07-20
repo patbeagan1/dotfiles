@@ -1,2 +1,5 @@
 
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
+
+alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
+alias findname='find . -name'
