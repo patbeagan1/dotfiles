@@ -11,3 +11,6 @@ setopt NO_AUTO_MENU
 setopt NO_CASE_GLOB
 setopt NO_MENU_COMPLETE
 setopt SHARE_HISTORY
+
+# Fixes autocomplete to choose the case sensitive one first, if it exists.
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'

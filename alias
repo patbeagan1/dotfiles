@@ -1,2 +1,4 @@
 
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
+
+alias dns_emu='emulator -avd Pixel_2_XL_API_28  -netdelay none -netspeed full -dns-server 8.8.8.8'
