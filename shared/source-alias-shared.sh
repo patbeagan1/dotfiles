@@ -1,3 +1,8 @@
+alias findgradle='\ps aux | grep Gradle | grep -v grep | awk '\''{print $2}'\'''
+alias killgradle='findgradle | xargs kill -9'
+alias savedalias='source ~/libbeagan/alias'
+alias jhome='cd /Users/pbeagan/repo/wayfair-android'
+alias jslint='npm run lint --silent -- --frail'
 
 #########################
 ### 3rd party service ###
@@ -143,6 +148,7 @@ alias venv='ve; va'
 ### MISC
 alias mnt='mount | grep -E ^/dev | column -t'
 alias jam='java -jar '
+alias gradlekill='pkill -f gradle-launcher'
 alias h="history"
 alias week='date +%V'
 alias dush="du -sh"

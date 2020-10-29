@@ -11,6 +11,7 @@ export PATH=$PATH:$LIBBEAGAN/scripts/sysadmin
 export PATH=$PATH:$LIBBEAGAN/scripts/vcs
 export PATH=$PATH:$LIBBEAGAN/scripts/android
 export PATH=$PATH:$LIBBEAGAN/scripts/dev
+export PATH=$PATH:$LIBBEAGAN/scripts/documentation
 
 # sourcing bash libraries
 source $LIBBEAGAN/bash/lib/sourcelib-cache.sh
@@ -20,6 +21,8 @@ source $LIBBEAGAN/bash/source-alias.sh
 source $LIBBEAGAN/bash/source-functions.sh
 source $LIBBEAGAN/bash/source-git-completion.bash
 source $LIBBEAGAN/bash/source-settings.sh
+
+source $LIBBEAGAN/shared/source-exports.sh
 
 # setting up terminal prompt
 source $LIBBEAGAN/bash/prompts/source-prompt-1.sh

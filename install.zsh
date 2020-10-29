@@ -17,10 +17,12 @@ export PATH=$PATH:$LIBBEAGAN/scripts/android
 export PATH=$PATH:$LIBBEAGAN/scripts/dev
 
 source $LIBBEAGAN/zsh/source-pbeagan.zsh
+source $LIBBEAGAN/zsh/source-omz-settings.zsh
 
 # shell agnostic files
 source $LIBBEAGAN/shared/source-git-config.sh
 source $LIBBEAGAN/shared/source-alias-shared.sh
+source $LIBBEAGAN/shared/source-exports.sh
 
 # When testing out new code please do it in the playground!
 source $LIBBEAGAN/playground-source.sh
