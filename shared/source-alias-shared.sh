@@ -1,7 +1,7 @@
 alias findgradle='\ps aux | grep Gradle | grep -v grep | awk '\''{print $2}'\'''
 alias killgradle='findgradle | xargs kill -9'
 alias savedalias='source ~/libbeagan/alias'
-alias jhome='cd /Users/pbeagan/repo/wayfair-android'
+alias jhome='cd /Users/pbeagan/link/dev'
 alias jslint='npm run lint --silent -- --frail'
 
 #########################

@@ -14,7 +14,7 @@ prompt_ps_padding ()
 ##############
 
 # ZSH_THEME="pygmalion"
-export PROMPT="%F{cyan}%n%F{white}@%F{green}$(ipconfig getifaddr en0):%F{yellow}%~%F{green}\$(prompt_ps_padding)%F{white}%% "
+export PROMPT="%F{cyan}%n%F{white}@%F{green}$(ipconfig getifaddr en0):%F{yellow}%~%F{green}$(prompt_ps_padding)%F{white}%% "
 # ZSH_THEME="lukerandall"
 # PROMPT='%F{green}%n%f@%F{magenta}%m%f %F{blue}%B%~%b%f %# '
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )

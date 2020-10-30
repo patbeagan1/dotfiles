@@ -8,3 +8,5 @@ alias dns_emu='emulator -avd Pixel_2_XL_API_28  -netdelay none -netspeed full -d
 alias ntagas='tagger.py -s n tagas'
 alias ntagcheck='tagger.py -s n tagcheck'
 alias tagas='tagger.py tagas'
+
+alias reset_branch='git diff --name-only origin/dev | cat | xargs -I % git checkout origin/dev -- %'
