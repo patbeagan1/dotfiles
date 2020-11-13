@@ -7,6 +7,8 @@ import hashlib
 
 dst_id = os.path.expanduser('~/.index/id')
 dst_tags = os.path.expanduser('~/.index')
+dst_nest = os.path.expanduser('~/.index/nest')
+debug = False
 
 
 def usage():
@@ -58,6 +60,12 @@ def main():
     else:
         dst_tags = dst_tags + "/tags"
 
+    if subcommand == "-d":
+        subcommand = args[0]
+        args = args[1:]
+        global debug
+        debug = True
+
     cmd = {
         "help": usage,
         "-h": usage,
@@ -68,16 +76,18 @@ def main():
         "index": cmd_index,
         "base": cmd_basefile,
         "match": cmd_match,
-        "matchany": cmd_matchany
+        "matchany": cmd_matchany,
+        "nest": cmd_nest
     }.get(subcommand)
 
     if cmd != None:
         if subcommand in [
             "tagas",
             "tag",
-            "index"
+            "index",
+            "nest"
         ]:
-            for it in [dst_id, dst_tags]:
+            for it in [dst_id, dst_tags, dst_nest]:
                 check_make(it)
         cmd(args)
     else:
@@ -110,9 +120,16 @@ def cmd_basefile(args):
 def cmd_tagcheck(args):
     target = args[0]
     (_, hashed, _) = get_hashed_path_from_target(target)
-    for i in os.scandir(dst_tags):
-        if os.path.exists(f"{i.path}/{hashed}"):
-            print(i.name)
+    tags = [
+        i.name
+        for i in os.scandir(dst_tags)
+        if os.path.exists(f"{i.path}/{hashed}")
+    ]
+    tags.extend(search_nest(tags))
+    tagset = sorted(set(tags))
+    for i in tagset:
+        print(i, end=" ")
+    print()
 
 
 def cmd_matchany(args):
@@ -129,9 +146,24 @@ def cmd_match(args):
         args = args[1:]
 
     intersection = []
-    for tag in args:
-        intersection.append(
-            {f"{i.name}" for i in os.scandir(f"{dst_tags}/{tag}")})
+    tags = args
+
+    for tag in tags:
+        dir_tag = f"{dst_tags}/{tag}"
+        if os.path.exists(dir_tag):
+            intersection.append({f"{i.name}" for i in os.scandir(dir_tag)})
+        else:
+            arr_child_tag = []
+            for childtag in search_nest_for_children(tag):
+                pd(childtag)
+                child_dst_tag = f"{dst_tags}/{childtag}"
+                check_make(child_dst_tag)
+                arr_child_tag.extend(
+                    [f"{i.name}" for i in os.scandir(child_dst_tag)])
+            intersection.append(set(arr_child_tag))
+
+    pd(intersection)
+
     a = None
     for i in intersection:
         if a is None:
@@ -155,11 +187,20 @@ def cmd_tagas(args):
 
 
 def cmd_index(args: list):
-    print(args)
     for it in args:
         path = get_rel_path(it)
         dst = get_id_path(get_hash(path))
         link(path, dst)
+
+
+def cmd_nest(args):
+    childname = args[0]
+    child = f"{dst_nest}/{childname}"
+    parentname = args[1]
+    parent = f"{dst_nest}/{parentname}"
+    check_make(child)
+    check_make(parent)
+    link(parent, f"{child}/{parentname}")
 
 ################################
 # Util methods below
@@ -175,6 +216,7 @@ This utility is always recursive!
 def inner_tagas(targets, tag_dir):
     for target in targets:
         if os.path.isdir(target):
+            pd(target)
             inner_tagas(os.scandir(target), tag_dir)
         else:
             (path, hashed, hashed_path) = get_hashed_path_from_target(target)
@@ -193,7 +235,7 @@ def get_hashed_path_from_target(target):
 def link(path, dst):
     try:
         os.unlink(dst)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         pass
     os.symlink(path, dst)
     print(f"symlink created for: {path}")
@@ -219,7 +261,7 @@ def openall(filelist):
     filelist = [f"{dst_id}/{i}" for i in filelist]
     filelist = [i for i in filelist if check_available(i)]
     chunked = chunks(filelist, 50)
-    
+
     for bashCommand in chunked:
         bashCommand.insert(0, "open")
         process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE)
@@ -227,6 +269,33 @@ def openall(filelist):
         input("Press enter to continue.")
         if error:
             raise Exception(error)
+
+
+def search_nest_for_children(tag):
+    children = []
+    for i in os.scandir(dst_nest):
+        if tag in [j.name for j in os.scandir(i)]:
+            children.append(i.name)
+    pd(children)
+    return children
+
+
+def search_nest(tags):
+    nest = []
+    for i in tags:
+        inner_nest(nest, i)
+    nest = set(nest)
+    return nest
+
+
+def inner_nest(nest, tag):
+    pd(tag)
+    dir_nest = f"{dst_nest}/{tag}"
+    if os.path.exists(dir_nest):
+        if tag not in nest:
+            nest.append(tag)
+            for j in os.scandir(dir_nest):
+                inner_nest(nest, j.name)
 
 
 def get_hash(filename: str):
@@ -240,17 +309,24 @@ def get_hash(filename: str):
                 buf = afile.read(BLOCKSIZE)
         return hasher.hexdigest()
     except IsADirectoryError:
-        print("We don't support hasing directories!")
+        print("We don't support hashing directories!")
 
 
 def check_make(dst_dir):
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 
+
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
+
+def pd(s):
+    if debug:
+        print(s)
+
 
 if __name__ == "__main__":
     main()
