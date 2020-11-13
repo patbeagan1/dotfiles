@@ -8,3 +8,4 @@ alias dns_emu='emulator -avd Pixel_2_XL_API_28  -netdelay none -netspeed full -d
 alias ntagas='tagger.py -s n tagas'
 alias ntagcheck='tagger.py -s n tagcheck'
 alias tagas='tagger.py tagas'
+alias backup_myhome='rsync -aPzv --checksum --remove-source-files --exclude="~/Downloads/MyHome/BIG" --exclude="~/Downloads/MyHome/bin" ~/Downlaods/MyHome /Volumes/home | tee backup_out.log'
