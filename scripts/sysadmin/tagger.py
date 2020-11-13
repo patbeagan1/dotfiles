@@ -42,6 +42,11 @@ def usage():
     print(info)
 
 
+def pd(s):
+    if debug:
+        print(s)
+
+
 def main():
 
     if len(sys.argv) < 2:
@@ -107,7 +112,7 @@ def cmd_tag(args):
 
 
 def cmd_taglist(args):
-    for i in os.scandir(dst_tags):
+    for i in scan(dst_tags):
         print(i.name)
 
 
@@ -122,7 +127,7 @@ def cmd_tagcheck(args):
     (_, hashed, _) = get_hashed_path_from_target(target)
     tags = [
         i.name
-        for i in os.scandir(dst_tags)
+        for i in scan(dst_tags)
         if os.path.exists(f"{i.path}/{hashed}")
     ]
     tags.extend(search_nest(tags))
@@ -135,7 +140,7 @@ def cmd_tagcheck(args):
 def cmd_matchany(args):
     for tag in args:
         dir_curr = f"{dst_tags}/{tag}"
-        for i in os.scandir(dir_curr):
+        for i in scan(dir_curr):
             print(f"{dir_curr}/{i.name}")
 
 
@@ -151,7 +156,7 @@ def cmd_match(args):
     for tag in tags:
         dir_tag = f"{dst_tags}/{tag}"
         if os.path.exists(dir_tag):
-            intersection.append({f"{i.name}" for i in os.scandir(dir_tag)})
+            intersection.append({f"{i.name}" for i in scan(dir_tag)})
         else:
             arr_child_tag = []
             for childtag in search_nest_for_children(tag):
@@ -159,7 +164,7 @@ def cmd_match(args):
                 child_dst_tag = f"{dst_tags}/{childtag}"
                 check_make(child_dst_tag)
                 arr_child_tag.extend(
-                    [f"{i.name}" for i in os.scandir(child_dst_tag)])
+                    [f"{i.name}" for i in scan(child_dst_tag)])
             intersection.append(set(arr_child_tag))
 
     pd(intersection)
@@ -207,17 +212,15 @@ def cmd_nest(args):
 ################################
 
 
-"""
-Unwraps directories and tags everything inside of them. 
-This utility is always recursive!
-"""
-
-
 def inner_tagas(targets, tag_dir):
+    """
+    Unwraps directories and tags everything inside of them. 
+    This utility is always recursive!
+    """
     for target in targets:
         if os.path.isdir(target):
             pd(target)
-            inner_tagas(os.scandir(target), tag_dir)
+            inner_tagas(scan(target), tag_dir)
         else:
             (path, hashed, hashed_path) = get_hashed_path_from_target(target)
             tag_path = f"{tag_dir}/{hashed}"
@@ -233,6 +236,9 @@ def get_hashed_path_from_target(target):
 
 
 def link(path, dst):
+    """
+    Creates a symlink at dst, which points to path
+    """
     try:
         os.unlink(dst)
     except (FileNotFoundError, PermissionError):
@@ -242,14 +248,24 @@ def link(path, dst):
 
 
 def get_rel_path(filename: str):
+    """
+    Easy way to get relative paths.
+    """
     return '/' + os.path.relpath(filename, start='/')
 
 
 def get_id_path(hashed: str):
+    """
+    Gets the path of the indexed file. 
+    """
     return f"{dst_id}/{hashed}"
 
 
 def check_available(filename):
+    """
+    Checks to see if a link is available.
+    The most common reason why it wouldn't be - if an external drive is detached.
+    """
     if os.path.islink(filename) and not os.path.exists(filename):
         print(f"UNAVAILABLE {filename}")
         return False
@@ -258,6 +274,12 @@ def check_available(filename):
 
 
 def openall(filelist):
+    """
+    Opens all files in the filelist.
+
+    This is open to a lot of improvement. In practice, it doesn't work that well. 
+    TODO: find a more elegant solution.
+    """
     filelist = [f"{dst_id}/{i}" for i in filelist]
     filelist = [i for i in filelist if check_available(i)]
     chunked = chunks(filelist, 50)
@@ -272,15 +294,25 @@ def openall(filelist):
 
 
 def search_nest_for_children(tag):
+    """
+    Since the nested tags are organized by child -> parent, 
+    we need a way to reverse that and get the children instead.
+
+    TODO: This could be faster if we directly checked for filenames instead of doing 2 scans.
+    """
     children = []
-    for i in os.scandir(dst_nest):
-        if tag in [j.name for j in os.scandir(i)]:
+    for i in scan(dst_nest):
+        if tag in [j.name for j in scan(i)]:
             children.append(i.name)
     pd(children)
     return children
 
 
 def search_nest(tags):
+    """
+    Starts a recursive search on all tags that this file has.
+    It will print out all tags, and all of their parent tags.
+    """
     nest = []
     for i in tags:
         inner_nest(nest, i)
@@ -289,12 +321,15 @@ def search_nest(tags):
 
 
 def inner_nest(nest, tag):
+    """
+    Recurses up the list of parents until it no longer finds ones that it doesn't know about
+    """
     pd(tag)
     dir_nest = f"{dst_nest}/{tag}"
     if os.path.exists(dir_nest):
         if tag not in nest:
             nest.append(tag)
-            for j in os.scandir(dir_nest):
+            for j in scan(dir_nest):
                 inner_nest(nest, j.name)
 
 
@@ -313,6 +348,7 @@ def get_hash(filename: str):
 
 
 def check_make(dst_dir):
+    """Makes a directory in a location, but only if that directory does not already exist."""
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 
@@ -323,9 +359,15 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def pd(s):
-    if debug:
-        print(s)
+def scan(directory):
+    pd(f"Scanning {directory}")
+    res = list(os.scandir(directory))
+    if ".notag" not in [i.name for i in res]:
+        pd(".notag not found")
+        return res
+    else:
+        pd(".notag found")
+        return []
 
 
 if __name__ == "__main__":
