@@ -1,4 +1,4 @@
-
+source alias
 export LIBBEAGAN="$HOME/libbeagan"
 
 export GOPATH="$HOME/go"
