@@ -8,6 +8,7 @@ import hashlib
 dst_id = os.path.expanduser('~/.index/id')
 dst_tags = os.path.expanduser('~/.index')
 dst_nest = os.path.expanduser('~/.index/nest')
+dst_meta = os.path.expanduser('~/.index/meta')
 debug = False
 
 
@@ -38,6 +39,9 @@ def usage():
             match -o will open all matched files
         matchany
             Print files that have any of the following tags
+        meta
+            add - add metadata to a metadata file
+            ls - look at metadata for a file
     """
     print(info)
 
@@ -82,7 +86,8 @@ def main():
         "base": cmd_basefile,
         "match": cmd_match,
         "matchany": cmd_matchany,
-        "nest": cmd_nest
+        "nest": cmd_nest,
+        "meta": cmd_meta
     }.get(subcommand)
 
     if cmd != None:
@@ -207,6 +212,24 @@ def cmd_nest(args):
     check_make(parent)
     link(parent, f"{child}/{parentname}")
 
+
+def cmd_meta(args: list):
+    should_open = False
+    if args[0] == "add":
+        filename = args[1]
+        args = args[2:]
+        for it in args:
+            path = get_rel_path(filename)
+            dst = get_meta_path(get_hash(path))
+            link(path, dst)
+    elif args[0] == 'ls':
+        args = args[1:]
+        for it in args:
+            path = get_rel_path(it)
+            dst = get_meta_path(get_hash(path))
+            link(path, dst)
+
+
 ################################
 # Util methods below
 ################################
@@ -259,6 +282,13 @@ def get_id_path(hashed: str):
     Gets the path of the indexed file. 
     """
     return f"{dst_id}/{hashed}"
+
+
+def get_meta_path(hashed: str):
+    """
+    Gets the path of the meta file. 
+    """
+    return f"{dst_meta}/{hashed}"
 
 
 def check_available(filename):

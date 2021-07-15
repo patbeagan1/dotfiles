@@ -1,3 +1,10 @@
+function itty () { echo -n "<pre>$1</pre>" | lzma -9 | base64 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }
+function ittyqr () { qrencode -l L -v 1 -o output.png -r <(echo `itty "$1"`); }
+function ittyqrc () { ittyqr "`cat $1`"; }
+alias gw='./gradlew'
+alias qr="qrencode -l L -v 1 -o output.png -r" 
+function qr_textToImage () { qrencode -l L -v 1 -o output"$(python3 -c 'import time; print(time.time())')".png; } 
+alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.jpg"
 
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
 
@@ -8,6 +15,8 @@ alias dns_emu='emulator -avd Pixel_2_XL_API_28  -netdelay none -netspeed full -d
 alias ntagas='tagger.py -s n tagas'
 alias ntagcheck='tagger.py -s n tagcheck'
 alias tagas='tagger.py tagas'
+
+alias reset_branch='git diff --name-only origin/dev | cat | xargs -I % git checkout origin/dev -- %'
 alias backup_myhome='rsync -aPzv --checksum --remove-source-files --exclude="~/Downloads/MyHome/BIG" --exclude="~/Downloads/MyHome/bin" ~/Downlaods/MyHome /Volumes/home | tee backup_out.log'
 
 # macOS has no `md5sum`, so use `md5` as a fallback
@@ -42,3 +51,6 @@ function cache_get {
 function quar {
   mv "$1" ~/.j/
 }
+alias tagcheck='tagger.py tagcheck'
+
+alias g1='git log --pretty=oneline'
