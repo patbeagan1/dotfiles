@@ -33,6 +33,24 @@ alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.ar
 # find . -name .gitattributes | map dirname
 alias map="xargs -n1"
 
+cache () {
+	local pre=""
+	if [ ! -z "$2" ]
+	then
+		pre="$1"
+		shift
+	fi
+	local cdir=~"/cache/$pre"
+	mkdir -pv -p "$cdir"
+	echo "$1" >> "$cdir"/getlist
+}
+function cache_get { 
+    find ~/cache -name getlist -exec dirname {} \; | xargs -I % command wget -P ~/cache/% -nc -i ~/cache/%/getlist
+} 
+
+function quar {
+  mv "$1" ~/.j/
+}
 alias tagcheck='tagger.py tagcheck'
 
 alias g1='git log --pretty=oneline'
