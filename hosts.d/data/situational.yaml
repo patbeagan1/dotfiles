@@ -1,0 +1,47 @@
+# Microsoft uses this server to redirect
+# mistyped URLs to search engines. They
+# log all such errors.
+- auto.search.msn.com
+
+# Verisign has joined the game
+- sitefinder.verisign.com
+
+# of trying to hijack mistyped
+# URLs to their site.
+# May break iOS Game Center.
+- sitefinder-idn.verisign.com
+
+# This may interfere with some streaming
+# video on sites such as cbc.ca
+- s0.2mdn.net
+
+# This may interefere with www.sears.com
+# and potentially other sites.
+- ad.doubleclick.net
+
+# Likewise, this may interfere with some
+# sites.
+- media.fastclick.net
+- cdn.fastclick.net
+
+# may interfere with ebay
+- ebay.doubleclick.net
+
+# breaks some sites
+- google-analytics.com
+- ssl.google-analytics.com
+- www.google-analytics.l.google.com
+
+# There are reports that this may mess
+# up CSS on livejournal
+- stat.livejournal.com
+
+# This has been known cause
+# problems with NPR.org
+- stats.surfaid.ihost.com
+
+# breaks some sites
+- www.google-analytics.com
+
+# Seems to interfere with the functioning of imeem.com
+- ads.imeem.com
