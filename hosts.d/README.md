@@ -29,6 +29,9 @@ machine for the information. It makes the request fail.
 Run `deno run --allow-read --allow-write hosts.deno.js` to generate a hosts file
 in the build directory.
 
+You will probably want to delete the existing files and make your own. You can
+download premade ones as well.
+
 ## Recommended host files
 
 - https://blocklistproject.github.io/Lists/#lists
