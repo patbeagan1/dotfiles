@@ -1,3 +1,3 @@
 # fastclick banner ads
 media[1..100].fastclick.net
-fastclick.net
+fastclick.net # more info

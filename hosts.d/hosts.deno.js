@@ -3,6 +3,9 @@ import combinate from "https://raw.githubusercontent.com/nas5w/combinate/v1.1.6/
 
 const debug = false;
 const outputFileName = "./build/hosts";
+const regexInlineComment = RegExp("[ ]+#");
+const regexLeadingComment = RegExp("^[ \t]*#");
+const regexBracketRange = RegExp(`\\[([^\\[\\]]+)\\]`);
 
 const main = () => {
   const fileList = generateFileList();
@@ -43,7 +46,8 @@ function generateFileList() {
  * building contents of the hosts file
  */
 function generateHostsContent(sites) {
-  const checkhost = (it) => it?.split(".")?.slice(-2)?.join("");
+  const checkhost = (it) =>
+    it?.split(regexInlineComment)[0].split(".")?.slice(-2)?.join("");
   const hostString = sites
     .map((it, index) => {
       const separator =
@@ -71,13 +75,25 @@ function generateSiteList(fileList) {
     .map(expandRanges)
     .map(expandMatches)
     .flatMap((it) => it)
-    .map((it) => it.split(".").reverse().join("."))
+    .map((it) => reverseBeforeComment(it))
     .sort()
-    .map((it) => it.split(".").reverse().join("."));
+    .map((it) => reverseBeforeComment(it));
+
+  function reverseBeforeComment(it) {
+    const line = it.split(regexInlineComment);
+    if (line.length > 1 && debug) console.log(line);
+    const first = line[0];
+    const rest = line.length > 1 ? line.slice(-1) : [];
+    const r = [first.split(".").reverse().join("."), rest]
+      .flatMap((it) => it)
+      .join(" #");
+    if (line.length > 1 && debug) console.log(r);
+    return r;
+  }
 }
 
 function parseTxtFile(fileName) {
-  const commentRegex = RegExp("^[ \t]*#");
+  const commentRegex = regexLeadingComment;
   const contents = Deno.readTextFileSync(fileName)
     .split("\n")
     .filter((it) => {
@@ -94,7 +110,7 @@ function parseTxtFile(fileName) {
  */
 function expandRanges(input) {
   //g[1..4][a,z]oogle.com -> ["1,2,3,4", "a,z"]
-  const regex = new RegExp(`\\[([^\\[\\]]+)\\]`);
+  const regex = regexBracketRange;
   const found = input.split(regex).filter((it) => it.includes(".."));
   if (found.length <= 0) return input;
 
@@ -122,7 +138,7 @@ function expandRanges(input) {
  */
 function expandMatches(input) {
   //g[1,2,3,4][a,z]oogle.com -> ["1,2,3,4", "a,z"]
-  const regex = new RegExp(`\\[([^\\[\\]]+)\\]`);
+  const regex = regexBracketRange;
   const found = input.split(regex).filter((it) => it.includes(","));
   if (found.length <= 0) return input;
 
