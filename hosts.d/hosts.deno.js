@@ -1,5 +1,6 @@
 import { parse as yamlParse } from "https://deno.land/std@0.82.0/encoding/yaml.ts";
 import combinate from "https://raw.githubusercontent.com/nas5w/combinate/v1.1.6/index.ts";
+import { uniq } from "https://unpkg.com/underscore@1.13.1/underscore-esm-min.js";
 
 const debug = false;
 const outputFileName = "./build/hosts";
@@ -62,7 +63,7 @@ function generateHostsContent(sites) {
  * flattening the list of sites and sorting them based on their host
  */
 function generateSiteList(fileList) {
-  return fileList
+  const ret = fileList
     .map((fileName) => {
       if (fileName.endsWith(".yaml")) {
         return yamlParse(Deno.readTextFileSync(fileName));
@@ -78,6 +79,9 @@ function generateSiteList(fileList) {
     .map((it) => reverseBeforeComment(it))
     .sort()
     .map((it) => reverseBeforeComment(it));
+
+  // deduplication - some might be referenced in multiple files.
+  return uniq(ret, true);
 
   function reverseBeforeComment(it) {
     const line = it.split(regexInlineComment);

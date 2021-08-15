@@ -28,3 +28,8 @@ machine for the information. It makes the request fail.
 
 Run `deno run --allow-read --allow-write hosts.deno.js` to generate a hosts file
 in the build directory.
+
+## Recommended host files
+
+- https://blocklistproject.github.io/Lists/#lists
+- https://someonewhocares.org/hosts/

@@ -1,0 +1,4 @@
+# Yaml file parsing works pretty much the same as txt file parsing
+- www.cool-downloads.net
+- www.cool-download[,s].com
+- www.friend-card[,s].com
