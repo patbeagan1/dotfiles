@@ -1,7 +1,10 @@
 import { parse as yamlParse } from "https://deno.land/std@0.82.0/encoding/yaml.ts";
+import combinate from "https://raw.githubusercontent.com/nas5w/combinate/v1.1.6/index.ts";
 
+const debug = false;
 const outputFileName = "./build/hosts";
-const main = (debug) => {
+
+const main = () => {
   const fileList = generateFileList();
   if (debug) console.log(fileList);
 
@@ -56,11 +59,94 @@ function generateHostsContent(sites) {
  */
 function generateSiteList(fileList) {
   return fileList
-    .map((fileName) => yamlParse(Deno.readTextFileSync(fileName)))
+    .map((fileName) => {
+      if (fileName.endsWith(".yaml")) {
+        return yamlParse(Deno.readTextFileSync(fileName));
+      }
+      if (fileName.endsWith(".txt")) {
+        return parseTxtFile(fileName);
+      }
+    })
+    .flatMap((it) => it)
+    .map(expandRanges)
+    .map(expandMatches)
     .flatMap((it) => it)
     .map((it) => it.split(".").reverse().join("."))
     .sort()
     .map((it) => it.split(".").reverse().join("."));
 }
 
-main(false);
+function parseTxtFile(fileName) {
+  const commentRegex = RegExp("^[ \t]*#");
+  const contents = Deno.readTextFileSync(fileName)
+    .split("\n")
+    .filter((it) => {
+      return !it.match(commentRegex);
+    })
+    .filter((it) => it);
+  if (debug) console.log(contents);
+  return contents;
+}
+
+/**
+ * Expands a range such as [1..4] into [1,2,3,4]
+ * This makes it compatible with the expandMatches step
+ */
+function expandRanges(input) {
+  //g[1..4][a,z]oogle.com -> ["1,2,3,4", "a,z"]
+  const regex = new RegExp(`\\[([^\\[\\]]+)\\]`);
+  const found = input.split(regex).filter((it) => it.includes(".."));
+  if (found.length <= 0) return input;
+
+  let ret = input;
+  for (let item of found) {
+    let nums = item.split("..");
+    const first = Number(nums[0]);
+    const second = Number(nums[1]);
+    const arrayLength = second - first;
+
+    let replacement = [...Array(arrayLength).keys()]
+      .map((it) => it + first)
+      .join(",");
+    ret = ret.replaceAll(item, replacement);
+  }
+
+  if (debug) console.log(input + " -> " + ret);
+  return ret;
+}
+
+/**
+ * Allows for compact declaration of variations on a domain.
+ * For example, media[1,2,3][1,2] would stand in for media11, media21, media31, media12, media22, media32
+ * Useful since a lot of the domain names just iterate, and there is no way to do pattern matching in a hosts file.
+ */
+function expandMatches(input) {
+  //g[1,2,3,4][a,z]oogle.com -> ["1,2,3,4", "a,z"]
+  const regex = new RegExp(`\\[([^\\[\\]]+)\\]`);
+  const found = input.split(regex).filter((it) => it.includes(","));
+  if (found.length <= 0) return input;
+
+  const cleanString = input.replaceAll("[", "").replaceAll("]", "");
+
+  const combinations = combinate(
+    found.map((i) => {
+      return i.split(",").flatMap((j) => {
+        return { match: i, replacewith: j };
+      });
+    })
+  );
+
+  const combos = combinations.map((it) => {
+    let replacedString = cleanString;
+    for (const [key, value] of Object.entries(it)) {
+      replacedString = replacedString.replaceAll(
+        value.match,
+        value.replacewith
+      );
+    }
+    return replacedString;
+  });
+  return combos;
+}
+
+main();

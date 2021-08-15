@@ -24,7 +24,7 @@ will try to access the given IP address. For sites that you do not actually want
 to contact, pointing to 127.0.0.1 (localhost) means that you ask your own
 machine for the information. It makes the request fail.
 
-
 ## Usage
 
-Run `deno run --allow-read --allow-write hosts.deno.js` to generate a hosts file in the build directory. 
+Run `deno run --allow-read --allow-write hosts.deno.js` to generate a hosts file
+in the build directory.
