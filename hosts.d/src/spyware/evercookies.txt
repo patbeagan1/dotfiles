@@ -1,9 +1,0 @@
-
-#<evercookies-sites>
-127.0.0.1 ar.hao123.com
-127.0.0.1 irs01.net
-127.0.0.1 kiks.yandex.ru
-127.0.0.1 simg.sinajs.cn
-127.0.0.1 tv.sohu.com
-127.0.0.1 y3.ifengimg.com
-#</evercookies-sites>
