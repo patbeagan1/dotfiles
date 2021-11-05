@@ -7,10 +7,6 @@ export LIBBEAGAN="$HOME/libbeagan"
 # Golang
 export GOPATH="$HOME/go"
 
-#Java
-export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
-export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
-
 # Android
 export ANDROID_SDK=$HOME/Library/Android/sdk
 export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
@@ -107,10 +103,19 @@ source "$LIBBEAGAN/aliases/alias_api.zsh"
 source "$LIBBEAGAN/aliases/alias_git.zsh"
 source "$LIBBEAGAN/aliases/alias_gradle.zsh"
 source "$LIBBEAGAN/aliases/alias_imagemagick.zsh"
-source "$LIBBEAGAN/aliases/alias_java.zsh"
 source "$LIBBEAGAN/aliases/alias_ls.zsh"
-source "$LIBBEAGAN/aliases/alias_mac.zsh"
 source "$LIBBEAGAN/aliases/alias_network.zsh"
 source "$LIBBEAGAN/aliases/alias_other.zsh"
 source "$LIBBEAGAN/aliases/alias_python.zsh"
 source "$LIBBEAGAN/aliases/alias_unix.zsh"
+
+darwin=false
+case "`uname`" in
+  Darwin* )
+    darwin=true
+    ;;
+esac
+
+if [ "$cygwin" = "false" ]; then
+    source "$LIBBEAGAN/aliases/alias_mac.zsh"
+fi
