@@ -26,6 +26,7 @@ export PATH=$PATH:$LIBBEAGAN/scripts
 export PATH=$PATH:$LIBBEAGAN/scripts/util
 export PATH=$PATH:$LIBBEAGAN/scripts/image_manipulation
 export PATH=$PATH:$LIBBEAGAN/scripts/file_management
+export PATH=$PATH:$LIBBEAGAN/scripts/documentation
 export PATH=$PATH:$LIBBEAGAN/scripts/math
 export PATH=$PATH:$LIBBEAGAN/scripts/sysadmin
 export PATH=$PATH:$LIBBEAGAN/scripts/vcs
@@ -92,7 +93,10 @@ ZSH_THEME="re5et"
 
 CASE_SENSITIVE="true"
 # COMPLETION_WAITING_DOTS="true"
-plugins=(git)
+plugins=(
+    git
+    adb
+)
 
 ###########################################################
 # Aliases
