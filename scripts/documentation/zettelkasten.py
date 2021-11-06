@@ -17,17 +17,16 @@ def main():
     with open(folder + filename, "a+") as f:
         section = prepare_section(f)
         section("".join(["=" for i in range(40)]))
-        section(str(datetime.datetime.now()))
-
-        title = " ".join(sys.argv[1:])
+        section(current_time.strftime(dateformat)+"\n")
         if (len(sys.argv) >= 2):
-            section(f"Title: {title}")
+            title = " ".join(sys.argv[1:])
+            section(f"# {title}")
         else:
-            section("Title: " + input("Title: "))
+            section(f"# {input('Title: ')}")
 
         section("".join(["-" for i in range(40)]))
-        section("Content: " + indent("Content: "))
-        section("References: " + indent("References: "))
+        section(f"Content: {indent('Content: ')}\n")
+        section(f"References: {indent('References: ')}\n")
 
 
 def prepare_section(f_in):
@@ -37,7 +36,7 @@ def prepare_section(f_in):
 
 
 def indent(s):
-    return "\n  " + input(s)
+    return "\n - " + input(s)
 
 
 if __name__ == "__main__":
