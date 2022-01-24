@@ -86,6 +86,7 @@ alias l='ls -F'
 alias la='ls -A'
 alias lb="last_branch.sh | tail -10"
 alias lbb="last_branch.sh | grep -v old"
+alias lbf="git branch --sort=committerdate | tail -10 | fzf | xargs git checkout"
 alias ll="ls -lhA"
 alias lla='ls -la'
 alias lr='ls -ralt'
