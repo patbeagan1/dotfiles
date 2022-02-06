@@ -1,3 +1,5 @@
+function remove_empty_lines () { cat "$1" | sed '/^[\w]*$/d'; }
+
 alias readOutLoud='say -v Moira -i -f'
 alias read_out_loud=readOutLoud
 
