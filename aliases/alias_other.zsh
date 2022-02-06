@@ -1,4 +1,7 @@
-alias waypoint="echo `pwd` >> ~/waypoint.txt; cat ~/waypoint.txt | sort | uniq >> ~/waypoint2.txt; mv ~/waypoint2.txt ~/waypoint.txt"
+alias readOutLoud='say -v Moira -i -f'
+alias read_out_loud=readOutLoud
+
+alias waypoint='echo `pwd` >> ~/waypoint.txt; cat ~/waypoint.txt | sort | uniq >> ~/waypoint2.txt; mv ~/waypoint2.txt ~/waypoint.txt'
 alias waypoint_go='cd $(cat ~/waypoint.txt | fzf)'
 alias teleport=waypoint_go
 alias tp=teleport
@@ -16,7 +19,7 @@ alias tulpn="netstat -tulpn"
 
 alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
 alias hnote='cd ~; note; cd -'
-alias nscript="cat <<EOF | tee node$(date +%s).js | node"
+alias nscript='cat <<EOF | tee node$(date +%s).js | node'
 
 alias mnt='mount | grep -E ^/dev | column -t'
 alias jam='java -jar '
