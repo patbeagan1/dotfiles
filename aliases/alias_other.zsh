@@ -1,6 +1,8 @@
 caturl () {
 	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
 }
+function remove_empty_lines () { cat "$1" | sed '/^[\w]*$/d'; }
+function remove_empty_lines_force () { remove_empty_lines "$1" > /tmp/tmp && mv /tmp/tmp "$1" }
 
 alias readOutLoud='say -v Moira -i -f'
 alias read_out_loud=readOutLoud
