@@ -1,3 +1,7 @@
+caturl () {
+	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
+}
+
 alias readOutLoud='say -v Moira -i -f'
 alias read_out_loud=readOutLoud
 
