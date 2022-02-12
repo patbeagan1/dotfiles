@@ -36,7 +36,7 @@ def main():
         main.append_tasks(Row(
             datetime.datetime.now(),
             local_parser.get_due_timestamp(args.due),
-            args.estimate if args.priority else 10,
+            args.estimate if args.estimate else 10,
             args.priority if args.priority else 10,
             " ".join(args.name)
         ))
@@ -210,6 +210,7 @@ class Main():
         with open(self.filename, "a") as csv_file:
             writer = csv.writer(csv_file, delimiter="\t", quotechar='|')
             writer.writerow([row.submitted, row.due, row.estimate, row.priority, row.name])
+            print("Success!")
 
 
 if __name__ == '__main__':
