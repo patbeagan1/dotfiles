@@ -8,7 +8,7 @@ import errno
 import shutil
 
 seconds_per_year = 31557600
-seconds_per_quarter = seconds_per_year/4
+seconds_per_quarter = seconds_per_year / 4
 seconds_since_epoch = int(time.time())
 
 
@@ -45,7 +45,7 @@ def walk(top, maxdepth):
     yield top, dirs, nondirs
     if maxdepth > 1:
         for name in dirs:
-            for x in walk(os.path.join(top, name), maxdepth-1):
+            for x in walk(os.path.join(top, name), maxdepth - 1):
                 yield x
 
 
@@ -67,7 +67,7 @@ def main():
 
     if len(sys.argv) == 3:
         print(sys.argv)
-        depth=int(sys.argv[2])
+        depth = int(sys.argv[2])
         for root, dirs, files in walk(sys.argv[1], depth):
             print("Depth: %s" % depth)
             loop_through_files(root, files)

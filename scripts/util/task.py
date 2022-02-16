@@ -25,21 +25,27 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     if args.read or args.next:
-        csv = main.read_tasks(DataMapper(sprint_manager=SprintManager(
-            sprint_length=args.sprint_length if args.sprint_length else 14,
-            sprint_points=args.sprint_points if args.sprint_points else 60
-        )))
+        csv = main.read_tasks(
+            DataMapper(
+                sprint_manager=SprintManager(
+                    sprint_length=args.sprint_length if args.sprint_length else 14,
+                    sprint_points=args.sprint_points if args.sprint_points else 60,
+                )
+            )
+        )
         print_final_results(args, csv)
     elif args.init:
         main.init_tasks()
     else:
-        main.append_tasks(Row(
-            datetime.datetime.now(),
-            local_parser.get_due_timestamp(args.due),
-            args.estimate if args.estimate else 10,
-            args.priority if args.priority else 10,
-            " ".join(args.name)
-        ))
+        main.append_tasks(
+            Row(
+                datetime.datetime.now(),
+                local_parser.get_due_timestamp(args.due),
+                args.estimate if args.estimate else 10,
+                args.priority if args.priority else 10,
+                " ".join(args.name),
+            )
+        )
 
 
 def print_final_results(args, csv):
@@ -63,19 +69,21 @@ class Row:
     name: str
 
 
-class LocalParser():
+class LocalParser:
     def parse(self) -> Namespace:
         parser = argparse.ArgumentParser()
         parser.add_argument("--estimate", "-e", type=int)
-        parser.add_argument("--due", "-d", choices=["day", "week", "sprint", "month", "year"])
+        parser.add_argument(
+            "--due", "-d", choices=["day", "week", "sprint", "month", "year"]
+        )
         parser.add_argument("--priority", "-p", type=int)
-        parser.add_argument("--read", "-r", action='store_true')
+        parser.add_argument("--read", "-r", action="store_true")
         parser.add_argument("--sprint-length", "-sl", type=int)
         parser.add_argument("--sprint-points", "-sp", type=int)
-        parser.add_argument("--init", action='store_true')
-        parser.add_argument("--next", action='store_true')
-        parser.add_argument("--verbose", "-v", action='store_true')
-        parser.add_argument("name", nargs='+' if self.is_name_required() else '*')
+        parser.add_argument("--init", action="store_true")
+        parser.add_argument("--next", action="store_true")
+        parser.add_argument("--verbose", "-v", action="store_true")
+        parser.add_argument("name", nargs="+" if self.is_name_required() else "*")
         args = parser.parse_args()
         return args
 
@@ -97,7 +105,7 @@ class LocalParser():
 
     @staticmethod
     def is_name_required():
-        return not any([it in sys.argv for it in ['--read', '--init', '--next']])
+        return not any([it in sys.argv for it in ["--read", "--init", "--next"]])
 
 
 @dataclass()
@@ -121,20 +129,24 @@ class SprintManager:
             return self.sprint
 
     def sprint_completion_date(self, sprint: int):
-        return datetime.datetime.now() + datetime.timedelta(days=((sprint) * self.sprint_length))
+        return datetime.datetime.now() + datetime.timedelta(
+            days=((sprint) * self.sprint_length)
+        )
 
     def ticket_completion_time(self, estimate: int):
-        return datetime.timedelta(days=estimate * (self.sprint_length / self.sprint_points))
+        return datetime.timedelta(
+            days=estimate * (self.sprint_length / self.sprint_points)
+        )
 
     def ticket_remaining_time(self, estimate: int):
-        return \
-            datetime.timedelta(days=self.sprint_length) - \
-            self.ticket_completion_time(estimate) - \
-            self.ticket_completion_time(self.count)
+        return (
+            datetime.timedelta(days=self.sprint_length)
+            - self.ticket_completion_time(estimate)
+            - self.ticket_completion_time(self.count)
+        )
 
 
-class DataMapper():
-
+class DataMapper:
     def __init__(self, sprint_manager: SprintManager):
         self.parser = parser()
         self.sprint_manager = sprint_manager
@@ -181,10 +193,10 @@ class DataMapper():
         value: int = 0
 
 
-class Main():
+class Main:
     def __init__(self):
         self.filename = f"{Path.home()}/tasks.csv"
-        self.columns = ['Submitted', 'Due', 'Estimate', 'Priority', 'Name']
+        self.columns = ["Submitted", "Due", "Estimate", "Priority", "Name"]
 
     def init_tasks(self):
         with open(self.filename, "w") as f:
@@ -196,8 +208,10 @@ class Main():
         csv = pd.read_csv(self.filename, delimiter="\t")
         # 1 means to operate on the rows, not the columns.
         csv["Time Remaining"] = csv.apply(self.data_mapper.map_submission, axis=1)
-        csv["Adjusted Priority"] = csv.apply(self.data_mapper.map_adjusted_priority, axis=1)
-        csv = csv.sort_values(by=['Adjusted Priority'])
+        csv["Adjusted Priority"] = csv.apply(
+            self.data_mapper.map_adjusted_priority, axis=1
+        )
+        csv = csv.sort_values(by=["Adjusted Priority"])
         csv["Sprint"] = csv["Estimate"].apply(self.data_mapper.map_sprints)
         self.data_mapper.sprint_manager.reset()
         csv["Confidence"] = csv.apply(self.data_mapper.map_sprint_confidence, axis=1)
@@ -208,10 +222,12 @@ class Main():
 
     def append_tasks(self, row: Row):
         with open(self.filename, "a") as csv_file:
-            writer = csv.writer(csv_file, delimiter="\t", quotechar='|')
-            writer.writerow([row.submitted, row.due, row.estimate, row.priority, row.name])
+            writer = csv.writer(csv_file, delimiter="\t", quotechar="|")
+            writer.writerow(
+                [row.submitted, row.due, row.estimate, row.priority, row.name]
+            )
             print("Success!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

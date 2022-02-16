@@ -17,8 +17,8 @@ def main():
     with open(folder + filename, "a+") as f:
         section = prepare_section(f)
         section("".join(["=" for i in range(40)]))
-        section(current_time.strftime(dateformat)+"\n")
-        if (len(sys.argv) >= 2):
+        section(current_time.strftime(dateformat) + "\n")
+        if len(sys.argv) >= 2:
             title = " ".join(sys.argv[1:])
             section(f"# {title}")
         else:
@@ -32,6 +32,7 @@ def main():
 def prepare_section(f_in):
     def inner(s):
         f_in.write(s + "\n")
+
     return inner
 
 
