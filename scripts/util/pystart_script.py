@@ -11,10 +11,12 @@ def shdo(command):
     p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
     return p.communicate()
 
+
 def shdox(command):
     """Stands for 'shell do explicit', this will just run a bash command"""
     p = subprocess.Popen(command, stderr=subprocess.PIPE)
     return p.communicate()
+
 
 s_code_starter = '''#!/usr/bin/env python3
 import os
@@ -108,5 +110,3 @@ if __name__ == "__main__":
     with open(s_name, "w") as f:
         f.write(s_code_starter)
     shdo(f"chmod 755 {s_name} && code {s_name}")
-
-

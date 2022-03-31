@@ -13,8 +13,15 @@ New Script.
 """
 
 verbosity = 0
-verbosity_level = {'quiet': (None, -100), 'error': ('E: ', -2), 'warning': ('W: ', -1),
-                   'info': ('', 0), 'debug': ('D: ', 1), 'verbose': ('V: ', 2), 'dump': ('Z: ', 3)}
+verbosity_level = {
+    "quiet": (None, -100),
+    "error": ("E: ", -2),
+    "warning": ("W: ", -1),
+    "info": ("", 0),
+    "debug": ("D: ", 1),
+    "verbose": ("V: ", 2),
+    "dump": ("Z: ", 3),
+}
 
 
 def dprint(s, s_verbosity_in: str = "info"):
@@ -29,7 +36,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description=description)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "-v", "--verbosity", help="Increases the verbosity level. Supports up to -vvv.", action="count", default=0)
+        "-v",
+        "--verbosity",
+        help="Increases the verbosity level. Supports up to -vvv.",
+        action="count",
+        default=0,
+    )
     group.add_argument("-q", "--quiet", action="store_true")
 
     global verbosity
@@ -55,7 +67,9 @@ if __name__ == "__main__":
     args = parse_args()
     top = os.getcwd()
     files_arr = []
-    for root, dirs, files in os.walk(top, topdown=True, onerror=None, followlinks=False):
+    for root, dirs, files in os.walk(
+        top, topdown=True, onerror=None, followlinks=False
+    ):
         print(root, "consumes", end=" ")
         print(sum(getsize(join(root, name)) for name in files), end=" ")
         print("bytes in", len(files), "non-directory files")
@@ -69,22 +83,21 @@ if __name__ == "__main__":
             subprocess.check_call(command)
         except subprocess.CalledProcessError:
             exit("failure running tmsu")
-            
+
         for f in files:
 
             file_name = f"{root}/{f}"
 
             with open(file_name, "rb") as in_file:
-                
+
                 # getting the hash of the file
                 m = hashlib.sha256(in_file.read()).hexdigest()
-                
-                # generating the short hash directory 
+
+                # generating the short hash directory
                 short_hash = m[0:1]
                 if not os.path.exists(short_hash):
                     os.makedirs(short_hash)
-                
-                
+
                 relative_new_name = m + os.path.splitext(file_name)[1]
                 # f"{curr_dir}.{f}"
                 new_name = f"{short_hash}/{relative_new_name}"
@@ -95,11 +108,17 @@ if __name__ == "__main__":
 
                 os.rename(file_name, new_name)
                 print("Copied " + file_name + " as " + new_name)
-                                
+
                 # adding tags to the file
                 try:
-                    cleanF = re.sub('\W+','_', f )
-                    command = ["tmsu", "tag", f"{new_name}", f"category={curr_dir}", f"original_name={cleanF}"]
+                    cleanF = re.sub("\W+", "_", f)
+                    command = [
+                        "tmsu",
+                        "tag",
+                        f"{new_name}",
+                        f"category={curr_dir}",
+                        f"original_name={cleanF}",
+                    ]
                     print(command)
                     subprocess.check_call(command)
                 except subprocess.CalledProcessError:
