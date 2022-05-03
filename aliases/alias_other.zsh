@@ -29,7 +29,8 @@ alias qp="ps auxwww|more"
 alias nu="who|wc -l"
 alias tulpn="netstat -tulpn"
 
-alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
+alias n=note
+alias note='cat >> "$(echo ~/note-$(date +"%b%e::%T")).txt" << EOF'
 alias hnote='cd ~; note; cd -'
 alias nscript='cat <<EOF | tee node$(date +%s).js | node'
 
