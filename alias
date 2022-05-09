@@ -1,3 +1,4 @@
+alias battery='upower -d'
 alias find_filenames_matching='ag -g'                                                                                                                                                                     21-08-16 - 12:40:16
 
 function itty () { echo -n "<pre>$1</pre>" | lzma -9 | base64 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }
@@ -13,6 +14,8 @@ alias psport='netstat -vanp tcp | grep 127.0.0.1'
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias findname='find . -name'
 alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
+
+nn () { echo `date "+%y.%m.%d.%H.%M.%S"` "$@" >> ~/notes.txt; }
 
 alias ntagas='tagger.py -s n tagas'
 alias ntagcheck='tagger.py -s n tagcheck'
