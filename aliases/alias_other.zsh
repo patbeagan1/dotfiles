@@ -1,8 +1,12 @@
+caturl () {
+	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
+}
 alias tk=task.py
 alias tkrr='tk --read'
 alias tkr='tk --read | head -15'
 alias tk_today='tk -due day'
 alias tkn='tk --next'
+
 function remove_empty_lines () { cat "$1" | sed '/^[\w]*$/d'; }
 function remove_empty_lines_force () { remove_empty_lines "$1" > /tmp/tmp && mv /tmp/tmp "$1" }
 
@@ -25,7 +29,8 @@ alias qp="ps auxwww|more"
 alias nu="who|wc -l"
 alias tulpn="netstat -tulpn"
 
-alias note='cat >> "$(echo note-$(date +"%b%e::%T")).txt" << EOF'
+alias n=note
+alias note='cat >> "$(echo ~/note-$(date +"%b%e::%T")).txt" << EOF'
 alias hnote='cd ~; note; cd -'
 alias nscript='cat <<EOF | tee node$(date +%s).js | node'
 
