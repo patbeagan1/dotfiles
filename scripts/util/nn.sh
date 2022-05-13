@@ -1,4 +1,5 @@
 #!/bin/zsh
+set -euxo pipefail
 
 nn () {
 	if [[ "sync" == "$*" ]]
