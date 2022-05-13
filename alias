@@ -16,8 +16,6 @@ alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias findname='find . -name'
 alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
 
-nn () { echo `date "+%y.%m.%d.%H.%M.%S"` "$@" >> ~/notes.txt; }
-
 alias ntagas='tagger.py -s n tagas'
 alias ntagcheck='tagger.py -s n tagcheck'
 alias tagas='tagger.py tagas'
