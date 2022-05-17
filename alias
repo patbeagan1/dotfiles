@@ -10,8 +10,9 @@ function qr_textToImage () { qrencode -l L -v 1 -o output"$(python3 -c 'import t
 alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.jpg"
 
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
-alias nn=nn.sh
-nn | tail 
+alias nn='nn.sh'
+alias nt='nn.sh todo:'
+
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias findname='find . -name'
 alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
