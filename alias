@@ -1,3 +1,6 @@
+ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
+
+function manu() { man -t "$1" | open -fa Preview; }
 alias battery='upower -d'
 alias find_filenames_matching='ag -g'                                                                                                                                                                     21-08-16 - 12:40:16
 
@@ -12,6 +15,7 @@ alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
 alias nn='nn.sh'
 alias nt='nn.sh todo:'
+alias nd='nn.sh diary:'
 
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias findname='find . -name'
