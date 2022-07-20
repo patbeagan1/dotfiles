@@ -1,6 +1,12 @@
 ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
 
 function manu() { man -t "$1" | open -fa Preview; }
+
+alias encrypt='gpg -c'
+alias decrypt='gpg -d'
+
+alias lss='ls -harsS'
+
 alias battery='upower -d'
 alias find_filenames_matching='ag -g'                                                                                                                                                                     21-08-16 - 12:40:16
 
