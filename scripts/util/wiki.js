@@ -5,7 +5,7 @@ let url = 'https://en.wikipedia.org/w/api.php'
 const params = {
   action: 'query',
   format: 'json',
-  titles: Deno.args,
+  titles: Deno.args.join(" "),
   prop: 'info',
   inprop: 'url|talkid'
 }
