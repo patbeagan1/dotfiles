@@ -1,3 +1,4 @@
+git-over-time() {  git log --format=format:'%as,%ae';  }
 alias battery='upower -d'
 alias find_filenames_matching='ag -g'                                                                                                                                                                     21-08-16 - 12:40:16
 
