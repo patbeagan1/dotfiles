@@ -1,3 +1,5 @@
+git-over-time() {  git log --format=format:'%as,%ae';  }
+
 ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
 
 function manu() { man -t "$1" | open -fa Preview; }
