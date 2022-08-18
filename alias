@@ -22,9 +22,11 @@ alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.
 
 alias psport='netstat -vanp tcp | grep 127.0.0.1'
 alias nn='nz.sh'
-alias nt='nz.sh | tail'
-alias nn-t='nz.sh todo:'
-alias nn-d='nz.sh diary:'
+alias nnt='nz.sh | tail'
+alias nn-todo='nz.sh todo:'
+alias nn-diary='nz.sh diary:'
+alias nn-link='nz.sh link:'
+
 
 function wiki () { open $(wiki.js "$*") }
 
