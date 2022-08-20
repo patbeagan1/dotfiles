@@ -28,6 +28,11 @@ alias nn-todo='nz.sh todo:'
 alias nn-diary='nz.sh diary:'
 alias nn-link='nz.sh link:'
 
+alias bullet-task='nz.sh task:'
+alias bullet-evnt='nz.sh evnt:'
+alias bullet-appt='nz.sh appt:'
+alias bullet-note='nz.sh note:'
+alias bullet-idea='nz.sh idea:'
 
 function wiki () { open $(wiki.js "$*") }
 
