@@ -3,8 +3,6 @@
 alias l.='ls -d .* --color=auto'
 alias l='ls -F'
 alias la='ls -A'
-alias lb="last_branch.sh | tail -10"
-alias lbb="last_branch.sh | grep -v old"
 alias ll="ls -lhA"
 alias lla='ls -la'
 alias lr='ls -ralt'
@@ -17,3 +15,4 @@ alias sl="ls"
 alias ralt='ls -ralt'
 alias dirs="ls -al | grep '^d'"
 alias peek="peek.sh"
+alias lss='ls -harsS'

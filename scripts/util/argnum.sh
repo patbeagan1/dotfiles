@@ -7,3 +7,4 @@ argnum ()
     echo
 }
 argnum "$@"
+trackusage.sh "$0"

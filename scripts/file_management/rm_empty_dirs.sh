@@ -6,3 +6,4 @@ rm_empty_dirs ()
 }
 
 rm_empty_dirs "$@"
+trackusage.sh "$0"

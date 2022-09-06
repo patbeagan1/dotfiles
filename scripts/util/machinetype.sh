@@ -20,7 +20,8 @@ machinetype ()
             machine="UNKNOWN:${unameOut}"
         ;;
     esac;
-    echo ${machine}
+    echo -n ${machine}
 }
 
 machinetype "$@"
+trackusage.sh "$0"

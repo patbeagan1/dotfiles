@@ -7,3 +7,4 @@ flatten ()
 }
 
 flatten "$@"
+trackusage.sh "$0"

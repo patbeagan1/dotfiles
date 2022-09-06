@@ -7,3 +7,4 @@ quote ()
 }
 
 quote "$@"
+trackusage.sh "$0"

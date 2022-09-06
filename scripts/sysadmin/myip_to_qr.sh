@@ -6,3 +6,4 @@ myip_to_qr ()
 }
 
 myip_to_qr "$@"
+trackusage.sh "$0"

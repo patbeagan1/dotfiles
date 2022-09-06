@@ -14,3 +14,4 @@ lastmod ()
 }
 
 lastmod "$@"
+trackusage.sh "$0"

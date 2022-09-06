@@ -7,3 +7,4 @@ median ()
 }
 
 median "$@"
+trackusage.sh "$0"

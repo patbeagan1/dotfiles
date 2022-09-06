@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+trackusage.sh "$0"
+
 if [ $# -eq 0 ] || [ $1 == "help" ]; then 
 cat <<END
 

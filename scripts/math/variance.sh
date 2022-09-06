@@ -6,3 +6,4 @@ variance ()
 }
 
 variance "$@"
+trackusage.sh "$0"

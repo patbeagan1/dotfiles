@@ -6,3 +6,4 @@ multiline ()
 }
 
 multiline "$@"
+trackusage.sh "$0"

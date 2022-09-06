@@ -6,3 +6,4 @@ kr ()
 }
 
 kr "$@"
+trackusage.sh "$0"

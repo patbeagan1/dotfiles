@@ -6,3 +6,4 @@ dot2pdf ()
 }
 
 dot2pdf "$@"
+trackusage.sh "$0"

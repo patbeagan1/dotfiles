@@ -6,3 +6,4 @@ dictionary ()
 }
 
 dictionary "$@"
+trackusage.sh "$0"

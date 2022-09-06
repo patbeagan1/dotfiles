@@ -47,3 +47,4 @@ shard ()
 }
 
 shard "$@"
+trackusage.sh "$0"

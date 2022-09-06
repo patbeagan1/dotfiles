@@ -9,3 +9,4 @@ remove_empty_dirs ()
 }
 
 remove_empty_dirs "$@"
+trackusage.sh "$0"

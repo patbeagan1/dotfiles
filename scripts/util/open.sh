@@ -14,3 +14,4 @@ open ()
 }
 
 open "$@"
+trackusage.sh "$0"

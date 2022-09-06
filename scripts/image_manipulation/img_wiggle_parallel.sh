@@ -6,3 +6,4 @@ img_wiggle_parallel ()
     convert -delay 15 -loop 0 mid*.jpg out.gif
 }
 img_wiggle_parallel "$@"
+trackusage.sh "$0"

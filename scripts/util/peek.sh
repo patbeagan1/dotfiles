@@ -6,3 +6,4 @@ peek ()
 }
 
 peek "$@"
+trackusage.sh "$0"

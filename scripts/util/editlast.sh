@@ -6,3 +6,4 @@ editlast ()
 }
 
 editlast "$@"
+trackusage.sh "$0"

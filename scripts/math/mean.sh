@@ -6,3 +6,4 @@ mean ()
 }
 
 mean "$@"
+trackusage.sh "$0"

@@ -6,3 +6,4 @@ script_content ()
 }
 
 script_content "$@"
+trackusage.sh "$0"

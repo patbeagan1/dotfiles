@@ -109,3 +109,4 @@ EOF
 }
 
 nn "$*"
+trackusage.sh "$0"

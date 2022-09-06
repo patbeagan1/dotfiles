@@ -13,3 +13,4 @@ diffall ()
 }
 
 diffall "$@"
+trackusage.sh "$0"

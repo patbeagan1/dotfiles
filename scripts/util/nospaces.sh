@@ -6,3 +6,4 @@ nospaces ()
 }
 
 nospaces "$@"
+trackusage.sh "$0"

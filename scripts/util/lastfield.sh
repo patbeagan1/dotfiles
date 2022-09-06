@@ -6,3 +6,4 @@ lastfield ()
 }
 
 lastfield "$@"
+trackusage.sh "$0"

@@ -6,3 +6,4 @@ realconf ()
 }
 
 realconf "$@"
+trackusage.sh "$0"

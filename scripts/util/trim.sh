@@ -6,3 +6,4 @@ trim ()
 }
 
 trim "$@"
+trackusage.sh "$0"

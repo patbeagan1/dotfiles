@@ -7,3 +7,4 @@ discover-brute-force ()
 }
 
 discover-brute-force "$@"
+trackusage.sh "$0"

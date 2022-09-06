@@ -10,3 +10,4 @@ fix_script ()
 }
 
 fix_script "$@"
+trackusage.sh "$0"

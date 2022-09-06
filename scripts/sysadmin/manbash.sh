@@ -6,3 +6,4 @@ manbash ()
 }
 
 manbash "$@"
+trackusage.sh "$0"

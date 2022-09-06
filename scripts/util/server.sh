@@ -15,3 +15,4 @@ server ()
 }
 
 server "$@"
+trackusage.sh "$0"

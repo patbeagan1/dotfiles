@@ -6,3 +6,4 @@ lsdaemons ()
 }
 
 lsdaemons "$@"
+trackusage.sh "$0"

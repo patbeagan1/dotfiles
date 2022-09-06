@@ -7,3 +7,4 @@ rec ()
 }
 
 rec "$@"
+trackusage.sh "$0"

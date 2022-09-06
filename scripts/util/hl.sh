@@ -6,3 +6,4 @@ hl ()
 }
 
 hl "$@"
+trackusage.sh "$0"

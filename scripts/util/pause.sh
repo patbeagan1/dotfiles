@@ -6,3 +6,4 @@ pause ()
 }
 
 pause "$@"
+trackusage.sh "$0"

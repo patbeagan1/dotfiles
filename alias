@@ -1,80 +1,28 @@
-git-over-time() {  git log --format=format:'%as,%ae';  }
+# This file and all dependencies should be able to be run multiple times per session.
 
-ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
+alias savedalias='source ~/libbeagan/alias'
+alias refresh='savedalias; hash -r'
 
-function manu() { man -t "$1" | open -fa Preview; }
+source "$LIBBEAGAN/aliases/alias_req_ext_api.zsh"
+source "$LIBBEAGAN/aliases/alias_git.zsh"
+source "$LIBBEAGAN/aliases/alias_gradle.zsh"
+source "$LIBBEAGAN/aliases/alias_imagemagick.zsh"
+source "$LIBBEAGAN/aliases/alias_ls.zsh"
+source "$LIBBEAGAN/aliases/alias_network.zsh"
+source "$LIBBEAGAN/aliases/alias_other.zsh"
+source "$LIBBEAGAN/aliases/alias_python.zsh"
+source "$LIBBEAGAN/aliases/alias_unix.zsh"
+source "$LIBBEAGAN/aliases/alias_misc.zsh"
+source "$LIBBEAGAN/aliases/alias_tagger.zsh"
+source "$LIBBEAGAN/aliases/alias_teleport.zsh"
+source "$LIBBEAGAN/aliases/alias_task_cmd.zsh"
+source "$LIBBEAGAN/aliases/alias_notes.zsh"
+source "$LIBBEAGAN/aliases/alias_remove_empty.zsh"
 
-alias encrypt='gpg -c'
-alias decrypt='gpg -d'
+if isMac.sh; then
+  source "$LIBBEAGAN/aliases/alias_machine_mac.zsh"
+fi
 
-alias lss='ls -harsS'
-
-alias battery='upower -d'
-alias find_filenames_matching='ag -g'                                                                                                                                                                     21-08-16 - 12:40:16
-
-function itty () { echo -n "<pre>$1</pre>" | lzma -9 | base64 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }
-function ittyqr () { qrencode -l L -v 1 -o output.png -r <(echo `itty "$1"`); }
-function ittyqrc () { ittyqr "`cat $1`"; }
-alias gw='./gradlew'
-alias qr="qrencode -l L -v 1 -o output.png -r" 
-function qr_textToImage () { qrencode -l L -v 1 -o output"$(python3 -c 'import time; print(time.time())')".png; } 
-alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.jpg"
-
-alias psport='netstat -vanp tcp | grep 127.0.0.1'
-alias nn='nz.sh'
-alias nt='nz.sh | tail'
-alias nn-t='nz.sh todo:'
-alias nn-d='nz.sh diary:'
-
-function wiki () { open $(wiki.js "$*") }
-
-share() {
-    ssh -R 80:localhost:$1 nokey@localhost.run
-}
-
-alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
-alias findname='find . -name'
-alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
-
-alias ntagas='tagger.py -s n tagas'
-alias ntagcheck='tagger.py -s n tagcheck'
-alias tagas='tagger.py tagas'
-
-alias reset_branch='git diff --name-only origin/dev | cat | xargs -I % git checkout origin/dev -- %'
-alias backup_myhome='rsync -aPzv --checksum --remove-source-files --exclude="~/Downloads/MyHome/BIG" --exclude="~/Downloads/MyHome/bin" ~/Downlaods/MyHome /Volumes/home | tee backup_out.log'
-
-# macOS has no `md5sum`, so use `md5` as a fallback
-command -v md5sum > /dev/null || alias md5sum="md5"
-
-# macOS has no `sha1sum`, so use `shasum` as a fallback
-command -v sha1sum > /dev/null || alias sha1sum="shasum"
-
-# URL-encode strings
-alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
-
-# Intuitive map function
-# For example, to list all directories that contain a certain file:
-# find . -name .gitattributes | map dirname
-alias map="xargs -n1"
-
-cache () {
-	local pre=""
-	if [ ! -z "$2" ]
-	then
-		pre="$1"
-		shift
-	fi
-	local cdir=~"/cache/$pre"
-	mkdir -pv -p "$cdir"
-	echo "$1" >> "$cdir"/getlist
-}
-function cache_get { 
-    find ~/cache -name getlist -exec dirname {} \; | xargs -I % command wget -P ~/cache/% -nc -i ~/cache/%/getlist
-} 
-
-function quar {
-  mv "$1" ~/.j/
-}
-alias tagcheck='tagger.py tagcheck'
-
-alias g1='git log --pretty=oneline'
+if isLinux.sh; then
+  source "$LIBBEAGAN/aliases/alias_machine_linux.zsh"
+fi
