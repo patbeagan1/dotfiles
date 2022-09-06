@@ -18,6 +18,7 @@ source "$LIBBEAGAN/aliases/alias_teleport.zsh"
 source "$LIBBEAGAN/aliases/alias_task_cmd.zsh"
 source "$LIBBEAGAN/aliases/alias_notes.zsh"
 source "$LIBBEAGAN/aliases/alias_remove_empty.zsh"
+source "$LIBBEAGAN/aliases/alias_scriptify.zsh"
 
 if isMac.sh; then
   source "$LIBBEAGAN/aliases/alias_machine_mac.zsh"
