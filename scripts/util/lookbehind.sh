@@ -6,3 +6,4 @@ lookbehind ()
 }
 
 lookbehind "$@"
+trackusage.sh "$0"

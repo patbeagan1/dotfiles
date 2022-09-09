@@ -15,3 +15,4 @@ notabs ()
 }
 
 notabs "$@"
+trackusage.sh "$0"

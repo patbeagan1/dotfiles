@@ -7,3 +7,4 @@ jj ()
 }
 
 jj "$@"
+trackusage.sh "$0"

@@ -6,3 +6,4 @@ math ()
 }
 
 math "$@"
+trackusage.sh "$0"

@@ -8,3 +8,5 @@ done
 cmd="$cmd $photo"
 echo "$cmd"
 eval "$cmd"
+
+trackusage.sh "$0"

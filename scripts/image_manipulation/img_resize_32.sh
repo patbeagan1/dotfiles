@@ -11,3 +11,4 @@ img_resize_32 ()
 }
 
 img_resize_32 "$@"
+trackusage.sh "$0"

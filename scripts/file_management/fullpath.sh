@@ -13,3 +13,4 @@ fullpath ()
 }
 
 fullpath "$@"
+trackusage.sh "$0"

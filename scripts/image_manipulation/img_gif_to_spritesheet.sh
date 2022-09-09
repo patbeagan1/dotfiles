@@ -16,3 +16,4 @@ img_gif_to_spritesheet ()
 }
 
 img_gif_to_spritesheet "$@"
+trackusage.sh "$0"

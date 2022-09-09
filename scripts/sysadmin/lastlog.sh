@@ -7,3 +7,4 @@ lastlog ()
 }
 
 lastlog "$@"
+trackusage.sh "$0"

@@ -32,3 +32,4 @@ comicify ()
     done
 }
 comicify
+trackusage.sh "$0"

@@ -6,3 +6,4 @@ sum ()
 }
 
 sum "$@"
+trackusage.sh "$0"

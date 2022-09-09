@@ -7,3 +7,4 @@ compare ()
 }
 
 compare "$@"
+trackusage.sh "$0"

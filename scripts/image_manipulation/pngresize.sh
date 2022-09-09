@@ -6,3 +6,4 @@ pngresize ()
 }
 
 pngresize "$@"
+trackusage.sh "$0"

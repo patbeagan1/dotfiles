@@ -6,3 +6,4 @@ manbook ()
 }
 
 manbook "$@"
+trackusage.sh "$0"

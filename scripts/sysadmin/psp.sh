@@ -6,3 +6,4 @@ psp ()
 }
 
 psp "$@"
+trackusage.sh "$0"

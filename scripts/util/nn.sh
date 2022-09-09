@@ -23,3 +23,4 @@ nn () {
 }
 
 nn "$*"
+trackusage.sh "$0"

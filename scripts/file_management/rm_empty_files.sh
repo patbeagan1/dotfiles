@@ -6,3 +6,4 @@ rm_empty_files ()
 }
 
 rm_empty_files "$@"
+trackusage.sh "$0"

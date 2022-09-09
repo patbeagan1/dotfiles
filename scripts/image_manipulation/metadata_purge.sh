@@ -10,3 +10,4 @@ metadata_purge ()
 }
 
 metatdata_purge "$@"
+trackusage.sh "$0"

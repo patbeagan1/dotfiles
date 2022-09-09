@@ -6,3 +6,4 @@ rederr ()
 } 3>&1
 
 rederr "$@"
+trackusage.sh "$0"

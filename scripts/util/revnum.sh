@@ -6,3 +6,4 @@ revnum ()
 }
 
 revnum "$@"
+trackusage.sh "$0"

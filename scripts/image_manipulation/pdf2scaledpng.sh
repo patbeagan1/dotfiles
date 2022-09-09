@@ -17,3 +17,4 @@ pdf2scaledpng ()
 }
 
 pdf2scaledpng "$@"
+trackusage.sh "$0"

@@ -29,3 +29,5 @@ img:hover {
 }
 </style>
 EOF
+
+trackusage.sh "$0"

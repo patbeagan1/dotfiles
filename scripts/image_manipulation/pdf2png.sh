@@ -6,3 +6,4 @@ pdf2png ()
 }
 
 pdf2png "$@"
+trackusage.sh "$0"

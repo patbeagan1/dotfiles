@@ -6,3 +6,4 @@ killport ()
 }
 
 killport "$@"
+trackusage.sh "$0"

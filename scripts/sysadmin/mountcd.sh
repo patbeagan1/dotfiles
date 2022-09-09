@@ -6,3 +6,4 @@ mountcd ()
 }
 
 mountcd "$@"
+trackusage.sh "$0"

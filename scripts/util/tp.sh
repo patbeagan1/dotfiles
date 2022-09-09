@@ -6,3 +6,4 @@ tp ()
 }
 
 tp "$@"
+trackusage.sh "$0"

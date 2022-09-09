@@ -12,3 +12,4 @@ lll ()
 }
 
 lll "$@"
+trackusage.sh "$0"

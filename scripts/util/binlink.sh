@@ -6,3 +6,4 @@ binlink ()
 }
 
 binlink "$@"
+trackusage.sh "$0"

@@ -7,3 +7,4 @@ itty ()
 }
 
 itty "$@"
+trackusage.sh "$0"
