@@ -1,4 +1,4 @@
-
+alias verify-directory-contents='rsync -rvcn'
 
 ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
 
