@@ -10,13 +10,18 @@ const startUrl = 'https://api.scryfall.com/cards/search' +
   '&q=e%3Admu' +
   '&unique=prints'
 
-const groupCardsByRarity = (cards) => cards.reduce((acc, value) => {
-  if (!acc[value.rarity]) {
-    acc[value.rarity] = []
-  }
-  acc[value.rarity].push(value)
-  return acc
-}, {})
+const groupCardsByRarity = (cards) => cards
+  .filter((it) => !it.type_line.includes('Basic Land'))
+  .reduce((acc, value) => {
+    if (!acc[value.rarity]) {
+      acc[value.rarity] = []
+    }
+    acc[value.rarity].push(value)
+    return acc
+  }, {})
+
+const findBasicLands = (cards) => cards
+  .filter((it) => it.type_line.includes('Basic Land'))
 
 async function getNextPage(url) {
   console.log('Visit next page')
@@ -29,7 +34,8 @@ async function getNextPage(url) {
           name: it.name,
           rarity: it.rarity,
           scryfall_uri: it.scryfall_uri,
-          image_url: it.image_uris.small
+          image_url: it.image_uris.small,
+          type_line: it.type_line
         }
       })
       if (response.has_more) {
@@ -44,15 +50,21 @@ function getRandomByRarity(cardsByRarity, rarity) {
   return cardsByRarity[rarity][Math.floor(Math.random() * cardsByRarity[rarity].length)]
 }
 
+function getRandomFromArray(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
 const a = getNextPage(startUrl)
 async function main() {
   const cardsByRarity = groupCardsByRarity(await a)
+  const basicLands = findBasicLands(await a)
   const cards = [
     Array(10).fill(0).map(() => getRandomByRarity(cardsByRarity, 'common')),
     Array(3).fill(0).map(() => getRandomByRarity(cardsByRarity, 'uncommon')),
     [Math.floor(Math.random() * 8) === 0
       ? getRandomByRarity(cardsByRarity, 'mythic')
-      : getRandomByRarity(cardsByRarity, 'rare')]
+      : getRandomByRarity(cardsByRarity, 'rare')],
+    [getRandomFromArray(basicLands)]
   ].flatMap((it) => it)
 
   console.log(cards)
