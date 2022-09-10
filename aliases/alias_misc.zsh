@@ -1,5 +1,12 @@
+script-edit () { vi "$(which "$1")"; }
+alias server='python3 -m http.server'
+alias vpn='nordvpn status'
+alias vpnc='nordvpn connect'
+alias vpnd='nordvpn disconnect'
+alias verify-hash='isLinux.sh && sha256sum || shasum -a 256'
 alias verify-directory-contents='rsync -rvcn'
 
+alias show-hardware-displays='sudo lshw -numeric -C display'
 ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
 
 function manu() { man -t "$1" | open -fa Preview; }

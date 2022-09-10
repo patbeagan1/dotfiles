@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-net --allow-write
+#!/usr/bin/env -S deno run --allow-net --allow-write
 
 const startUrl = 'https://api.scryfall.com/cards/search' +
   '?format=json' +
