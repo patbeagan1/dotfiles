@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-net --allow-write --allow-read --allow-run
+#!/usr/bin/env -S deno run --allow-net --allow-write --allow-read --allow-run
 
 import { compress } from "https://deno.land/x/zip@v1.2.3/mod.ts";
 

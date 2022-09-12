@@ -9,7 +9,7 @@ loop ()
     fi;
 
     while :; do
-        eval $*;
+        eval $@;
         sleep 0.5;
         if [ $shouldClear == "true" ]; then
             clear;
