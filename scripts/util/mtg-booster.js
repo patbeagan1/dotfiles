@@ -1,4 +1,6 @@
-#!/usr/bin/env deno run --allow-net --allow-write
+#!/usr/bin/env deno run --allow-net --allow-write --allow-read --allow-run
+
+import { compress } from "https://deno.land/x/zip@v1.2.3/mod.ts";
 
 const startUrl = "https://api.scryfall.com/cards/search" +
   "?format=json" +
@@ -10,22 +12,20 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&q=e%3Admu" +
   "&unique=prints";
 
-const groupCardsByRarity = (cards) =>
-  cards
-    .filter((it) => !it.type_line.includes("Basic Land"))
-    .reduce((acc, value) => {
-      if (!acc[value.rarity]) {
-        acc[value.rarity] = [];
-      }
-      acc[value.rarity].push(value);
-      return acc;
-    }, {});
+const groupCardsByRarity = (cards) => cards
+  .filter((it) => !it.isBasicLand && !it.isToken)
+  .reduce((acc, value) => {
+    if (!acc[value.rarity]) {
+      acc[value.rarity] = [];
+    }
+    acc[value.rarity].push(value);
+    return acc;
+  }, {});
 
-const findBasicLands = (cards) =>
-  cards
-    .filter((it) => it.type_line.includes("Basic Land"));
+const findBasicLands = (cards) => cards
+  .filter((it) => it.isBasicLand);
 
-async function getNextPage(url) {
+function getCards(url) {
   console.log("Visit next page");
   return fetch(url)
     .then((response) => response.json())
@@ -37,11 +37,12 @@ async function getNextPage(url) {
           rarity: it.rarity,
           scryfall_uri: it.scryfall_uri,
           image_url: it.image_uris.small,
-          type_line: it.type_line,
+          isBasicLand: it.type_line.includes("Basic Land"),
+          isToken: it.type_line.includes("Token"),
         };
       });
       if (response.has_more) {
-        out.push.apply(out, await getNextPage(response.next_page));
+        out.push.apply(out, await getCards(response.next_page));
       }
       return out;
     })
@@ -58,11 +59,35 @@ function getRandomFromArray(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const a = getNextPage(startUrl);
 async function main() {
+  const a = getCards(startUrl);
   const cardsByRarity = groupCardsByRarity(await a);
-  const basicLands = findBasicLands(await a);
-  const cards = [
+  const numBoosters = 6;
+  const numDecks = 3;
+  for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
+    for (let index = 0; index < numBoosters; index++) {
+      const cards = await buildBooster(await a, cardsByRarity);
+      console.log(cards);
+      const output = createBoosterFileContent(cards);
+      await Deno.writeTextFile(`mtg-booster-${index}.html`, output);
+    }
+    let count = 0
+    await compress(Array(numBoosters).fill(0).map(() => `mtg-booster-${count++}.html`), `sealed-deck-${indexDeck}.zip`, { overwrite: true })
+  }
+}
+main();
+
+function createBoosterFileContent(cards) {
+  return `
+  <html><body>
+  ${cards.map((it) => `<a href="${it.scryfall_uri}"><img src="${it.image_url}"/></a>`
+  ).join("\n")}
+  </body></html>
+`;
+}
+
+function buildBooster(allCards, cardsByRarity) {
+  return [
     Array(10).fill(0).map(() => getRandomByRarity(cardsByRarity, "common")),
     Array(3).fill(0).map(() => getRandomByRarity(cardsByRarity, "uncommon")),
     [
@@ -70,20 +95,7 @@ async function main() {
         ? getRandomByRarity(cardsByRarity, "mythic")
         : getRandomByRarity(cardsByRarity, "rare"),
     ],
-    [getRandomFromArray(basicLands)],
+    [getRandomFromArray(findBasicLands(allCards))],
   ].flatMap((it) => it);
-
-  console.log(cards);
-
-  const output = `
-  <html><body>
-  ${
-    cards.map((it) =>
-      `<a href="${it.scryfall_uri}"><img src="${it.image_url}"/></a>`
-    ).join("\n")
-  }
-  </body></html>
-`;
-  await Deno.writeTextFile("./mtg-booster.html", output);
 }
-main();
+

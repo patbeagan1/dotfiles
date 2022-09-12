@@ -1,3 +1,4 @@
+alias q='duckduckgo.sh'
 alias dns_check='systemd-resolve --status'
 alias ports='netstat -vanp tcp'
 alias ip_local="ipconfig getifaddr en0"
