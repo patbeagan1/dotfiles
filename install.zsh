@@ -27,3 +27,11 @@ export PATH=$PATH:$LIBBEAGAN/scripts/dev
 # Aliases
 
 source "$LIBBEAGAN/alias"
+
+###########################################################
+# Dependencies
+
+libbeagan_dependencies() {
+    if isMac.sh && ! which ag >/dev/null; then echo "Silver searcher not installed. Install with 'brew install the_silver_searcher'"; fi
+}
+libbeagan_dependencies
