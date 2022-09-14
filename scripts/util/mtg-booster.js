@@ -128,15 +128,19 @@ function createIndexFileContent(cardsByMana, numBoosters) {
     lines.push(`<a href="./mtg-booster-${index}.html"><div>Booster #${index}</div></a>`)
   }
   lines.push('<hr>')
+  const keys = []
   for (const key in cardsByMana) {
+    keys.push(key)
+  }
+  keys.sort().forEach(key => {
     if (Object.hasOwnProperty.call(cardsByMana, key)) {
       const element = cardsByMana[key];
       lines.push(`<a href="./mtg-booster-filtered-${key}.html"><div>${key}: <strong>${element.length}</strong> cards</div></a>`)
     }
-  }
+  })
   return `
   <html><body>
-  ${lines.join("\n")}
+  ${lines.flat().join("\n")}
   </body></html>
 `
 }
