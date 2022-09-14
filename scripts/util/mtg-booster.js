@@ -45,6 +45,7 @@ function getCards(url) {
     .then(async (response) => {
       const out = response.data.map((it) => {
         const manaType = it.mana_cost.match(manaTypeRegex)
+        const priceUSDstr = it.prices["usd"]
         return {
           id: it.collector_number,
           name: it.name,
@@ -53,7 +54,8 @@ function getCards(url) {
           image_url: it.image_uris.small,
           isBasicLand: it.type_line.includes("Basic Land"),
           isToken: it.type_line.includes("Token"),
-          manaType: manaType ? manaType.filter(uniq).sort().join("") : "-"
+          manaType: manaType ? manaType.filter(uniq).sort().join("") : "-",
+          price: priceUSDstr ? parseFloat(priceUSDstr) : -1
         };
       });
       if (response.has_more) {
@@ -114,16 +116,38 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
     }
   }
 
-  const filename = "index.html"
-  const output = createIndexFileContent(cardsByMana, numBoosters)
+  const cardsByPrice = allCards.flat().sort((a, b) => {
+    if (a["price"] > b["price"]) {
+      return -1
+    } else if (a["price"] < b["price"]) {
+      return 1
+    } else {
+      return 0
+    }
+  })
+  const output = `
+  <html><body>
+  ${cardsByPrice.map((it) => `<a href="${it.scryfall_uri}"><div>${it.name}: ${it.price}</div></a>`).join("\n")}
+  </body></html>
+  `
+  const filename = `mtg-price.html`
   genFiles.push(filename)
   await Deno.writeTextFile(filename, output);
+
+  await writeIndexFile(cardsByMana, numBoosters, genFiles);
 
   await compress(genFiles, `sealed-deck-${indexDeck}.zip`, { overwrite: true });
 
   genFiles.forEach(element => {
     Deno.remove(element)
   });
+}
+
+async function writeIndexFile(cardsByMana, numBoosters, genFiles) {
+  const filename = "index.html";
+  const output = createIndexFileContent(cardsByMana, numBoosters);
+  genFiles.push(filename);
+  await Deno.writeTextFile(filename, output);
 }
 
 function createIndexFileContent(cardsByMana, numBoosters) {
@@ -142,6 +166,8 @@ function createIndexFileContent(cardsByMana, numBoosters) {
       lines.push(`<a href="./mtg-booster-filtered-${key}.html"><div>${key}: <strong>${element.length}</strong> cards</div></a>`)
     }
   })
+  lines.push('<hr>')
+  lines.push(`<a href="./mtg-price.html"><div>Cards by price</a>`)
   return `
   <html><body>
   ${lines.flat().join("\n")}
