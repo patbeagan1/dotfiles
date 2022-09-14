@@ -120,6 +120,10 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
   await Deno.writeTextFile(filename, output);
 
   await compress(genFiles, `sealed-deck-${indexDeck}.zip`, { overwrite: true });
+
+  genFiles.forEach(element => {
+    Deno.remove(element)
+  });
 }
 
 function createIndexFileContent(cardsByMana, numBoosters) {
