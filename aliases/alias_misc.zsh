@@ -1,3 +1,4 @@
+alias kotlin_conversion='echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
 script-edit () { vi "$(which "$1")"; }
 alias server='python3 -m http.server'
 alias vpn='nordvpn status'
