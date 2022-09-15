@@ -12,6 +12,10 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&q=e%3Admu" +
   "&unique=prints";
 
+const manaTypeRegex = /[A-Z]/gi;
+
+const uniq = (value, index, self) => self.indexOf(value) === index;
+
 const groupCardsByRarity = (cards) => cards
   .filter((it) => !it.isBasicLand && !it.isToken)
   .reduce((acc, value) => {
@@ -19,6 +23,15 @@ const groupCardsByRarity = (cards) => cards
       acc[value.rarity] = [];
     }
     acc[value.rarity].push(value);
+    return acc;
+  }, {});
+
+const groupCardsByMana = (cards) => cards
+  .reduce((acc, value) => {
+    if (!acc[value.manaType]) {
+      acc[value.manaType] = [];
+    }
+    acc[value.manaType].push(value);
     return acc;
   }, {});
 
@@ -31,6 +44,7 @@ function getCards(url) {
     .then((response) => response.json())
     .then(async (response) => {
       const out = response.data.map((it) => {
+        const manaType = it.mana_cost.match(manaTypeRegex)
         return {
           id: it.collector_number,
           name: it.name,
@@ -39,6 +53,7 @@ function getCards(url) {
           image_url: it.image_uris.small,
           isBasicLand: it.type_line.includes("Basic Land"),
           isToken: it.type_line.includes("Token"),
+          manaType: manaType ? manaType.filter(uniq).sort().join("") : "-"
         };
       });
       if (response.has_more) {
@@ -55,27 +70,84 @@ function getRandomByRarity(cardsByRarity, rarity) {
   ];
 }
 
+
+async function main() {
+  const remoteCards = getCards(startUrl);
+  const cardsByRarity = groupCardsByRarity(await remoteCards);
+  const numBoosters = 6;
+  const numDecks = 3;
+  for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
+    await generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck);
+  }
+  console.log(startUrl)
+}
+main();
+
 function getRandomFromArray(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-async function main() {
-  const a = getCards(startUrl);
-  const cardsByRarity = groupCardsByRarity(await a);
-  const numBoosters = 6;
-  const numDecks = 3;
-  for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
-    for (let index = 0; index < numBoosters; index++) {
-      const cards = await buildBooster(await a, cardsByRarity);
-      console.log(cards);
-      const output = createBoosterFileContent(cards);
-      await Deno.writeTextFile(`mtg-booster-${index}.html`, output);
-    }
-    let count = 0
-    await compress(Array(numBoosters).fill(0).map(() => `mtg-booster-${count++}.html`), `sealed-deck-${indexDeck}.zip`, { overwrite: true })
+async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) {
+  const allCards = [];
+  const genFiles = []
+
+  // generating booster files
+  for (let index = 0; index < numBoosters; index++) {
+    const cards = await buildBooster(await remoteCards, cardsByRarity);
+    allCards.push(cards);
+    console.log(cards.map((it) => it.name));
+    const output = createBoosterFileContent(cards);
+    const filename = `mtg-booster-${index}.html`
+    genFiles.push(filename)
+    await Deno.writeTextFile(filename, output);
   }
+
+  // using the generated booster info to create filtered sets based on mana type
+  const cardsByMana = groupCardsByMana(allCards.flat());
+  for (const key in cardsByMana) {
+    if (Object.hasOwnProperty.call(cardsByMana, key)) {
+      const element = cardsByMana[key];
+      const output = createBoosterFileContent(element);
+      const filename = `mtg-booster-filtered-${key}.html`
+      genFiles.push(filename)
+      await Deno.writeTextFile(filename, output);
+    }
+  }
+
+  const filename = "index.html"
+  const output = createIndexFileContent(cardsByMana, numBoosters)
+  genFiles.push(filename)
+  await Deno.writeTextFile(filename, output);
+
+  await compress(genFiles, `sealed-deck-${indexDeck}.zip`, { overwrite: true });
+
+  genFiles.forEach(element => {
+    Deno.remove(element)
+  });
 }
-main();
+
+function createIndexFileContent(cardsByMana, numBoosters) {
+  const lines = []
+  for (let index = 0; index < numBoosters; index++) {
+    lines.push(`<a href="./mtg-booster-${index}.html"><div>Booster #${index}</div></a>`)
+  }
+  lines.push('<hr>')
+  const keys = []
+  for (const key in cardsByMana) {
+    keys.push(key)
+  }
+  keys.sort().forEach(key => {
+    if (Object.hasOwnProperty.call(cardsByMana, key)) {
+      const element = cardsByMana[key];
+      lines.push(`<a href="./mtg-booster-filtered-${key}.html"><div>${key}: <strong>${element.length}</strong> cards</div></a>`)
+    }
+  })
+  return `
+  <html><body>
+  ${lines.flat().join("\n")}
+  </body></html>
+`
+}
 
 function createBoosterFileContent(cards) {
   return `
