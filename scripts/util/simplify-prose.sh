@@ -31,11 +31,25 @@ simplify-prose() {
     cat "$1" |
         preprocess |
         tr "\n" "\r" |
-        sed 's/\r/--------\n\n/g' |
+        sed 's/\r\r/\n--------\n\n /g' |
+        sed 's/  / /g' |
+        
+        sed 's/i\.e\./i-e-/g' |
+        sed 's/_i\.e_\./i-e-/g' |
+        sed 's/e\.g\./e-g-/g' |
+
+        sed 's/\."/"\./g' |
+        sed 's/\.”/”\./g' |
+        sed 's/\,"/"\,/g' |
+        sed 's/\,”/”\,/g' |
+        
         sed 's/,/,\n /g' |
         sed 's/;/;\n /g' |
-        sed 's/\./.\n\n/g' |
-        awk '/--------/ {print ++count, $0} !/--------/ { print }'
+        sed 's/\./\.\n\n/g' |
+        sed 's/\?/\?\n\n/g' |
+        sed 's/\!/\!\n\n/g' |
+        
+        awk '/--------/ {print ++count, $0} !/--------/ {print}'
 }
 
 simplify-prose "$@" || help
