@@ -28,7 +28,7 @@ Errs:
 
 remove_leading_whitespace() {
   # removes leading whitespace
-  sed 's/^[ ]*\(.*$\)/\1/' #|
+  sed 's/^[ ]*\(.*$\)/\1/'
 }
 
 replace_abbreviations() {
@@ -56,14 +56,18 @@ replace_double_spaces() {
   sed 's/  / /g'
 }
 
+format_core() {
+  replace_double_spaces |
+    replace_abbreviations |
+    replace_quoted_punctuation |
+    replace_punctuation
+}
+
 simplify-prose-legal() {
   cat "$1" |
     remove_leading_whitespace |
     tr "\n" " " |
-    replace_double_spaces |
-    replace_abbreviations |
-    replace_quoted_punctuation |
-    replace_punctuation |
+    format_core |
     awk '{print ++count "\t" "| " $0}'
 }
 
@@ -76,10 +80,7 @@ simplify-prose() {
     sed 's/NEWLINE-MAGIC-9182/ /g' |
     tr "\n" "\r" |
     sed 's/\r\r/\n--------\n\n /g' |
-    replace_double_spaces |
-    replace_abbreviations |
-    replace_quoted_punctuation |
-    replace_punctuation |
+    format_core |
     awk '/--------/ {print ++count, $0} !/--------/ {print}'
 }
 
