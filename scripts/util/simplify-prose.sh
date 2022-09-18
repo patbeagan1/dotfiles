@@ -14,17 +14,54 @@ Helps to break up large blocks of text by putting common punctuation on differen
 This helps when reading thick prose from before 1900, 
   because it allows you to more easily filter out the sentences that are irrelevant, 
   and double back to the parts that have become relveant again, once a stack of clauses resolves.
+
+Options
+  -l: legal mode
+  -p: prose mode
+
+Errs:
+  1: generic
+  2: missing mode flag
 "
     if [[ ! $error_code -eq 0 ]]; then echo "Err: $error_code"; fi
 }
 
-preprocess() {
+remove_leading_whitespace() {
     # removes leading whitespace
-    sed 's/^[ ]*\(.*$\)/\1/' |
+    sed 's/^[ ]*\(.*$\)/\1/' #|
+}
+
+preprocess() {
+        remove_leading_whitespace |
         tr '\n' '\r' |
         sed 's/\r\r/NEWLINE-MAGIC-9182/g' |
         sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\n\n/g' |
         sed 's/NEWLINE-MAGIC-9182/ /g'
+}
+
+simplify-prose-legal() {
+    cat "$1" |
+        remove_leading_whitespace |
+        tr "\n" " " |
+        sed 's/\r\r/\n--------\n\n /g' |
+        sed 's/  / /g' |
+        
+        sed 's/i\.e\./i-e-/g' |
+        sed 's/_i\.e_\./i-e-/g' |
+        sed 's/e\.g\./e-g-/g' |
+
+        sed 's/\."/"\./g' |
+        sed 's/\.”/”\./g' |
+        sed 's/\,"/"\,/g' |
+        sed 's/\,”/”\,/g' |
+        
+        sed 's/,/,\n /g' |
+        sed 's/;/;\n /g' |
+        sed 's/\./\.\n\n/g' |
+        sed 's/\?/\?\n\n/g' |
+        sed 's/\!/\!\n\n/g' |
+        
+        awk '{print ++count "\t" "| " $0}'
 }
 
 simplify-prose() {
@@ -52,5 +89,14 @@ simplify-prose() {
         awk '/--------/ {print ++count, $0} !/--------/ {print}'
 }
 
-simplify-prose "$@" || help
+if [ "$1" = "-l" ]; then
+  shift
+  simplify-prose-legal "$@" || help
+elif [ "$1" = "-p" ]; then
+  shift
+  simplify-prose "$@" || help
+else
+  true
+  help
+fi
 trackusage.sh "$0"
