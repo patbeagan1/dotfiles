@@ -31,13 +31,13 @@ alias gw='./gradlew'
 
 #==========================================
 # QR
-function itty () { echo -n "<pre>$1</pre>" | lzma -9 | base64 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }
-function ittyqr () { qrencode -l L -v 1 -o output.png -r <(echo `itty "$1"`); }
-function ittyqrc () { ittyqr "`cat $1`"; }
-alias qr="qrencode -l L -v 1 -o output.png -r" 
-alias qr_compileAggregate="montage output*  -geometry 120x120+1+1   montage.out.jpg"
-function qr_textToImage () { qrencode -l L -v 1 -o output"$(python3 -c 'import time; print(time.time())')".png; } 
+alias qr="qrencoder.sh" 
+alias qr_compileAggregate="montage /tmp/qr-output* -geometry 120x120+1+1 montage.out.jpg"
 
+#==========================================
+# Itty
+function itty_qr () { qr $(itty.sh "$1"); }
+function itty_qr_cat () { itty_qr "`cat $1`"; }
 
 #==========================================
 

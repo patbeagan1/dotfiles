@@ -47,13 +47,33 @@ replace_quoted_punctuation() {
 replace_punctuation() {
   sed 's/,/,\n /g' |
     sed 's/;/;\n /g' |
+    sed 's/:/:\n /g' |
     sed 's/\./\.\n\n/g' |
     sed 's/\?/\?\n\n/g' |
     sed 's/\!/\!\n\n/g'
 }
 
+replace_conjunction() {
+  sed 's/ and /\n  and /g' |
+    sed 's/ or /\n  or /g'
+}
+
 replace_double_spaces() {
   sed 's/  / /g'
+}
+
+reduce_newlines() {
+  tr '\n' '\r' |
+    sed 's/\r\r/NEWLINE-MAGIC-9182/g' |
+    sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\n\n/g' |
+    sed 's/NEWLINE-MAGIC-9182/ /g'
+}
+
+reduce_newlines_after_conjunction() {
+  tr '\n' '\r' |
+    sed -E 's/\r[ ]*\r[ ]*and/\r  and/g' |
+    sed -E 's/\r[ ]*\r[ ]*or/\r  or/g' |
+    tr '\r' '\n'
 }
 
 format_core() {
@@ -68,16 +88,15 @@ simplify-prose-legal() {
     remove_leading_whitespace |
     tr "\n" " " |
     format_core |
+    replace_conjunction |
+    reduce_newlines_after_conjunction |
     awk '{print ++count "\t" "| " $0}'
 }
 
 simplify-prose() {
   cat "$1" |
     remove_leading_whitespace |
-    tr '\n' '\r' |
-    sed 's/\r\r/NEWLINE-MAGIC-9182/g' |
-    sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\n\n/g' |
-    sed 's/NEWLINE-MAGIC-9182/ /g' |
+    reduce_newlines |
     tr "\n" "\r" |
     sed 's/\r\r/\n--------\n\n /g' |
     format_core |
