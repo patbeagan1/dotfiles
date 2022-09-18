@@ -39,28 +39,35 @@ preprocess() {
         sed 's/NEWLINE-MAGIC-9182/ /g'
 }
 
+replace_abbreviations () {
+        sed 's/i\.e\./i-e-/g' |
+        sed 's/_i\.e_\./i-e-/g' |
+        sed 's/e\.g\./e-g-/g' 
+}
+
+replace_quoted_punctuation () {
+          sed 's/\."/"\./g' |
+        sed 's/\.”/”\./g' |
+        sed 's/\,"/"\,/g' |
+        sed 's/\,”/”\,/g' 
+}
+
+replace_punctuation () {
+        sed 's/,/,\n /g' |
+        sed 's/;/;\n /g' |
+        sed 's/\./\.\n\n/g' |
+        sed 's/\?/\?\n\n/g' |
+        sed 's/\!/\!\n\n/g' 
+}
 simplify-prose-legal() {
     cat "$1" |
         remove_leading_whitespace |
         tr "\n" " " |
         sed 's/\r\r/\n--------\n\n /g' |
         sed 's/  / /g' |
-        
-        sed 's/i\.e\./i-e-/g' |
-        sed 's/_i\.e_\./i-e-/g' |
-        sed 's/e\.g\./e-g-/g' |
-
-        sed 's/\."/"\./g' |
-        sed 's/\.”/”\./g' |
-        sed 's/\,"/"\,/g' |
-        sed 's/\,”/”\,/g' |
-        
-        sed 's/,/,\n /g' |
-        sed 's/;/;\n /g' |
-        sed 's/\./\.\n\n/g' |
-        sed 's/\?/\?\n\n/g' |
-        sed 's/\!/\!\n\n/g' |
-        
+        replace_abbreviations |
+        replace_quoted_punctuation |
+        replace_punctuation |
         awk '{print ++count "\t" "| " $0}'
 }
 
@@ -70,22 +77,9 @@ simplify-prose() {
         tr "\n" "\r" |
         sed 's/\r\r/\n--------\n\n /g' |
         sed 's/  / /g' |
-        
-        sed 's/i\.e\./i-e-/g' |
-        sed 's/_i\.e_\./i-e-/g' |
-        sed 's/e\.g\./e-g-/g' |
-
-        sed 's/\."/"\./g' |
-        sed 's/\.”/”\./g' |
-        sed 's/\,"/"\,/g' |
-        sed 's/\,”/”\,/g' |
-        
-        sed 's/,/,\n /g' |
-        sed 's/;/;\n /g' |
-        sed 's/\./\.\n\n/g' |
-        sed 's/\?/\?\n\n/g' |
-        sed 's/\!/\!\n\n/g' |
-        
+        replace_abbreviations |
+        replace_quoted_punctuation |
+        replace_punctuation |
         awk '/--------/ {print ++count, $0} !/--------/ {print}'
 }
 
