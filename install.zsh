@@ -32,6 +32,14 @@ source "$LIBBEAGAN/alias"
 # Dependencies
 
 libbeagan_dependencies() {
-    if isMac.sh && ! which ag >/dev/null; then echo "Silver searcher not installed. Install with 'brew install the_silver_searcher'"; fi
+    if isMac.sh; then
+        if ! which ag &>/dev/null; then echo "brew install the_silver_searcher"; fi
+        if ! which wget &>/dev/null; then echo 'brew install wget'; fi
+        if ! which dot &>/dev/null; then echo 'brew install graphviz'; fi
+        if ! which tree &>/dev/null; then echo 'brew install tree'; fi
+        if ! which qrencode &>/dev/null; then echo 'brew install qrencode'; fi
+        if ! which java &>/dev/null; then echo 'brew install java'; fi
+        if ! which fzf &>/dev/null; then echo 'brew install fzf'; fi
+    fi
 }
 libbeagan_dependencies
