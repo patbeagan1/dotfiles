@@ -15,7 +15,7 @@ This helps when reading thick prose from before 1900,
   because it allows you to more easily filter out the sentences that are irrelevant, 
   and double back to the parts that have become relveant again, once a stack of clauses resolves.
 
-Options
+Required mode flag
   -l: legal mode
   -p: prose mode
 
@@ -29,14 +29,6 @@ Errs:
 remove_leading_whitespace() {
     # removes leading whitespace
     sed 's/^[ ]*\(.*$\)/\1/' #|
-}
-
-preprocess() {
-        remove_leading_whitespace |
-        tr '\n' '\r' |
-        sed 's/\r\r/NEWLINE-MAGIC-9182/g' |
-        sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\n\n/g' |
-        sed 's/NEWLINE-MAGIC-9182/ /g'
 }
 
 replace_abbreviations () {
@@ -59,12 +51,16 @@ replace_punctuation () {
         sed 's/\?/\?\n\n/g' |
         sed 's/\!/\!\n\n/g' 
 }
+
+replace_double_spaces () {
+  sed 's/  / /g' 
+}
+
 simplify-prose-legal() {
     cat "$1" |
         remove_leading_whitespace |
         tr "\n" " " |
-        sed 's/\r\r/\n--------\n\n /g' |
-        sed 's/  / /g' |
+        replace_double_spaces |
         replace_abbreviations |
         replace_quoted_punctuation |
         replace_punctuation |
@@ -73,10 +69,14 @@ simplify-prose-legal() {
 
 simplify-prose() {
     cat "$1" |
-        preprocess |
+        remove_leading_whitespace |
+        tr '\n' '\r' |
+        sed 's/\r\r/NEWLINE-MAGIC-9182/g' |
+        sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\n\n/g' |
+        sed 's/NEWLINE-MAGIC-9182/ /g' |
         tr "\n" "\r" |
         sed 's/\r\r/\n--------\n\n /g' |
-        sed 's/  / /g' |
+        replace_double_spaces |
         replace_abbreviations |
         replace_quoted_punctuation |
         replace_punctuation |
