@@ -24,10 +24,24 @@ alias findname='find . -name'
 
 # caching web pages for offline viewing
 # esp for gutenburg
-alias wgetl='wget --recursive --no-parent'
-alias cache=wgetl
+alias wget-all='wget --recursive --no-parent'
+
+alias cat-web='wget -O-'
 
 alias gw='./gradlew'
+
+#==========================================
+# Random
+
+alias random="random.sh"
+alias random_temp_file='/tmp/$(date +%s)_$(random 1000)'
+alias d2="random 2"
+alias d4="random 4"
+alias d6="random 6"
+alias d8="random 8"
+alias d10="random 10"
+alias d12="random 12"
+alias d20="random 20"
 
 #==========================================
 # QR
