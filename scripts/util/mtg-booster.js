@@ -103,16 +103,17 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
       return `
       <html><body>
       <div style="display: flex; flex-wrap: wrap;">
-      ${cards.map((it) => `
-      <div id="${it.id}">
+      ${cards.map((it, index) => {
+        return `
+      <div id="${index}">
       <a href="${it.scryfall_uri}">
       <img src="${it.image_url}"/>
       </a>
-      <div onclick="rmCard(${it.id})">
+      <div onclick="rmCard(${index})">
       Remove
       </div>
-      </div>`
-      ).join("\n")}
+      </div>`;
+      }).join("\n")}
       </div>
       <script>
       function rmCard(cardId) {
@@ -135,18 +136,19 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
       await Deno.writeTextFile(filename, output);
     }
 
-    const getRandomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    function getRandomByRarity(cardsByRarity, rarity) {
-      return cardsByRarity[rarity][
-        Math.floor(Math.random() * cardsByRarity[rarity].length)
-      ];
-    }
-
-    const findBasicLands = (cards) => cards
-      .filter((it) => it.isBasicLand);
 
     function buildBooster(allCards, cardsByRarity) {
+      const getRandomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      function getRandomByRarity(cardsByRarity, rarity) {
+        return cardsByRarity[rarity][
+          Math.floor(Math.random() * cardsByRarity[rarity].length)
+        ];
+      }
+
+      const findBasicLands = (cards) => cards
+        .filter((it) => it.isBasicLand);
+
       return [
         Array(10).fill(0).map(() => getRandomByRarity(cardsByRarity, "common")),
         Array(3).fill(0).map(() => getRandomByRarity(cardsByRarity, "uncommon")),
