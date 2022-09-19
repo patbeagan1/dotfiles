@@ -46,6 +46,7 @@ libbeagan_dependencies() {
         if ! which deno &>/dev/null; then echo 'brew install deno'; fi
         if ! which python3 &>/dev/null; then echo 'brew install python'; fi
         if ! which npm &>/dev/null; then echo 'brew install npm'; fi
+        if ! which parallel &>/dev/null; then echo 'brew install parallel'; fi
 
         # general purpose
         if ! which dart &>/dev/null; then echo 'brew install dart'; fi
