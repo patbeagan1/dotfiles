@@ -103,14 +103,15 @@ simplify-prose() {
     awk '/--------/ {print ++count, $0} !/--------/ {print}'
 }
 
-if [ "$1" = "-l" ]; then
+if [ ! $# -eq 2 ]; then
+  help
+elif [ "$1" = "-l" ]; then
   shift
   simplify-prose-legal "$@" || help
 elif [ "$1" = "-p" ]; then
   shift
   simplify-prose "$@" || help
 else
-  true
   help
 fi
 trackusage.sh "$0"
