@@ -13,6 +13,7 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&unique=prints";
 
 const manaTypeRegex = /[A-Z]/gi;
+const uniq = (value, index, self) => self.indexOf(value) === index;
 
 const groupCardsByRarity = (cards) => cards
   .filter((it) => !it.isBasicLand && !it.isToken)
@@ -50,6 +51,7 @@ function getCards(url) {
           isBasicLand: it.type_line.includes("Basic Land"),
           isToken: it.type_line.includes("Token"),
           manaType: manaType ? manaType.filter(uniq).sort().join("") : "-",
+          convertedManaCost: it.cmc,
           price: priceUSDstr ? parseFloat(priceUSDstr) : -1
         };
       });
@@ -71,7 +73,6 @@ async function main() {
   }
   console.log(startUrl)
 }
-main();
 
 async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) {
   const allCards = [];
@@ -95,7 +96,38 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
 
   async function writeAllCardsPage(allCards, genFiles) {
     const filename = "mtg-all-cards.html";
-    const output = createAllCardsContent(allCards.flat());
+    const sortedCards = allCards
+      .flat()
+      .sort((a, b) => {
+        if (a["id"] > b["id"]) {
+          return -1;
+        } else if (a["id"] < b["id"]) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+      .sort((a, b) => {
+        if (a["convertedManaCost"] > b["convertedManaCost"]) {
+          return -1;
+        } else if (a["convertedManaCost"] < b["convertedManaCost"]) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+      .sort((a, b) => {
+        if (a["manaType"] > b["manaType"]) {
+          return -1;
+        } else if (a["manaType"] < b["manaType"]) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+    console.log(sortedCards);
+
+    const output = createAllCardsContent(sortedCards);
     genFiles.push(filename);
     await Deno.writeTextFile(filename, output);
 
@@ -195,8 +227,6 @@ async function writePricePage(allCards, genFiles) {
   await Deno.writeTextFile(filename, output);
 }
 
-const uniq = (value, index, self) => self.indexOf(value) === index;
-
 async function writeIndexFile(cardsByMana, numBoosters, genFiles) {
   const filename = "index.html";
   const output = createIndexFileContent(cardsByMana, numBoosters);
@@ -239,4 +269,4 @@ function createBoosterFileContent(cards) {
 `;
 }
 
-
+main();
