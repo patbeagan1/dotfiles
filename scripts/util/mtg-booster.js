@@ -96,36 +96,14 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
 
   async function writeAllCardsPage(allCards, genFiles) {
     const filename = "mtg-all-cards.html";
-    const sortedCards = allCards
-      .flat()
-      .sort((a, b) => {
-        if (a["id"] > b["id"]) {
-          return -1;
-        } else if (a["id"] < b["id"]) {
-          return 1;
-        } else {
-          return 0;
-        }
-      })
-      .sort((a, b) => {
-        if (a["convertedManaCost"] > b["convertedManaCost"]) {
-          return -1;
-        } else if (a["convertedManaCost"] < b["convertedManaCost"]) {
-          return 1;
-        } else {
-          return 0;
-        }
-      })
-      .sort((a, b) => {
-        if (a["manaType"] > b["manaType"]) {
-          return -1;
-        } else if (a["manaType"] < b["manaType"]) {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
-    console.log(sortedCards);
+    const sortedCards = sortByField(
+      sortByField(
+        sortByField(
+          allCards.flat(),
+          "id"),
+        "convertedManaCost"),
+      "manaType"
+    )
 
     const output = createAllCardsContent(sortedCards);
     genFiles.push(filename);
@@ -208,15 +186,7 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
 }
 
 async function writePricePage(allCards, genFiles) {
-  const cardsByPrice = allCards.flat().sort((a, b) => {
-    if (a["price"] > b["price"]) {
-      return -1;
-    } else if (a["price"] < b["price"]) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
+  const cardsByPrice = sortByField(allCards.flat(), "price")
   const output = `
   <html><body>
   ${cardsByPrice.map((it) => `<a href="${it.scryfall_uri}"><div>${it.name}: ${it.price}</div></a>`).join("\n")}
@@ -225,6 +195,21 @@ async function writePricePage(allCards, genFiles) {
   const filename = `mtg-price.html`;
   genFiles.push(filename);
   await Deno.writeTextFile(filename, output);
+}
+
+function sortByField(arr, field) {
+  function byField(field) {
+    return (a, b) => {
+      if (a[field] > b[field]) {
+        return -1;
+      } else if (a[field] < b[field]) {
+        return 1;
+      } else {
+        return 0;
+      }
+    };
+  }
+  return arr.sort(byField(field))
 }
 
 async function writeIndexFile(cardsByMana, numBoosters, genFiles) {
