@@ -103,7 +103,7 @@ finalize_url_formatting() {
 }
 
 save_generic_abbrviations() {
-  sed -E 's/(\.)([^\w])/DOT-MAGIC-9876\2/g'
+  sed -E 's/(\.)([^ ])/DOT-MAGIC-9876-\2/g'
 }
 
 finalize_generic_abbrevations() {
