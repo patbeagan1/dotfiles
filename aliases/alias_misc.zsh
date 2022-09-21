@@ -57,7 +57,6 @@ function itty_qr_cat () { itty_qr "`cat $1`"; }
 
 function wiki () { open $(wiki.js "$*") }
 
-
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
 

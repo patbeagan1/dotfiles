@@ -10,7 +10,7 @@ help () {
     echo "
 No help message yet
 "
-    if [[ ! \$error_code -eq 0 ]]; then echo "Err: \$error_code"; fi
+    exit \$error_code
 }
 
 EOF

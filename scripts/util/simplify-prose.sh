@@ -32,7 +32,9 @@ remove_leading_whitespace() {
 }
 
 replace_abbreviations() {
-  sed 's/i\.e\./i-e-/g' |
+  sed 's/U\.S\./U-S-/ig' |
+    sed 's/U\.S\.A\./U-S-A-/ig' |
+    sed 's/i\.e\./i-e-/g' |
     sed 's/_i\.e_\./i-e-/g' |
     sed 's/e\.g\./e-g-/g'
 }
@@ -41,7 +43,21 @@ replace_quoted_punctuation() {
   sed 's/\."/"\./g' |
     sed 's/\.”/”\./g' |
     sed 's/\,"/"\,/g' |
-    sed 's/\,”/”\,/g'
+    sed 's/\,”/”\,/g' |
+    sed 's/\!"/"\!/g' |
+    sed 's/\!”/”\!/g'
+}
+
+replace_parenthesized_punctuation() {
+  sed 's/\.)/)\./g' |
+    sed 's/\!)/)\!/g' |
+    sed 's/\,)/)\,/g'
+}
+
+transliterate_for_font_compatibility() {
+  sed 's/“/"/g' |
+    sed 's/”/"/g' |
+    sed "s/’/\'/g"
 }
 
 replace_punctuation() {
@@ -50,7 +66,8 @@ replace_punctuation() {
     sed 's/:/:\n /g' |
     sed 's/\./\.\n\n/g' |
     sed 's/\?/\?\n\n/g' |
-    sed 's/\!/\!\n\n/g'
+    sed 's/\!/\!\n\n/g' |
+    sed 's/—/--/g'
 }
 
 replace_conjunction() {
@@ -76,11 +93,24 @@ reduce_newlines_after_conjunction() {
     tr '\r' '\n'
 }
 
+save_url_formatting() {
+  sed -E '/\.[^.]*\.org/s/\./URLDOT-MAGIC-235/g' |
+    sed -E '/\.[^.]*\.com/s/\./URLDOT-MAGIC-235/g'
+}
+
+finalize_url_formatting() {
+  sed 's/URLDOT-MAGIC-235/\./g'
+}
+
 format_core() {
   replace_double_spaces |
     replace_abbreviations |
     replace_quoted_punctuation |
-    replace_punctuation
+    replace_parenthesized_punctuation |
+    save_url_formatting |
+    replace_punctuation |
+    finalize_url_formatting |
+    transliterate_for_font_compatibility
 }
 
 simplify-prose-legal() {
