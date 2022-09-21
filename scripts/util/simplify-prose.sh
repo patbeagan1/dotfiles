@@ -31,7 +31,7 @@ remove_leading_whitespace() {
   sed 's/^[ ]*\(.*$\)/\1/'
 }
 
-replace_abbreviations() {
+replace_known_abbreviations() {
   sed 's/U\.S\./U-S-/ig' |
     sed 's/U\.S\.A\./U-S-A-/ig' |
     sed 's/i\.e\./i-e-/g' |
@@ -102,14 +102,28 @@ finalize_url_formatting() {
   sed 's/URLDOT-MAGIC-235/\./g'
 }
 
+save_generic_abbrviations() {
+  sed -E 's/(\.)([^\w])/DOT-MAGIC-9876\2/g'
+}
+
+finalize_generic_abbrevations() {
+  sed -E 's/DOT-MAGIC-9876/\./g'
+}
+
 format_core() {
   replace_double_spaces |
-    replace_abbreviations |
+    replace_known_abbreviations |
     replace_quoted_punctuation |
     replace_parenthesized_punctuation |
+
     save_url_formatting |
+    save_generic_abbrviations |
+
     replace_punctuation |
+
     finalize_url_formatting |
+    finalize_generic_abbrevations |
+
     transliterate_for_font_compatibility
 }
 

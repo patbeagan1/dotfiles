@@ -28,6 +28,7 @@ webringify() {
             margin-bottom: 20px;
             padding: 20px;
             border-radius: 10px;
+            overflow-x: auto;
         }
         </style>' >> "webring/$count.html"
         echo "<webring-component current-site=\"$count\"></webring-component>" >> "webring/$count.html"
