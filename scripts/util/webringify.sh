@@ -39,6 +39,10 @@ webringify() {
         echo '<script src="./webring.js"></script>' >> "webring/$count.html"
         echo '</body></html>' >> "webring/$count.html"
         count=$((count + 1))
+        
+        echo "<html><body>" >> "webring/index.html"
+        echo "<a href=\"$count.html\">$count</a>" >> "webring/index.html"
+        echo "</body></html>" >> "webring/index.html"
     done
 
     echo '

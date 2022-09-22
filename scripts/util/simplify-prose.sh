@@ -41,11 +41,18 @@ replace_known_abbreviations() {
 
 replace_quoted_punctuation() {
   sed 's/\."/"\./g' |
-    sed 's/\.”/”\./g' |
     sed 's/\,"/"\,/g' |
-    sed 's/\,”/”\,/g' |
+    sed 's/\?"/"\?/g' |
     sed 's/\!"/"\!/g' |
-    sed 's/\!”/”\!/g'
+    sed 's/\;"/"\;/g' |
+    sed 's/\:"/"\:/g' |
+
+    sed "s/\.'/'\./g" |
+    sed "s/\,'/'\,/g" |
+    sed "s/\?'/'\?/g" |
+    sed "s/\:'/'\:/g" |
+    sed "s/\;'/'\;/g" |
+    sed "s/\!'/'\!/g"
 }
 
 replace_parenthesized_punctuation() {
@@ -57,7 +64,8 @@ replace_parenthesized_punctuation() {
 transliterate_for_font_compatibility() {
   sed 's/“/"/g' |
     sed 's/”/"/g' |
-    sed "s/’/\'/g"
+    sed "s/’/\'/g" |
+    sed "s/‘/\'/g"
 }
 
 replace_punctuation() {
@@ -111,20 +119,16 @@ finalize_generic_abbrevations() {
 }
 
 format_core() {
-  replace_double_spaces |
+  transliterate_for_font_compatibility |
+    replace_double_spaces |
     replace_known_abbreviations |
     replace_quoted_punctuation |
     replace_parenthesized_punctuation |
-
     save_url_formatting |
     save_generic_abbrviations |
-
     replace_punctuation |
-
     finalize_url_formatting |
-    finalize_generic_abbrevations |
-
-    transliterate_for_font_compatibility
+    finalize_generic_abbrevations
 }
 
 simplify-prose-legal() {
