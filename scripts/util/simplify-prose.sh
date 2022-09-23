@@ -11,8 +11,8 @@ Helps to break up large blocks of text by putting common punctuation on differen
   Sentences are shown by new paragraphs,
   Commas are shown as new lines that are indented.
 
-This helps when reading thick prose from before 1900, 
-  because it allows you to more easily filter out the sentences that are irrelevant, 
+This helps when reading thick prose from before 1900,
+  because it allows you to more easily filter out the sentences that are irrelevant,
   and double back to the parts that have become relveant again, once a stack of clauses resolves.
 
 Required mode flag
@@ -46,7 +46,6 @@ replace_quoted_punctuation() {
     sed 's/\!"/"\!/g' |
     sed 's/\;"/"\;/g' |
     sed 's/\:"/"\:/g' |
-
     sed "s/\.'/'\./g" |
     sed "s/\,'/'\,/g" |
     sed "s/\?'/'\?/g" |
@@ -80,7 +79,9 @@ replace_punctuation() {
 
 replace_conjunction() {
   sed 's/ and /\n  and /g' |
-    sed 's/ or /\n  or /g'
+    sed 's/ AND /\n  AND /g' |
+    sed 's/ or /\n  or /g' |
+    sed 's/ OR /\n  OR /g'
 }
 
 replace_double_spaces() {
@@ -94,6 +95,12 @@ reduce_newlines() {
     sed 's/NEWLINE-MAGIC-9182/ /g'
 }
 
+increase_newlines() {
+  tr '\n' '\r' |
+    sed 's/\r/\r\r/g' |
+    tr '\r' '\n'
+}
+
 reduce_newlines_after_conjunction() {
   tr '\n' '\r' |
     sed -E 's/\r[ ]*\r[ ]*and/\r  and/g' |
@@ -101,17 +108,8 @@ reduce_newlines_after_conjunction() {
     tr '\r' '\n'
 }
 
-save_url_formatting() {
-  sed -E '/\.[^.]*\.org/s/\./URLDOT-MAGIC-235/g' |
-    sed -E '/\.[^.]*\.com/s/\./URLDOT-MAGIC-235/g'
-}
-
-finalize_url_formatting() {
-  sed 's/URLDOT-MAGIC-235/\./g'
-}
-
-save_generic_abbrviations() {
-  sed -E 's/(\.)([^ ])/DOT-MAGIC-9876-\2/g'
+save_generic_abbreviations() {
+  sed -E 's/(\.)([^ ])/DOT-MAGIC-9876\2/g'
 }
 
 finalize_generic_abbrevations() {
@@ -124,16 +122,15 @@ format_core() {
     replace_known_abbreviations |
     replace_quoted_punctuation |
     replace_parenthesized_punctuation |
-    save_url_formatting |
-    save_generic_abbrviations |
+    save_generic_abbreviations |
     replace_punctuation |
-    finalize_url_formatting |
     finalize_generic_abbrevations
 }
 
 simplify-prose-legal() {
   cat "$1" |
     remove_leading_whitespace |
+    increase_newlines |
     tr "\n" " " |
     format_core |
     replace_conjunction |
