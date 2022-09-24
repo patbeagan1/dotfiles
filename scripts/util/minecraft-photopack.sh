@@ -44,6 +44,22 @@ csv=(
 )
 
 minecraft-photopack() {
+
+    local timestamp=$(date +%s)
+    local output_folder="painting-pack-$timestamp"
+    mkdir "$output_folder"
+    echo '{
+  "pack": {
+    "pack_format": 9,
+    "description":'"Painting pack $timestamp"'
+  }
+}' >> "$output_folder"/pack.mcmeta
+    echo 'Generated painting pack' >> "$output_folder"/README.txt
+    mkdir -p "$output_folder"/assets/minecraft/textures/painting
+    wget -O "$output_folder"/pack.png https://upload.wikimedia.org/wikipedia/commons/5/57/Tiny6pixel.png
+
+    local scale=3
+
     for i in $csv; do
         # read one line
         IFS=, read -rA array <<<"$i"
@@ -51,9 +67,34 @@ minecraft-photopack() {
         local filename="unchanged"
         if [ $# -gt 0 ]; then
             filename="$1"
+
+            array[1]=$(( $array[1] * $scale ))
+            array[2]=$(( $array[2] * $scale ))
+
             magick \
                 convert $filename \
-                -resize $array[1]x$array[2] $array[3].png || return 1
+                -resize $array[1]x$array[2]^ \
+                -gravity center \
+                -extent $array[1]x$array[2] \
+                -flatten \
+                -strip \
+                -colorspace RGB \
+                -depth 24 \
+                -define png:compression-filter=1 \
+                -define png:compression-level=9 \
+                -define png:compression-strategy=2 \
+                unoptimized_$array[3].png || return 1
+
+                local input=unoptimized_$array[3].png
+                local output="$output_folder"/assets/minecraft/textures/painting/$array[3].png
+
+                if which pngcrush &>/dev/null; then
+                    pngcrush "$input" "$output"
+                else
+                    mv "$input" "$output"
+                fi
+
+                rm "$input"
             shift
         fi
 
