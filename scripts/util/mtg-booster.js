@@ -10,9 +10,9 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&order=set" +
   "&page=1" +
   "&q=e%3A" +
-  // "sok" +
+  "sok" +
   // "neo" +
-  "dmu" +
+  // "dmu" +
   "&unique=prints";
 
 const manaTypeRegex = /[A-Z]/gi;
@@ -74,25 +74,12 @@ function getCards(url) {
     .catch((error) => console.log(error));
 }
 
-async function main() {
-  console.log(startUrl);
-  const resolvedCards = await getCards(startUrl);;
-
-  const cardsByRarity = groupCardsByRarity(resolvedCards);
-  const numBoosters = 6;
-  const numDecks = 3;
-  for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
-    await generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck);
-  }
-  console.log(startUrl)
-}
-
 async function generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck) {
   const allCards = [];
   const genFiles = []
 
   // generating booster files
-  await generateBoosterFiles(resolvedCards);
+  await generateBoosterFiles(resolvedCards.filter((it) => it));
 
   // using the generated booster info to create filtered sets based on mana type
   const cardsByMana = groupCardsByMana(allCards.flat());
@@ -164,9 +151,16 @@ async function generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck
       const getRandomFromArray = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
       function getRandomByRarity(cardsByRarity, rarity) {
-        return cardsByRarity[rarity][
-          Math.floor(Math.random() * cardsByRarity[rarity].length)
-        ];
+        try {
+          return cardsByRarity[rarity][
+            Math.floor(Math.random() * cardsByRarity[rarity].length)
+          ];
+        } catch (e) {
+          console.log(e)
+          console.log(cardsByRarity);
+          console.log(rarity);
+          return []
+        }
       }
 
       const findBasicLands = (cards) => cards
@@ -267,4 +261,16 @@ function createBoosterFileContent(cards) {
 `;
 }
 
+async function main() {
+  console.log(startUrl);
+  const resolvedCards = await getCards(startUrl);;
+
+  const cardsByRarity = groupCardsByRarity(resolvedCards);
+  const numBoosters = 6;
+  const numDecks = 3;
+  for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
+    await generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck);
+  }
+  console.log(startUrl)
+}
 main();
