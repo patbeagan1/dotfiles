@@ -9,13 +9,17 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&include_variations=true" +
   "&order=set" +
   "&page=1" +
-  "&q=e%3Admu" +
+  "&q=e%3A" +
+  // "sok" +
+  // "neo" +
+  "dmu" +
   "&unique=prints";
 
 const manaTypeRegex = /[A-Z]/gi;
 const uniq = (value, index, self) => self.indexOf(value) === index;
 
 const groupCardsByRarity = (cards) => cards
+  .filter((it) => it)
   .filter((it) => !it.isBasicLand && !it.isToken)
   .reduce((acc, value) => {
     if (!acc[value.rarity]) {
@@ -26,6 +30,7 @@ const groupCardsByRarity = (cards) => cards
   }, {});
 
 const groupCardsByMana = (cards) => cards
+  .filter((it) => it)
   .reduce((acc, value) => {
     if (!acc[value.manaType]) {
       acc[value.manaType] = [];
@@ -40,46 +45,54 @@ function getCards(url) {
     .then((response) => response.json())
     .then(async (response) => {
       const out = response.data.map((it) => {
-        const manaType = it.mana_cost.match(manaTypeRegex)
-        const priceUSDstr = it.prices["usd"]
-        return {
-          id: it.collector_number,
-          name: it.name,
-          rarity: it.rarity,
-          scryfall_uri: it.scryfall_uri,
-          image_url: it.image_uris.small,
-          isBasicLand: it.type_line.includes("Basic Land"),
-          isToken: it.type_line.includes("Token"),
-          manaType: manaType ? manaType.filter(uniq).sort().join("") : "-",
-          convertedManaCost: it.cmc,
-          price: priceUSDstr ? parseFloat(priceUSDstr) : -1
-        };
+        try {
+          const manaType = it.mana_cost.match(manaTypeRegex)
+          const priceUSDstr = it.prices["usd"]
+          return {
+            id: it.collector_number,
+            name: it.name,
+            rarity: it.rarity,
+            scryfall_uri: it.scryfall_uri,
+            image_url: it.image_uris.small,
+            isBasicLand: it.type_line.includes("Basic Land"),
+            isToken: it.type_line.includes("Token"),
+            manaType: manaType ? manaType.filter(uniq).sort().join("") : "-",
+            convertedManaCost: it.cmc,
+            price: priceUSDstr ? parseFloat(priceUSDstr) : -1
+          };
+        } catch (e) {
+          console.log(e)
+          console.log(it)
+          return null
+        }
       });
       if (response.has_more) {
         out.push.apply(out, await getCards(response.next_page));
       }
-      return out;
+      return out.filter((it) => it);
     })
     .catch((error) => console.log(error));
 }
 
 async function main() {
-  const remoteCards = getCards(startUrl);
-  const cardsByRarity = groupCardsByRarity(await remoteCards);
+  console.log(startUrl);
+  const resolvedCards = await getCards(startUrl);;
+
+  const cardsByRarity = groupCardsByRarity(resolvedCards);
   const numBoosters = 6;
   const numDecks = 3;
   for (let indexDeck = 0; indexDeck < numDecks; indexDeck++) {
-    await generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck);
+    await generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck);
   }
   console.log(startUrl)
 }
 
-async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) {
+async function generateDeck(numBoosters, resolvedCards, cardsByRarity, indexDeck) {
   const allCards = [];
   const genFiles = []
 
   // generating booster files
-  await generateBoosterFiles();
+  await generateBoosterFiles(resolvedCards);
 
   // using the generated booster info to create filtered sets based on mana type
   const cardsByMana = groupCardsByMana(allCards.flat());
@@ -113,7 +126,7 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
       return `
       <html><body>
       <div style="display: flex; flex-wrap: wrap;">
-      ${cards.map((it, index) => {
+      ${cards.filter((it) => it).map((it, index) => {
         return `
       <div id="${index}">
       <a href="${it.scryfall_uri}">
@@ -135,11 +148,11 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
     }
   }
 
-  async function generateBoosterFiles() {
+  async function generateBoosterFiles(resolvedCards) {
     for (let index = 0; index < numBoosters; index++) {
-      const cards = await buildBooster(await remoteCards, cardsByRarity);
+      const cards = await buildBooster(resolvedCards, cardsByRarity);
       allCards.push(cards);
-      console.log(cards.map((it) => it.name));
+      console.log(cards.map((it) => it ? it.name : "UNKNOWN"));
       const output = createBoosterFileContent(cards);
       const filename = `mtg-booster-${index}.html`;
       genFiles.push(filename);
@@ -186,7 +199,7 @@ async function generateDeck(numBoosters, remoteCards, cardsByRarity, indexDeck) 
 }
 
 async function writePricePage(allCards, genFiles) {
-  const cardsByPrice = sortByField(allCards.flat(), "price")
+  const cardsByPrice = sortByField(allCards.flat(), "price").filter((it) => it)
   const output = `
   <html><body>
   ${cardsByPrice.map((it) => `<a href="${it.scryfall_uri}"><div>${it.name}: ${it.price}</div></a>`).join("\n")}
@@ -248,7 +261,7 @@ async function writeIndexFile(cardsByMana, numBoosters, genFiles) {
 function createBoosterFileContent(cards) {
   return `
   <html><body>
-  ${cards.map((it) => `<a href="${it.scryfall_uri}"><img src="${it.image_url}"/></a>`
+  ${cards.filter((it) => it).map((it) => `<a href="${it.scryfall_uri}"><img src="${it.image_url}"/></a>`
   ).join("\n")}
   </body></html>
 `;
