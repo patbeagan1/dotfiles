@@ -3,7 +3,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-help () {
+help() {
     error_code=$?
     echo "
 No help message yet
@@ -11,9 +11,19 @@ No help message yet
     if [[ ! $error_code -eq 0 ]]; then echo "Err: $error_code"; fi
 }
 
-q () {
-	local content=$(echo "$@" | sed 's/ /%20/g')
-	open -a Safari https://duckduckgo.com/"$content"
+q() {
+    local content='https://duckduckgo.com/'
+    
+    # blocklist
+    content+='-site%3Aquora.com%20'
+
+    content+=$(echo "$@" | sed 's/ /%20/g')
+
+    if isMac.sh; then
+        open -a Safari "$content"
+    else
+        firefox "$content"
+    fi
 }
 
 q "$@" || help
