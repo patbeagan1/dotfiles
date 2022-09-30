@@ -26,6 +26,8 @@ export PATH=$PATH:$LIBBEAGAN/scripts/dev
 ###########################################################
 # Aliases
 
+# this is in another file 
+# so that it cen get sourced multiple times per session.
 source "$LIBBEAGAN/alias"
 
 ###########################################################
