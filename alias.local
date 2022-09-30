@@ -1,0 +1,1 @@
+intake () { echo "$@" >> ~/repo/internal/Notes/Zettel/Intake.md; }
