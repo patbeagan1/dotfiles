@@ -26,9 +26,12 @@ export PATH=$PATH:$LIBBEAGAN/scripts/dev
 ###########################################################
 # Aliases
 
-# this is in another file 
+# this is in another file
 # so that it cen get sourced multiple times per session.
 source "$LIBBEAGAN/alias"
+# also adding in the local scripts, which are only good for one computer at a time
+# if you are not me, feel free to comment this bit out.
+source "$LIBBEAGAN/alias.local"
 
 ###########################################################
 # Dependencies
@@ -68,32 +71,43 @@ libbeagan_dependencies() {
         print_clear 'required'
 
         # general purpose
-        add_util 'dart'
         add_util 'docker'
         add_util 'exiftool'
         add_util 'ffmpeg'
-        add_util 'go'
-        add_util 'lua'
         add_util 'nmap'
-        add_util 'recode'
         add_util 'rename'
         add_util 'sqlite3'
         add_util 'sshfs'
         add_util 'yarn'
         print_clear 'general purpose'
 
+        # other languages
+        add_util 'dart'
+        add_util 'rust'
+        add_util 'go'
+        add_util 'lua'
+        print_clear 'languages'
+
         # optional / could be replaced
-        add_util 'gitup'
-        add_util 'ktlint'
-        add_util 'mednafen'
-        add_util 'nu' 'nushell'
-        add_util 'fish'
-        add_util 'pngcrush'
-        add_util 'rbenv'
-        add_util 'restic'
-        add_util 'tiddlywiki'
-        add_util 'timewarrior'
-        add_util 'gimp'
+        # most popular installs here: https://formulae.brew.sh/analytics/install-on-request/365d/
+        add_util 'recode'       # encoding transliterator
+        add_util 'gitup'        # git visualizer
+        add_util 'ktlint'       # kotlin linter
+        add_util 'mednafen'     # retro game emulator
+        add_util 'nu' 'nushell' # nu shell
+        add_util 'fish'         # friendly interactive shell
+        add_util 'pngcrush'     # png file optimizer
+        add_util 'rbenv'        # ruby version manager
+        add_util 'restic'       # backups
+        add_util 'tiddlywiki'   # knowledge base
+        add_util 'timewarrior'  # task management
+        add_util 'gimp'         # image modification
+        add_util 'tldr'         # man pages
+        add_util 'htop'         # system monitor
+        add_util 'jq'           # json parsing
+        add_util 'ncdu'         # du but with ncurses gui
+        add_util 'gh'           # github helper
+        add_util 'newfetch'     # system status visualizer
         print_clear 'optional'
     fi
 }
