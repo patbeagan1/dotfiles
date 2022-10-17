@@ -29,7 +29,8 @@ alias findname='find . -name'
 # caching web pages for offline viewing
 # esp for gutenburg
 alias wget-all='wget --recursive --no-parent'
-
+alias wget-local='wget -E -H -k -K -p'
+alias wget-site='wget -c -EHkKp -P sites -t 1'
 alias cat-web='wget -O-'
 
 alias gw='./gradlew'
