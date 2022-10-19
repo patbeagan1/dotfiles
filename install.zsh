@@ -108,6 +108,7 @@ libbeagan_dependencies() {
         add_util 'ncdu'         # du but with ncurses gui
         add_util 'gh'           # github helper
         add_util 'newfetch'     # system status visualizer
+        add_util 'adr-tools'    # arch decision creation tool 
         print_clear 'optional'
     fi
 }
