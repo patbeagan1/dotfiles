@@ -1,3 +1,7 @@
+color-describe () { open "https://www.2020colours.com/$1"; }
+
+alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack/nsenter1'
+
 alias kotlin_conversion='echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
 script-edit () { vi "$(which "$1")"; }
 alias server='python3 -m http.server'
@@ -25,7 +29,8 @@ alias findname='find . -name'
 # caching web pages for offline viewing
 # esp for gutenburg
 alias wget-all='wget --recursive --no-parent'
-
+alias wget-local='wget -E -H -k -K -p'
+alias wget-site='wget -c -EHkKp -P sites -t 1'
 alias cat-web='wget -O-'
 
 alias gw='./gradlew'
