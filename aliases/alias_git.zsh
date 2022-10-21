@@ -1,3 +1,5 @@
+alias revert-file='git checkout origin/develop --'
+alias revert-files='find . -exec git checkout origin/develop -- {} \;'
 alias lb="last_branch.sh | tail -10"
 alias lbb="last_branch.sh | grep -v old"
 alias lbf="git branch --sort=committerdate | tail -10 | fzf --tac --no-sort | xargs git checkout"
