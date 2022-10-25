@@ -12,8 +12,8 @@ No help message yet
 }
 
 divide () {
-	cat "$1" | grep "$2" > "$1".first
-	cat "$1" | grep -v "$2" > "$1".second
+	cat "$1" | grep -i "$2" > "$1".first
+	cat "$1" | grep -iv "$2" > "$1".second
 }
 
 divide "$@" || help
