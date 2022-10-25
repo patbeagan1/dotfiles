@@ -16,6 +16,7 @@ q() {
     
     # blocklist
     content+='-site%3Aquora.com%20'
+    content+='-site%3Ayummly.com%20'
 
     content+=$(echo "$@" | sed 's/ /%20/g')
 
