@@ -28,4 +28,6 @@ CASE_SENSITIVE="true"
 plugins=(
     git
     adb
+    zsh-autosuggestions
+    z
 )
