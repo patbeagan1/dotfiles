@@ -48,7 +48,7 @@ libbeagan_dependencies() {
         }
         print_clear() {
             if [ ! ${#util[@]} -eq 0 ]; then
-                echo "Missing $1 tools:\n$util"
+                echo "\nMissing $1 tools:\n$util"
             fi
             util=()
         }
@@ -58,7 +58,6 @@ libbeagan_dependencies() {
         add_util 'deno'
         add_util 'dot' 'graphviz'
         add_util 'fzf'
-        add_util 'gpg'
         add_util 'gpg' 'gnupg'
         add_util 'java'
         add_util 'magick' 'imagemagick'
