@@ -3,23 +3,24 @@
 alias savedalias='source ~/libbeagan/alias'
 alias refresh='savedalias; hash -r'
 
-source "$LIBBEAGAN/aliases/alias_req_ext_api.zsh"
+source "$LIBBEAGAN/aliases/alias_android.zsh"
+source "$LIBBEAGAN/aliases/alias_extract.zsh"
 source "$LIBBEAGAN/aliases/alias_git.zsh"
 source "$LIBBEAGAN/aliases/alias_gradle.zsh"
 source "$LIBBEAGAN/aliases/alias_imagemagick.zsh"
 source "$LIBBEAGAN/aliases/alias_ls.zsh"
+source "$LIBBEAGAN/aliases/alias_misc.zsh"
 source "$LIBBEAGAN/aliases/alias_network.zsh"
+source "$LIBBEAGAN/aliases/alias_notes.zsh"
 source "$LIBBEAGAN/aliases/alias_other.zsh"
 source "$LIBBEAGAN/aliases/alias_python.zsh"
-source "$LIBBEAGAN/aliases/alias_unix.zsh"
-source "$LIBBEAGAN/aliases/alias_misc.zsh"
-source "$LIBBEAGAN/aliases/alias_tagger.zsh"
-source "$LIBBEAGAN/aliases/alias_teleport.zsh"
-source "$LIBBEAGAN/aliases/alias_task_cmd.zsh"
-source "$LIBBEAGAN/aliases/alias_notes.zsh"
 source "$LIBBEAGAN/aliases/alias_remove_empty.zsh"
+source "$LIBBEAGAN/aliases/alias_req_ext_api.zsh"
 source "$LIBBEAGAN/aliases/alias_scriptify.zsh"
-source "$LIBBEAGAN/aliases/alias_android.zsh"
+source "$LIBBEAGAN/aliases/alias_tagger.zsh"
+source "$LIBBEAGAN/aliases/alias_task_cmd.zsh"
+source "$LIBBEAGAN/aliases/alias_teleport.zsh"
+source "$LIBBEAGAN/aliases/alias_unix.zsh"
 
 if isMac.sh; then
   source "$LIBBEAGAN/aliases/alias_machine_mac.zsh"

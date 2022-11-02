@@ -4,6 +4,8 @@ if [ $CURRENT_COMPUTER = "framework" ]; then
     echo '|__| |__  |    |    /  \    |__  |__)  /\   |\/| |__  |  | /  \ |__) |__/ '
     echo '|  | |___ |___ |___ \__/    |    |  \ /~~\  |  | |___ |/\| \__/ |  \ |  \ '
     echo
+
+    intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
 fi
 
 if [ $CURRENT_COMPUTER = "mac_2017" ]; then
@@ -14,7 +16,7 @@ if [ $CURRENT_COMPUTER = "mac_2017" ]; then
     echo ' |_|  |_|\__,_|\___| |_____|\___/|_|/_/    '
     echo
 
-    intake() { echo "$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
+    intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
 fi
 
 if [ $CURRENT_COMPUTER = "mac_2022" ]; then
