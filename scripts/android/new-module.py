@@ -34,8 +34,18 @@ def setup_settings_gradle(module):
 
 
 def setup_build_gradle(module):
-    with open(path.join(root_dir, module, "build.gradle"), "w+") as f:
-        f.write("apply from: rootProject.file('android-library.gradle')")
+    with open(path.join(root_dir, module, "build.gradle.kts"), "w+") as f:
+        f.write("""
+        // apply from: rootProject.file('android-library.gradle')
+        plugins {
+            id("com.android.library")
+        }
+
+        android {
+            compileSdkVersion = 21
+            minSdkVersion 21
+        }
+        """)
 
 
 def setup_main_directory(module):
@@ -57,7 +67,7 @@ def setup_main_directory(module):
     with open(path.join(src_dir, "Main.kt"), "w+") as f:
         f.writelines(
             [
-                f"package com.example.{to_dotpath(module)}",
+                f"package com.example.{to_dotpath(module)}\n",
                 'fun main() = println("hello world")',
             ]
         )

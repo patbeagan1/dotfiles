@@ -13,6 +13,7 @@ alias verify-directory-contents='rsync -rvcn'
 
 alias show-hardware-displays='sudo lshw -numeric -C display'
 ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
+unpin_all() { ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm ;}
 
 function manu() { man -t "$1" | open -fa Preview; }
 
@@ -35,6 +36,37 @@ alias cat-web='wget -O-'
 
 alias gw='./gradlew'
 
+caturl () {
+	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
+}
+
+alias jslint='npm run lint --silent -- --frail'
+
+alias slp='pmset sleepnow'
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+
+#===========================
+# Notes
+alias n=note
+alias note='cat >> "$(echo ~/note-$(date +"%b%e::%T")).txt" << EOF'
+alias hnote='cd ~; note; cd -'
+alias nscript='cat <<EOF | tee node$(date +%s).js | node'
+
+alias mnt='mount | grep -E ^/dev | column -t'
+alias jam='java -jar '
+alias h="history"
+alias week='date +%V'
+alias dush="du -sh"
+alias bcommit_hist='history | grep bcommit'
+alias fuck='eval $(thefuck $(fc -ln -1)); history -r'
+alias jc="j c"
+alias ks="kotlinc-jvm"
+alias vi-raw='vi -u NONE'
+alias wget="wget -c"
+alias histg="history | grep"
+alias jslint='npm run lint --silent -- --frail'
+
 #==========================================
 # Random
 
@@ -55,8 +87,8 @@ alias qr_compileAggregate="montage /tmp/qr-output* -geometry 120x120+1+1 montage
 
 #==========================================
 # Itty
-function itty_qr () { qr $(itty.sh "$1"); }
-function itty_qr_cat () { itty_qr "`cat $1`"; }
+function qr_itty () { qr $(itty.sh "$1"); }
+function qr_itty_cat () { qr_itty "`cat $1`"; }
 
 #==========================================
 

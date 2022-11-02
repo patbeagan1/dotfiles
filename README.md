@@ -22,3 +22,5 @@ source ./install.zsh
 ```
 
 I source the install command from my `~/.zshrc` file. Keeping aliases in here keeps it much cleaner!
+
+Ascii art generated from [here](https://www.coolgenerator.com/ascii-text-generator), stick letter font
