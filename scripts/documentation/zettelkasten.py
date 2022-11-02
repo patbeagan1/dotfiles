@@ -15,23 +15,24 @@ def main():
     if not os.path.isdir(folder):
         os.mkdir(folder)
     with open(folder + filename, "a+") as f:
-        section = prepare_section(f)
-        section("".join(["=" for i in range(40)]))
-        section(current_time.strftime(dateformat) + "\n")
+        line = prepare_section(f)
+        line("".join(["-" for i in range(40)]))
+        line(f"written: {current_time.strftime(dateformat)}")
+        line("".join(["-" for i in range(40)]))
+        line("")
         if len(sys.argv) >= 2:
             title = " ".join(sys.argv[1:])
-            section(f"# {title}")
+            line(f"# {title}\n")
         else:
-            section(f"# {input('Title: ')}")
+            line(f"# {input('Title: ')}\n")
 
-        section("".join(["-" for i in range(40)]))
-        section(f"Content: {indent('Content: ')}\n")
-        section(f"References: {indent('References: ')}\n")
+        line(f"### Content: \n{indent('Content: ')}\n")
+        line(f"### References: \n{indent('References: ')}")
 
 
 def prepare_section(f_in):
     def inner(s):
-        f_in.write(s + "\n")
+        f_in.write(f"{s}\n")
 
     return inner
 
