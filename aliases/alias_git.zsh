@@ -23,6 +23,7 @@ git-over-time() {  git log --format=format:'%as,%ae';  }
 ###########################################################
 
 git config --global alias.co checkout
+git config --global alias.revert-file 'checkout origin/develop --'
 git config --global alias.br branch
 git config --global alias.ci commit
 git config --global alias.st status

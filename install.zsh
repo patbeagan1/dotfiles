@@ -28,10 +28,6 @@ export PATH=$PATH:$LIBBEAGAN/scripts/vcs
 # so that it cen get sourced multiple times per session.
 source "$LIBBEAGAN/alias"
 
-# also adding in the local scripts, which are only good for one computer at a time
-# if you are not me, feel free to comment this bit out.
-source "$LIBBEAGAN/alias.local.sh"
-
 ###########################################################
 # Dependencies
 source "$LIBBEAGAN/dependencies.sh"
