@@ -3,7 +3,6 @@
 alias savedalias='source ~/libbeagan/alias'
 alias refresh='savedalias; hash -r'
 
-function source_alias() { source "$LIBBEAGAN/aliases/$1"; }
 source_alias alias_android.zsh
 source_alias alias_extract.zsh
 source_alias alias_git.zsh

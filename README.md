@@ -4,7 +4,7 @@ This is a collection of shell functions and scripts which are included in the ho
 
 ## Getting started
 
-If you just want to grab a couple of aliases, you can source the individual files in the `aliases` folder. You can grab them straight from github by doing something like `source <(curl localhost:8000/alias_ls.zsh)`, whereever the script resides on your network.
+If you just want to grab a couple of aliases, you can source the individual files in the `aliases` folder. You can grab them straight from github by doing something like `source <(curl localhost:8000/alias_ls.zsh)`, wherever the script resides on your network.
 
 If you just want to use a single script, you can download it via the github raw url,
 or run it in place with `curl xyz.sh | zsh`.

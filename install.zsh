@@ -26,6 +26,8 @@ export PATH=$PATH:$LIBBEAGAN/scripts/vcs
 
 # this is in another file
 # so that it cen get sourced multiple times per session.
+
+function source_alias() { source "$LIBBEAGAN/aliases/$1"; }
 source "$LIBBEAGAN/alias"
 
 ###########################################################
