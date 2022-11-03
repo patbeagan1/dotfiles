@@ -19,13 +19,13 @@ echo $@ |sed 's/BULLET/\
 )
 
 ";
-        adminUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
-    echo https://admin.wayfair.com/tracker/views/142.php?prtid=$(getbranch | sed 's/[^0-9]//g')
+        ticketUrl="$(if [[ $(getbranch) != "fabric-"* ]] ; then
+    echo https://example.com/$(getbranch | sed 's/[^0-9]//g')
 else
     echo Fabric $(getbranch | sed 's/[^0-9]//g')
 fi)
 ";
-        commitText="$prefix$number $title$body$adminUrl";
+        commitText="$prefix$number $title$body$ticketUrl";
         echo "$commitText";
         git commit -am "$commitText";
         echo;
