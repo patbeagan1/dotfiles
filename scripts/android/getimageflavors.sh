@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2022 Pat Beagan: MIT License
 
 getgateway () { ag -g $1 }
 rm /tmp/imgoutput.html

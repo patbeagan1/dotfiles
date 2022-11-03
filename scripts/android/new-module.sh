@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2022 Pat Beagan: MIT License
 set -euo pipefail
 
 if [ $# -ne 1 ]; then 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2022 Pat Beagan: MIT License
 photo="'$1'"
 shift
 cmd="exiftool "

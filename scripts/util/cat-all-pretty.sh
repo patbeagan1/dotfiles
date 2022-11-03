@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# (c) 2022 Pat Beagan: MIT License
 
 for i in *; do
     echo

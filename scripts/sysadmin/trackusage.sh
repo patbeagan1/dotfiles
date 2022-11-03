@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# (c) 2022 Pat Beagan: MIT License
 set -euo pipefail
 
 # Lists by reversed size because we keep track of the number of bytes in each file

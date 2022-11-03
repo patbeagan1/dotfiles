@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2022 Pat Beagan: MIT License
 
 check_install() {
     if hash "$1" 2>/dev/null; then

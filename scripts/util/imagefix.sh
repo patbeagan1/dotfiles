@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# (c) 2022 Pat Beagan: MIT License
 
 set -euo pipefail
 IFS=$'\n\t'

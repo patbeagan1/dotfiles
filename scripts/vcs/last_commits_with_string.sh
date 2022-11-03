@@ -1,4 +1,5 @@
 #!/bin/bash 
+# (c) 2022 Pat Beagan: MIT License
 
 last_commits_with_string () 
 { 

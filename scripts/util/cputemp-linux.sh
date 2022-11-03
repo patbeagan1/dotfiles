@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh 
+# (c) 2022 Pat Beagan: MIT License
 if isMac.sh; then 
 	echo "This script is only for linux. Exiting."
 	exit 1

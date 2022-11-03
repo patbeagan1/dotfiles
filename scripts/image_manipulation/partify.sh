@@ -1,4 +1,5 @@
 #!/bin/bash 
+# (c) 2022 Pat Beagan: MIT License
 
 # Creates a party gif of a static image by replacing the given color with the "Party Parrot" colors
 #
