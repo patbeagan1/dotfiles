@@ -72,6 +72,8 @@ libbeagan_dependencies() {
     add_util 'rg' 'ripgrep'    # more featureful replacement for the silver searcher
     add_util 'iStats' 'gem install iStats'    # a CPU/battery health tool for mac
     print_clear 'optional'
+
+    echo
 }
 
 libbeagan_dependencies
