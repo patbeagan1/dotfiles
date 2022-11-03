@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# (c) 2022 Pat Beagan: MIT License
 
 import os
 import sys
