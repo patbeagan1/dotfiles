@@ -25,7 +25,7 @@ check_install() {
 
 cputemp () {
     if isMac.sh; then
-        check_install.sh iStats
+        check_install iStats
         c=$(iStats | grep 'CPU temp' | sed s/[a-zA-Z\ :]*// | sed s/°.*//);
         echo "9*$c/5+32" | bc -l;
     else
