@@ -2,10 +2,20 @@ import random
 
 from textual.app import App, ComposeResult
 from textual.color import Color
-from textual.widgets import Footer
+from textual.widgets import Footer, Static
 
 from textual_mastodon.bar import Bar
 
+
+class Dock(Static):
+    CSS = """Dock {
+    dock: left;
+    width: 15;
+    height: 100 %;
+    color:  # 0f2b41;
+    background: dodgerblue;
+    }   
+    """
 
 class BindingApp(App):
     BINDINGS = [
@@ -19,6 +29,7 @@ class BindingApp(App):
         self.action_quit()
 
     def compose(self) -> ComposeResult:
+        yield Dock()
         yield Footer()
 
     def action_add_bar(self, color: str) -> None:
