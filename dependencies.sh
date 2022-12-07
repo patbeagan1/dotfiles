@@ -9,7 +9,7 @@ libbeagan_dependencies() {
     }
     print_clear() {
         if [ ! ${#util[@]} -eq 0 ]; then
-            echo "\nMissing $1 tools:\n$util"
+            echo "\nMissing $1 tools:\n${(o)util}"
         fi
         util=()
     }
@@ -43,6 +43,7 @@ libbeagan_dependencies() {
 
     # other languages
     add_util 'dart'
+    add_util 'kscript'
     add_util 'rust'
     add_util 'go'
     add_util 'lua'
