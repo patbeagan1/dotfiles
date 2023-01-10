@@ -9,7 +9,7 @@ libbeagan_dependencies() {
     }
     print_clear() {
         if [ ! ${#util[@]} -eq 0 ]; then
-            echo "\nMissing $1 tools:\n$util"
+            echo "\nMissing $1 tools:\n${(o)util}"
         fi
         util=()
     }
@@ -32,6 +32,7 @@ libbeagan_dependencies() {
 
     # general purpose
     add_util 'docker'
+    add_util 'jq'              # json parsing
     add_util 'exiftool'
     add_util 'ffmpeg'
     add_util 'nmap'
@@ -43,6 +44,7 @@ libbeagan_dependencies() {
 
     # other languages
     add_util 'dart'
+    add_util 'kscript'
     add_util 'rust'
     add_util 'go'
     add_util 'lua'
@@ -64,9 +66,9 @@ libbeagan_dependencies() {
     add_util 'gimp'            # image modification
     add_util 'tldr'            # man pages
     add_util 'htop'            # system monitor
-    add_util 'jq'              # json parsing
     add_util 'ncdu'            # du but with ncurses gui
     add_util 'gh'              # github helper
+    add_util 'poetry'          # python package manager
     add_util 'newfetch'        # system status visualizer
     add_util 'adr' 'adr-tools' # arch decision creation tool
     add_util 'rg' 'ripgrep'    # more featureful replacement for the silver searcher
