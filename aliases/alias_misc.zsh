@@ -1,4 +1,5 @@
 color-describe () { open "https://www.2020colours.com/$1"; }
+alias nix-install='nix-env -iA nixpkgs.'
 
 alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack/nsenter1'
 
