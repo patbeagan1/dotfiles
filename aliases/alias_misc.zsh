@@ -1,4 +1,12 @@
 color-describe () { open "https://www.2020colours.com/$1"; }
+alias nix-install='nix-env -iA nixpkgs.'
+
+alias ntagas='tagger.py -s n tagas'
+alias ntagcheck='tagger.py -s n tagcheck'
+alias tagas='tagger.py tagas'
+alias xnode='node -e'
+alias xpython='python -c'
+alias tagcheck='tagger.py tagcheck'
 
 alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack/nsenter1'
 
