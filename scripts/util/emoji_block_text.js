@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const chars = {
   ' ': [
     [0,0,0],
