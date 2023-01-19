@@ -1,3 +1,4 @@
+alias shrink_mov_from='ffmpeg -vcodec libx264 -crf 20 output.mp4 -i'
 color-describe () { open "https://www.2020colours.com/$1"; }
 
 alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack/nsenter1'
