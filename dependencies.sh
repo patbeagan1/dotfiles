@@ -32,6 +32,7 @@ libbeagan_dependencies() {
 
     # general purpose
     add_util 'docker'
+    add_util 'jq'              # json parsing
     add_util 'exiftool'
     add_util 'ffmpeg'
     add_util 'nmap'
@@ -65,13 +66,14 @@ libbeagan_dependencies() {
     add_util 'gimp'            # image modification
     add_util 'tldr'            # man pages
     add_util 'htop'            # system monitor
-    add_util 'jq'              # json parsing
     add_util 'ncdu'            # du but with ncurses gui
     add_util 'gh'              # github helper
+    add_util 'poetry'          # python package manager
     add_util 'newfetch'        # system status visualizer
     add_util 'adr' 'adr-tools' # arch decision creation tool
     add_util 'rg' 'ripgrep'    # more featureful replacement for the silver searcher
     add_util 'iStats' 'gem install iStats'    # a CPU/battery health tool for mac
+    add_util 'direnv'          # nix-env -iA nixpkgs.direnv # env vars per directory 
     print_clear 'optional'
 
     echo

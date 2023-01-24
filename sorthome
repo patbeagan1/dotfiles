@@ -150,7 +150,7 @@ movefiles med/bookmarks links[@]
 models=(".obj" ".mtl")
 movefiles med/models models[@]
 
-pdf=(".pdf" ".PDF")
+pdf=(".pdf" ".PDF" ".epub")
 movefiles med/pdf pdf[@]
 
 video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")

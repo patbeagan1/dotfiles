@@ -17,6 +17,8 @@ if [ "$CURRENT_COMPUTER" = "mac_2017" ]; then
     echo
 
     intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
+    alias consolevision='java -jar ~/Downloads/app-0.7.0-all.jar'
+    alias cv=consolevision
 fi
 
 if [ "$CURRENT_COMPUTER" = "mac_2022" ]; then
