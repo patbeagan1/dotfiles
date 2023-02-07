@@ -113,6 +113,58 @@ android {
             f.write("# mock-maker-inline")
 
 
+class GradleJvm(Gradle):
+
+    def run(self):
+        self.setup_main_directory()
+        self.setup_test_directory()
+        self.setup_build_gradle()
+        self.setup_settings_gradle()
+
+    def setup_build_gradle(self):
+        with open(path.join(root_dir, self.module, "build.gradle.kts"), "w+") as f:
+            f.write("""
+plugins {
+    kotlin("jvm")
+    id("java-library")
+}
+
+repositories {
+    mavenCentral()
+}
+    """)
+
+    def setup_main_directory(self):
+        src_dir = path.join(
+            path.join(
+                root_dir,
+                self.module,
+                "src",
+                "main"),
+            "java",
+            package_to_path(self.package_name),
+            to_path(self.module))
+        makedirs(src_dir)
+        with open(path.join(src_dir, "Main.kt"), "w+") as f:
+            f.writelines(
+                [
+                    f"package {self.package_name}.{to_dotpath(self.module)}\n",
+                    'fun main() = println("hello world")',
+                ]
+            )
+
+    def setup_test_directory(self):
+        prefix = path.join(
+            root_dir,
+            self.module,
+            "src",
+            "test")
+        makedirs(path.join(
+            prefix,
+            "java",
+            package_to_path(self.package_name),
+            to_path(self.module)))
+
 class GradleMultiplatform(Gradle):
 
     def run(self):
@@ -221,6 +273,8 @@ if __name__ == "__main__":
                            help="generates a new android module")
     arg_group.add_argument("-m", "--multiplatform", action="store_true",
                            help="generates a new kotlin multiplatform module")
+    arg_group.add_argument("-j", "--jvm", action="store_true",
+                           help="generates a new kotlin jvm module")
 
     args = parser.parse_args()
 
@@ -232,6 +286,9 @@ if __name__ == "__main__":
     elif args.multiplatform:
         print(f"Generating Multiplatform module: {args.module_name}")
         GradleMultiplatform(args.module_name, args.package_name).run()
+    elif args.jvm:
+        print(f"Generating JVM module: {args.module_name}")
+        GradleJvm(args.module_name, args.package_name).run()
     else:
         parser.print_help()
         exit(1)

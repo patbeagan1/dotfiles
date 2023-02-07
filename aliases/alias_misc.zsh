@@ -1,3 +1,4 @@
+alias ls-files-by-size='ls -l | tr -s " " | cut -d" " -f 5-100 | sort -n | trim.sh'
 color-describe () { open "https://www.2020colours.com/$1"; }
 alias nix-install='nix-env -iA nixpkgs.'
 
