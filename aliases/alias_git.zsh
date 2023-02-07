@@ -1,3 +1,4 @@
+alias gitl='git last --oneline | cat'
 alias gss='git status -sb'
 alias revert-file='git checkout origin/develop --'
 alias revert-files='find . -exec git checkout origin/develop -- {} \;'
