@@ -1,5 +1,10 @@
+
 function prettyCSV() { cat "$1" | column -t -s ","; }
 alias shrink_mov_from='ffmpeg -vcodec libx264 -crf 20 output.mp4 -i'
+
+# foreach-line; do echo "$line"; done < alias
+alias foreach-line='while IFS= read -r line'
+
 alias ls-files-by-size='ls -l | tr -s " " | cut -d" " -f 5-100 | sort -n | trim.sh'
 color-describe () { open "https://www.2020colours.com/$1"; }
 alias nix-install='nix-env -iA nixpkgs.'

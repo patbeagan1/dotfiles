@@ -5,6 +5,7 @@ if [ "$CURRENT_COMPUTER" = "framework" ]; then
     echo '|  | |___ |___ |___ \__/    |    |  \ /~~\  |  | |___ |/\| \__/ |  \ |  \ '
     echo
 
+    restic_backup() { restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~; }  
     intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
 fi
 
