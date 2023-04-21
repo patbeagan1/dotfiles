@@ -52,20 +52,58 @@ app.get('/cbrviewer/:fileName', async (req, res) => {
     const cbrFileName = req.params.fileName;
     const zip = await readZip(cbrFileName)
 
-    const images = await Promise.all(zip
-      .file(/.jpg|.jpeg|.png/)
-      .map(async (entry) => {
-        return await getImageUrlFor(entry);
-      }));
+    const images = await Promise.all(
+      findImageFileObjects(zip)
+        .map(async (entry) => {
+          return {
+            name: entry.name,
+            url: await getImageUrlFor(entry)
+          }
+        }));
+
+    images.sort((a, b) => {
+      const nameA = a.name.toUpperCase();
+      const nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      } else if (nameA > nameB) {
+        return 1;
+      } else {
+        return 0;
+      }
+    })
+
     const html = `
       <html>
         <head>
           <title>CBR Viewer - ${cbrFileName}</title>
+          <style>
+          #container {
+            display: flex;
+            justify-content: center;
+          }
+          #container > div {
+            width: 90%;
+          }
+          .cbr-image-container {
+            display: flex;
+            justify-content: center;
+          }
+          .cbr-image {
+            width: 100%;
+          }
+          </style>
         </head>
         <body>
           <h1>${cbrFileName}</h1>
-          <div>
-            ${images.map(url => `<img src="${url}">`).join('')}
+          <div id="container">
+            <div>
+              ${images.map(each => `
+                <div class="cbr-image-container">
+                  <img class="cbr-image" src="${each.url}">
+                </div>
+              `).join('')}
+            </div>
           </div>
         </body>
       </html>
@@ -103,18 +141,26 @@ async function readZip(fileName) {
   return zip
 }
 
+function findImageFileObjects(zipFile) {
+  return zipFile.file(/.jpg|.JPG|.jpeg|.png/)
+}
+
 async function getLinkHTML(fileName) {
   const zip = readZip(fileName)
   return zip.then(async zipFile => {
-
-    const entry = zipFile.file(/.jpg|.jpeg|.png/)[0]
-    const url = await getImageUrlFor(entry)
-    return `
+    try {
+      const entry = findImageFileObjects(zipFile)[0]
+      const url = await getImageUrlFor(entry)
+      return `
         <a href="/cbrviewer/${fileName}" class="cbr-link">
           <img src="${url}">
           <span>${fileName}</span>
         </a>
       `;
+    } catch (error) {
+      console.error(error)
+      return ""
+    }
   });
 }
 
