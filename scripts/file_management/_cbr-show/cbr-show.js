@@ -31,6 +31,7 @@ app.get('/', async (req, res) => {
           }
           .cbr-link img {
             width: 100%;
+            max-height: 300px;
             border-radius: 10px;
             margin-bottom: 10px;
           }
