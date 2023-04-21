@@ -14,6 +14,7 @@ source_alias alias_network.zsh
 source_alias alias_notes.zsh
 source_alias alias_other.zsh
 source_alias alias_python.zsh
+source_alias alias_js.zsh
 source_alias alias_remove_empty.zsh
 source_alias alias_req_ext_api.zsh
 source_alias alias_scriptify.zsh

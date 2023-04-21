@@ -1,2 +1,5 @@
 .DS_Store
 .idea
+scripts/util/my-video.webm
+*node_modules
+*.vscode
