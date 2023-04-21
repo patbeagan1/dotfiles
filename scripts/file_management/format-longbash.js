@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 function splitBashCommand(bashCommand) {
     const regex = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g;
     const args = bashCommand.match(regex) || [];
