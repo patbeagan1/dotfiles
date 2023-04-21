@@ -35,6 +35,9 @@ app.get('/', async (req, res) => {
             border-radius: 10px;
             margin-bottom: 10px;
           }
+          .display-filename {
+            overflow-wrap: anywhere;
+          }
         </style>
       </head>
       <body>
@@ -116,7 +119,7 @@ app.get('/cbrviewer/:fileName', async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Server started at http://localhost:3000'));
+app.listen(3000, "0.0.0.0", () => console.log('Server started at http://0.0.0.0:3000'));
 
 async function getImageUrlFor(entry) {
   const type = entry.name.search(/.(\w)$/);
@@ -155,7 +158,7 @@ async function getLinkHTML(fileName) {
       return `
         <a href="/cbrviewer/${fileName}" class="cbr-link">
           <img src="${url}">
-          <span>${fileName}</span>
+          <span class="display-filename">${fileName}</span>
         </a>
       `;
     } catch (error) {
