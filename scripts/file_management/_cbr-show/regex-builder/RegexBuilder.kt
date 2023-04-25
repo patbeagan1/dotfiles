@@ -123,4 +123,8 @@ fun main() {
         }
         .build()
 
-    val input = "a3by
+    val input = "a3bxyycdzzxx"
+    val result = regex.containsMatchIn(input)
+    println("Match result: $result") // Should print: Match result: true
+}
+
