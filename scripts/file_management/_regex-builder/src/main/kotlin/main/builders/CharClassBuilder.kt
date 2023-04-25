@@ -1,4 +1,6 @@
-package main
+package main.builders
+
+import main.RegexBuilder
 
 class CharClassBuilder : RegexBuilder() {
 
@@ -19,4 +21,7 @@ class CharClassBuilder : RegexBuilder() {
     fun rangeLowerAZ() = range('a', 'z')
     fun rangeUpperAZ() = range('A', 'Z')
     fun rangeDigit() = range('0', '9')
+    fun rangeHexadecimal() = range('A', 'F')
+        .range('a', 'f')
+        .rangeDigit()
 }

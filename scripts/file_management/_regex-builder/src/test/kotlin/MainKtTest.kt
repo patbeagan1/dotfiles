@@ -151,4 +151,99 @@ class MainKtTest {
 
         assertEquals(expected, actual)
     }
+
+
+    @Test
+    fun `date`() {
+        val expected = """^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"""
+        val actual = RegexBuilder()
+            .startOfLine()
+            // year
+            .group {
+                choiceOf({
+                    literalPhrase("19")
+                }, {
+                    literalPhrase("20")
+                })
+            }
+            .quantifier(Exactly(2)) {
+                digit()
+            }
+            .literalPhrase("-")
+            // month
+            .group {
+                choiceOf({
+                    literalPhrase("0")
+                    characterClass { range('1', '9') }
+                }, {
+                    literalPhrase("1")
+                    characterClass { range('0', '2') }
+                })
+            }
+            .literalPhrase("-")
+            // day
+            .group {
+                choiceOf({
+                    literalPhrase("0")
+                    characterClass {
+                        range('1', '9')
+                    }
+                }, {
+                    characterClass {
+                        literal('1')
+                        literal('2')
+                    }
+                    characterClass {
+                        rangeDigit()
+                    }
+                }, {
+                    literalPhrase("3")
+                    characterClass {
+                        literal('0')
+                        literal('1')
+                    }
+                })
+            }
+            .endOfLine()
+            .build()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `credit card`() {
+        val expected = """^(?:\d[ -]?){13,16}$"""
+        val actual = RegexBuilder()
+            .startOfLine()
+            .quantifier(Custom(13, 16)) {
+                groupNonCapturing {
+                    digit()
+                    quantifier(ZeroOrOne) {
+                        characterClass {
+                            literal(' ')
+                            literal('-')
+                        }
+                    }
+                }
+            }
+            .endOfLine()
+            .build()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `color code`() {
+        val expected = """^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"""
+        val actual = RegexBuilder()
+            .startOfLine()
+            .literalPhrase("#")
+            .groupChoice({
+                quantifier(Exactly(6)) { characterClass { rangeHexadecimal() } }
+            }, {
+                quantifier(Exactly(3)) { characterClass { rangeHexadecimal() } }
+            })
+            .endOfLine()
+            .build()
+        assertEquals(expected, actual)
+    }
 }

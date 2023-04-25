@@ -1,12 +1,14 @@
 package main
 
-import main.types.QuantifierType.OneOrMore
+import main.builders.CharClassBuilder
+import main.builders.GroupBuilder
+import main.builders.NamedGroupBuilder
+import main.builders.UnionBuilder
 import main.types.PosixCharacterClass
 import main.types.QuantifierType
-import main.types.RegexFlag
-import java.util.Collections.emptySet
+import main.types.QuantifierType.OneOrMore
 
-open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
+open class RegexBuilder {
     val stringBuilder = StringBuilder()
 
     fun unicodeProperty(property: String): RegexBuilder {
@@ -163,13 +165,13 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-    fun nonCapturingGroup(init: NonCapturingGroupBuilder.() -> Unit): RegexBuilder {
+    fun groupNonCapturing(init: NonCapturingGroupBuilder.() -> Unit): RegexBuilder {
         val nonCapturingGroupBuilder = NonCapturingGroupBuilder().apply(init)
         stringBuilder.append(nonCapturingGroupBuilder.buildNonCapturingGroup())
         return this
     }
 
-    fun namedGroup(name: String, init: NamedGroupBuilder.() -> Unit): RegexBuilder {
+    fun groupNamed(name: String, init: NamedGroupBuilder.() -> Unit): RegexBuilder {
         val namedGroupBuilder = NamedGroupBuilder(name).apply(init)
         stringBuilder.append(namedGroupBuilder.buildNamedGroup())
         return this
@@ -196,14 +198,21 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
+    fun groupChoice(vararg init: RegexBuilder.() -> Unit): RegexBuilder = group {
+        choiceOf(*init)
+    }
+
     fun lookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
         val lookaheadBuilder = LookaheadBuilder().apply(init)
         stringBuilder.append(lookaheadBuilder.buildLookahead())
         return this
     }
 
-    fun or(): RegexBuilder {
-        stringBuilder.append("|")
+    fun choiceOf(vararg init: RegexBuilder.() -> Unit): RegexBuilder {
+        val unionBuilder = UnionBuilder()
+        init.forEach {
+            unionBuilder.choice(it) }
+        stringBuilder.append(unionBuilder.buildUnion())
         return this
     }
 
@@ -222,54 +231,11 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
     fun build(): String = stringBuilder.toString()
     fun buildToRegex(): Regex = Regex(build())
 
-    class LookaheadBuilder : RegexBuilder() {
-        fun buildLookahead(): String {
-            return "(?=${super.build()})"
-        }
-
-        fun buildNegativeLookahead(): String {
-            return "(?!${super.build()})"
-        }
-    }
-
-    class NonCapturingGroupBuilder : RegexBuilder() {
-        fun buildNonCapturingGroup(): String {
-            return "(?:${super.build()})"
-        }
-    }
-
-    class NamedGroupBuilder(private val name: String) : RegexBuilder() {
-        fun buildNamedGroup(): String {
-            return "(?<$name>${super.build()})"
-        }
-    }
-
-    class LookbehindBuilder : RegexBuilder() {
-        fun buildPositiveLookbehind(): String {
-            return "(?<=${super.build()})"
-        }
-
-        fun buildNegativeLookbehind(): String {
-            return "(?<!${super.build()})"
-        }
-    }
-
-    class AtomicGroupBuilder : RegexBuilder() {
-        fun buildAtomicGroup(): String {
-            return "(?>${super.build()})"
-        }
-    }
-
-    class QuantifierBuilder : RegexBuilder() {
-        fun buildQuantifier(quantifier: String): String {
-            return "${super.build()}$quantifier"
-        }
-    }
 }
 
 fun main() {
     val regex = RegexBuilder()
-        .namedGroup("digits") {
+        .groupNamed("digits") {
             digit()
             quantifier(OneOrMore) {
                 digit()
