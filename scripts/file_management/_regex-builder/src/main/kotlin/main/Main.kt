@@ -175,8 +175,8 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-    fun literal(value: String): RegexBuilder {
-        stringBuilder.append(value.replace(Regex("([\\\\.^$|?*+()\\[\\]{}])"), "\\\\$1"))
+    fun literalPhrase(value: String): RegexBuilder {
+        stringBuilder.append(value.replace(Regex("([\\\\.^$|?*+()\\[\\]{}/])"), "\\\\$1"))
         return this
     }
 
@@ -220,6 +220,7 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
     }
 
     fun build(): String = stringBuilder.toString()
+    fun buildToRegex(): Regex = Regex(build())
 
     class LookaheadBuilder : RegexBuilder() {
         fun buildLookahead(): String {
@@ -275,7 +276,7 @@ fun main() {
             }
         }
 //        .comment("Named group for digits")
-        .literal("abc")
+        .literalPhrase("abc")
         .backreference("digits")
 //        .comment("Backreference to digits group")
 //        .conditional("digits", {
@@ -285,7 +286,7 @@ fun main() {
 //        })
 //        .comment("Conditional depending on the existence of the 'digits' group")
         .quantifier(QuantifierType.ZeroOrOne) {
-            literal("Z")
+            literalPhrase("Z")
         }
 //        .comment("Zero or one occurrence of 'Z'")
 //        .recursion()
