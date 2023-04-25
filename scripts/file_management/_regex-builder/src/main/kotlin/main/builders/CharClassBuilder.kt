@@ -2,10 +2,10 @@ package main.builders
 
 import main.RegexBuilder
 
-class CharClassBuilder : RegexBuilder() {
+class CharClassBuilder(private val isNegative: Boolean) : RegexBuilder() {
 
     fun buildCharClass(): String {
-        return "[${super.build()}]"
+        return "[${if (isNegative) "^" else ""}${super.build()}]"
     }
 
     fun range(from: Char, to: Char): CharClassBuilder {

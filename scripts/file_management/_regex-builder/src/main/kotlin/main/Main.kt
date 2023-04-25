@@ -1,6 +1,7 @@
 package main
 
 import main.builders.*
+import main.builders.GroupType.*
 import main.types.PosixCharacterClass
 import main.types.QuantifierType
 import main.types.QuantifierType.OneOrMore
@@ -111,12 +112,6 @@ open class RegexBuilder {
         return this
     }
 
-    fun atomicGroup(init: AtomicGroupBuilder.() -> Unit): RegexBuilder {
-        val atomicGroupBuilder = AtomicGroupBuilder().apply(init)
-        stringBuilder.append(atomicGroupBuilder.buildAtomicGroup())
-        return this
-    }
-
     fun wordBoundary(): RegexBuilder {
         stringBuilder.append("\\b")
         return this
@@ -162,12 +157,6 @@ open class RegexBuilder {
         return this
     }
 
-    fun groupNonCapturing(init: NonCapturingGroupBuilder.() -> Unit): RegexBuilder {
-        val nonCapturingGroupBuilder = NonCapturingGroupBuilder().apply(init)
-        stringBuilder.append(nonCapturingGroupBuilder.buildNonCapturingGroup())
-        return this
-    }
-
     fun groupNamed(name: String, init: NamedGroupBuilder.() -> Unit): RegexBuilder {
         val namedGroupBuilder = NamedGroupBuilder(name).apply(init)
         stringBuilder.append(namedGroupBuilder.buildNamedGroup())
@@ -189,8 +178,8 @@ open class RegexBuilder {
         return this
     }
 
-    fun group(init: GroupBuilder.() -> Unit): RegexBuilder {
-        val groupBuilder = GroupBuilder().apply(init)
+    fun group(type: GroupType = Normal, init: GroupBuilder.() -> Unit): RegexBuilder {
+        val groupBuilder = GroupBuilder(type).apply(init)
         stringBuilder.append(groupBuilder.buildGroup())
         return this
     }
@@ -208,13 +197,14 @@ open class RegexBuilder {
     fun choiceOf(vararg init: RegexBuilder.() -> Unit): RegexBuilder {
         val unionBuilder = UnionBuilder()
         init.forEach {
-            unionBuilder.choice(it) }
+            unionBuilder.choice(it)
+        }
         stringBuilder.append(unionBuilder.buildUnion())
         return this
     }
 
-    fun characterClass(init: CharClassBuilder.() -> Unit): RegexBuilder {
-        val charClassBuilder = CharClassBuilder().apply(init)
+    fun characterGroup(isNegative: Boolean = false, init: CharClassBuilder.() -> Unit): RegexBuilder {
+        val charClassBuilder = CharClassBuilder(isNegative).apply(init)
         stringBuilder.append(charClassBuilder.buildCharClass())
         return this
     }
