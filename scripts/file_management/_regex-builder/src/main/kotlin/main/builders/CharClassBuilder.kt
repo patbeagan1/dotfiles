@@ -1,12 +1,8 @@
 package main.builders
 
-import main.RegexBuilder
-import main.builders.CharacterClassType.*
-
-enum class CharacterClassType {
-    Positive,
-    Negative
-}
+import main.types.CharacterClassType
+import main.types.CharacterClassType.Negative
+import main.types.CharacterClassType.Positive
 
 class CharClassBuilder(private val type: CharacterClassType) : RegexBuilder() {
 

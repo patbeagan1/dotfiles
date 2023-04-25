@@ -1,9 +1,8 @@
-import main.RegexBuilder
-import main.builders.CharacterClassType
-import main.builders.CharacterClassType.*
+import main.builders.RegexBuilder
+import main.types.CharacterClassType.*
 import main.builders.GroupType.*
-import main.builders.LookAroundType
 import main.builders.LookAroundType.*
+import main.types.PosixCharacterClass.ALPHA
 import main.types.QuantifierType.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -18,7 +17,7 @@ class MainKtTest {
                 quantifier(ZeroOrMore) { literalPhrase("b") }
                 quantifier(ZeroOrOne) { literalPhrase("c") }
                 literalPhrase("de")
-            }.build()
+            }.build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
@@ -56,7 +55,7 @@ class MainKtTest {
                 }
             }
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
 
         assertEquals(expected, actual)
 
@@ -115,7 +114,7 @@ class MainKtTest {
                 }
             }
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
 
         assertEquals(expected, actual)
     }
@@ -152,7 +151,7 @@ class MainKtTest {
             }
             .quantifier(Exactly(4)) { digit() }
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
 
         assertEquals(expected, actual)
     }
@@ -210,7 +209,7 @@ class MainKtTest {
                 })
             }
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
@@ -231,7 +230,7 @@ class MainKtTest {
                 }
             }
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
 
         assertEquals(expected, actual)
     }
@@ -248,7 +247,7 @@ class MainKtTest {
                 quantifier(Exactly(3)) { characterClass { rangeHexadecimal() } }
             })
             .endOfLine()
-            .build()
+            .build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
@@ -259,7 +258,7 @@ class MainKtTest {
             .lookAround(PositiveLookbehind) {
                 literalPhrase("abc")
             }
-            .build()
+            .build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
@@ -278,7 +277,7 @@ class MainKtTest {
                     characterClass { rangeDigit() }
                 })
             }
-            .build()
+            .build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
@@ -292,14 +291,18 @@ class MainKtTest {
                 literal('d')
             }
             .literalPhrase("e")
-            .build()
+            .build().also { Regex(it) }
         assertEquals(expected, actual)
     }
 
     @Test
-    fun a() {
-        (0..256).forEach {
-            println(it.toString() + ":${it.toChar()}:" + Char(it))
-        }
+    fun `posix character classes`() {
+        val expected = "^[:alpha:][123]"
+        val actual = RegexBuilder()
+            .startOfLine()
+            .characterClassPosix(ALPHA)
+            .characterClass { literalPhrase("123") }
+            .build()
+        assertEquals(expected, actual)
     }
 }

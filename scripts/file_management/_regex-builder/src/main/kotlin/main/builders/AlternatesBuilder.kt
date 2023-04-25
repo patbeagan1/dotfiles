@@ -1,8 +1,6 @@
 package main.builders
 
-import main.RegexBuilder
-
-class UnionBuilder : RegexBuilder() {
+internal class AlternatesBuilder : RegexBuilder() {
 
     private val choices = mutableListOf<RegexBuilder.() -> Unit>()
 

@@ -1,6 +1,8 @@
 package main.builders
 
-import main.RegexBuilder
+class LookaroundBuilder(private val type: LookAroundType) : RegexBuilder() {
+    fun buildLookaround(): String = type.format(build())
+}
 
 sealed class LookAroundType {
     abstract fun format(content: String): String
@@ -22,6 +24,3 @@ sealed class LookAroundType {
     }
 }
 
-class LookaroundBuilder(private val type: LookAroundType) : RegexBuilder() {
-    fun buildLookaround(): String = type.format(build())
-}
