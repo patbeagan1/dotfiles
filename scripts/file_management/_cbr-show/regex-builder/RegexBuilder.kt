@@ -31,6 +31,36 @@ class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
+ fun whitespace(): RegexBuilder {
+        stringBuilder.append("\\s")
+        return this
+    }
+
+    fun nonWhitespace(): RegexBuilder {
+        stringBuilder.append("\\S")
+        return this
+    }
+
+    fun wordChar(): RegexBuilder {
+        stringBuilder.append("\\w")
+        return this
+    }
+
+    fun nonWordChar(): RegexBuilder {
+        stringBuilder.append("\\W")
+        return this
+    }
+
+    fun digit(): RegexBuilder {
+        stringBuilder.append("\\d")
+        return this
+    }
+
+    fun nonDigit(): RegexBuilder {
+        stringBuilder.append("\\D")
+        return this
+    }
+
     fun unicodeCharacter(hexCode: String): RegexBuilder {
         stringBuilder.append("\\u$hexCode")
         return this
@@ -227,8 +257,10 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 fun main() {
     val regex = RegexBuilder(flags = setOf(RegexFlag.CASE_INSENSITIVE, RegexFlag.MULTILINE))
         .wordBoundary()
-        .unicodeScript("Latin") // Characters from the Latin script
-        .unicodeCategory("Lu") // Uppercase letters
+        .digit()
+        .whitespace()
+        .wordChar()
+        .nonWhitespace()
         .unicodeCharacter("002E") // Unicode character for a period (.)
         .characterClass {
             posixCharacterClass(PosixCharacterClass.ALNUM) // Alphanumeric characters
@@ -257,7 +289,7 @@ fun main() {
         .wordBoundary()
         .build()
 
-    val input = "A.Byxcdzzxx"
+    val input = "1 A.bxayycdzzxx"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
