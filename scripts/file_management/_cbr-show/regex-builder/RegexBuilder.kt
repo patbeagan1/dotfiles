@@ -130,6 +130,45 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
+    fun namedGroup(name: String, builder: RegexBuilder.() -> Unit): RegexBuilder {
+        stringBuilder.append("(?<")
+        stringBuilder.append(name)
+        stringBuilder.append(">")
+        stringBuilder.append(RegexBuilder().apply(builder).stringBuilder)
+        stringBuilder.append(")")
+        return this
+    }
+
+    fun backreference(name: String): RegexBuilder {
+        stringBuilder.append("\\k<")
+        stringBuilder.append(name)
+        stringBuilder.append(">")
+        return this
+    }
+
+    fun conditional(reference: String, ifBuilder: RegexBuilder.() -> Unit, elseBuilder: RegexBuilder.() -> Unit): RegexBuilder {
+        stringBuilder.append("(?")
+        stringBuilder.append(reference)
+        stringBuilder.append("?")
+        stringBuilder.append(RegexBuilder().apply(ifBuilder).stringBuilder)
+        stringBuilder.append(":")
+        stringBuilder.append(RegexBuilder().apply(elseBuilder).stringBuilder)
+        stringBuilder.append(")")
+        return this
+    }
+
+    fun recursion(): RegexBuilder {
+        stringBuilder.append("\\g<0>")
+        return this
+    }
+
+    fun comment(comment: String): RegexBuilder {
+        stringBuilder.append("(?#")
+        stringBuilder.append(comment)
+        stringBuilder.append(")")
+        return this
+    }
+
       fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
         val lookaheadBuilder = LookaheadBuilder().apply(init)
         stringBuilder.append(lookaheadBuilder.buildNegativeLookahead())
@@ -281,18 +320,26 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 }
 
 fun main() {
-    val regex = RegexBuilder(flags = setOf(RegexFlag.CASE_INSENSITIVE, RegexFlag.MULTILINE))
-        .startOfString()
-        .digit()
-        .whitespace()
-        .endOfPreviousMatch()
-        .wordChar()
-        .nonWhitespace()
-        .endOfStringOrBeforeNewlineAtEnd()
-        .escapeSequence(".[]{}()*+?")
+    val regex = RegexBuilder()
+        .namedGroup("digits") {
+            digit()
+            oneOrMore { digit() }
+        }
+        .comment("Named group for digits")
+        .literal("abc")
+        .backreference("digits")
+        .comment("Backreference to digits group")
+        .conditional("digits", {
+            literal("YES")
+        }, {
+            literal("NO")
+        })
+        .comment("Conditional depending on the existence of the 'digits' group")
+        .recursion()
+        .comment("Recursive pattern")
         .build()
 
-    val input = "1 A\n.[]{}()*+?"
+    val input = "123abc123YES123abc123YES"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
