@@ -114,32 +114,33 @@ open class RegexBuilder {
         return this
     }
 
-    fun conditional(
-        reference: String,
-        ifBuilder: RegexBuilder.() -> Unit,
-        elseBuilder: RegexBuilder.() -> Unit
-    ): RegexBuilder {
-        stringBuilder.append("(?")
-        stringBuilder.append(reference)
-        stringBuilder.append("?")
-        stringBuilder.append(RegexBuilder().apply(ifBuilder).stringBuilder)
-        stringBuilder.append(":")
-        stringBuilder.append(RegexBuilder().apply(elseBuilder).stringBuilder)
-        stringBuilder.append(")")
-        return this
-    }
-
-    fun recursion(): RegexBuilder {
-        stringBuilder.append("\\g<0>")
-        return this
-    }
-
-    fun comment(comment: String): RegexBuilder {
-        stringBuilder.append("(?#")
-        stringBuilder.append(comment)
-        stringBuilder.append(")")
-        return this
-    }
+    // these might only be applicable in dotnet
+//    fun conditional(
+//        reference: String,
+//        ifBuilder: RegexBuilder.() -> Unit,
+//        elseBuilder: RegexBuilder.() -> Unit
+//    ): RegexBuilder {
+//        stringBuilder.append("(?")
+//        stringBuilder.append(reference)
+//        stringBuilder.append("?")
+//        stringBuilder.append(RegexBuilder().apply(ifBuilder).stringBuilder)
+//        stringBuilder.append(":")
+//        stringBuilder.append(RegexBuilder().apply(elseBuilder).stringBuilder)
+//        stringBuilder.append(")")
+//        return this
+//    }
+//
+//    fun recursion(): RegexBuilder {
+//        stringBuilder.append("\\g<0>")
+//        return this
+//    }
+//
+//    fun comment(comment: String): RegexBuilder {
+//        stringBuilder.append("(?#")
+//        stringBuilder.append(comment)
+//        stringBuilder.append(")")
+//        return this
+//    }
 
     fun group(type: GroupType = GroupType.Normal, init: GroupBuilder.() -> Unit): RegexBuilder {
         val groupBuilder = GroupBuilder(type).apply(init)

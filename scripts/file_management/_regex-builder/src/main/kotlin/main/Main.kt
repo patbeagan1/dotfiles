@@ -17,9 +17,9 @@ fun main() {
         .backreference("digits")
 //        .comment("Backreference to digits group")
 //        .conditional("digits", {
-//            literal("YES")
+//            literalPhrase("YES")
 //        }, {
-//            literal("NO")
+//            literalPhrase("NO")
 //        })
 //        .comment("Conditional depending on the existence of the 'digits' group")
         .quantifier(QuantifierType.ZeroOrOne) {
@@ -29,6 +29,7 @@ fun main() {
 //        .recursion()
 //        .comment("Recursive pattern")
         .build()
+        .also { println(it) }
 
     val input = "123abc123YESZ123abc123YESZ"
     val result = Regex(regex).containsMatchIn(input)
