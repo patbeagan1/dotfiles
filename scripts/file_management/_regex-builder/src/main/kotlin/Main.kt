@@ -47,6 +47,14 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         stringBuilder.append("\\z")
         return this
     }
+    fun startOfLine(): RegexBuilder {
+        stringBuilder.append("^")
+        return this
+    }
+    fun endOfLine(): RegexBuilder {
+        stringBuilder.append("$")
+        return this
+    }
 
     fun endOfPreviousMatch(): RegexBuilder {
         stringBuilder.append("\\G")
@@ -248,29 +256,33 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
 
     fun build(): String {
         val pattern = stringBuilder.toString()
-        val flagPattern =""// flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
+        val flagPattern = ""// flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
         return "$flagPattern$pattern"
     }
 
-    inner class GroupBuilder : RegexBuilder() {
+    class GroupBuilder : RegexBuilder() {
         fun buildGroup(): String {
             return "(${super.build()})"
         }
     }
 
-    inner class QuantifierBuilder : RegexBuilder() {
+    class QuantifierBuilder : RegexBuilder() {
         fun buildQuantifier(quantifier: String): String {
             return "${super.build()}$quantifier"
         }
     }
 
-    inner class CharClassBuilder {
+    class CharClassBuilder {
         private val charClassBuilder = StringBuilder()
 
         fun range(from: Char, to: Char): CharClassBuilder {
             charClassBuilder.append("$from-$to")
             return this
         }
+
+        fun rangeLowerAZ() = range('a', 'z')
+        fun rangeUpperAZ() = range('A', 'Z')
+        fun rangeDigit() = range('0', '9')
 
         fun literal(value: Char): CharClassBuilder {
             charClassBuilder.append(value)
@@ -282,7 +294,7 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         }
     }
 
-    inner class LookaheadBuilder : RegexBuilder() {
+    class LookaheadBuilder : RegexBuilder() {
         fun buildLookahead(): String {
             return "(?=${super.build()})"
         }
@@ -292,19 +304,19 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         }
     }
 
-    inner class NonCapturingGroupBuilder : RegexBuilder() {
+    class NonCapturingGroupBuilder : RegexBuilder() {
         fun buildNonCapturingGroup(): String {
             return "(?:${super.build()})"
         }
     }
 
-    inner class NamedGroupBuilder(private val name: String) : RegexBuilder() {
+    class NamedGroupBuilder(private val name: String) : RegexBuilder() {
         fun buildNamedGroup(): String {
             return "(?<$name>${super.build()})"
         }
     }
 
-    inner class LookbehindBuilder : RegexBuilder() {
+    class LookbehindBuilder : RegexBuilder() {
         fun buildPositiveLookbehind(): String {
             return "(?<=${super.build()})"
         }
@@ -314,7 +326,7 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         }
     }
 
-    inner class AtomicGroupBuilder : RegexBuilder() {
+    class AtomicGroupBuilder : RegexBuilder() {
         fun buildAtomicGroup(): String {
             return "(?>${super.build()})"
         }
