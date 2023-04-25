@@ -26,13 +26,9 @@ class RegexBuilder {
         return this
     }
 
-    fun startGroup(): RegexBuilder {
-        stringBuilder.append("(")
-        return this
-    }
-
-    fun endGroup(): RegexBuilder {
-        stringBuilder.append(")")
+    fun group(init: GroupBuilder.() -> Unit): RegexBuilder {
+        val groupBuilder = GroupBuilder().apply(init)
+        stringBuilder.append(groupBuilder.buildGroup())
         return this
     }
 
@@ -44,15 +40,21 @@ class RegexBuilder {
     fun build(): Regex {
         return Regex(stringBuilder.toString())
     }
+
+    inner class GroupBuilder : RegexBuilder() {
+        fun buildGroup(): String {
+            return "(${super.build().pattern})"
+        }
+    }
 }
 
 fun main() {
     val regex = RegexBuilder()
-        .startGroup()
-        .literal("ab")
-        .anyChar()
-        .zeroOrMore()
-        .endGroup()
+        .group {
+            literal("ab")
+            anyChar()
+            zeroOrMore()
+        }
         .literal("cd")
         .oneOrMore()
         .build()
