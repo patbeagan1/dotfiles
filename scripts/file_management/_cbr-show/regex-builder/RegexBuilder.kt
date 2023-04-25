@@ -31,6 +31,32 @@ class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
+    fun startOfString(): RegexBuilder {
+        stringBuilder.append("\\A")
+        return this
+    }
+
+    fun endOfStringOrBeforeNewlineAtEnd(): RegexBuilder {
+        stringBuilder.append("\\Z")
+        return this
+    }
+
+    fun absoluteEndOfString(): RegexBuilder {
+        stringBuilder.append("\\z")
+        return this
+    }
+
+    fun endOfPreviousMatch(): RegexBuilder {
+        stringBuilder.append("\\G")
+        return this
+    }
+
+    fun escapeSequence(sequence: String): RegexBuilder {
+        stringBuilder.append("\\Q$sequence\\E")
+        return this
+    }
+
+
  fun whitespace(): RegexBuilder {
         stringBuilder.append("\\s")
         return this
@@ -256,40 +282,17 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 
 fun main() {
     val regex = RegexBuilder(flags = setOf(RegexFlag.CASE_INSENSITIVE, RegexFlag.MULTILINE))
-        .wordBoundary()
+        .startOfString()
         .digit()
         .whitespace()
+        .endOfPreviousMatch()
         .wordChar()
         .nonWhitespace()
-        .unicodeCharacter("002E") // Unicode character for a period (.)
-        .characterClass {
-            posixCharacterClass(PosixCharacterClass.ALNUM) // Alphanumeric characters
-        }
-        .negativeLookbehind {
-            literal("c")
-        }
-        .nonCapturingGroup {
-            literal("b")
-            anyChar()
-        }
-        .atomicGroup {
-            literal("x")
-            anyChar()
-        }
-        .zeroOrMore {
-            literal("y")
-        }
-        .literal("cd")
-        .oneOrMore {
-            literal("z")
-        }
-        .customQuantifier(2, 4) {
-            literal("x")
-        }
-        .wordBoundary()
+        .endOfStringOrBeforeNewlineAtEnd()
+        .escapeSequence(".[]{}()*+?")
         .build()
 
-    val input = "1 A.bxayycdzzxx"
+    val input = "1 A\n.[]{}()*+?"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
