@@ -1,6 +1,21 @@
 class RegexBuilder {
     private val stringBuilder = StringBuilder()
 
+        fun unicodeProperty(property: String): RegexBuilder {
+        stringBuilder.append("\\p{$property}")
+        return this
+    }
+
+    fun unicodeCharacter(hexCode: String): RegexBuilder {
+        stringBuilder.append("\\u$hexCode")
+        return this
+    }
+
+    fun posixCharacterClass(characterClass: String): RegexBuilder {
+        stringBuilder.append("[:$characterClass:]")
+        return this
+    }
+
 fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         val lookbehindBuilder = LookbehindBuilder().apply(init)
         stringBuilder.append(lookbehindBuilder.buildPositiveLookbehind())
@@ -175,8 +190,10 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 fun main() {
     val regex = RegexBuilder()
         .wordBoundary()
-        .positiveLookbehind {
-            literal("a")
+        .unicodeProperty("L") // Any kind of letter from any language
+        .unicodeCharacter("002E") // Unicode character for a period (.)
+        .characterClass {
+            posixCharacterClass("alnum") // Alphanumeric characters
         }
         .negativeLookbehind {
             literal("c")
@@ -202,7 +219,7 @@ fun main() {
         .wordBoundary()
         .build()
 
-    val input = "abxayycdzzxx"
+    val input = "A.byxcdzzxx"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
