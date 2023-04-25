@@ -1,9 +1,6 @@
 package main
 
-import main.builders.CharClassBuilder
-import main.builders.GroupBuilder
-import main.builders.NamedGroupBuilder
-import main.builders.UnionBuilder
+import main.builders.*
 import main.types.PosixCharacterClass
 import main.types.QuantifierType
 import main.types.QuantifierType.OneOrMore

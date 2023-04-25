@@ -1,4 +1,6 @@
-package main
+package main.builders
+
+import main.RegexBuilder
 
 class QuantifierBuilder : RegexBuilder() {
     fun buildQuantifier(quantifier: String): String {

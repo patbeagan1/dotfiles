@@ -1,4 +1,6 @@
-package main
+package main.builders
+
+import main.RegexBuilder
 
 class LookbehindBuilder : RegexBuilder() {
     fun buildPositiveLookbehind(): String {

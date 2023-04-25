@@ -1,4 +1,6 @@
-package main
+package main.builders
+
+import main.RegexBuilder
 
 class LookaheadBuilder : RegexBuilder() {
     fun buildLookahead(): String {
