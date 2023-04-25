@@ -15,8 +15,16 @@ enum class PosixCharacterClass(val characterClassName: String) {
     XDIGIT("xdigit")
 }
 
-class RegexBuilder {
-    private val stringBuilder = StringBuilder()
+enum class RegexFlag(val flag: String) {
+    CASE_INSENSITIVE("i"),
+    MULTILINE("m"),
+    DOTALL("s"),
+    UNICODE_CASE("u"),
+    UNIX_LINES("d")
+}
+
+class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
+        private val stringBuilder = StringBuilder()
 
         fun unicodeProperty(property: String): RegexBuilder {
         stringBuilder.append("\\p{$property}")
@@ -25,6 +33,16 @@ class RegexBuilder {
 
     fun unicodeCharacter(hexCode: String): RegexBuilder {
         stringBuilder.append("\\u$hexCode")
+        return this
+    }
+
+   fun unicodeScript(script: String): RegexBuilder {
+        stringBuilder.append("\\p{Is$script}")
+        return this
+    }
+
+    fun unicodeCategory(category: String): RegexBuilder {
+        stringBuilder.append("\\p{$category}")
         return this
     }
 
@@ -130,8 +148,10 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-    fun build(): Regex {
-        return Regex(stringBuilder.toString())
+      fun build(): Regex {
+        val pattern = stringBuilder.toString()
+        val flagPattern = flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
+        return Regex("$flagPattern$pattern")
     }
 
     inner class GroupBuilder : RegexBuilder() {
@@ -205,9 +225,10 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 }
 
 fun main() {
-    val regex = RegexBuilder()
+    val regex = RegexBuilder(flags = setOf(RegexFlag.CASE_INSENSITIVE, RegexFlag.MULTILINE))
         .wordBoundary()
-        .unicodeProperty("L") // Any kind of letter from any language
+        .unicodeScript("Latin") // Characters from the Latin script
+        .unicodeCategory("Lu") // Uppercase letters
         .unicodeCharacter("002E") // Unicode character for a period (.)
         .characterClass {
             posixCharacterClass(PosixCharacterClass.ALNUM) // Alphanumeric characters
@@ -236,7 +257,7 @@ fun main() {
         .wordBoundary()
         .build()
 
-    val input = "A.byxcdzzxx"
+    val input = "A.Byxcdzzxx"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
