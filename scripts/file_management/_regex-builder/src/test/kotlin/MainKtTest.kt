@@ -1,4 +1,6 @@
 import main.RegexBuilder
+import main.types.QuantifierType
+import main.types.QuantifierType.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -9,8 +11,8 @@ class MainKtTest {
         val actual = RegexBuilder()
             .group {
                 literal("a")
-                zeroOrMore { literal("b") }
-                zeroOrOne { literal("c") }
+                quantifier(ZeroOrMore) { literal("b") }
+                quantifier(ZeroOrOne) { literal("c") }
                 literal("de")
             }.build()
         assertEquals(expected, actual)
@@ -33,7 +35,7 @@ class MainKtTest {
                 literal('-')
             }
             .literal("@")
-            .oneOrMore {
+            .quantifier(OneOrMore) {
                 characterClass {
                     rangeLowerAZ()
                     rangeUpperAZ()
@@ -43,7 +45,7 @@ class MainKtTest {
                 }
             }
             .literal(".")
-            .customQuantifier(0, 2) {
+            .quantifier(AtLeast(2)) {
                 characterClass {
                     range('a', 'z')
                     range('A', 'Z')

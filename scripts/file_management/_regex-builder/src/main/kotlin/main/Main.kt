@@ -1,11 +1,13 @@
 package main
 
+import main.types.QuantifierType.OneOrMore
 import main.types.PosixCharacterClass
+import main.types.QuantifierType
 import main.types.RegexFlag
 import java.util.Collections.emptySet
 
 open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
-    private val stringBuilder = StringBuilder()
+    val stringBuilder = StringBuilder()
 
     fun unicodeProperty(property: String): RegexBuilder {
         stringBuilder.append("\\p{$property}")
@@ -26,10 +28,12 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         stringBuilder.append("\\z")
         return this
     }
+
     fun startOfLine(): RegexBuilder {
         stringBuilder.append("^")
         return this
     }
+
     fun endOfLine(): RegexBuilder {
         stringBuilder.append("$")
         return this
@@ -181,30 +185,6 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-    fun zeroOrMore(init: QuantifierBuilder.() -> Unit): RegexBuilder {
-        val quantifierBuilder = QuantifierBuilder().apply(init)
-        stringBuilder.append(quantifierBuilder.buildQuantifier("*"))
-        return this
-    }
-
-    fun zeroOrOne(builder: RegexBuilder.() -> Unit): RegexBuilder {
-        stringBuilder.append(RegexBuilder().apply(builder).stringBuilder)
-        stringBuilder.append("?")
-        return this
-    }
-
-    fun oneOrMore(init: QuantifierBuilder.() -> Unit): RegexBuilder {
-        val quantifierBuilder = QuantifierBuilder().apply(init)
-        stringBuilder.append(quantifierBuilder.buildQuantifier("+"))
-        return this
-    }
-
-    fun customQuantifier(min: Int, max: Int, init: QuantifierBuilder.() -> Unit): RegexBuilder {
-        val quantifierBuilder = QuantifierBuilder().apply(init)
-        stringBuilder.append(quantifierBuilder.buildQuantifier("{$min,$max}"))
-        return this
-    }
-
     fun optional(): RegexBuilder {
         stringBuilder.append("?")
         return this
@@ -233,17 +213,13 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-    fun build(): String {
-        val pattern = stringBuilder.toString()
-        val flagPattern = ""// flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
-        return "$flagPattern$pattern"
+    fun quantifier(type: QuantifierType, init: RegexBuilder.() -> Unit): RegexBuilder {
+        val quantifierBuilder = QuantifierBuilder().apply(init)
+        stringBuilder.append(quantifierBuilder.buildQuantifier(type.format()))
+        return this
     }
 
-    class QuantifierBuilder : RegexBuilder() {
-        fun buildQuantifier(quantifier: String): String {
-            return "${super.build()}$quantifier"
-        }
-    }
+    fun build(): String = stringBuilder.toString()
 
     class LookaheadBuilder : RegexBuilder() {
         fun buildLookahead(): String {
@@ -283,13 +259,20 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         }
     }
 
+    class QuantifierBuilder : RegexBuilder() {
+        fun buildQuantifier(quantifier: String): String {
+            return "${super.build()}$quantifier"
+        }
+    }
 }
 
 fun main() {
     val regex = RegexBuilder()
         .namedGroup("digits") {
             digit()
-            oneOrMore { digit() }
+            quantifier(OneOrMore) {
+                digit()
+            }
         }
 //        .comment("Named group for digits")
         .literal("abc")
@@ -301,7 +284,7 @@ fun main() {
 //            literal("NO")
 //        })
 //        .comment("Conditional depending on the existence of the 'digits' group")
-        .zeroOrOne {
+        .quantifier(QuantifierType.ZeroOrOne) {
             literal("Z")
         }
 //        .comment("Zero or one occurrence of 'Z'")
