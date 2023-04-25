@@ -1,3 +1,20 @@
+enum class PosixCharacterClass(val characterClassName: String) {
+    ALNUM("alnum"),
+    ALPHA("alpha"),
+    ASCII("ascii"),
+    BLANK("blank"),
+    CNTRL("cntrl"),
+    DIGIT("digit"),
+    GRAPH("graph"),
+    LOWER("lower"),
+    PRINT("print"),
+    PUNCT("punct"),
+    SPACE("space"),
+    UPPER("upper"),
+    WORD("word"),
+    XDIGIT("xdigit")
+}
+
 class RegexBuilder {
     private val stringBuilder = StringBuilder()
 
@@ -11,8 +28,8 @@ class RegexBuilder {
         return this
     }
 
-    fun posixCharacterClass(characterClass: String): RegexBuilder {
-        stringBuilder.append("[:$characterClass:]")
+    fun posixCharacterClass(characterClass: PosixCharacterClass): RegexBuilder {
+        stringBuilder.append("[:${characterClass.characterClassName}:]")
         return this
     }
 
@@ -193,7 +210,7 @@ fun main() {
         .unicodeProperty("L") // Any kind of letter from any language
         .unicodeCharacter("002E") // Unicode character for a period (.)
         .characterClass {
-            posixCharacterClass("alnum") // Alphanumeric characters
+            posixCharacterClass(PosixCharacterClass.ALNUM) // Alphanumeric characters
         }
         .negativeLookbehind {
             literal("c")
