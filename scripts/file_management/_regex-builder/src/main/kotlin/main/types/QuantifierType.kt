@@ -23,7 +23,7 @@ sealed class QuantifierType {
         override fun format() = "{$n,}"
     }
 
-    class Custom(private val min: Int, private val max: Int) : QuantifierType() {
+    class RangeOf(private val min: Int, private val max: Int) : QuantifierType() {
         override fun format() = "{$min,$max}"
     }
 

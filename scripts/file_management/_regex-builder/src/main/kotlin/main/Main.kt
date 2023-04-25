@@ -1,7 +1,9 @@
 package main
 
 import main.builders.*
+import main.builders.CharacterClassType.*
 import main.builders.GroupType.*
+import main.builders.LookAroundType.*
 import main.types.PosixCharacterClass
 import main.types.QuantifierType
 import main.types.QuantifierType.OneOrMore
@@ -100,18 +102,6 @@ open class RegexBuilder {
         return this
     }
 
-    fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
-        val lookbehindBuilder = LookbehindBuilder().apply(init)
-        stringBuilder.append(lookbehindBuilder.buildPositiveLookbehind())
-        return this
-    }
-
-    fun negativeLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
-        val lookbehindBuilder = LookbehindBuilder().apply(init)
-        stringBuilder.append(lookbehindBuilder.buildNegativeLookbehind())
-        return this
-    }
-
     fun wordBoundary(): RegexBuilder {
         stringBuilder.append("\\b")
         return this
@@ -151,12 +141,6 @@ open class RegexBuilder {
         return this
     }
 
-    fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
-        val lookaheadBuilder = LookaheadBuilder().apply(init)
-        stringBuilder.append(lookaheadBuilder.buildNegativeLookahead())
-        return this
-    }
-
     fun groupNamed(name: String, init: NamedGroupBuilder.() -> Unit): RegexBuilder {
         val namedGroupBuilder = NamedGroupBuilder(name).apply(init)
         stringBuilder.append(namedGroupBuilder.buildNamedGroup())
@@ -188,9 +172,9 @@ open class RegexBuilder {
         choiceOf(*init)
     }
 
-    fun lookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
-        val lookaheadBuilder = LookaheadBuilder().apply(init)
-        stringBuilder.append(lookaheadBuilder.buildLookahead())
+    fun lookAround(type: LookAroundType = PositiveLookahead, init: LookaroundBuilder.() -> Unit): RegexBuilder {
+        val lookAround = LookaroundBuilder(type).apply(init)
+        stringBuilder.append(lookAround.buildLookaround())
         return this
     }
 
@@ -203,8 +187,8 @@ open class RegexBuilder {
         return this
     }
 
-    fun characterGroup(isNegative: Boolean = false, init: CharClassBuilder.() -> Unit): RegexBuilder {
-        val charClassBuilder = CharClassBuilder(isNegative).apply(init)
+    fun characterClass(type: CharacterClassType = Positive, init: CharClassBuilder.() -> Unit): RegexBuilder {
+        val charClassBuilder = CharClassBuilder(type).apply(init)
         stringBuilder.append(charClassBuilder.buildCharClass())
         return this
     }

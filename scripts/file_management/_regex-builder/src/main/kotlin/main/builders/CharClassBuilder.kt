@@ -1,11 +1,18 @@
 package main.builders
 
 import main.RegexBuilder
+import main.builders.CharacterClassType.*
 
-class CharClassBuilder(private val isNegative: Boolean) : RegexBuilder() {
+enum class CharacterClassType {
+    Positive,
+    Negative
+}
 
-    fun buildCharClass(): String {
-        return "[${if (isNegative) "^" else ""}${super.build()}]"
+class CharClassBuilder(private val type: CharacterClassType) : RegexBuilder() {
+
+    fun buildCharClass(): String = when (type) {
+        Positive -> "[${super.build()}]"
+        Negative -> "[^${super.build()}]"
     }
 
     fun range(from: Char, to: Char): CharClassBuilder {
@@ -16,6 +23,13 @@ class CharClassBuilder(private val isNegative: Boolean) : RegexBuilder() {
     fun literal(value: Char): CharClassBuilder {
         stringBuilder.append(value)
         return this
+    }
+
+    fun range(from: Int, to: Int): CharClassBuilder {
+        val characterCodeOffset = 48
+        val acceptableRange = 0..9
+        if (from !in acceptableRange || to !in acceptableRange) throw IndexOutOfBoundsException()
+        return range(Char(from + characterCodeOffset), Char(to + characterCodeOffset))
     }
 
     fun rangeLowerAZ() = range('a', 'z')

@@ -1,5 +1,9 @@
 import main.RegexBuilder
+import main.builders.CharacterClassType
+import main.builders.CharacterClassType.*
 import main.builders.GroupType.*
+import main.builders.LookAroundType
+import main.builders.LookAroundType.*
 import main.types.QuantifierType.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -24,7 +28,7 @@ class MainKtTest {
         val expected = """^[a-zA-Z0-9._%+-]@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"""
         val actual = RegexBuilder()
             .startOfLine()
-            .characterGroup {
+            .characterClass {
                 rangeLowerAZ()
                 rangeUpperAZ()
                 rangeDigit()
@@ -36,7 +40,7 @@ class MainKtTest {
             }
             .literalPhrase("@")
             .quantifier(OneOrMore) {
-                characterGroup {
+                characterClass {
                     rangeLowerAZ()
                     rangeUpperAZ()
                     rangeDigit()
@@ -46,9 +50,9 @@ class MainKtTest {
             }
             .literalPhrase(".")
             .quantifier(AtLeast(2)) {
-                characterGroup {
-                    range('a', 'z')
-                    range('A', 'Z')
+                characterClass {
+                    rangeLowerAZ()
+                    rangeUpperAZ()
                 }
             }
             .endOfLine()
@@ -73,7 +77,7 @@ class MainKtTest {
                 }
             }
             .quantifier(OneOrMore) {
-                characterGroup {
+                characterClass {
                     wordChar()
                     literal('.')
                     literal('-')
@@ -89,7 +93,7 @@ class MainKtTest {
                 group {
                     literalPhrase("/")
                     quantifier(OneOrMore) {
-                        characterGroup {
+                        characterClass {
                             wordChar()
                             literal('.')
                             literal('-')
@@ -100,7 +104,7 @@ class MainKtTest {
                 group {
                     literalPhrase("/?")
                     quantifier(OneOrMore) {
-                        characterGroup {
+                        characterClass {
                             wordChar()
                             literal('.')
                             literal('=')
@@ -124,7 +128,7 @@ class MainKtTest {
             .quantifier(ZeroOrOne) {
                 group {
                     literalPhrase("+")
-                    quantifier(Custom(1, 2)) { digit() }
+                    quantifier(RangeOf(1, 2)) { digit() }
                     quantifier(ZeroOrOne) { whitespace() }
                 }
             }
@@ -132,7 +136,7 @@ class MainKtTest {
             .quantifier(Exactly(3)) { digit() }
             .quantifier(ZeroOrOne) { literalPhrase(")") }
             .quantifier(ZeroOrOne) {
-                characterGroup {
+                characterClass {
                     whitespace()
                     literal('.')
                     literal('-')
@@ -140,7 +144,7 @@ class MainKtTest {
             }
             .quantifier(Exactly(3)) { digit() }
             .quantifier(ZeroOrOne) {
-                characterGroup {
+                characterClass {
                     whitespace()
                     literal('.')
                     literal('-')
@@ -175,10 +179,10 @@ class MainKtTest {
             .group {
                 choiceOf({
                     literalPhrase("0")
-                    characterGroup { range('1', '9') }
+                    characterClass { range('1', '9') }
                 }, {
                     literalPhrase("1")
-                    characterGroup { range('0', '2') }
+                    characterClass { range('0', '2') }
                 })
             }
             .literalPhrase("-")
@@ -186,20 +190,20 @@ class MainKtTest {
             .group {
                 choiceOf({
                     literalPhrase("0")
-                    characterGroup {
+                    characterClass {
                         range('1', '9')
                     }
                 }, {
-                    characterGroup {
+                    characterClass {
                         literal('1')
                         literal('2')
                     }
-                    characterGroup {
+                    characterClass {
                         rangeDigit()
                     }
                 }, {
                     literalPhrase("3")
-                    characterGroup {
+                    characterClass {
                         literal('0')
                         literal('1')
                     }
@@ -215,11 +219,11 @@ class MainKtTest {
         val expected = """^(?:\d[ -]?){13,16}$"""
         val actual = RegexBuilder()
             .startOfLine()
-            .quantifier(Custom(13, 16)) {
+            .quantifier(RangeOf(13, 16)) {
                 group(NonCapturing) {
                     digit()
                     quantifier(ZeroOrOne) {
-                        characterGroup {
+                        characterClass {
                             literal(' ')
                             literal('-')
                         }
@@ -239,12 +243,63 @@ class MainKtTest {
             .startOfLine()
             .literalPhrase("#")
             .groupChoice({
-                quantifier(Exactly(6)) { characterGroup { rangeHexadecimal() } }
+                quantifier(Exactly(6)) { characterClass { rangeHexadecimal() } }
             }, {
-                quantifier(Exactly(3)) { characterGroup { rangeHexadecimal() } }
+                quantifier(Exactly(3)) { characterClass { rangeHexadecimal() } }
             })
             .endOfLine()
             .build()
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `lookaround`() {
+        val expected = "(?<=abc)"
+        val actual = RegexBuilder()
+            .lookAround(PositiveLookbehind) {
+                literalPhrase("abc")
+            }
+            .build()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `custom range`() {
+        val expected = "^(?:100|[1-9][0-9]|[0-9])"
+        val actual = RegexBuilder()
+            .startOfLine()
+            .group(NonCapturing) {
+                choiceOf({
+                    literalPhrase("100")
+                }, {
+                    characterClass { range(1, 9) }
+                    characterClass { rangeDigit() }
+                }, {
+                    characterClass { rangeDigit() }
+                })
+            }
+            .build()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `negative character class`() {
+        val expected = "ab[^cd]e"
+        val actual = RegexBuilder()
+            .literalPhrase("ab")
+            .characterClass(Negative) {
+                literal('c')
+                literal('d')
+            }
+            .literalPhrase("e")
+            .build()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun a() {
+        (0..256).forEach {
+            println(it.toString() + ":${it.toChar()}:" + Char(it))
+        }
     }
 }
