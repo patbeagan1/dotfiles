@@ -23,6 +23,12 @@ class RegexBuilder {
         return this
     }
 
+    fun customQuantifier(min: Int, max: Int, init: QuantifierBuilder.() -> Unit): RegexBuilder {
+        val quantifierBuilder = QuantifierBuilder().apply(init)
+        stringBuilder.append(quantifierBuilder.buildQuantifier("{$min,$max}"))
+        return this
+    }
+
     fun optional(): RegexBuilder {
         stringBuilder.append("?")
         return this
@@ -34,8 +40,20 @@ class RegexBuilder {
         return this
     }
 
+    fun lookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
+        val lookaheadBuilder = LookaheadBuilder().apply(init)
+        stringBuilder.append(lookaheadBuilder.buildLookahead())
+        return this
+    }
+
     fun or(): RegexBuilder {
         stringBuilder.append("|")
+        return this
+    }
+
+    fun characterClass(init: CharClassBuilder.() -> Unit): RegexBuilder {
+        val charClassBuilder = CharClassBuilder().apply(init)
+        stringBuilder.append(charClassBuilder.buildCharClass())
         return this
     }
 
@@ -54,12 +72,43 @@ class RegexBuilder {
             return "(${super.build().pattern})$quantifier"
         }
     }
+
+    inner class CharClassBuilder {
+        private val charClassBuilder = StringBuilder()
+
+        fun range(from: Char, to: Char): CharClassBuilder {
+            charClassBuilder.append("$from-$to")
+            return this
+        }
+
+        fun literal(value: Char): CharClassBuilder {
+            charClassBuilder.append(value)
+            return this
+        }
+
+        fun buildCharClass(): String {
+            return "[$charClassBuilder]"
+        }
+    }
+
+    inner class LookaheadBuilder : RegexBuilder() {
+        fun buildLookahead(): String {
+            return "(?=${super.build().pattern})"
+        }
+    }
 }
 
 fun main() {
     val regex = RegexBuilder()
+        .literal("a")
+        .characterClass {
+            range('1', '9')
+        }
+        .lookahead {
+            literal("b")
+        }
         .group {
-            literal("ab")
+            literal("b")
             anyChar()
         }
         .zeroOrMore {
@@ -69,9 +118,9 @@ fun main() {
         .oneOrMore {
             literal("z")
         }
+        .customQuantifier(2, 4) {
+            literal("x")
+        }
         .build()
 
-    val input = "xabyycdzz"
-    val result = regex.containsMatchIn(input)
-    println("Match result: $result") // Should print: Match result: true
-}
+    val input = "a3by
