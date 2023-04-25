@@ -203,6 +203,12 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
+   fun zeroOrOne(builder: RegexBuilder.() -> Unit): RegexBuilder {
+        stringBuilder.append(RegexBuilder().apply(builder).stringBuilder)
+        stringBuilder.append("?")
+        return this
+    }
+
     fun oneOrMore(init: QuantifierBuilder.() -> Unit): RegexBuilder {
         val quantifierBuilder = QuantifierBuilder().apply(init)
         stringBuilder.append(quantifierBuilder.buildQuantifier("+"))
@@ -319,7 +325,7 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 
 }
 
-fun main() {
+ffun main() {
     val regex = RegexBuilder()
         .namedGroup("digits") {
             digit()
@@ -335,11 +341,15 @@ fun main() {
             literal("NO")
         })
         .comment("Conditional depending on the existence of the 'digits' group")
+        .zeroOrOne {
+            literal("Z")
+        }
+        .comment("Zero or one occurrence of 'Z'")
         .recursion()
         .comment("Recursive pattern")
         .build()
 
-    val input = "123abc123YES123abc123YES"
+    val input = "123abc123YESZ123abc123YESZ"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
