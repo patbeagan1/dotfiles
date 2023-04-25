@@ -1,6 +1,29 @@
 class RegexBuilder {
     private val stringBuilder = StringBuilder()
 
+fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
+        val lookbehindBuilder = LookbehindBuilder().apply(init)
+        stringBuilder.append(lookbehindBuilder.buildPositiveLookbehind())
+        return this
+    }
+
+    fun negativeLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
+        val lookbehindBuilder = LookbehindBuilder().apply(init)
+        stringBuilder.append(lookbehindBuilder.buildNegativeLookbehind())
+        return this
+    }
+
+    fun atomicGroup(init: AtomicGroupBuilder.() -> Unit): RegexBuilder {
+        val atomicGroupBuilder = AtomicGroupBuilder().apply(init)
+        stringBuilder.append(atomicGroupBuilder.buildAtomicGroup())
+        return this
+    }
+
+    fun wordBoundary(): RegexBuilder {
+        stringBuilder.append("\\b")
+        return this
+    }
+
       fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
         val lookaheadBuilder = LookaheadBuilder().apply(init)
         stringBuilder.append(lookaheadBuilder.buildNegativeLookahead())
@@ -130,22 +153,39 @@ class RegexBuilder {
             return "(?<$name>${super.build().pattern})"
         }
     }
+
+        inner class LookbehindBuilder : RegexBuilder() {
+        fun buildPositiveLookbehind(): String {
+            return "(?<=${super.build().pattern})"
+        }
+
+        fun buildNegativeLookbehind(): String {
+            return "(?<!${super.build().pattern})"
+        }
+    }
+
+    inner class AtomicGroupBuilder : RegexBuilder() {
+        fun buildAtomicGroup(): String {
+            return "(?>${super.build().pattern})"
+        }
+    }
+
 }
 
 fun main() {
     val regex = RegexBuilder()
-        .literal("a")
-        .characterClass {
-            range('1', '9')
+        .wordBoundary()
+        .positiveLookbehind {
+            literal("a")
         }
-        .negativeLookahead {
+        .negativeLookbehind {
             literal("c")
         }
         .nonCapturingGroup {
             literal("b")
             anyChar()
         }
-        .namedGroup("namedGroup") {
+        .atomicGroup {
             literal("x")
             anyChar()
         }
@@ -159,9 +199,10 @@ fun main() {
         .customQuantifier(2, 4) {
             literal("x")
         }
+        .wordBoundary()
         .build()
 
-    val input = "a3bxayycdzzxx"
+    val input = "abxayycdzzxx"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
