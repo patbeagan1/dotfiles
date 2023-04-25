@@ -1,6 +1,24 @@
 class RegexBuilder {
     private val stringBuilder = StringBuilder()
 
+      fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
+        val lookaheadBuilder = LookaheadBuilder().apply(init)
+        stringBuilder.append(lookaheadBuilder.buildNegativeLookahead())
+        return this
+    }
+
+    fun nonCapturingGroup(init: NonCapturingGroupBuilder.() -> Unit): RegexBuilder {
+        val nonCapturingGroupBuilder = NonCapturingGroupBuilder().apply(init)
+        stringBuilder.append(nonCapturingGroupBuilder.buildNonCapturingGroup())
+        return this
+    }
+
+    fun namedGroup(name: String, init: NamedGroupBuilder.() -> Unit): RegexBuilder {
+        val namedGroupBuilder = NamedGroupBuilder(name).apply(init)
+        stringBuilder.append(namedGroupBuilder.buildNamedGroup())
+        return this
+    }
+
     fun literal(value: String): RegexBuilder {
         stringBuilder.append(value.replace(Regex("([\\\\.^$|?*+()\\[\\]{}])"), "\\\\$1"))
         return this
@@ -95,6 +113,22 @@ class RegexBuilder {
         fun buildLookahead(): String {
             return "(?=${super.build().pattern})"
         }
+
+        fun buildNegativeLookahead(): String {
+            return "(?!${super.build().pattern})"
+        }
+    }
+
+    inner class NonCapturingGroupBuilder : RegexBuilder() {
+        fun buildNonCapturingGroup(): String {
+            return "(?:${super.build().pattern})"
+        }
+    }
+
+    inner class NamedGroupBuilder(private val name: String) : RegexBuilder() {
+        fun buildNamedGroup(): String {
+            return "(?<$name>${super.build().pattern})"
+        }
     }
 }
 
@@ -104,11 +138,15 @@ fun main() {
         .characterClass {
             range('1', '9')
         }
-        .lookahead {
-            literal("b")
+        .negativeLookahead {
+            literal("c")
         }
-        .group {
+        .nonCapturingGroup {
             literal("b")
+            anyChar()
+        }
+        .namedGroup("namedGroup") {
+            literal("x")
             anyChar()
         }
         .zeroOrMore {
@@ -123,8 +161,7 @@ fun main() {
         }
         .build()
 
-    val input = "a3bxyycdzzxx"
+    val input = "a3bxayycdzzxx"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
-
