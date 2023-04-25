@@ -11,13 +11,15 @@ class RegexBuilder {
         return this
     }
 
-    fun zeroOrMore(): RegexBuilder {
-        stringBuilder.append("*")
+    fun zeroOrMore(init: QuantifierBuilder.() -> Unit): RegexBuilder {
+        val quantifierBuilder = QuantifierBuilder().apply(init)
+        stringBuilder.append(quantifierBuilder.buildQuantifier("*"))
         return this
     }
 
-    fun oneOrMore(): RegexBuilder {
-        stringBuilder.append("+")
+    fun oneOrMore(init: QuantifierBuilder.() -> Unit): RegexBuilder {
+        val quantifierBuilder = QuantifierBuilder().apply(init)
+        stringBuilder.append(quantifierBuilder.buildQuantifier("+"))
         return this
     }
 
@@ -46,6 +48,12 @@ class RegexBuilder {
             return "(${super.build().pattern})"
         }
     }
+
+    inner class QuantifierBuilder : RegexBuilder() {
+        fun buildQuantifier(quantifier: String): String {
+            return "(${super.build().pattern})$quantifier"
+        }
+    }
 }
 
 fun main() {
@@ -53,13 +61,17 @@ fun main() {
         .group {
             literal("ab")
             anyChar()
-            zeroOrMore()
+        }
+        .zeroOrMore {
+            literal("y")
         }
         .literal("cd")
-        .oneOrMore()
+        .oneOrMore {
+            literal("z")
+        }
         .build()
 
-    val input = "xabycdcd"
+    val input = "xabyycdzz"
     val result = regex.containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
