@@ -1,29 +1,8 @@
+package main
+
+import main.types.PosixCharacterClass
+import main.types.RegexFlag
 import java.util.Collections.emptySet
-
-enum class PosixCharacterClass(val characterClassName: String) {
-    ALNUM("alnum"),
-    ALPHA("alpha"),
-    ASCII("ascii"),
-    BLANK("blank"),
-    CNTRL("cntrl"),
-    DIGIT("digit"),
-    GRAPH("graph"),
-    LOWER("lower"),
-    PRINT("print"),
-    PUNCT("punct"),
-    SPACE("space"),
-    UPPER("upper"),
-    WORD("word"),
-    XDIGIT("xdigit")
-}
-
-enum class RegexFlag(val flag: String) {
-    CASE_INSENSITIVE("i"),
-    MULTILINE("m"),
-    DOTALL("s"),
-    UNICODE_CASE("u"),
-    UNIX_LINES("d")
-}
 
 open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
     private val stringBuilder = StringBuilder()
@@ -260,37 +239,9 @@ open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return "$flagPattern$pattern"
     }
 
-    class GroupBuilder : RegexBuilder() {
-        fun buildGroup(): String {
-            return "(${super.build()})"
-        }
-    }
-
     class QuantifierBuilder : RegexBuilder() {
         fun buildQuantifier(quantifier: String): String {
             return "${super.build()}$quantifier"
-        }
-    }
-
-    class CharClassBuilder {
-        private val charClassBuilder = StringBuilder()
-
-        fun range(from: Char, to: Char): CharClassBuilder {
-            charClassBuilder.append("$from-$to")
-            return this
-        }
-
-        fun rangeLowerAZ() = range('a', 'z')
-        fun rangeUpperAZ() = range('A', 'Z')
-        fun rangeDigit() = range('0', '9')
-
-        fun literal(value: Char): CharClassBuilder {
-            charClassBuilder.append(value)
-            return this
-        }
-
-        fun buildCharClass(): String {
-            return "[$charClassBuilder]"
         }
     }
 

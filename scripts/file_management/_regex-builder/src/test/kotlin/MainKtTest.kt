@@ -1,3 +1,4 @@
+import main.RegexBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -11,7 +12,6 @@ class MainKtTest {
                 zeroOrMore { literal("b") }
                 zeroOrOne { literal("c") }
                 literal("de")
-
             }.build()
         assertEquals(expected, actual)
     }
