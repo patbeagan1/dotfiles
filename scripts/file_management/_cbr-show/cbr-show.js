@@ -6,6 +6,17 @@ const app = express();
 
 const cbrDirectory = './'; // Use the current directory as the CBR directory
 
+const coverCache = new Map()
+async function checkCoverCache(key, defaultFn) {
+  const value = coverCache.get[key]
+  if (value) {
+    return value
+  }
+  const generatedValue = await defaultFn()
+  coverCache.set(key, generatedValue)
+  return generatedValue
+}
+
 app.get('/', async (req, res) => {
   const cbrFiles = getCbrFiles(cbrDirectory);
   const links = await Promise.all(cbrFiles.map(async (file) => await getLinkHTML(file)))
@@ -154,7 +165,7 @@ async function getLinkHTML(fileName) {
   return zip.then(async zipFile => {
     try {
       const entry = findImageFileObjects(zipFile)[0]
-      const url = await getImageUrlFor(entry)
+      const url = await checkCoverCache(entry.name, () => getImageUrlFor(entry))
       return `
         <a href="/cbrviewer/${fileName}" class="cbr-link">
           <img src="${url}">
