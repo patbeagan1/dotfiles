@@ -1,3 +1,5 @@
+import java.util.Collections.emptySet
+
 enum class PosixCharacterClass(val characterClassName: String) {
     ALNUM("alnum"),
     ALPHA("alpha"),
@@ -23,10 +25,10 @@ enum class RegexFlag(val flag: String) {
     UNIX_LINES("d")
 }
 
-class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
-        private val stringBuilder = StringBuilder()
+open class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
+    private val stringBuilder = StringBuilder()
 
-        fun unicodeProperty(property: String): RegexBuilder {
+    fun unicodeProperty(property: String): RegexBuilder {
         stringBuilder.append("\\p{$property}")
         return this
     }
@@ -57,7 +59,7 @@ class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
     }
 
 
- fun whitespace(): RegexBuilder {
+    fun whitespace(): RegexBuilder {
         stringBuilder.append("\\s")
         return this
     }
@@ -92,7 +94,7 @@ class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-   fun unicodeScript(script: String): RegexBuilder {
+    fun unicodeScript(script: String): RegexBuilder {
         stringBuilder.append("\\p{Is$script}")
         return this
     }
@@ -107,7 +109,7 @@ class RegexBuilder(private val flags: Set<RegexFlag> = emptySet()) {
         return this
     }
 
-fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
+    fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         val lookbehindBuilder = LookbehindBuilder().apply(init)
         stringBuilder.append(lookbehindBuilder.buildPositiveLookbehind())
         return this
@@ -130,15 +132,6 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-    fun namedGroup(name: String, builder: RegexBuilder.() -> Unit): RegexBuilder {
-        stringBuilder.append("(?<")
-        stringBuilder.append(name)
-        stringBuilder.append(">")
-        stringBuilder.append(RegexBuilder().apply(builder).stringBuilder)
-        stringBuilder.append(")")
-        return this
-    }
-
     fun backreference(name: String): RegexBuilder {
         stringBuilder.append("\\k<")
         stringBuilder.append(name)
@@ -146,7 +139,11 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-    fun conditional(reference: String, ifBuilder: RegexBuilder.() -> Unit, elseBuilder: RegexBuilder.() -> Unit): RegexBuilder {
+    fun conditional(
+        reference: String,
+        ifBuilder: RegexBuilder.() -> Unit,
+        elseBuilder: RegexBuilder.() -> Unit
+    ): RegexBuilder {
         stringBuilder.append("(?")
         stringBuilder.append(reference)
         stringBuilder.append("?")
@@ -169,7 +166,7 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-      fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
+    fun negativeLookahead(init: LookaheadBuilder.() -> Unit): RegexBuilder {
         val lookaheadBuilder = LookaheadBuilder().apply(init)
         stringBuilder.append(lookaheadBuilder.buildNegativeLookahead())
         return this
@@ -203,7 +200,7 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-   fun zeroOrOne(builder: RegexBuilder.() -> Unit): RegexBuilder {
+    fun zeroOrOne(builder: RegexBuilder.() -> Unit): RegexBuilder {
         stringBuilder.append(RegexBuilder().apply(builder).stringBuilder)
         stringBuilder.append("?")
         return this
@@ -249,21 +246,21 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
         return this
     }
 
-      fun build(): Regex {
+    fun build(): String {
         val pattern = stringBuilder.toString()
-        val flagPattern = flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
-        return Regex("$flagPattern$pattern")
+        val flagPattern =""// flags.joinToString(separator = "", prefix = "(?", postfix = ")") { it.flag }
+        return "$flagPattern$pattern"
     }
 
     inner class GroupBuilder : RegexBuilder() {
         fun buildGroup(): String {
-            return "(${super.build().pattern})"
+            return "(${super.build()})"
         }
     }
 
     inner class QuantifierBuilder : RegexBuilder() {
         fun buildQuantifier(quantifier: String): String {
-            return "(${super.build().pattern})$quantifier"
+            return "${super.build()}$quantifier"
         }
     }
 
@@ -287,69 +284,69 @@ fun positiveLookbehind(init: LookbehindBuilder.() -> Unit): RegexBuilder {
 
     inner class LookaheadBuilder : RegexBuilder() {
         fun buildLookahead(): String {
-            return "(?=${super.build().pattern})"
+            return "(?=${super.build()})"
         }
 
         fun buildNegativeLookahead(): String {
-            return "(?!${super.build().pattern})"
+            return "(?!${super.build()})"
         }
     }
 
     inner class NonCapturingGroupBuilder : RegexBuilder() {
         fun buildNonCapturingGroup(): String {
-            return "(?:${super.build().pattern})"
+            return "(?:${super.build()})"
         }
     }
 
     inner class NamedGroupBuilder(private val name: String) : RegexBuilder() {
         fun buildNamedGroup(): String {
-            return "(?<$name>${super.build().pattern})"
+            return "(?<$name>${super.build()})"
         }
     }
 
-        inner class LookbehindBuilder : RegexBuilder() {
+    inner class LookbehindBuilder : RegexBuilder() {
         fun buildPositiveLookbehind(): String {
-            return "(?<=${super.build().pattern})"
+            return "(?<=${super.build()})"
         }
 
         fun buildNegativeLookbehind(): String {
-            return "(?<!${super.build().pattern})"
+            return "(?<!${super.build()})"
         }
     }
 
     inner class AtomicGroupBuilder : RegexBuilder() {
         fun buildAtomicGroup(): String {
-            return "(?>${super.build().pattern})"
+            return "(?>${super.build()})"
         }
     }
 
 }
 
-ffun main() {
+fun main() {
     val regex = RegexBuilder()
         .namedGroup("digits") {
             digit()
             oneOrMore { digit() }
         }
-        .comment("Named group for digits")
+//        .comment("Named group for digits")
         .literal("abc")
         .backreference("digits")
-        .comment("Backreference to digits group")
-        .conditional("digits", {
-            literal("YES")
-        }, {
-            literal("NO")
-        })
-        .comment("Conditional depending on the existence of the 'digits' group")
+//        .comment("Backreference to digits group")
+//        .conditional("digits", {
+//            literal("YES")
+//        }, {
+//            literal("NO")
+//        })
+//        .comment("Conditional depending on the existence of the 'digits' group")
         .zeroOrOne {
             literal("Z")
         }
-        .comment("Zero or one occurrence of 'Z'")
-        .recursion()
-        .comment("Recursive pattern")
+//        .comment("Zero or one occurrence of 'Z'")
+//        .recursion()
+//        .comment("Recursive pattern")
         .build()
 
     val input = "123abc123YESZ123abc123YESZ"
-    val result = regex.containsMatchIn(input)
+    val result = Regex(regex).containsMatchIn(input)
     println("Match result: $result") // Should print: Match result: true
 }
