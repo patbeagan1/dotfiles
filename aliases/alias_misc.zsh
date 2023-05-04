@@ -100,6 +100,7 @@ alias d20="random 20"
 # QR
 alias qr="qrencoder.sh" 
 alias qr_compileAggregate="montage /tmp/qr-output* -geometry 120x120+1+1 montage.out.jpg"
+alias qr_address='qr "http://`pretty_ip -f0`"'
 
 #==========================================
 # Itty
