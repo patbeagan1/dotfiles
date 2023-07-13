@@ -73,7 +73,10 @@ libbeagan_dependencies() {
     add_util 'adr' 'adr-tools' # arch decision creation tool
     add_util 'rg' 'ripgrep'    # more featureful replacement for the silver searcher
     add_util 'iStats' 'gem install iStats'    # a CPU/battery health tool for mac
+    add_util 'pandoc'          # converts between document formats, like md -> html
     add_util 'direnv'          # nix-env -iA nixpkgs.direnv # env vars per directory 
+    add_util 'jid'             # interactive jq
+    add_util 'jq'              # interactive parses and formats json
     print_clear 'optional'
 
     echo
