@@ -109,6 +109,8 @@ function qr_itty_cat () { qr_itty "`cat $1`"; }
 
 #==========================================
 
+alias to_clipboard="xclip -selection clipboard" 
+
 function wiki () { open $(wiki.js "$*") }
 
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'

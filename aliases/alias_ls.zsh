@@ -16,3 +16,6 @@ alias ralt='ls -ralt'
 alias dirs="ls -al | grep '^d'"
 alias peek="peek.sh"
 alias lss='ls -harsS'
+function lk {
+  cd "$(walk "$@")"
+}
