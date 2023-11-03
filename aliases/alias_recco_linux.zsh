@@ -4,9 +4,6 @@ alias update="sudo apt update && sudo apt upgrade"
 # Clear the terminal screen
 alias c="clear"
 
-# Quickly go back to the previous directory
-alias ..="cd .."
-
 # Display open ports and associated processes
 alias ports="sudo netstat -tulnp"
 
@@ -23,7 +20,7 @@ alias diskspace="df -h"
 alias meminfo="free -m"
 
 # Display active processes in a user-friendly format
-alias psg="ps auxf | grep -v grep | grep -i -e VSZ -e"
+alias psg="ps auxf | grep -v grep"
 
 # Quickly extract archives based on file extension
 extract() {
@@ -48,7 +45,7 @@ extract() {
 }
 
 # Display public IP address
-alias publicip="curl -s http://ipecho.net/plain"
+alias publicip="curl -s http://ipecho.net/plain && echo"
 
 # Restart networking service (useful when facing network issues)
 alias restartnet="sudo systemctl restart NetworkManager"
