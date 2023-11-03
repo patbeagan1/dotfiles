@@ -680,19 +680,19 @@ filter_rows() {
 
 # Applies a function to each line of input
 # Usage: map "command" < file
-map() {
-    while read -r line; do
-        echo "$line" | $1
-    done
-}
+# map() {
+#    while read -r line; do
+#        echo "$line" | $1
+#    done
+#}
 
 # Filters lines based on a predicate function's exit status
 # Usage: filter "command" < file
-filter() {
-    while read -r line; do
-        echo "$line" | $1 >/dev/null && echo "$line"
-    done
-}
+#filter() {
+#    while read -r line; do
+#        echo "$line" | $1 >/dev/null && echo "$line"
+#    done
+#}
 
 # Initialize a new repository in the local directory "backup"
 alias restic_init='restic init --repo ~/backup'
@@ -1055,13 +1055,13 @@ alias nvmup="nvm install node && nvm use node && nvm alias default node"
 alias npmup="npm install -g npm"
 
 # Update pyenv and install latest Python version
-alias pyenvup="pyenv update && pyenv install $(pyenv install -l | grep -v '[a-z]' | tail -1) && pyenv global $(pyenv install -l | grep -v '[a-z]' | tail -1)"
+alias pyenvup='pyenv update && pyenv install $(pyenv install -l | grep -v "[a-z]" | tail -1) && pyenv global $(pyenv install -l | grep -v "[a-z]" | tail -1)'
 
 # Upgrade pip to the latest version
 alias pipup="pip install --upgrade pip"
 
 # Update rbenv and ruby-build, then install the latest Ruby version
-alias rbenvup="rbenv update && rbenv install $(rbenv install -l | tail -1) && rbenv global $(rbenv install -l | tail -1)"
+alias rbenvup='rbenv update && rbenv install $(rbenv install -l | tail -1) && rbenv global $(rbenv install -l | tail -1)'
 
 # Update all installed gems
 alias gemup="gem update"
