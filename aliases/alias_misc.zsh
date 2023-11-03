@@ -112,6 +112,7 @@ function qr_itty_cat () { qr_itty "`cat $1`"; }
 alias to_clipboard="xclip -selection clipboard" 
 
 function wiki () { open $(wiki.js "$*") }
+alias record='asciinema rec'
 
 alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
 alias dns_emu='for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
