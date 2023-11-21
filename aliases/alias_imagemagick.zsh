@@ -1,3 +1,6 @@
+alias chafa-all='for i in *; do chafa "$i"; sleep 0.5; done'
+
+
 alias convert-list-functions="convert -list"             # list of all functions
 alias convert-list="convert -list list"                  # list of all -list options
 alias convert-list-channel="convert -list channel"       # list of all image -channel options
