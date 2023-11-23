@@ -10,12 +10,12 @@ import lzma
 
 def image_to_data_uri(img):
     buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    data_uri = f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+    img.save(buffered, format="webp")
+    data_uri = f"data:image/webp;base64,{base64.b64encode(buffered.getvalue()).decode()}"
     return to_itty(f"""<html><img src="{data_uri}"/></html>""")
 
 
-def divide_image(image_path, section_size):
+def divide_image(img, image_path, section_size):
     img = Image.open(image_path)
     img_width, img_height = img.size
 
@@ -48,7 +48,7 @@ def create_qr_codes(sections):
     return qr_images
 
 def montage_with_qr(sections, qr_images, section_size):
-    section_size = 177 # width of module 40 qr code
+    section_size = 177 + 20 # width of module 40 qr code with 10 px border
     halfsize = int(section_size / 2)
 
     num_sections = len(sections)
@@ -71,8 +71,10 @@ def montage_with_qr(sections, qr_images, section_size):
     return montage_img
 
 def main(image_path, output_path):
-    section_size = 42
-    sections = divide_image(image_path, section_size)
+    section_size = 60
+    img = Image.open(image_path)
+    
+    sections = divide_image(img, image_path, section_size)
     qr_images = create_qr_codes(sections)
     montage_img = montage_with_qr(sections, qr_images, section_size)
     montage_img.save(output_path)
