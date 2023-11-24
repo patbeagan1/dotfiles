@@ -87,8 +87,16 @@ def main(image_path, output_path):
     montage_img = montage_with_qr(sections, qr_images, section_size)
     montage_img.save(output_path)
 
-
 if __name__ == "__main__":
+    """
+    Next steps:
+    - Clnoe this script
+    - Have new version print out the base image first, with a grid that has an overlay with number coordinates
+    - Similar to an archeological dig site. 
+    - Then, add the QR codes one by one to the bottom, with a numbered title.
+    - Would make it more printer-friendly. 
+    - Could have something like 4 QR per row, to make sure that the QR codes would have the proper DPI when printed.  
+    """
     parser = argparse.ArgumentParser(
         description="Create a montage of image sections and their QR codes."
     )
