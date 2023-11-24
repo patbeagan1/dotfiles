@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageColor
@@ -8,10 +8,13 @@ import base64
 import argparse
 import lzma
 
+
 def image_to_data_uri(img):
     buffered = BytesIO()
     img.save(buffered, format="webp")
-    data_uri = f"data:image/webp;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+    data_uri = (
+        f"data:image/webp;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+    )
     return to_itty(f"""<img src="{data_uri}"/>""")
 
 
@@ -28,12 +31,12 @@ def divide_image(img, image_path, section_size):
 
     return sections
 
+
 def to_itty(s):
-    return 'https://itty.bitty.site/#/'+base64.b64encode(
-        lzma.compress(
-            bytes(s, encoding="utf-8"), format=lzma.FORMAT_ALONE, preset=9
-        )
+    return "https://itty.bitty.site/#/" + base64.b64encode(
+        lzma.compress(bytes(s, encoding="utf-8"), format=lzma.FORMAT_ALONE, preset=9)
     ).decode("utf-8")
+
 
 def create_qr_codes(sections):
     qr_images = []
@@ -42,20 +45,23 @@ def create_qr_codes(sections):
         qr = qrcode.QRCode(version=None, box_size=1, border=5)
         qr.add_data(data_uri)
         qr.make(fit=True)
-        qr_img = qr.make_image(fill='black', back_color='white')
+        qr_img = qr.make_image(fill="black", back_color="white")
         qr_images.append(qr_img)
 
     return qr_images
 
+
 def montage_with_qr(sections, qr_images, section_size):
-    section_size = 177 + 20 # width of module 40 qr code with 10 px border
+    section_size = 177 + 20  # width of module 40 qr code with 10 px border
     halfsize = int(section_size / 2)
 
     num_sections = len(sections)
     img_width = section_size + halfsize
     montage_width = int(np.ceil(np.sqrt(num_sections)))
     montage_height = int(np.ceil(num_sections / montage_width))
-    montage_img = Image.new('RGB', (montage_width * img_width, montage_height * section_size))
+    montage_img = Image.new(
+        "RGB", (montage_width * img_width, montage_height * section_size)
+    )
 
     draw = ImageDraw.Draw(montage_img)
 
@@ -63,15 +69,14 @@ def montage_with_qr(sections, qr_images, section_size):
         x = (i % montage_width) * img_width
         y = (i // montage_width) * section_size
 
-        draw.line([(0, y),( montage_width * img_width, y)],fill = (255,0,255), width=2)
+        draw.line([(0, y), (montage_width * img_width, y)], fill=(255, 0, 255), width=2)
+        montage_img.paste(section.resize((halfsize, section_size)), (x, y))
         montage_img.paste(
-            section.resize((halfsize, section_size)),
-            (x, y))
-        montage_img.paste(
-            qr_img, #.resize((section_size, section_size)),
-            (x+ halfsize, y))
+            qr_img, (x + halfsize, y)  # .resize((section_size, section_size)),
+        )
 
     return montage_img
+
 
 def main(image_path, output_path):
     section_size = 60
@@ -82,8 +87,11 @@ def main(image_path, output_path):
     montage_img = montage_with_qr(sections, qr_images, section_size)
     montage_img.save(output_path)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create a montage of image sections and their QR codes.")
+    parser = argparse.ArgumentParser(
+        description="Create a montage of image sections and their QR codes."
+    )
     parser.add_argument("image_path", help="Path to the input image")
     parser.add_argument("output_path", help="Path for saving the output montage")
     args = parser.parse_args()
