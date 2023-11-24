@@ -90,7 +90,7 @@ def main(image_path, output_path):
 if __name__ == "__main__":
     """
     Next steps:
-    - Clnoe this script
+    - Clone this script
     - Have new version print out the base image first, with a grid that has an overlay with number coordinates
     - Similar to an archeological dig site. 
     - Then, add the QR codes one by one to the bottom, with a numbered title.
