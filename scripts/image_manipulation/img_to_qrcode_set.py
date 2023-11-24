@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageColor
 import qrcode
 from io import BytesIO
 import base64
@@ -12,7 +12,7 @@ def image_to_data_uri(img):
     buffered = BytesIO()
     img.save(buffered, format="webp")
     data_uri = f"data:image/webp;base64,{base64.b64encode(buffered.getvalue()).decode()}"
-    return to_itty(f"""<html><img src="{data_uri}"/></html>""")
+    return to_itty(f"""<img src="{data_uri}"/>""")
 
 
 def divide_image(img, image_path, section_size):
@@ -25,7 +25,7 @@ def divide_image(img, image_path, section_size):
             box = (x, y, x + section_size, y + section_size)
             section = img.crop(box)
             sections.append(section)
-    
+
     return sections
 
 def to_itty(s):
@@ -44,7 +44,7 @@ def create_qr_codes(sections):
         qr.make(fit=True)
         qr_img = qr.make_image(fill='black', back_color='white')
         qr_images.append(qr_img)
-    
+
     return qr_images
 
 def montage_with_qr(sections, qr_images, section_size):
@@ -57,15 +57,18 @@ def montage_with_qr(sections, qr_images, section_size):
     montage_height = int(np.ceil(num_sections / montage_width))
     montage_img = Image.new('RGB', (montage_width * img_width, montage_height * section_size))
 
+    draw = ImageDraw.Draw(montage_img)
+
     for i, (section, qr_img) in enumerate(zip(sections, qr_images)):
         x = (i % montage_width) * img_width
         y = (i // montage_width) * section_size
 
+        draw.line([(0, y),( montage_width * img_width, y)],fill = (255,0,255), width=2)
         montage_img.paste(
-            section.resize((halfsize, section_size)), 
+            section.resize((halfsize, section_size)),
             (x, y))
         montage_img.paste(
-            qr_img, #.resize((section_size, section_size)), 
+            qr_img, #.resize((section_size, section_size)),
             (x+ halfsize, y))
 
     return montage_img
@@ -73,7 +76,7 @@ def montage_with_qr(sections, qr_images, section_size):
 def main(image_path, output_path):
     section_size = 60
     img = Image.open(image_path)
-    
+
     sections = divide_image(img, image_path, section_size)
     qr_images = create_qr_codes(sections)
     montage_img = montage_with_qr(sections, qr_images, section_size)
