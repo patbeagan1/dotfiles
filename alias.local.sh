@@ -7,6 +7,7 @@ if [ "$CURRENT_COMPUTER" = "framework" ]; then
 
     restic_backup() { restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~; }  
     intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
+    days_until.py 2024-12-25 "Xmas 2024"
 fi
 
 if [ "$CURRENT_COMPUTER" = "mac_2017" ]; then
