@@ -106,6 +106,7 @@ alias qr_address='qr "http://`pretty_ip -f0`"'
 # Itty
 function qr_itty () { qr $(itty.sh "$1"); }
 function qr_itty_cat () { qr_itty "`cat $1`"; }
+function to_itty() { cat /dev/stdin | lzma -9 | base64 -w0 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }    
 
 #==========================================
 
