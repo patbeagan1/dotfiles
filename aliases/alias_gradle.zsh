@@ -1,3 +1,4 @@
+alias gww='gw "$(gw tasks | grep " - " | fzf -e | cut -d- -f 1 | xargs)"'
 alias destroy_gradle='rm -rf ~/.gradle/caches && rm -rf .gradle && ./gradlew clean'
 alias findgradle='\ps aux | grep Gradle | grep -v grep | awk '\''{print $2}'\'''
 alias killgradle='findgradle | xargs kill -9'

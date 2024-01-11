@@ -34,3 +34,9 @@ git config --global alias.last 'log -1 HEAD'
 git config --global alias.visual '!gitk'
 git config --global alias.mergetest '!f(){ git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted"; };f'
 git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
+
+###########################################################
+# Development
+###########################################################
+
+alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort | tail -1"
