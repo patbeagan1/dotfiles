@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # This script checks if a specific program is installed using various package managers.
+# It uses GNU parallel to perform checks in parallel for speed improvement.
 # Usage: ./check_program.sh [program_name]
+
+echo "Starting program check..."
 
 # Define an associative array for package managers and their respective check commands
 declare -A pkg_managers=(
@@ -35,6 +38,8 @@ check_installed() {
     local manager=$1
     local program=$2
 
+    echo "Checking for $program using $manager..."
+
     # Check if the package manager is available on the system
     if ! command -v $manager &> /dev/null; then
         echo "Package manager $manager is not installed."
@@ -50,11 +55,15 @@ check_installed() {
 
     # Execute the command to check if the program is installed
     if eval "$check_cmd $program" &> /dev/null; then
+        echo "Program $program is installed via $manager."
         return 0
     else
         return 1
     fi
 }
+
+# Export function to be used by parallel
+export -f check_installed
 
 # Check if a program name is provided
 if [ $# -eq 0 ]; then
@@ -63,19 +72,11 @@ if [ $# -eq 0 ]; then
 fi
 
 PROGRAM=$1
-PROGRAM_INSTALLED=false
+export PROGRAM
 
-# Iterate through package managers and check if the program is installed
-for manager in "${!pkg_managers[@]}"; do
-    if check_installed $manager $PROGRAM; then
-        echo "Program $PROGRAM is installed via $manager."
-        PROGRAM_INSTALLED=true
-        break
-    fi
-done
+# Run the checks in parallel
+echo "Running checks across various package managers..."
+parallel check_installed ::: "${!pkg_managers[@]}" ::: "$PROGRAM"
 
-if ! $PROGRAM_INSTALLED; then
-    echo "Program $PROGRAM is not installed via known package managers or is not available."
-    exit 1
-fi
+echo "Check complete."
 
