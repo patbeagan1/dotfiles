@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script checks if a specific program is installed using various package managers.
-# It uses GNU parallel to perform checks in parallel for speed improvement.
+# It uses GNU parallel to perform checks in parallel and follows a map-reduce approach.
 # Usage: ./check_program.sh [program_name]
 
 echo "Starting program check..."
@@ -29,6 +29,7 @@ declare -A pkg_managers=(
     [go]="go list -m"
     [conda]="conda list"
 )
+export pkg_managers
 
 # Function to check if a program is installed using a specified package manager
 # Arguments:
@@ -38,24 +39,25 @@ check_installed() {
     local manager=$1
     local program=$2
 
-    echo "Checking for $program using $manager..."
+    echo "Checking for $program using $manager..." >&2
 
     # Check if the package manager is available on the system
     if ! command -v $manager &> /dev/null; then
-        echo "Package manager $manager is not installed."
+        shellcolor --fg red "Package manager $manager is not installed." >&2
         return 2
     fi
 
     # Retrieve the command for the package manager
     local check_cmd=${pkg_managers[$manager]}
+    shellcolor --bg green "$check_cmd"
     if [ -z "$check_cmd" ]; then
-        echo "Unsupported package manager: $manager"
+        shellcolor --fg red "Unsupported package manager: $manager" >&2
         return 1
     fi
 
     # Execute the command to check if the program is installed
     if eval "$check_cmd $program" &> /dev/null; then
-        echo "Program $program is installed via $manager."
+        echo "$manager"
         return 0
     else
         return 1
@@ -74,9 +76,13 @@ fi
 PROGRAM=$1
 export PROGRAM
 
-# Run the checks in parallel
+# Map phase: Run the checks in parallel and collect results
 echo "Running checks across various package managers..."
-parallel check_installed ::: "${!pkg_managers[@]}" ::: "$PROGRAM"
+results=$(parallel check_installed ::: "${!pkg_managers[@]}" ::: "$PROGRAM")
+
+# Reduce phase: Filter out empty lines and display the package managers that have the program installed
+echo "Program $PROGRAM is installed via the following package managers:"
+echo "$results" | grep -v '^$'
 
 echo "Check complete."
 
