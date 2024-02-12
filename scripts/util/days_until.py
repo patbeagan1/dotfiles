@@ -1,5 +1,6 @@
 #!/usr/bin/env python3 
 
+import sys
 import argparse
 from datetime import datetime
 
@@ -15,6 +16,9 @@ def calculate_time_until(event_date_str, event_name):
     
     # Time until the event
     time_until = event_date - current_date
+
+    if str(time_until) != str(abs(time_until)):
+        raise ValueError("Time can't be negative")
 
     # Extract years, months, weeks, and days
     years, remainder = divmod(time_until.days, 365)
@@ -49,7 +53,7 @@ def main():
         result = calculate_time_until(args.event_date, args.event_name)
         print(result)
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", file=sys.stderr)
 
 if __name__ == "__main__":
     main()
