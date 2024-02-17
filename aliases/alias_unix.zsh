@@ -27,8 +27,7 @@ editfile () {
 	fi
 }      
 
-alias trim="awk '{$1=$1;print}'"
-function hrun() {
+function historyrun() {
 	local currCommand="$(
 		history |
 	       	sed 's|^ *||' |
@@ -37,8 +36,9 @@ function hrun() {
 		awk '{$1=$1;print}' |
 	       	fzf --no-sort -e
 	)"
-	echo "$currCommand"
-	echo "^ command that will be run. Press enter to continue, or ctrl-c to exit."
+	shellcolor --bold "$currCommand"
+	echo "Press enter to continue, or ctrl-c to exit."
+	pause.sh
 	eval "$currCommand"
 }
 

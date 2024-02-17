@@ -81,6 +81,7 @@ alias ks="kotlinc-jvm"
 alias vi-raw='vi -u NONE'
 alias wget="wget -c"
 alias histg="history | grep"
+alias historyg="history | grep"
 alias jslint='npm run lint --silent -- --frail'
 
 #==========================================
