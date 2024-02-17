@@ -16,3 +16,30 @@ if isLinux.sh; then
     alias qp="ps auxwww|more"
     alias tulpn="netstat -tulpn"
 fi
+
+editfile () { 
+	local filename="$(ag -g "$1" | fzf)"; 
+	if [ -z "$filename" ] ; then 
+		echo "No files to edit."
+		return ; 
+	else 
+		vi "$filename"  ; 
+	fi
+}      
+
+alias trim="awk '{$1=$1;print}'"
+function hrun() {
+	local currCommand="$(
+		history |
+	       	sed 's|^ *||' |
+	       	sort -r |
+	       	cut -d' ' -f2-99 |
+		awk '{$1=$1;print}' |
+	       	fzf --no-sort -e
+	)"
+	echo "$currCommand"
+	echo "^ command that will be run. Press enter to continue, or ctrl-c to exit."
+	eval "$currCommand"
+}
+
+
