@@ -1,7 +1,14 @@
 #!/bin/bash
 
-# Get a list of files in the current directory
-files=(*)
+# Check if file names are provided as arguments
+if [ $# -gt 0 ]; then
+    # Use the provided file names
+    files=("$@")
+else
+    # Use the files in the current directory
+    files=(*)
+fi
+
 count=${#files[@]}
 index=0
 
@@ -16,6 +23,9 @@ display_file() {
     # Move the cursor back down to avoid overwriting the line
     tput cup 1 0
 }
+
+# Trap the exit signal to clear the screen upon exit
+trap 'clear' EXIT
 
 # Display the first file
 display_file

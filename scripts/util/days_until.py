@@ -40,10 +40,6 @@ def calculate_time_until(event_date_str, event_name):
     weeks = int(weeks)
     days = int(days)
 
-    print(time_until)
-    print("xyp")
-    print(f"{years} {months} {weeks} {days}")
-
     # Creating parts of the output string
     parts = []
     if years > 0:

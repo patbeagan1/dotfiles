@@ -6,14 +6,20 @@ if [ "$CURRENT_COMPUTER" = "framework" ]; then
     echo
 
     cal
+    echo 
     restic_backup() { restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~; }  
     intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
-    days_until.py 2023-12-25 'Xmas 2023' 2> /dev/null
-    days_until.py 2024-02-14 "Valentine's" 2> /dev/null
-    days_until.py 2024-03-17 "St. Patrick's Day" 2> /dev/null
-    days_until.py 2024-08-04 "The Day" 2> /dev/null
-    days_until.py 2024-12-25 "Xmas 2024" 2> /dev/null
-    days_until.py 2025-02-15 "Moving day" 2> /dev/null
+    declare -A holidays=(
+       	 ["2023-12-25"]="Xmas 2023"
+       	 ["2024-02-14"]="Valentine's"
+       	 ["2024-03-17"]="St. Patrick's Day 🍀"
+	 ["2024-08-04"]="The Day"
+       	 ["2024-12-25"]="Xmas 2024"
+       	 ["2025-02-15"]="Moving day"
+    )
+    for date in ${(k)holidays}; do                                                                                                                                                  
+         days_until.py "$date" "${holidays[$date]}" 2>/dev/null
+    done
 
 fi
 
