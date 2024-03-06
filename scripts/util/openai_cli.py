@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import openai
 import os
 import sys
+from openai import OpenAI
+import datetime
 
 def main():
     """
@@ -15,7 +16,7 @@ def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Forward a request to OpenAI and display the results in real-time.')
     parser.add_argument('--prompt', help='The prompt to send to OpenAI', required=True)
-    parser.add_argument('--model', help='The model to use (e.g., text-davinci-003)', default='gpt-3.5-turbo-0125')
+    parser.add_argument('--model', help='The model to use (e.g., gpt-3.5-turbo)', default="gpt-3.5-turbo")
     parser.add_argument('--max_tokens', help='The maximum number of tokens to generate', type=int, default=100)
     args = parser.parse_args()
 
@@ -26,22 +27,23 @@ def main():
         sys.exit(1)
 
     # Set API key
-    openai.api_key = api_key
+    OpenAI.api_key = api_key
+    client = OpenAI()
 
     # Send request and print response
     try:
-        response = openai.Completion.create(
-            model=args.model,
-            prompt=args.prompt,
-            max_tokens=args.max_tokens,
-            stream=False
+        response = client.chat.completions.create(
+          model=args.model,
+          messages=[
+            {"role": "user", "content": args.prompt},
+          ]
         )
 
-        for message in response:
-            if 'data' in message and 'choices' in message['data']:
-                choices = message['data']['choices']
-                if choices:
-                    print(choices[0]['text'], end='', flush=True)
+        with open("/tmp/ai_completions.txt", mode='a') as file:
+            file.write("\n" + str(datetime.datetime.now()) + "\n")
+            file.write(str(response))
+
+        print(response.choices[0].message.content)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
 
