@@ -73,5 +73,7 @@ if __name__ == '__main__':
         spinner_thread.start()
     
     main(args)
-    spinner_thread.join()
-    sys.exit()
+    
+    if args.spinner:
+        spinner_thread.join()
+        sys.exit()
