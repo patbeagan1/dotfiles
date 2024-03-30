@@ -2,25 +2,51 @@
 
 This is a collection of shell functions and scripts which are included in the hopes that they will be helpful.
 
-## Getting started
+## 🛑 But first, a disclaimer 🛑
 
-If you just want to grab a couple of aliases, you can source the individual files in the `aliases` folder. You can grab them straight from github by doing something like `source <(curl localhost:8000/alias_ls.zsh)`, wherever the script resides on your network.
+Sourcing 3rd party files (as in, the zsh `source` command) is pretty dang dangerous, even though it can be convenient. It's a good idea to make sure that you know what every line in a file does before proceeding.
 
-If you just want to use a single script, you can download it via the github raw url,
-or run it in place with `curl xyz.sh | zsh`.
-I make some effort to keep scripts `sh` compatible, but until someone requests that specifically, no guarantees.
+You could just trust me 👀 but as someone who cares about your digital wellbeing in situations like this, I would recommend _not_ taking my word for it. It's better to read through and try just a couple of aliases at a time.  
 
-## Using all of the available scripts
+# Getting Started
+
+## Using all of the available scripts and aliases
+
+To use this system, you must be running ZSH!
 
 First, clone this project to your machine
-`git clone https://github.com/patbeagan1/libbeagan`
+`git clone git@github.com:patbeagan1/dotfiles.git`
 
-All of the scripts can be used by running the following command from your terminal, as long as you are in a zsh shell.
+Then, add the following to your `~/.zshrc` file
 
-```zsh
-source ./install.zsh
+```sh
+export LIBBEAGAN_HOME="$HOME/dotfiles"
+source ~/dotfiles/install.zsh
 ```
 
-I source the install command from my `~/.zshrc` file. Keeping aliases in here keeps it much cleaner!
+## Using just one script
+
+If you just want to use a single script, you can download it via the github raw url,
+or run it in place like this
+
+```sh 
+sh <(curl --silent https://raw.githubusercontent.com/patbeagan1/dotfiles/master/scripts/math/sum.sh) 1,3,5 
+# 9, which is 1+3+5
+```
+
+I make some effort to keep scripts `sh` compatible, but until someone requests that specifically, no guarantees.
+
+## Using just one set of aliases
+
+The aliases are kept in a bunch of alias files, loosely grouped by usage. If you want to use just one set of aliases, you can do so by sourcing the individual files in the `aliases` folder. i
+
+You can grab them straight from github by doing something like 
+
+```sh
+source <(curl https://raw.githubusercontent.com/patbeagan1/dotfiles/master/aliases/alias_git.zsh)`
+# now `gs` stands for `git status`
+```
+
+---
 
 Ascii art generated from [here](https://www.coolgenerator.com/ascii-text-generator), stick letter font
