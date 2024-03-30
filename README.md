@@ -1,10 +1,12 @@
-# libbeagan
+# libbeagan dotfiles
 
 This is a collection of shell functions and scripts which are included in the hopes that they will be helpful.
 
+To use this system, you must be running ZSH!
+
 ## 🛑 But first, a disclaimer 🛑
 
-Sourcing 3rd party files (as in, the zsh `source` command) is pretty dang dangerous, even though it can be convenient. It's a good idea to make sure that you know what every line in a file does before proceeding.
+Sourcing 3rd party files (as in, the zsh `source` command) is pretty dang dangerous, even though it can be convenient. It works as if you were typing the commands yourself, using your current environment and user permissions. That means it has the ability to access your environment keys, and make any system changes you're allowed to. It's a good idea to make sure that you know what every line in a file does before proceeding.
 
 You could just trust me 👀 but as someone who cares about your digital wellbeing in situations like this, I would recommend _not_ taking my word for it. It's better to read through and try just a couple of aliases at a time.  
 
@@ -12,7 +14,7 @@ You could just trust me 👀 but as someone who cares about your digital wellbei
 
 ## Using all of the available scripts and aliases
 
-To use this system, you must be running ZSH!
+_Per the disclaimer, only do this if you are me, or you are full of blind faith_
 
 First, clone this project to your machine
 `git clone git@github.com:patbeagan1/dotfiles.git`
@@ -38,7 +40,7 @@ I make some effort to keep scripts `sh` compatible, but until someone requests t
 
 ## Using just one set of aliases
 
-The aliases are kept in a bunch of alias files, loosely grouped by usage. If you want to use just one set of aliases, you can do so by sourcing the individual files in the `aliases` folder. i
+The aliases are kept in a bunch of alias files, loosely grouped by usage. If you want to use just one set of aliases, you can do so by sourcing the individual files in the `aliases` folder.
 
 You can grab them straight from github by doing something like 
 
