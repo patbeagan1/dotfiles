@@ -17,6 +17,8 @@ if isLinux.sh; then
     alias tulpn="netstat -tulpn"
 fi
 
+alias ctl='sudo systemctl'
+
 fileedit () { 
 	local filename="$(ag -g "$1" | fzf)"; 
 	if [ -z "$filename" ] ; then 
