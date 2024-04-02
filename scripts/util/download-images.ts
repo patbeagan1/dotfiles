@@ -17,7 +17,7 @@ async function downloadImage(url) {
     const hexHash = hash.toString('hex');
     const timestamp = Date.now();
     const extension = url.split('.').pop().split('?')[0];
-    const newFileName = `${timestamp}-${hexHash}.${extension}`;
+    const newFileName = `${hexHash}-${timestamp}.${extension}`;
     await Deno.writeFile(newFileName, new Uint8Array(buffer));
     console.log(`Downloaded ${newFileName}`);
 
