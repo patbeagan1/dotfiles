@@ -3,6 +3,7 @@
 import sys
 import argparse
 from datetime import datetime
+import math
 
 def calculate_time_until(event_date_str, event_name):
     try:
@@ -17,13 +18,27 @@ def calculate_time_until(event_date_str, event_name):
     # Time until the event
     time_until = event_date - current_date
 
+    if time_until.days == -1:
+        return f"Today is {event_name}"
+    
+    # Offset to midnight
+    curr_day = datetime.now()
+    offset = datetime.now() - datetime(year=curr_day.year, month=curr_day.month, day=curr_day.day)
+
     if str(time_until) != str(abs(time_until)):
         raise ValueError("Time can't be negative")
 
     # Extract years, months, weeks, and days
-    years, remainder = divmod(time_until.days, 365)
-    months, remainder = divmod(remainder, 30)
-    weeks, days = divmod(remainder, 7)
+    v = datetime.min + time_until + offset
+    years = v.year - 1 
+    months = v.month - 1
+    weeks = (v.day - 1) / 7
+    days = (v.day - 1) % 7 
+
+    years = int(years)
+    months = int(months)
+    weeks = int(weeks)
+    days = int(days)
 
     # Creating parts of the output string
     parts = []

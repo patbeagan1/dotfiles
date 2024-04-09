@@ -22,13 +22,18 @@ source_alias alias_tagger.zsh
 source_alias alias_task_cmd.zsh
 source_alias alias_teleport.zsh
 source_alias alias_unix.zsh
+source_alias alias_gpt.zsh
+# source_alias alias_hoiday_prompt.zsh
+# source_alias alias_recco.zsh
 
 if isMac.sh; then
   source_alias alias_machine_mac.zsh
+#  source_alias alias_recco_mac.zsh
 fi
 
 if isLinux.sh; then
   source_alias alias_machine_linux.zsh
+#  source_alias alias_recco_linux.zsh
 fi
 
 # also adding in the local scripts, which are only good for one computer at a time

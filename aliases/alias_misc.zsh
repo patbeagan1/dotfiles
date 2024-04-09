@@ -58,7 +58,7 @@ caturl () {
 
 alias jslint='npm run lint --silent -- --frail'
 
-alias slp='pmset sleepnow'
+alias slp='isMac.sh && pmset sleepnow || systemctl suspend'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 
@@ -81,6 +81,7 @@ alias ks="kotlinc-jvm"
 alias vi-raw='vi -u NONE'
 alias wget="wget -c"
 alias histg="history | grep"
+alias historyg="history | grep"
 alias jslint='npm run lint --silent -- --frail'
 
 #==========================================
