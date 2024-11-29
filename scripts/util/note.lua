@@ -1,5 +1,8 @@
 #!/usr/bin/env lua
 
+-- luarocks --local install luasocket
+-- luarocks --local install luafilesystem
+
 -- Enhanced Note-Taking App in Lua
 local lfs = require("lfs") -- Lua File System module for managing files
 
