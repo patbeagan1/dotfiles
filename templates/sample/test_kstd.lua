@@ -1,6 +1,6 @@
 #!/usr/bin/env lua5.4
 
-local kstd = require "kontext"
+local kstd = require("kstd")
 
 print("\ntesting Run")
 kstd:of({

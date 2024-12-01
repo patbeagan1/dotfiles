@@ -43,7 +43,7 @@ function kstd:run(block)
 end
 
 function kstd:apply(block)
-    error("Not implemented. This goes against the _ENV hierarchy. Use let to build the object instead.")
+    error("Not implemented. This goes against the _ENV hierarchy. Use 'also' to build the object instead.")
 end
 -- endregion 
 
