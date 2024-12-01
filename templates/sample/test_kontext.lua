@@ -1,8 +1,9 @@
+#!/usr/bin/env lua5.4
 
-local kontext = require "kontext"
+local kstd = require "kontext"
 
 print("\ntesting Run")
-kontext:of({
+kstd:of({
     greet = function()
         print("Greetings")
     end
@@ -11,26 +12,40 @@ kontext:of({
 end)
 
 print("\ntesting Let")
-kontext:of(5):let(function(it)
+kstd:of(5):let(function()
     return it * it
-end):let(function(it)
+end):let(function()
     print(it)
 end)
 
+print("\nEnsure that the 'it' from the let scope is not still bound")
+print(it)
+
 print("\ntesting Also")
-kontext:of({
+kstd:of({
     a = 75
-}):also(function(it)
+}):also(function()
     it.b = 25
-end):let(function(it)
+end):let(function()
     print(it.a, it.b)
 end)
 
-print("\ntesting Apply")
-kontext:of({
-    a = 75
-}):apply(function()
-    b = 25
-end):let(function(it)
-    print(it.a, it.b)
+print("\nTesting that the let function can have a named param, instead of an implicit 'it'")
+kstd:of(1):let(function()
+    print(it + 6)
+    return it
+end):let(function(named_it)
+    print(named_it)
 end)
+
+print()
+
+for i = 1, 10, 1 do
+    kstd:of(i):takeIf(function()
+        return it % 2 == 0
+    end):let(function()
+        if it then
+            print(it)
+        end
+    end)
+end
