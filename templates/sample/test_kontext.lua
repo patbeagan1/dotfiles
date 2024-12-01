@@ -49,3 +49,8 @@ for i = 1, 10, 1 do
         end
     end)
 end
+
+kstd.use(io.open("html.lua", "r"), function(f)
+    local c = f:read("*a")
+    print(c)
+end)

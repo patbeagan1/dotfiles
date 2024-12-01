@@ -122,4 +122,26 @@ function kstd.with(value, block)
     return block(value)
 end
 
+-- Enhanced `use` function with nil check and optional error handling
+function kstd.use(resource, fn, on_error)
+    if not resource then
+        error("Resource is nil")
+    end
+
+    local success, result = pcall(fn, resource)
+    if resource.close then
+        resource:close()
+    end
+
+    if not success then
+        if on_error then
+            on_error(result)
+        else
+            error(result)
+        end
+    end
+
+    return result
+end
+
 return kstd
