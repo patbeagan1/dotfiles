@@ -144,4 +144,8 @@ function kstd.use(resource, fn, on_error)
     return result
 end
 
+function kstd:context(block)
+    kstd:of(self):run(block)
+end
+
 return kstd

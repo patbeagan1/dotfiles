@@ -11,6 +11,15 @@ kstd:of({
     greet()
 end)
 
+local obj = {}
+function obj.greet()
+    print("Greetings")
+end
+
+kstd:of(obj):run(function()
+    greet()
+end)
+
 print("\ntesting Let")
 kstd:of(5):let(function()
     return it * it
@@ -50,7 +59,16 @@ for i = 1, 10, 1 do
     end)
 end
 
-kstd.use(io.open("html.lua", "r"), function(f)
-    local c = f:read("*a")
-    print(c)
+print()
+kstd:context(function()
+    with(1, function(it)
+        print(it)
+    end)
+
+    use(io.open("html.lua", "r"), function(f)
+        local c = f:read("*a")
+        print(c)
+    end)
 end)
+
+print(use)
