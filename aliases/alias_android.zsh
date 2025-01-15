@@ -1,3 +1,7 @@
+alias enable_developer_options="adb shell settings put global development_settings_enabled 1"
+alias enable_dont_keep_activities="adb shell settings put global always_finish_activities 1"
+alias disbale_dont_keep_activities="adb shell settings put global always_finish_activities 0"
+
 alias android-list-devices='adb devices -l'
 alias android-list-avds='emulator -list-avds'
 

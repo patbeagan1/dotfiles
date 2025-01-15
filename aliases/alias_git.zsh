@@ -39,4 +39,4 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 # Development
 ###########################################################
 
-alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort | tail -1"
+alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
