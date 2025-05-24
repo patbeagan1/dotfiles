@@ -46,7 +46,7 @@ local function prompt_password()
 end
 
 -- Encrypt account data with GPG
-local function encrypt_data(account_username, data)
+local function encrypt_data(account_username, data, password)
     ensure_directory()
     local file_path = base_dir .. "/" .. account_username .. ".gpg"
 
@@ -59,8 +59,7 @@ local function encrypt_data(account_username, data)
     end
 
     -- Encrypt with GPG using master password
-    local command = string.format("gpg --batch --yes --passphrase '%s' -c -o %s %s", os.getenv("MASTER_PASSWORD"),
-        file_path, tmp_file)
+    local command = string.format("gpg --batch --yes --passphrase '%s' -c -o %s %s", password, file_path, tmp_file)
     os.execute(command)
     os.remove(tmp_file)
 
@@ -68,15 +67,14 @@ local function encrypt_data(account_username, data)
 end
 
 -- Decrypt account data with GPG
-local function decrypt_data(account_username)
+local function decrypt_data(account_username, password)
     local file_path = base_dir .. "/" .. account_username .. ".gpg"
     if not lfs.attributes(file_path, "mode") then
         print("Account '" .. account_username .. "' does not exist.")
         return nil
     end
 
-    local command = string.format("gpg --batch --yes --passphrase '%s' --decrypt %s", os.getenv("MASTER_PASSWORD"),
-        file_path)
+    local command = string.format("gpg --batch --yes --passphrase '%s' --decrypt %s", password, file_path)
     return execute_command(command)
 end
 
@@ -126,13 +124,13 @@ local function add_account(service, username)
     local account_username = service .. "_" .. username
     local password = prompt_password()
     local data = string.format("username: %s\npassword: %s", username, password)
-    encrypt_data(account_username, data)
+    encrypt_data(account_username, data, os.getenv("MASTER_PASSWORD"))
 end
 
 -- Get an account's details and copy password to clipboard
 local function get_account(service, username)
     local account_username = service .. "_" .. username
-    local data = decrypt_data(account_username)
+    local data = decrypt_data(account_username, os.getenv("MASTER_PASSWORD"))
     if data then
         print("Account: " .. account_username)
         local password = data:match("password: (.+)")
@@ -144,6 +142,35 @@ local function get_account(service, username)
     end
 end
 
+-- Migrate to a new master password
+local function migrate_master_password(old_password, new_password)
+    ensure_directory()
+
+    print("Starting master password migration...")
+
+    for file in lfs.dir(base_dir) do
+        if file:match("%.gpg$") then
+            print("Processing: " .. file)
+            local filename = file.gsub(".gpg", "") 
+
+            -- Decrypt with the old password
+            local decrypted_data = decrypt_data(filename, old_password)
+            print(string.format("%s, %s", filename, old_password))
+            if not decrypted_data then
+                print("Skipping file due to decryption failure: " .. filename)
+                return false
+            end
+
+            -- Re-encrypt with the new password
+            encrypt_data(decrypted_data, filename, new_password)
+            print("Successfully migrated: " .. file)
+        end
+    end
+
+    print("Master password migration completed successfully.")
+    return true
+end
+
 -- Command-line interface
 local function main(...)
     local args = {...}
@@ -152,6 +179,7 @@ local function main(...)
         print("  lua password_manager.lua add <service> <username>")
         print("  lua password_manager.lua get <service> <username>")
         print("  lua password_manager.lua list")
+        print("  lua password_manager.lua migrate")
         os.exit(1)
     end
 
@@ -170,6 +198,24 @@ local function main(...)
         get_account(service, username)
     elseif command == "list" and #args == 1 then
         list_accounts()
+    elseif command == "migrate" and #args == 1 then
+        -- Prompt for old and new passwords
+        if not os.getenv("MASTER_PASSWORD") then
+            print("Error: MASTER_PASSWORD environment variable is not set.")
+            os.exit(1)
+        end
+
+        local old_password = os.getenv("MASTER_PASSWORD")
+        local new_password = prompt_hidden("Enter new master password: ")
+        local confirm_password = prompt_hidden("Re-enter new master password to confirm: ")
+
+        if new_password ~= confirm_password then
+            print("Passwords do not match. Migration aborted.")
+            os.exit(1)
+        end
+
+        migrate_master_password(old_password, new_password)
+        print("Migration Complete!\nPlease remember to update the MASTER_PASSWORD environment variable")
     else
         print("Invalid arguments. Use 'add', 'get', or 'list'.")
     end

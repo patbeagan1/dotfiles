@@ -21,8 +21,9 @@ alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack
 alias kotlin_conversion='echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
 script-edit () { vi "$(which "$1")"; }
 alias server='python3 -m http.server'
-alias vpn='nordvpn status'
+alias vpn='nordvpn status; nordvpn'
 alias vpnc='nordvpn connect'
+alias vpnm='nordvpn mesh'
 alias vpnd='nordvpn disconnect'
 alias verify-hash='isLinux.sh && sha256sum || shasum -a 256'
 alias verify-directory-contents='rsync -rvcn'
