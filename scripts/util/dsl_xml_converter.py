@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 
 import argparse
 import re
@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 # -------- DSL to XML --------
+
 
 def parse_attributes(attr_string):
     attrs = {}
@@ -16,6 +17,7 @@ def parse_attributes(attr_string):
                 value = f'"{value}"'
             attrs[key] = value
     return attrs
+
 
 def dsl_to_xml(lines, indent_level=0):
     xml = ""
@@ -30,7 +32,7 @@ def dsl_to_xml(lines, indent_level=0):
             xml += f"{indent}<!-- {line[1:].strip()} -->\n"
             continue
 
-        if re.match(r'^CDATA\s*\{', line):
+        if re.match(r"^CDATA\s*\{", line):
             cdata_content = ""
             while lines:
                 l = lines.pop(0).strip()
@@ -42,13 +44,15 @@ def dsl_to_xml(lines, indent_level=0):
             xml += f"{indent}<![CDATA[{cdata_content}]]>\n"
             continue
 
-        match = re.match(r'(\w+)\s*(\([^)]*\))?\s*(\{)?$', line)
+        match = re.match(r"(\w+)\s*(\([^)]*\))?\s*(\{)?$", line)
         if match:
             tag = match.group(1)
             attr_str = match.group(2)
-            has_block = match.group(3) == '{'
+            has_block = match.group(3) == "{"
             attrs = parse_attributes(attr_str[1:-1] if attr_str else "")
-            attr_xml = " " + " ".join(f'{k}={v}' for k, v in attrs.items()) if attrs else ""
+            attr_xml = (
+                " " + " ".join(f"{k}={v}" for k, v in attrs.items()) if attrs else ""
+            )
 
             if has_block:
                 xml += f"{indent}<{tag}{attr_xml}>\n"
@@ -69,6 +73,7 @@ def dsl_to_xml(lines, indent_level=0):
 
     return xml
 
+
 def validate_dsl_syntax(dsl_string):
     stack = []
     in_quote = False
@@ -76,16 +81,17 @@ def validate_dsl_syntax(dsl_string):
         if char == '"':
             in_quote = not in_quote
         elif not in_quote:
-            if char == '{':
-                stack.append('{')
-            elif char == '}':
-                if not stack or stack.pop() != '{':
+            if char == "{":
+                stack.append("{")
+            elif char == "}":
+                if not stack or stack.pop() != "{":
                     return False, f"Unmatched closing brace at position {i}"
     if in_quote:
         return False, "Unclosed quotation mark"
     if stack:
         return False, "Unclosed brace(s)"
     return True, "DSL syntax is valid"
+
 
 def validate_xml(xml_string):
     try:
@@ -94,7 +100,9 @@ def validate_xml(xml_string):
     except ET.ParseError as e:
         return False, f"XML Parse Error: {e}"
 
+
 # -------- XML to DSL --------
+
 
 def xml_to_dsl(elem, indent_level=0):
     indent = "  " * indent_level
@@ -107,15 +115,24 @@ def xml_to_dsl(elem, indent_level=0):
         return dsl
 
     attrs = elem.attrib
-    attr_str = "(" + ", ".join(f'{k}={repr(v)}' for k, v in attrs.items()) + ")" if attrs else ""
+    attr_str = (
+        "(" + ", ".join(f"{k}={repr(v)}" for k, v in attrs.items()) + ")"
+        if attrs
+        else ""
+    )
 
     children = list(elem)
     has_text = elem.text and elem.text.strip()
 
-    if children or has_text:
+    if not children and has_text:
+        dsl += f"{indent}{elem.tag}{attr_str} {{"
+        dsl += f' "{elem.text.strip()}"'
+        dsl += f"}}\n"
+
+    elif children or has_text:
         dsl += f"{indent}{elem.tag}{attr_str} {{\n"
         if has_text:
-            dsl += f"{indent}  \"{elem.text.strip()}\"\n"
+            dsl += f'{indent}  "{elem.text.strip()}"\n'
 
         for child in children:
             if isinstance(child.tag, str):
@@ -129,12 +146,24 @@ def xml_to_dsl(elem, indent_level=0):
 
     return dsl
 
+
 # -------- Main Entrypoint --------
+
 
 def main():
     parser = argparse.ArgumentParser(description="Convert between DSL and XML.")
-    parser.add_argument("--dsl2xml", nargs=2, metavar=("input.dsl", "output.xml"), help="Convert DSL to XML")
-    parser.add_argument("--xml2dsl", nargs=2, metavar=("input.xml", "output.dsl"), help="Convert XML to DSL")
+    parser.add_argument(
+        "--dsl2xml",
+        nargs=2,
+        metavar=("input.dsl", "output.xml"),
+        help="Convert DSL to XML",
+    )
+    parser.add_argument(
+        "--xml2dsl",
+        nargs=2,
+        metavar=("input.xml", "output.dsl"),
+        help="Convert XML to DSL",
+    )
     args = parser.parse_args()
 
     if args.dsl2xml:
@@ -149,7 +178,9 @@ def main():
 
         lines = dsl_input.strip().splitlines()
         xml_output = dsl_to_xml(lines)
-        pretty_xml = minidom.parseString(f"<root>{xml_output}</root>").toprettyxml(indent="  ")
+        pretty_xml = minidom.parseString(f"<root>{xml_output}</root>").toprettyxml(
+            indent="  "
+        )
         with open(out_file, "w") as f:
             f.write(pretty_xml.replace("<root>", "").replace("</root>", "").strip())
         print(f"Converted DSL → XML: {out_file}")
@@ -166,6 +197,6 @@ def main():
     else:
         parser.print_help()
 
+
 if __name__ == "__main__":
     main()
-
