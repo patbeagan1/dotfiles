@@ -5,8 +5,7 @@ function envsec() {
 
   # Unfortunately, yq is a snap that has strict permissions, so it cannot see hidden files. 
   # https://forum.snapcraft.io/t/requesting-classic-confinement-for-yq/10559/16
-  local config_dir="$HOME/env"
-  local config_file="$config_dir/secrets.yaml"
+  local config_file="$HOME/env/secrets.yaml"
 
   command -v gpg >/dev/null || { echo "❌ gpg not found."; return 1; }
   command -v yq >/dev/null || { echo "❌ yq (v4+) not found."; return 1; }
@@ -15,7 +14,17 @@ function envsec() {
   }
   [[ -z "$GPG_IDENTITY" && "$cmd" = add ]] && { echo "❌ GPG_IDENTITY is not set."; return 1; }
 
-  mkdir -p "$config_dir"
+  local secrets_file_override=""
+  for arg in "$@"; do
+    if [[ "$arg" == "--file" ]]; then
+      secrets_file_override="next"
+    elif [[ "$secrets_file_override" == "next" ]]; then
+      config_file="$arg"
+      secrets_file_override=""
+    fi
+  done
+
+  mkdir -p "$(dirname "$config_file")"
   [[ -f "$config_file" ]] || touch "$config_file"
 
   case "$cmd" in
@@ -74,11 +83,10 @@ function envsec() {
       ;;
     list)
       echo "🔐 Stored secrets:"
-      for key in $(yq eval 'keys | .[]' "$config_file"); do
-        local encrypted=$(yq eval ".\"$key\".encrypted" "$config_file")
-        local icon=$([[ "$encrypted" == "true" ]] && echo "🔒" || echo "📖")
-        printf "  %s %s\n" "$icon" "$key"
-      done
+      yq eval 'to_entries[] |
+        with(select(.value.encrypted == true); .value.format = "🔒") |  
+        with(select(.value.encrypted == false); .value.format = "📖") |  
+        "(\(.value.last_modified)) \(.value.format) \(.key)"' "$config_file"  
       ;;
     delete)
       local key="$1"
@@ -143,17 +151,58 @@ function envsec() {
 
       echo "📋 $key copied to clipboard."
       ;;
+    ingest)
+      local key="$1"
+      shift
+
+      local plain=false
+      if [[ "$1" == "--plain" ]]; then
+        plain=true
+        shift
+      fi
+
+      if [[ -z "$key" ]]; then
+        echo "Usage: envsec ingest <ENV_VAR_NAME> [--plain]"
+        return 1
+      fi
+
+      local value="${(P)key}"  # Get value of the env var
+      if [[ -z "$value" ]]; then
+        echo "❌ Environment variable $key not set or empty."
+        return 1
+      fi
+
+      local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      local encoded
+
+      if [[ "$plain" == true ]]; then
+        encoded="$value"
+      else
+        encoded=$(echo "$value" | gpg --encrypt --armor --recipient "$GPG_IDENTITY" --quiet --batch | base64 | tr -d '\n')
+      fi
+
+      yq eval --inplace ".\"$key\".value = \"$encoded\"" "$config_file"
+      yq eval --inplace ".\"$key\".encrypted = $([[ $plain == true ]] && echo "false" || echo "true")" "$config_file"
+      yq eval --inplace ".\"$key\".last_modified = \"$timestamp\"" "$config_file"
+
+      echo "✅ Ingested $key from environment. (encrypted: $([[ $plain == true ]] && echo "no" || echo "yes"))"
+      ;;
+
     help|--help|-h|"")
       echo "🔐 Usage: envsec <command> [args...]"
       echo ""
+      echo "Options:"
+      echo "  --file <file>     Use alternate secrets file (default: ~/env/secrets.yaml)"
+      echo ""
       echo "Commands:"
-      echo "  add <KEY> [--plain]   Add or update a secret (encrypted by default)"
-      echo "  encrypt <KEY>         Encrypt an existing plaintext secret"
-      echo "  copy <KEY>            Copy decrypted secret to clipboard"
-      echo "  load                  Export all secrets into environment"
-      echo "  list                  List all stored secret keys"
-      echo "  delete <KEY>          Remove a key from the store"
-      echo "  help                  Show this help message"
+      echo "  add <KEY> [--plain]      Add or update a secret (encrypted by default)"
+      echo "  encrypt <KEY>            Encrypt an existing plaintext secret"
+      echo "  copy <KEY>               Copy decrypted secret to clipboard"
+      echo "  load                     Export all secrets into environment"
+      echo "  list                     List all stored secret keys"
+      echo "  delete <KEY>             Remove a key from the store"
+      echo "  ingest <KEY> [--plain]   Import from current shell env var"
+      echo "  help                     Show this help message"
       ;;
     *)
       echo "❌ Unknown command: $cmd"

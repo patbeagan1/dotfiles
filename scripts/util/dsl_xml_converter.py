@@ -147,6 +147,29 @@ def xml_to_dsl(elem, indent_level=0):
     return dsl
 
 
+def replacer(match):
+    print("replace")
+    prefix = match.group(1)
+    inner = match.group(2)
+    return f"{prefix} {{\n  {inner.strip()}\n}}"
+
+
+def expand_single_line_blocks(dsl_code: str) -> str:
+    """
+    Replaces single-line DSL blocks like `something { foo() }` with:
+        something {
+            foo()
+        }
+    Only applies to blocks fully contained on a single line.
+    """
+    pattern = re.compile(r"\s*(\w+\s*\(?[^\)]*\)?\s*)\{\s*(.*?)\s*\}")
+    print("expand")
+
+    new_var = pattern.sub(replacer, dsl_code)
+    print("expandAfter: " + new_var)
+    return new_var
+
+
 # -------- Main Entrypoint --------
 
 
@@ -176,7 +199,9 @@ def main():
             print("Error:", msg)
             return
 
-        lines = dsl_input.strip().splitlines()
+        # replace single line dsl functions with multiline ones
+        lines = [expand_single_line_blocks(it) for it in dsl_input.strip().splitlines()]
+
         xml_output = dsl_to_xml(lines)
         pretty_xml = minidom.parseString(f"<root>{xml_output}</root>").toprettyxml(
             indent="  "
