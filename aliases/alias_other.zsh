@@ -73,8 +73,12 @@ function envsec() {
       echo "✅ Secrets loaded into environment."
       ;;
     list)
-      echo "🔐 Stored keys:"
-      yq eval 'keys | .[]' "$config_file"
+      echo "🔐 Stored secrets:"
+      for key in $(yq eval 'keys | .[]' "$config_file"); do
+        local encrypted=$(yq eval ".\"$key\".encrypted" "$config_file")
+        local icon=$([[ "$encrypted" == "true" ]] && echo "🔒" || echo "📖")
+        printf "  %s %s\n" "$icon" "$key"
+      done
       ;;
     delete)
       local key="$1"
