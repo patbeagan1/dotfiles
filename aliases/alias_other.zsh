@@ -187,6 +187,105 @@ function envsec() {
 
       echo "✅ Ingested $key from environment. (encrypted: $([[ $plain == true ]] && echo "no" || echo "yes"))"
       ;;
+    genkey)
+      echo "🔧 Generating a new GPG key using GPG's built-in interactive tool."
+      echo "💡 You will be prompted to enter your name, email, and passphrase."
+
+      gpg --full-generate-key
+
+      echo
+      echo "🔍 Retrieving the latest key you generated..."
+
+      local last_fpr
+      last_fpr=$(gpg --list-keys --with-colons | awk -F: '/^fpr:/ {print $10}' | tail -n1)
+
+      if [[ -z "$last_fpr" ]]; then
+        echo "❌ Failed to retrieve GPG key fingerprint."
+        return 1
+      fi
+
+      local email
+      email=$(gpg --list-keys "$last_fpr" --with-colons | awk -F: '/^uid:/ {print $10}' | sed -n 's/.*<\(.*\)>/\1/p' | head -n1)
+
+      echo "✅ GPG key created."
+      echo "🔑 Fingerprint: $last_fpr"
+      echo "📧 Email: $email"
+
+      read -q "?💡 Set this as your default GPG_IDENTITY for envsec? [y/N] " confirm
+      echo
+      if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        export GPG_IDENTITY="$email"
+        echo "✅ GPG_IDENTITY set to: $email"
+        echo 'export GPG_IDENTITY="'"$email"'"' >> ~/.zshrc
+      fi
+      ;;
+    migrate-key)
+      local new_identity="$1"
+      shift
+
+      local force=false
+      for arg in "$@"; do
+        [[ "$arg" == "--force" ]] && force=true
+      done
+
+      if [[ -z "$new_identity" ]]; then
+        echo "Usage: envsec migrate-key <NEW_GPG_IDENTITY> [--file <FILE>] [--dry-run]"
+        return 1
+      fi
+
+      echo "🔄 Migrating encrypted secrets to new GPG key: $new_identity"
+      [[ "$force" == false ]] && echo "🧪 Dry run mode — no changes will be saved."
+
+      local updated=false
+      local backup_file="${config_file}.bak.$(date +%Y%m%d%H%M%S)"
+
+      local keys_json=$(yq eval -o=json '.' "$config_file")
+
+      for key in $(echo "$keys_json" | jq -r 'keys[]'); do
+        local is_encrypted=$(echo "$keys_json" | jq -r --arg key "$key" '.[$key].encrypted')
+        if [[ "$is_encrypted" != "true" ]]; then
+          continue
+        fi
+
+        local encoded=$(echo "$keys_json" | jq -r --arg key "$key" '.[$key].value')
+        local decrypted=$(echo "$encoded" | base64 --decode | gpg --quiet --batch --yes --decrypt 2>/dev/null)
+
+        if [[ -z "$decrypted" ]]; then
+          echo "❌ Failed to decrypt $key. Skipping."
+          continue
+        fi
+
+        if [[ "$force" == false ]]; then
+          echo "🔍 Would migrate: $key"
+          continue
+        fi
+
+        local re_encrypted=$(echo "$decrypted" | gpg --encrypt --armor --recipient "$new_identity" --quiet --batch | base64 | tr -d '\n')
+        local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+        # Create backup once before modifying anything
+        if [[ "$updated" == false ]]; then
+          cp "$config_file" "$backup_file"
+          echo "💾 Backup created at $backup_file"
+        fi
+
+        # Update YAML
+        yq eval --inplace ".\"$key\".value = \"$re_encrypted\"" "$config_file"
+        yq eval --inplace ".\"$key\".last_modified = \"$timestamp\"" "$config_file"
+
+        echo "🔐 Migrated $key"
+        updated=true
+      done
+
+      if [[ "$force" == false ]]; then
+        echo "✅ Dry run complete. No changes were written."
+      elif [[ "$updated" == true ]]; then
+        echo "✅ Migration complete."
+      else
+        echo "ℹ️ No keys were migrated."
+      fi
+      ;;
+
 
     help|--help|-h|"")
       echo "🔐 Usage: envsec <command> [args...]"
@@ -195,13 +294,18 @@ function envsec() {
       echo "  --file <file>     Use alternate secrets file (default: ~/env/secrets.yaml)"
       echo ""
       echo "Commands:"
-      echo "  add <KEY> [--plain]      Add or update a secret (encrypted by default)"
-      echo "  encrypt <KEY>            Encrypt an existing plaintext secret"
-      echo "  copy <KEY>               Copy decrypted secret to clipboard"
       echo "  load                     Export all secrets into environment"
       echo "  list                     List all stored secret keys"
+      echo "  add <KEY> [--plain]      Add or update a secret (encrypted by default)"
+      echo "  copy <KEY>               Copy decrypted secret to clipboard"
       echo "  delete <KEY>             Remove a key from the store"
+      echo "  encrypt <KEY>            Encrypt an existing plaintext secret"
       echo "  ingest <KEY> [--plain]   Import from current shell env var"
+      echo "  genkey                   Create a new GPG key pair (uses interactive GPG flow)"
+      echo "  migrate-key <GPG ID> [--force]"
+      echo "                           Migrates encrypted values in a file from one key to another."
+      echo "                             Creates a backup"
+      echo "                             Does a dry run if used without --force"
       echo "  help                     Show this help message"
       ;;
     *)
