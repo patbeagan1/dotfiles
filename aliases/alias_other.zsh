@@ -12,6 +12,17 @@ function envsec() {
   command -v pbcopy >/dev/null 2>/dev/null || command -v xclip >/dev/null 2>/dev/null || {
     [[ "$1" == "copy" ]] && echo "❌ No clipboard tool found (requires pbcopy or xclip)."
   }
+
+  local gpg_id_override=""
+  for arg in "$@"; do
+    if [[ "$arg" == "--gpg-id" ]]; then
+      gpg_id_override="next"
+    elif [[ "$gpg_id_override" == "next" ]]; then
+      GPG_IDENTITY="$arg"
+      gpg_id_override=""
+    fi
+  done
+
   [[ -z "$GPG_IDENTITY" && "$cmd" = add ]] && { echo "❌ GPG_IDENTITY is not set."; return 1; }
 
   local secrets_file_override=""
@@ -140,6 +151,11 @@ function envsec() {
         value="$raw_value"
       fi
 
+      if [[ -z "$value" ]] || [[ null = "$value" ]]; then
+        echo "❌ Key $key is not set, or is empty."
+        return 1
+      fi
+
       if command -v pbcopy &>/dev/null; then
         echo -n "$value" | pbcopy
       elif command -v xclip &>/dev/null; then
@@ -190,6 +206,7 @@ function envsec() {
     genkey)
       echo "🔧 Generating a new GPG key using GPG's built-in interactive tool."
       echo "💡 You will be prompted to enter your name, email, and passphrase."
+      echo ""
 
       gpg --full-generate-key
 
@@ -205,8 +222,9 @@ function envsec() {
       fi
 
       local email
-      email=$(gpg --list-keys "$last_fpr" --with-colons | awk -F: '/^uid:/ {print $10}' | sed -n 's/.*<\(.*\)>/\1/p' | head -n1)
+      email=$(gpg --list-keys "$last_fpr" | awk -F' ' '/^uid/ { print $0 }' | sed 's/.*<//' | sed 's/>.*//')
 
+      echo ""
       echo "✅ GPG key created."
       echo "🔑 Fingerprint: $last_fpr"
       echo "📧 Email: $email"
