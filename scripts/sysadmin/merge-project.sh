@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "

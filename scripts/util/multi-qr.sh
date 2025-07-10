@@ -2,13 +2,28 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
-Usage: $scriptname [-h|--help]
+Usage: $scriptname [-h|--help] <file>
 
-No help message yet
+Creates multiple QR codes from a large file by splitting it into chunks.
+Each chunk is converted to a tiny URL and then to a QR code.
+
+Process:
+1. Splits input file into 2KB chunks
+2. Converts each chunk to tiny URL using itty.bitty.site
+3. Generates QR code for each tiny URL
+4. Combines all QR codes into a single vertical image
+5. Opens the combined image
+
+Arguments:
+  file    File to split and convert to QR codes
+
+Examples:
+  $scriptname large_document.txt
+  $scriptname /path/to/big_file.pdf
 "
     exit $error_code
 }

@@ -3,10 +3,25 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+scriptname="$(basename "$0")"
+
 help () {
     error_code=$?
     echo "
-No help message yet
+Usage: $scriptname [-h|--help] [-v|--verbose] [-f|--file=<file>] [<message...>]
+
+Demonstrates zsh option parsing with zparseopts. This is a template script
+showing how to handle command line arguments in zsh scripts.
+
+Options:
+  -h, --help     Show this help message
+  -v, --verbose  Enable verbose output
+  -f, --file     Specify a file (default: 'default')
+  message        Optional message arguments
+
+Examples:
+  $scriptname --verbose --file=config.txt Hello World
+  $scriptname -v -f data.txt
 "
     exit $error_code
 }

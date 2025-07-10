@@ -2,13 +2,24 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
 Usage: $scriptname [-h|--help]
 
-No help message yet
+Scans the local network (192.168.1.0/24) for active hosts using parallel ping.
+Shows all responding hosts and displays your own IP address.
+
+Features:
+  - Parallel scanning with 128 concurrent processes
+  - Scans entire 192.168.1.0/24 subnet
+  - Shows only responding hosts
+  - Displays your own IP address at the end
+  - Fast scanning with 2-second timeout per host
+
+Examples:
+  $scriptname          # Scans local network and shows active hosts
 "
     exit $error_code
 }

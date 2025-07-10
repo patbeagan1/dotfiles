@@ -4,10 +4,32 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+scriptname="$(basename "$0")"
+
 help() {
     error_code=$?
     echo "
-No help message yet
+Usage: $scriptname [-h|--help] <search_terms>
+
+Performs a DuckDuckGo search with automatic site exclusions.
+Opens the search results in Safari (macOS) or Firefox (Linux).
+
+Arguments:
+  search_terms    Search query (multiple words supported)
+
+Features:
+  - Automatically excludes common low-quality sites
+  - Opens in default browser (Safari/Firefox)
+  - URL-encodes search terms
+  - Cross-platform support
+
+Excluded sites:
+  - Quora, Yummly, Amazon, TripAdvisor
+  - Expedia, Facebook, Microsoft
+
+Examples:
+  $scriptname 'how to install python'
+  $scriptname 'best restaurants in san francisco'
 "
     if [[ ! $error_code -eq 0 ]]; then echo "Err: $error_code"; fi
 }

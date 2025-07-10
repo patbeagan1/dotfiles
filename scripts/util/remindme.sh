@@ -2,13 +2,26 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
-Usage: $scriptname [-h|--help]
+Usage: $scriptname [-h|--help] <reminder_text>
 
-No help message yet
+Creates a reminder in the macOS Reminders app using AppleScript.
+Adds the reminder to the default 'Reminders' list.
+
+Arguments:
+  reminder_text    Text content for the reminder
+
+Features:
+  - Uses macOS Reminders app
+  - Adds to default 'Reminders' list
+  - Works with AppleScript automation
+
+Examples:
+  $scriptname 'Call mom tomorrow'
+  $scriptname 'Buy groceries on Friday'
 "
     exit $error_code
 }

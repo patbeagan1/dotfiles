@@ -2,13 +2,23 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
 Usage: $scriptname [-h|--help]
 
-No help message yet
+Checks the git status of all repositories in the current directory.
+Shows the status of each git repository with brief output format.
+
+Features:
+  - Iterates through all subdirectories
+  - Shows current directory path
+  - Displays git status in brief format (-sb)
+  - Adds spacing between repositories for readability
+
+Examples:
+  $scriptname          # Checks all git repos in current directory
 "
     exit $error_code
 }
