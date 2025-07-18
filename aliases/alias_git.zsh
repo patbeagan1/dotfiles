@@ -144,7 +144,9 @@ gh-prs-awaiting-my-review() {
   echo "###########################################################"
   echo "#   GitHub PRs awaiting your review (${reviewer})"
   echo "###########################################################"
-  gh pr list --search "is:pr is:open review-requested:${reviewer} -author:${reviewer} sort:updated-desc" --limit 100 --json number,title,url,updatedAt,reviews | \
+
+  # Get PRs awaiting review, including headRefName and mergeable status
+  gh pr list --search "is:pr is:open review-requested:${reviewer} -author:${reviewer} sort:updated-desc" --limit 100 --json number,title,url,updatedAt,reviews,headRefName,mergeable | \
     jq -r '
       .[] |
       # Collect reviewers who are not the current reviewer
@@ -153,11 +155,12 @@ gh-prs-awaiting-my-review() {
       .updated_days_ago = ((now - ( ( .updatedAt | sub("\\..*";"") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime ) )) / 86400 | floor) |
       # Mark as important if not reviewed by anyone else or last updated > 7 days ago
       .important = ( ( (.reviewers | length) == 0 ) or (.updated_days_ago > 7) ) |
-      # Compose output
+      # Compose output, including merge conflict status
       "\u001b[1;34m\(.number):\u001b[0m \u001b[1;37m\(.title)\u001b[0m\(.important | if . then " ‼️" else "" end)\n" +
       "\u001b[36m\(.url)\u001b[0m\n" +
       "Reviewed by: \(.reviewers | if length == 0 then "\u001b[31mNo other reviewers\u001b[0m" else map("\u001b[38;5;30m" + . + "\u001b[0m") | join(", ") end)\n" +
-      "Last updated: \(.updatedAt) (\(.updated_days_ago) days ago)\n"
+      "Last updated: \(.updatedAt) (\(.updated_days_ago) days ago)\n" +
+      (if .mergeable == "CONFLICTING" then "\u001b[31m⚠️ Has conflicts with develop\u001b[0m\n" else "" end)
     '
 }
 
