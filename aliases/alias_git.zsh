@@ -59,3 +59,69 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 
 # Alias to get the current release version
 alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
+
+gh-prs-last-6-months-all() {
+  if [ "$#" -eq 0 ]; then
+    echo "Error: No repositories supplied."
+    echo "Usage: gh-prs-last-6-months-all <repo1> <repo2> ..."
+    return 1
+  fi
+  local repos=("$@")
+  for repo in "${repos[@]}"; do
+    if [ -d "$repo/.git" ]; then
+      echo ""
+      echo "=================================================================="
+      echo "Repository: $repo"
+      echo "=================================================================="
+      echo ""
+      (cd "$repo" && gh-prs-last-6-months)
+      echo ""
+    else
+      echo "Directory $repo is not a git repository."
+    fi
+  done
+}
+
+
+gh-prs-last-6-months() {
+  # Detect the default base branch of the local repo (e.g., develop or main or master)
+  local base_branch
+  if git show-ref --verify --quiet refs/remotes/origin/develop; then
+    base_branch="develop"
+  elif git show-ref --verify --quiet refs/remotes/origin/main; then
+    base_branch="main"
+  elif git show-ref --verify --quiet refs/remotes/origin/master; then
+    base_branch="master"
+  else
+    # fallback: use current branch
+    base_branch=$(git symbolic-ref --short HEAD)
+  fi
+
+  local since_date=$(date -v-6m +%Y-%m-%d)
+  local until_date=$(date +%Y-%m-%d)
+  
+  # Ask for the GitHub username directly and remember it for future use
+  local author
+  if [ -f ~/.gh_prs_author ]; then
+    author=$(cat ~/.gh_prs_author)
+  fi
+  if [ -z "$author" ]; then
+    read "author?Enter your GitHub username: "
+    if [ -z "$author" ]; then
+      echo "GitHub username is required."
+      return 1
+    fi
+    echo "$author" > ~/.gh_prs_author
+  fi
+
+  echo "###########################################################"
+  echo "#   GitHub PRs merged in the last 6 months (by ${author})"
+  echo "###########################################################"
+  gh pr list --limit 1000 --search "is:pr is:closed merged:${since_date}..${until_date} base:${base_branch} author:${author} sort:updated-desc" | cat
+
+  echo ""
+  echo "###########################################################"
+  echo "#   GitHub PRs merged into branches other than ${base_branch} (by ${author})"
+  echo "###########################################################"
+  gh pr list --search "is:pr is:closed merged:${since_date}..${until_date} -base:${base_branch} author:${author} sort:updated-desc" | cat
+}
