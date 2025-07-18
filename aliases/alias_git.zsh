@@ -125,3 +125,96 @@ gh-prs-last-6-months() {
   echo "###########################################################"
   gh pr list --search "is:pr is:closed merged:${since_date}..${until_date} -base:${base_branch} author:${author} sort:updated-desc" | cat
 }
+
+gh-prs-awaiting-my-review() {
+  local reviewer
+  # Try to get GitHub username from cache or prompt
+  if [ -f ~/.gh_prs_author ]; then
+    reviewer=$(cat ~/.gh_prs_author)
+  fi
+  if [ -z "$reviewer" ]; then
+    read "reviewer?Enter your GitHub username: "
+    if [ -z "$reviewer" ]; then
+      echo "GitHub username is required."
+      return 1
+    fi
+    echo "$reviewer" > ~/.gh_prs_author
+  fi
+
+  echo "###########################################################"
+  echo "#   GitHub PRs awaiting your review (${reviewer})"
+  echo "###########################################################"
+  gh pr list --search "is:pr is:open review-requested:${reviewer} -author:${reviewer} sort:updated-desc" --limit 100 --json number,title,url,updatedAt,reviews | \
+    jq -r '
+      .[] |
+      # Collect reviewers who are not the current reviewer
+      .reviewers = ([.reviews[]?.author.login] | unique | map(select(. != "'"${reviewer}"'"))) |
+      # Calculate time since last update in days
+      .updated_days_ago = ((now - ( ( .updatedAt | sub("\\..*";"") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime ) )) / 86400 | floor) |
+      # Mark as important if not reviewed by anyone else or last updated > 7 days ago
+      .important = ( ( (.reviewers | length) == 0 ) or (.updated_days_ago > 7) ) |
+      # Compose output
+      "\u001b[1;34m\(.number):\u001b[0m \u001b[1;37m\(.title)\u001b[0m\(.important | if . then " ‼️" else "" end)\n" +
+      "\u001b[36m\(.url)\u001b[0m\n" +
+      "Reviewed by: \(.reviewers | if length == 0 then "\u001b[31mNo other reviewers\u001b[0m" else map("\u001b[38;5;30m" + . + "\u001b[0m") | join(", ") end)\n" +
+      "Last updated: \(.updatedAt) (\(.updated_days_ago) days ago)\n"
+    '
+}
+
+jira-my-tickets() {
+  exit 1 # TODO: untested
+
+  local jira_user
+  # Try to get Jira username/email from cache or prompt
+  if [ -f ~/.jira_user ]; then
+    jira_user=$(cat ~/.jira_user)
+  fi
+  if [ -z "$jira_user" ]; then
+    read "jira_user?Enter your Jira username or email: "
+    if [ -z "$jira_user" ]; then
+      echo "Jira username/email is required."
+      return 1
+    fi
+    echo "$jira_user" > ~/.jira_user
+  fi
+
+  local jira_url
+  if [ -f ~/.jira_url ]; then
+    jira_url=$(cat ~/.jira_url)
+  fi
+  if [ -z "$jira_url" ]; then
+    read "jira_url?Enter your Jira base URL (e.g., https://yourcompany.atlassian.net): "
+    if [ -z "$jira_url" ]; then
+      echo "Jira base URL is required."
+      return 1
+    fi
+    echo "$jira_url" > ~/.jira_url
+  fi
+
+  local jql="assignee = \"$jira_user\" AND resolution = Unresolved ORDER BY updated DESC"
+  echo "###########################################################"
+  echo "#   Jira tickets currently assigned to you ($jira_user)"
+  echo "###########################################################"
+  if command -v jira &>/dev/null; then
+    jira issue list --jql "$jql"
+  else
+    echo "Jira CLI not found. Trying with curl and basic auth."
+    local jira_token
+    if [ -f ~/.jira_token ]; then
+      jira_token=$(cat ~/.jira_token)
+    fi
+    if [ -z "$jira_token" ]; then
+      read -s "jira_token?Enter your Jira API token (input hidden): "
+      if [ -z "$jira_token" ]; then
+        echo "Jira API token is required."
+        return 1
+      fi
+      echo "$jira_token" > ~/.jira_token
+    fi
+    curl -s -u "$jira_user:$jira_token" \
+      -X GET \
+      -H "Content-Type: application/json" \
+      "$jira_url/rest/api/2/search?jql=$(echo $jql | jq -sRr @uri)&fields=key,summary,status" |
+      jq -r '.issues[] | "\(.key): \(.fields.summary) [\(.fields.status.name)]"'
+  fi
+}
