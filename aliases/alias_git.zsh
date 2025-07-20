@@ -177,60 +177,50 @@ gh-prs-awaiting-my-review() {
     '
 }
 
-jira-my-tickets() {
-  exit 1 # TODO: untested
+jirasprintmine() {
+  # File to cache the Jira instance subdomain
+  local jira_subdomain_file="$HOME/.jira_instance_subdomain"
+  local JIRA_INSTANCE_SUBDOMAIN=""
 
-  local jira_user
-  # Try to get Jira username/email from cache or prompt
-  if [ -f ~/.jira_user ]; then
-    jira_user=$(cat ~/.jira_user)
+  # Try to read the Jira instance subdomain from file, or prompt if not found
+  if [[ -f "$jira_subdomain_file" ]]; then
+    JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
   fi
-  if [ -z "$jira_user" ]; then
-    read "jira_user?Enter your Jira username or email: "
-    if [ -z "$jira_user" ]; then
-      echo "Jira username/email is required."
+  if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+    read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
+    if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+      echo "Jira instance subdomain is required."
       return 1
     fi
-    echo "$jira_user" > ~/.jira_user
+    echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
   fi
 
-  local jira_url
-  if [ -f ~/.jira_url ]; then
-    jira_url=$(cat ~/.jira_url)
-  fi
-  if [ -z "$jira_url" ]; then
-    read "jira_url?Enter your Jira base URL (e.g., https://yourcompany.atlassian.net): "
-    if [ -z "$jira_url" ]; then
-      echo "Jira base URL is required."
-      return 1
-    fi
-    echo "$jira_url" > ~/.jira_url
+  # Query Jira for current user's issues in open sprints, output as JSON
+  local json
+  # Recommended JQL to better understand current work left in the sprint:
+  # - Exclude issues that are already Done/Closed/Resolved (adjust status names as needed for your Jira instance)
+  # - Optionally, group by status or order by priority/updated
+  # - Show only issues in the current active sprint assigned to you and not completed
+  json=$(acli jira workitem search --jql='assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done ORDER BY priority DESC, updated DESC' --json 2>/dev/null)
+  if [[ -z "$json" || "$json" == "[]" ]]; then
+    echo "No Jira issues assigned to you in open sprints."
+    return 0
   fi
 
-  local jql="assignee = \"$jira_user\" AND resolution = Unresolved ORDER BY updated DESC"
+  # Pretty print the issues with useful info
   echo "###########################################################"
-  echo "#   Jira tickets currently assigned to you ($jira_user)"
+  echo "#   Jira Issues Assigned to You in Open Sprints"
   echo "###########################################################"
-  if command -v jira &>/dev/null; then
-    jira issue list --jql "$jql"
-  else
-    echo "Jira CLI not found. Trying with curl and basic auth."
-    local jira_token
-    if [ -f ~/.jira_token ]; then
-      jira_token=$(cat ~/.jira_token)
-    fi
-    if [ -z "$jira_token" ]; then
-      read -s "jira_token?Enter your Jira API token (input hidden): "
-      if [ -z "$jira_token" ]; then
-        echo "Jira API token is required."
-        return 1
-      fi
-      echo "$jira_token" > ~/.jira_token
-    fi
-    curl -s -u "$jira_user:$jira_token" \
-      -X GET \
-      -H "Content-Type: application/json" \
-      "$jira_url/rest/api/2/search?jql=$(echo $jql | jq -sRr @uri)&fields=key,summary,status" |
-      jq -r '.issues[] | "\(.key): \(.fields.summary) [\(.fields.status.name)]"'
-  fi
+  echo ""
+  echo "$json" | JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" jq -r '
+    .[] |
+    # Compose key, summary, status, and URL using the correct fields path
+    "\u001b[1;34m\(.key)\u001b[0m: \u001b[1;37m\(.fields.summary)\u001b[0m\n" +
+    "Status: \u001b[36m\(.fields.status.name)\u001b[0m | " +
+    "Type: \u001b[35m\(.fields.issuetype.name)\u001b[0m | " +
+    "Priority: \u001b[33m\(.fields.priority.name // "N/A")\u001b[0m\n" +
+    "Assignee: \u001b[32m\(.fields.assignee.displayName // "Unassigned")\u001b[0m\n" +
+    "URL: \u001b[4;36mhttps://" + (env.JIRA_INSTANCE_SUBDOMAIN) + ".atlassian.net/browse/" + .key + "\u001b[0m\n" +
+    "-----------------------------------------------------------"
+  '
 }
