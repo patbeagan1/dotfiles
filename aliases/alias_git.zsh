@@ -1,4 +1,4 @@
-alias switchoc = "!f() { git switch $1 2>/dev/null || git switch -c $1; }; f"
+switchoc () { git switch "$1" 2>/dev/null || git switch -c "$1"; git fetch "$1" 2>/dev/null; }
 alias gitl='git last --oneline | cat'
 alias gss='git status -sb'
 alias revert-file='git checkout origin/develop --'
