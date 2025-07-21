@@ -1,3 +1,4 @@
+alias gemini-cli='npx https://github.com/google-gemini/gemini-cli'
 
 function prettyCSV() { cat "$1" | column -t -s ","; }
 alias shrink_mov_from='ffmpeg -vcodec libx264 -crf 20 output.mp4 -i'
