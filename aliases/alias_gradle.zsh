@@ -50,8 +50,28 @@ javalarge() {
         return
     fi
 
-    # Add header
-    local header="PID      PPID     RSS(MB)    COMMAND              ARGS"
+    # Gather per-process memory and CPU info for the fzf header, similar to htop/Activity Monitor
+
+    # We'll use ps to get per-process %MEM and %CPU, and show them in the process list.
+    # We'll also show the user, as Activity Monitor does.
+
+    local header="PID      PPID     USER       %CPU   %MEM   RSS(MB)    COMMAND              ARGS"
+
+    # Build a new procs variable with all requisite columns: PID, PPID, USER, %CPU, %MEM, RSS(MB), COMMAND, ARGS
+    procs=$(
+        for pid in "${pids[@]}"; do
+            # Get process info: pid, ppid, user, %cpu, %mem, rss, comm, args
+            # Use ps -ww to avoid truncating args
+            ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,comm=,args= | while read -r pid ppid user cpu mem rss comm args; do
+                # Only show if RSS > 50MB
+                if [[ "$rss" -gt 50000 ]]; then
+                    printf "%-8s %-8s %-10s %-6s %-6s %-10s %-20s %s\n" \
+                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$comm" "$args"
+                fi
+            done
+        done
+    )
+
     local selected
     selected=$(echo "$procs" | fzf --header="$header" \
         --preview='
