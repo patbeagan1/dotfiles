@@ -33,26 +33,36 @@ javalarge() {
     done
     pids=("${(@u)pids}")  # Remove duplicates
 
-    if [[ ${#pids[@]} -eq 0 ]]; then
+    # Filter out invalid or empty PIDs (non-numeric, empty, or not running)
+    local -a valid_pids
+    valid_pids=()
+    for pid in "${pids[@]}"; do
+        if [[ "$pid" =~ '^[0-9]+$' ]] && kill -0 "$pid" 2>/dev/null; then
+            valid_pids+=("$pid")
+        fi
+    done
+
+    if [[ ${#valid_pids[@]} -eq 0 ]]; then
         echo "No matching processes found."
         set +x
         return
     fi
 
-    # Gather all process info in one pass: PID, PPID, USER, %CPU, %MEM, RSS(MB), COMMAND, ARGS
-    local header="PID      PPID     USER       %CPU   %MEM   RSSMEM  PHYSMEM  ARGS"
+    # Gather all process info in one pass: PID, PPID, USER, %CPU, %MEM, RSS(MB), ARGS
+    # (Skip vmmap/physmem here for speed)
+    local header="PID      PPID     USER       %CPU   %MEM   RSSMEM  ARGS"
     local procs
     procs=$(
-        for pid in "${pids[@]}"; do
+        for pid in "${valid_pids[@]}"; do
             # Use ps -ww to avoid truncating args, and get all info in one go
             ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,args= | while read -r pid ppid user cpu mem rss args; do
-                physmem=$(vmmap $pid -summary 2>/dev/null | awk '/Physical footprint:/ { print $3 }')
-                if [[ $debug -eq 1 ]]; then
-                    echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, args=$args" >&2
-                fi
+                # Only print if RSS > 50MB
                 if [[ "$rss" -gt 50000 ]]; then
-                    printf "%-8s %-8s %-10s %-6s %-6s %-7s %-7s %s\n" \
-                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$physmem" "$args"
+                    if [[ $debug -eq 1 ]]; then
+                        echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, rss=${rss}KB, args=$args" >&2
+                    fi
+                    printf "%-8s %-8s %-10s %-6s %-6s %-7s %s\n" \
+                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$args"
                 fi
             done
         done
@@ -64,7 +74,7 @@ javalarge() {
         return
     fi
 
-    # fzf selection with preview of current and parent process info
+    # fzf selection with preview of current and parent process info, and show physmem in preview
     local selected
     selected=$(echo "$procs" | fzf --header="$header" \
         --preview='
@@ -78,6 +88,11 @@ javalarge() {
             echo
             echo "Current process info:"
             echo "$pidinfo" | fold -s -w $width
+            echo
+            if command -v vmmap >/dev/null 2>&1; then
+                physmem=$(vmmap $pid -summary 2>/dev/null | awk "/Physical footprint:/ { print \$3 }")
+                echo "Physical footprint: $physmem"
+            fi
         ' \
         --preview-window=up,50%,border-sharp \
         --ansi)
@@ -85,8 +100,13 @@ javalarge() {
     if [[ -n "$selected" ]]; then
         local pid
         pid=$(awk '{print $1}' <<< "$selected")
-        echo "Killing process PID: $pid"
-        kill -9 "$pid"
+        # Double-check PID is valid before killing
+        if [[ "$pid" =~ '^[0-9]+$' ]] && kill -0 "$pid" 2>/dev/null; then
+            echo "Killing process PID: $pid"
+            kill -9 "$pid"
+        else
+            echo "Selected PID $pid is not valid or no longer running."
+        fi
     else
         echo "No process selected."
     fi
