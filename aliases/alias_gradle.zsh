@@ -8,7 +8,21 @@ alias gradlekill='pkill -f gradle-launcher'
 alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
 
 javalarge() {
-    # set -x  # Enable debug mode
+    local debug=0
+
+    # Parse flags
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -d|--debug)
+                debug=1
+                set -x
+                shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
 
     # Find all relevant processes (java, emulator, studio, Android Studio, cursor) over 50MB RSS
     local patterns="java|emulator|studio|Android Studio|cursor|gradle"
@@ -33,7 +47,9 @@ javalarge() {
             # Use ps -ww to avoid truncating args, and get all info in one go
             ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,args= | while read -r pid ppid user cpu mem rss args; do
                 physmem=$(vmmap $pid -summary 2>/dev/null | awk '/Physical footprint:/ { print $3 }')
-                echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, args=$args" >&2
+                if [[ $debug -eq 1 ]]; then
+                    echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, args=$args" >&2
+                fi
                 if [[ "$rss" -gt 50000 ]]; then
                     printf "%-8s %-8s %-10s %-6s %-6s %-7s %-7s %s\n" \
                         "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$physmem" "$args"
