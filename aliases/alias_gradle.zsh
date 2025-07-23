@@ -8,25 +8,31 @@ alias gradlekill='pkill -f gradle-launcher'
 alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
 
 javalarge() {
-    exit 1 # untested
     set -x  # Enable debug mode
 
-    # List all java-related processes over 500MB, show PID, RSS, COMMAND, and parent process info
+    # List all relevant processes over 500MB, show PID, RSS, COMMAND, and parent process info
     local procs
 
-    # Use pgrep to get all PIDs with 'java' in the command line, then ps to get info
-    # This is more reliable than grepping ps output, as it avoids missing processes due to truncation or grep quirks
-    local pids
-    pids=$(pgrep -f java)
-    if [[ -z "$pids" ]]; then
-        echo "No java processes found."
+    # Expand the list of matching programs
+    local patterns="java|emulator|studio|Android Studio|cursor"
+    local -a pids
+    # Use pgrep for each pattern and collect unique PIDs
+    pids=()
+    for pat in ${(s:|:)patterns}; do
+        pids+=("${(@f)$(pgrep -f "$pat")}")
+    done
+    # Remove duplicates
+    pids=("${(@u)pids}")
+
+    if [[ ${#pids[@]} -eq 0 ]]; then
+        echo "No matching processes found."
         set +x  # Disable debug mode before returning
         return
     fi
 
     # Build a list of process info for those over 500MB RSS
     procs=$(
-        for pid in $pids; do
+        for pid in "${pids[@]}"; do
             # Get process info: pid, ppid, rss, comm, args
             # Use ps -ww to avoid truncating args
             ps -p "$pid" -o pid=,ppid=,rss=,comm=,args= | while read -r pid ppid rss comm args; do
@@ -39,7 +45,7 @@ javalarge() {
     )
 
     if [[ -z "$procs" ]]; then
-        echo "No java processes over 500MB found."
+        echo "No matching processes over 500MB found."
         set +x  # Disable debug mode before returning
         return
     fi
@@ -47,12 +53,24 @@ javalarge() {
     # Add header
     local header="PID      PPID     RSS(MB)    COMMAND              ARGS"
     local selected
-    selected=$(echo "$procs" | fzf --header="$header" --preview='ppid=$(awk "{print \$2}" <<< {}); ppidinfo=$(ps -p $ppid -o pid,comm,args=); echo "Parent process info:\n$ppidinfo"' --ansi)
+    selected=$(echo "$procs" | fzf --header="$header" --preview='
+        ppid=$(awk "{print \$2}" <<< {})
+        pid=$(awk "{print \$1}" <<< {})
+        # Get parent process info
+        ppidinfo=$(ps -p $ppid -o pid,comm,args=)
+        # Get current process info
+        pidinfo=$(ps -p $pid -o pid,comm,args=)
+        echo "Current process info:"
+        echo "$pidinfo" | fold -s -w 30
+        echo
+        echo "Parent process info:"
+        echo "$ppidinfo" | fold -s -w 30
+    ' --ansi)
 
     if [[ -n "$selected" ]]; then
         local pid
         pid=$(awk '{print $1}' <<< "$selected")
-        echo "Killing java process PID: $pid"
+        echo "Killing process PID: $pid"
         kill -9 "$pid"
     else
         echo "No process selected."
