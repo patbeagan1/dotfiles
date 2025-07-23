@@ -37,7 +37,7 @@ javalarge() {
             # Use ps -ww to avoid truncating args
             ps -p "$pid" -o pid=,ppid=,rss=,comm=,args= | while read -r pid ppid rss comm args; do
                 echo "DEBUG: pid=$pid, ppid=$ppid, rss=${rss}KB, comm=$comm, args=$args" >&2
-                if [[ "$rss" -gt 500000 ]]; then
+                if [[ "$rss" -gt 50000 ]]; then
                     printf "%-8s %-8s %-10s %-20s %s\n" "$pid" "$ppid" "$((rss/1024))MB" "$comm" "$args"
                 fi
             done
@@ -45,7 +45,7 @@ javalarge() {
     )
 
     if [[ -z "$procs" ]]; then
-        echo "No matching processes over 500MB found."
+        echo "No matching processes over 50k found."
         set +x  # Disable debug mode before returning
         return
     fi
@@ -53,21 +53,24 @@ javalarge() {
     # Add header
     local header="PID      PPID     RSS(MB)    COMMAND              ARGS"
     local selected
-    selected=$(echo "$procs" | fzf --header="$header" --preview='
-        ppid=$(awk "{print \$2}" <<< {})
-        pid=$(awk "{print \$1}" <<< {})
-        # Get parent process info
-        ppidinfo=$(ps -p $ppid -o pid,comm,args=)
-        # Get current process info
-        pidinfo=$(ps -p $pid -o pid,comm,args=)
-        # Get half the terminal width
-        width=$(( $(tput cols) / 2 ))
-        echo "Current process info:"
-        echo "$pidinfo" | fold -s -w $width
-        echo
-        echo "Parent process info:"
-        echo "$ppidinfo" | fold -s -w $width
-    ' --ansi)
+    selected=$(echo "$procs" | fzf --header="$header" \
+        --preview='
+            ppid=$(awk "{print \$2}" <<< {})
+            pid=$(awk "{print \$1}" <<< {})
+            # Get parent process info
+            ppidinfo=$(ps -p $ppid -o pid,comm,args=)
+            # Get current process info
+            pidinfo=$(ps -p $pid -o pid,comm,args=)
+            # Get half the terminal width
+            width=$(( $(tput cols) ))
+            echo "Current process info:"
+            echo "$pidinfo" | fold -s -w $width
+            echo
+            echo "Parent process info:"
+            echo "$ppidinfo" | fold -s -w $width
+        ' \
+        --preview-window=up,50%,border-sharp \
+        --ansi)
 
     if [[ -n "$selected" ]]; then
         local pid
