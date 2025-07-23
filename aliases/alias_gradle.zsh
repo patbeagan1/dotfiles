@@ -60,11 +60,13 @@ javalarge() {
         ppidinfo=$(ps -p $ppid -o pid,comm,args=)
         # Get current process info
         pidinfo=$(ps -p $pid -o pid,comm,args=)
+        # Get half the terminal width
+        width=$(( $(tput cols) / 2 ))
         echo "Current process info:"
-        echo "$pidinfo" | fold -s -w 30
+        echo "$pidinfo" | fold -s -w $width
         echo
         echo "Parent process info:"
-        echo "$ppidinfo" | fold -s -w 30
+        echo "$ppidinfo" | fold -s -w $width
     ' --ansi)
 
     if [[ -n "$selected" ]]; then
