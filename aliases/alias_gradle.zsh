@@ -8,10 +8,10 @@ alias gradlekill='pkill -f gradle-launcher'
 alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
 
 javalarge() {
-    set -x  # Enable debug mode
+    # set -x  # Enable debug mode
 
     # Find all relevant processes (java, emulator, studio, Android Studio, cursor) over 50MB RSS
-    local patterns="java|emulator|studio|Android Studio|cursor"
+    local patterns="java|emulator|studio|Android Studio|cursor|gradle"
     local -a pids
     pids=()
     for pat in ${(s:|:)patterns}; do
@@ -26,17 +26,17 @@ javalarge() {
     fi
 
     # Gather all process info in one pass: PID, PPID, USER, %CPU, %MEM, RSS(MB), COMMAND, ARGS
-    local header="PID      PPID     USER       %CPU   %MEM   RSSMEM  PHYSMEM COMMAND              ARGS"
+    local header="PID      PPID     USER       %CPU   %MEM   RSSMEM  PHYSMEM  ARGS"
     local procs
     procs=$(
         for pid in "${pids[@]}"; do
             # Use ps -ww to avoid truncating args, and get all info in one go
-            ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,comm=,args= | while read -r pid ppid user cpu mem rss comm args; do
+            ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,args= | while read -r pid ppid user cpu mem rss args; do
                 physmem=$(vmmap $pid -summary 2>/dev/null | awk '/Physical footprint:/ { print $3 }')
-                echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, comm=$comm, args=$args" >&2
+                echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, args=$args" >&2
                 if [[ "$rss" -gt 50000 ]]; then
-                    printf "%-8s %-8s %-10s %-6s %-6s %-7s %-7s %-20s %s\n" \
-                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$physmem" "$comm" "$args"
+                    printf "%-8s %-8s %-10s %-6s %-6s %-7s %-7s %s\n" \
+                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$physmem" "$args"
                 fi
             done
         done
@@ -54,14 +54,14 @@ javalarge() {
         --preview='
             ppid=$(awk "{print \$2}" <<< {})
             pid=$(awk "{print \$1}" <<< {})
-            ppidinfo=$(ps -p $ppid -o pid,comm,args=)
-            pidinfo=$(ps -p $pid -o pid,comm,args=)
+            ppidinfo=$(ps -p $ppid -o pid,args=)
+            pidinfo=$(ps -p $pid -o pid,args=)
             width=$(( $(tput cols) ))
-            echo "Current process info:"
-            echo "$pidinfo" | fold -s -w $width
-            echo
             echo "Parent process info:"
             echo "$ppidinfo" | fold -s -w $width
+            echo
+            echo "Current process info:"
+            echo "$pidinfo" | fold -s -w $width
         ' \
         --preview-window=up,50%,border-sharp \
         --ansi)
