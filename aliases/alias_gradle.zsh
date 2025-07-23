@@ -26,16 +26,17 @@ javalarge() {
     fi
 
     # Gather all process info in one pass: PID, PPID, USER, %CPU, %MEM, RSS(MB), COMMAND, ARGS
-    local header="PID      PPID     USER       %CPU   %MEM   RSS(MB)    COMMAND              ARGS"
+    local header="PID      PPID     USER       %CPU   %MEM   RSSMEM  PHYSMEM COMMAND              ARGS"
     local procs
     procs=$(
         for pid in "${pids[@]}"; do
             # Use ps -ww to avoid truncating args, and get all info in one go
             ps -p "$pid" -o pid=,ppid=,user=,%cpu=,%mem=,rss=,comm=,args= | while read -r pid ppid user cpu mem rss comm args; do
-                echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, rss=${rss}KB, comm=$comm, args=$args" >&2
+                physmem=$(vmmap $pid -summary 2>/dev/null | awk '/Physical footprint:/ { print $3 }')
+                echo "DEBUG: pid=$pid, ppid=$ppid, user=$user, cpu=$cpu, mem=$mem, physmem=$physmem, rss=${rss}KB, comm=$comm, args=$args" >&2
                 if [[ "$rss" -gt 50000 ]]; then
-                    printf "%-8s %-8s %-10s %-6s %-6s %-10s %-20s %s\n" \
-                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$comm" "$args"
+                    printf "%-8s %-8s %-10s %-6s %-6s %-7s %-7s %-20s %s\n" \
+                        "$pid" "$ppid" "$user" "$cpu" "$mem" "$((rss/1024))MB" "$physmem" "$comm" "$args"
                 fi
             done
         done
