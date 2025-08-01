@@ -2,13 +2,27 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
-Usage: $scriptname [-h|--help]
+Usage: $scriptname [-h|--help] <url>
 
-No help message yet
+Displays ANSI content from a remote URL with proper encoding and visual effects.
+Downloads the content from the URL and displays it using cat-ansifile.sh.
+
+Arguments:
+  url    Remote URL containing ANSI content
+
+Features:
+  - Downloads content from remote URL using curl
+  - Clears screen before displaying (ESC c)
+  - Uses cat-ansifile.sh for proper encoding and display effects
+  - Handles remote ANSI art and BBS-style content
+
+Examples:
+  $scriptname http://example.com/ansi_art.txt
+  $scriptname https://bbs.example.com/art.ans
 "
     exit $error_code
 }

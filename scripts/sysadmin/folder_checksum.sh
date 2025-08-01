@@ -2,13 +2,27 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
-Usage: $scriptname [-h|--help]
+Usage: $scriptname [-h|--help] <directory>
 
-No help message yet
+Generates a SHA1 checksum for an entire directory by:
+1. Finding all files in the directory recursively
+2. Sorting them alphabetically
+3. Computing SHA1 for each file
+4. Concatenating all SHA1s and computing a final SHA1
+
+This is useful for detecting changes in directory contents or verifying
+directory integrity.
+
+Arguments:
+  directory    Path to the directory to checksum
+
+Examples:
+  $scriptname /path/to/directory
+  $scriptname .
 "
     exit $error_code
 }

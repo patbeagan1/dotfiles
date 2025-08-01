@@ -2,13 +2,26 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
-Usage: $scriptname [-h|--help]
+Usage: $scriptname [-h|--help] <key_file>
 
-No help message yet
+Displays the randomart (ASCII art representation) of an SSH key.
+Uses ssh-keygen to show the visual fingerprint of the key.
+
+Arguments:
+  key_file    Path to the SSH key file (public or private)
+
+Features:
+  - Shows ASCII art representation of SSH key fingerprint
+  - Uses ssh-keygen -lv for detailed key information
+  - Visual way to verify key fingerprints
+
+Examples:
+  $scriptname ~/.ssh/id_rsa.pub
+  $scriptname ~/.ssh/id_ed25519
 "
     exit $error_code
 }

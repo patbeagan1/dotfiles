@@ -3,13 +3,19 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
 Usage: $scriptname [-h|--help]
 
-No help message yet
+Adds copyright header to all bash shell scripts in the ./scripts directory.
+The copyright header will be inserted after the shebang line in each .sh file.
+
+The copyright header added is:
+# (c) 2022 Pat Beagan: MIT License
+
+This script modifies files in place using sed.
 "
     exit $error_code
 }

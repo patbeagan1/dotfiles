@@ -2,13 +2,27 @@
 
 set -euo pipefail
 
-scriptname="$0"
+scriptname="$(basename "$0")"
 help() {
     error_code=$?
     echo "
 Usage: $scriptname [-h|--help]
 
-No help message yet
+Scans for all listening ports on the local system using lsof.
+Shows which processes are listening on which ports with colorized output.
+
+Features:
+  - Shows all listening TCP and UDP ports
+  - Displays process information for each port
+  - Colorized output for better readability
+  - Excludes common development directories from search
+
+Requires:
+  - sudo privileges to see all processes
+  - lsof command
+
+Examples:
+  $scriptname          # Shows all listening ports
 "
     exit $error_code
 }

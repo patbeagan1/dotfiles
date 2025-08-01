@@ -7,6 +7,9 @@ function envsec() {
   # https://forum.snapcraft.io/t/requesting-classic-confinement-for-yq/10559/16
   local config_file="$HOME/env/secrets.yaml"
 
+  # https://stackoverflow.com/questions/51504367/gpg-agent-forwarding-inappropriate-ioctl-for-device#55032706
+  export GPG_TTY=$(tty)
+
   command -v gpg >/dev/null || { echo "❌ gpg not found."; return 1; }
   command -v yq >/dev/null || { echo "❌ yq (v4+) not found."; return 1; }
   command -v pbcopy >/dev/null 2>/dev/null || command -v xclip >/dev/null 2>/dev/null || {

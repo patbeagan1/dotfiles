@@ -18,6 +18,8 @@ if which /usr/libexec/java_home >/dev/null; then
     alias javaSet15='export JAVA_HOME=$(/usr/libexec/java_home -v 15); java -version'
     alias javaSet16='export JAVA_HOME=$(/usr/libexec/java_home -v 16); java -version'
     alias javaSet17='export JAVA_HOME=$(/usr/libexec/java_home -v 17); java -version'
+    alias javaSet21='export JAVA_HOME=$(/usr/libexec/java_home -v 21); java -version'
+    alias javaSet24='export JAVA_HOME=$(/usr/libexec/java_home -v 24); java -version'
     alias java8='export JAVA_HOME=$JAVA_8_HOME'
     alias java11='export JAVA_HOME=$JAVA_11_HOME'
 fi

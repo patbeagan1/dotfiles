@@ -4,10 +4,31 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+scriptname="$(basename "$0")"
+
 help() {
     error_code=$?
     echo "
-No help message yet
+Usage: $scriptname [-h|--help]
+
+Converts text files in the current directory into a webring-style website.
+Creates HTML pages with navigation between files and a webring component.
+
+Process:
+1. Finds all .txt files in current directory
+2. Creates HTML pages for each file with styling
+3. Adds webring navigation component
+4. Creates index.html with links to all pages
+5. Generates webring.js with navigation logic
+
+Features:
+  - Automatic HTML generation from text files
+  - Webring navigation between pages
+  - Clean, readable styling
+  - JavaScript-based navigation component
+
+Examples:
+  $scriptname          # Converts all .txt files in current directory
 "
     exit $error_code
 }

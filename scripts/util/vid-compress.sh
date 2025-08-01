@@ -8,7 +8,10 @@ help() {
     echo "
 Usage: $scriptname [-h|--help]
 
-This is used to merge other projects back into the incubator.
+Compresses a video file with h265 compression 
+https://unix.stackexchange.com/questions/28803/how-can-i-reduce-a-videos-size-with-ffmpeg
+
+Good for compressing videos so that they fit in github PRs. 
 "
     exit $error_code
 }
@@ -25,17 +28,11 @@ main() {
 
     if (($#help)); then help; fi
 
-merge-project () {
-	if [ $# -ne 2 ]
-	then
-		echo 'requires <repo> <default-branch>'
-		return 1
-	fi
-	git remote add -f repo-"$1" git@github.com:patbeagan1/"$1".git
-	git merge repo-"$1"/"$2" --allow-unrelated-histories
+vid-compress () {
+	ffmpeg -i "$1" -vcodec libx265 -crf 28 output.mp4
 }
 
-    merge-project "$@" || help
+    vid-compress "$@" || help
 }
 
 main "$@" || help
