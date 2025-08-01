@@ -31,7 +31,19 @@ if ! [[ "$iterations" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # The system prompt tells Ollama how to behave.
-system_prompt="You are an expert prompt engineer. Your task is to take a given prompt and improve it for better results with large language models. You will be given the original prompt, and the latest prompt. The latest prompt should be improved while adhering to the intent of the original prompt. The improved prompt should be more detailed, specific, and provide clearer instructions. Your response should only contain the improved prompt, with no additional conversational text."
+system_prompt="You are an expert prompt engineer.
+Your task is to take the given latest prompt and improve it for better results with large language models.
+Take your time, and consider the weak points in the latest prompt, creating a plan to mitigate those weaknesses, while enhancing its strengths.
+You will be given the original prompt, and the latest prompt.
+The latest prompt should be improved while adhering to the intent of the original prompt.
+The improved prompt should be more detailed, specific, and provide clearer instructions.
+Your response should only contain the improved prompt, with no additional conversational text.
+"
+
+echo -e "${GRAY}System Prompt:${RESET}"
+echo -e "${WHITE}$system_prompt${RESET}"
+echo -e "${GRAY}================================${RESET}"
+echo ""
 
 echo -e "${CYAN}${BOLD}🤖 Prompt Improvement Tool${RESET}"
 echo -e "${GRAY}================================${RESET}"
