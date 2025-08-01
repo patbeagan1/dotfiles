@@ -1,3 +1,4 @@
+alias gemini-cli='npx https://github.com/google-gemini/gemini-cli'
 
 function prettyCSV() { cat "$1" | column -t -s ","; }
 alias shrink_mov_from='ffmpeg -vcodec libx264 -crf 20 output.mp4 -i'
@@ -21,10 +22,39 @@ alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack
 alias kotlin_conversion='echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
 script-edit () { vi "$(which "$1")"; }
 alias server='python3 -m http.server'
+
+
+# Nordvpn
 alias vpn='nordvpn status; nordvpn'
 alias vpnc='nordvpn connect'
 alias vpnm='nordvpn mesh'
 alias vpnd='nordvpn disconnect'
+# fzf launcher for the nordvpn CLI.
+# Usage: Type 'nv' and press Enter.
+nv() {
+  # Check for dependencies
+  if ! command -v fzf &>/dev/null || ! command -v nordvpn &>/dev/null; then
+    echo "Error: This function requires 'fzf' and 'nordvpn' to be installed." >&2
+    return 1
+  fi
+
+  # Extract subcommands from the help text.
+  # The awk command now handles aliases by taking the first field (e.g., "connect,")
+  # and removing the comma and any characters that follow it.
+  local selected_command
+  selected_command=$(nordvpn --help | grep -E '^\s+[a-z-]+' |
+    awk '{sub(/,.*/, "", $1); print $1}' |
+    fzf --height 80% --min-height 15 --border --prompt="NordVPN > " \
+        --preview='nordvpn {} --help' \
+        --preview-window='right,65%,border-left')
+
+  # If a command was selected (the user didn't cancel),
+  # place it in the command-line buffer for editing.
+  if [[ -n "$selected_command" ]]; then
+    print -z "nordvpn ${selected_command} "
+  fi
+}
+
 alias verify-hash='isLinux.sh && sha256sum || shasum -a 256'
 alias verify-directory-contents='rsync -rvcn'
 
