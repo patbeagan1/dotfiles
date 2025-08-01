@@ -10,6 +10,9 @@ alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
 # fzf wrapper for Gradle with a project-specific, expiring cache.
 # Caches tasks for 1 week to speed up repeated use.
 # Usage: Type 'gr' in your project directory and press Enter.
+unalias gr # not sure where this is defined, but it's an alias for `git remote``
+alias gr-clear='rm -rf "$HOME/.config/gr-wrapper"'
+
 gr() {
     # --- 1. System & Tool Checks ---
     if ! command -v fzf &> /dev/null; then

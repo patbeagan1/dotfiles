@@ -10,18 +10,26 @@ iterations=$1
 prompt_to_improve=$2
 
 # The system prompt tells Ollama how to behave.
-system_prompt="You are an expert prompt engineer. Your task is to take a given prompt and improve it for better results with large language models. The improved prompt should be more detailed, specific, and provide clearer instructions. Your response should only contain the improved prompt, with no additional conversational text."
+system_prompt="You are an expert prompt engineer. Your task is to take a given prompt and improve it for better results with large language models. You will be given the original prompt, and the latest prompt. The latest prompt should be improved while adhering to the intent of the original prompt. The improved prompt should be more detailed, specific, and provide clearer instructions. Your response should only contain the improved prompt, with no additional conversational text."
 
 echo "Initial prompt: $prompt_to_improve"
 echo "---"
 
 # Loop to iteratively improve the prompt
+
+
 current_prompt=$prompt_to_improve
 for i in $(seq 1 $iterations); do
   # Use Ollama to improve the current prompt
-  # The --no-keep-alive flag ensures the process exits cleanly after each run
-  improved_prompt=$(ollama run --no-keep-alive "llama3" "$system_prompt $current_prompt")
+  request="$system_prompt
 
+Original Prompt: \"\"\"$prompt_to_improve\"\"\"
+
+Latest Prompt: \"\"\"$current_prompt\"\"\""
+  echo "$request"
+
+  improved_prompt=$(ollama run "gemma" "$request")
+  
   # Print the new prompt and update the current_prompt variable for the next iteration
   echo "Iteration $i:"
   echo "$improved_prompt"
