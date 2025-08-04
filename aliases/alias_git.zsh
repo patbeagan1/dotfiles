@@ -67,9 +67,13 @@ ai_commit() {
   ### === Configuration ===
 
   local MODEL="llama3"
-  local PROMPT=$'Generate a Conventional Commit message from the following Git diff.\n\
-  Use present tense, concise wording like "fix: prevent crash on null input".\n\
-  Only return the commit message, no extra explanation.\n\n'
+  local PROMPT='Generate a Conventional Commit message from the following Git diff.\n\
+Follow the Conventional Commits specification (https://www.conventionalcommits.org):\n\
+- Format: <type>[optional scope]: <description>\n\
+- Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert\n\
+- Use present tense, concise wording (e.g., "fix: prevent crash on null input")\n\
+- Scope is optional and should be in parentheses after the type if present\n\
+- **Important:** You are a function that creates precise output. Do not include any explanation. Only output the commit message.\n\n'
 
   ### === Logging ===
 
