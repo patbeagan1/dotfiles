@@ -61,6 +61,69 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 # Alias to get the current release version
 alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
 
+### === Entrypoint ===
+
+ai_commit() {
+
+  # Generate a Conventional Commit message from staged Git changes using Ollama
+  ### === Configuration ===
+
+  readonly MODEL="llama3"
+  readonly PROMPT=$'Generate a Conventional Commit message from the following Git diff.\n\
+  Use present tense, concise wording like "fix: prevent crash on null input".\n\
+  Only return the commit message, no extra explanation.\n\n'
+
+  ### === Logging ===
+
+  log()  { print -P "%F{blue}ℹ%f $*"; }
+  warn() { print -P "%F{yellow}⚠%f $*" >&2; }
+  die()  { print -P "%F{red}✖%f $*" >&2; return 1; }
+
+  ### === Subroutines ===
+
+  check_repo() {
+    git rev-parse --is-inside-work-tree &>/dev/null || die "Not in a Git repository."
+  }
+
+  get_diff() {
+    local diff=$(git diff --cached)
+    [[ -z "$diff" ]] && die "No staged changes to commit."
+    echo "$diff"
+  }
+
+  generate_message() {
+    local diff="$1"
+    local msg=$(ollama run "$MODEL" "${PROMPT}${diff}") || die "Ollama generation failed."
+    msg=$(echo "$msg" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    [[ -z "$msg" ]] && die "Generated message is empty."
+    echo "$msg"
+  }
+
+  confirm() {
+    echo -n "💬 Proceed with commit? (y/N): "
+    read -r reply
+    [[ "$reply" == [yY] ]]
+  }
+
+  commit() {
+    git commit -m "$1" || die "Git commit failed."
+    log "Commit successful."
+  }
+
+  check_repo
+  local diff=$(get_diff)
+
+  log "Generating commit message with $MODEL..."
+  local msg=$(generate_message "$diff")
+
+  print -P "\n%F{cyan}📋 Commit message:%f"
+  echo "----------------------------------------"
+  echo "$msg"
+  echo "----------------------------------------"
+
+  confirm && commit "$msg" || warn "Commit canceled."
+}
+
 gh-prs-last-6-months-all() {
   if [ "$#" -eq 0 ]; then
     echo "Error: No repositories supplied."
