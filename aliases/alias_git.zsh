@@ -61,15 +61,13 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 # Alias to get the current release version
 alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
 
-### === Entrypoint ===
-
 ai_commit() {
 
   # Generate a Conventional Commit message from staged Git changes using Ollama
   ### === Configuration ===
 
-  readonly MODEL="llama3"
-  readonly PROMPT=$'Generate a Conventional Commit message from the following Git diff.\n\
+  local MODEL="llama3"
+  local PROMPT=$'Generate a Conventional Commit message from the following Git diff.\n\
   Use present tense, concise wording like "fix: prevent crash on null input".\n\
   Only return the commit message, no extra explanation.\n\n'
 
@@ -123,6 +121,49 @@ ai_commit() {
 
   confirm && commit "$msg" || warn "Commit canceled."
 }
+
+# fzf wrapper to group useful git/jira/gh functions for quick access
+git_tools_fzf() {
+  local options=(
+    "1. gh-prs-last-6-months         View your PRs from the last 6 months in this repo"
+    "2. gh-prs-last-6-months-all     View your PRs from the last 6 months in multiple repos"
+    "3. jirasprintmine               List your Jira issues in open sprints"
+    "4. git-over-time                Show commit dates and authors"
+    "5. getCurrentRelease            Show the latest release branch"
+    "6. gv (git-view3)               Pretty git log graph"
+    "7. gs (git status)              Show git status"
+    "8. gb (git branch)              List branches"
+    "9. gco (git checkout)           Checkout a branch"
+    "10. lbf                         Fuzzy checkout from last 10 branches"
+    "11. lbb                         Show last branch"
+    "12. Exit"
+  )
+  local choice
+  choice=$(printf '%s\n' "${options[@]}" | fzf --prompt="Select a git/jira tool: " --height=80% --border --ansi)
+  case "$choice" in
+    "1."*) gh-prs-last-6-months ;;
+    "2."*) 
+      echo "Enter repo directories (space-separated):"
+      read -r repos
+      gh-prs-last-6-months-all $repos
+      ;;
+    "3."*) jirasprintmine ;;
+    "4."*) git-over-time ;;
+    "5."*) getCurrentRelease ;;
+    "6."*) gv ;;
+    "7."*) gs ;;
+    "8."*) gb ;;
+    "9."*) 
+      echo "Enter branch to checkout:"
+      read -r branch
+      gco "$branch"
+      ;;
+    "10."*) lbf ;;
+    "11."*) lbb ;;
+    *) echo "Exiting." ;;
+  esac
+}
+alias gtools="git_tools_fzf"
 
 gh-prs-last-6-months-all() {
   if [ "$#" -eq 0 ]; then
