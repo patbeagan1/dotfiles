@@ -113,18 +113,18 @@ adevopts() {
 
   # Write all options to the temp file: description|command|color
   cat > "$tmpfile" <<EOF
-Layout bounds: show|adb shell setprop debug.layout true|$BLUE
-Layout bounds: hide|adb shell setprop debug.layout false|$BLUE
-GPU overdraw: show|adb shell setprop debug.hwui.overdraw show|$BLUE
-GPU overdraw: hide|adb shell setprop debug.hwui.overdraw false|$BLUE
-Pointer location: show|adb shell settings put system pointer_location 1|$BLUE
-Pointer location: hide|adb shell settings put system pointer_location 0|$BLUE
-Touches: show|adb shell settings put system show_touches 1|$BLUE
-Touches: hide|adb shell settings put system show_touches 0|$BLUE
-CPU usage: show|adb shell setprop debug.cpuusage true|$BLUE
-CPU usage: hide|adb shell setprop debug.cpuusage false|$BLUE
-ANR dialog: show|adb shell settings put global anr_show_background 1|$BLUE
-ANR dialog: hide|adb shell settings put global anr_show_background 0|$BLUE
+Layout bounds: show|adb shell setprop debug.layout true|$GREEN
+Layout bounds: hide|adb shell setprop debug.layout false|$RED
+GPU overdraw: show|adb shell setprop debug.hwui.overdraw show|$GREEN
+GPU overdraw: hide|adb shell setprop debug.hwui.overdraw false|$RED
+Pointer location: show|adb shell settings put system pointer_location 1|$GREEN
+Pointer location: hide|adb shell settings put system pointer_location 0|$RED
+Touches: show|adb shell settings put system show_touches 1|$GREEN
+Touches: hide|adb shell settings put system show_touches 0|$RED
+CPU usage: show|adb shell setprop debug.cpuusage true|$GREEN
+CPU usage: hide|adb shell setprop debug.cpuusage false|$RED
+ANR dialog: show|adb shell settings put global anr_show_background 1|$GREEN
+ANR dialog: hide|adb shell settings put global anr_show_background 0|$RED
 
 Strict mode: enable|adb shell setprop persist.sys.strictmode.visual 1|$GREEN
 Strict mode: disable|adb shell setprop persist.sys.strictmode.visual 0|$RED
@@ -162,23 +162,23 @@ Clock (demo mode): set to 12:34|adb shell am broadcast -a com.android.systemui.d
 # Additional options from @web (examples, add more as needed)
 Data saver: enable|adb shell settings put global data_saver_mode 1|$CYAN
 Data saver: disable|adb shell settings put global data_saver_mode 0|$CYAN
-Show surface updates: enable|adb shell setprop debug.hwui.show_dirty_regions true|$BLUE
-Show surface updates: disable|adb shell setprop debug.hwui.show_dirty_regions false|$BLUE
-Show hardware layers updates: enable|adb shell setprop debug.hwui.show_layers_updates true|$BLUE
-Show hardware layers updates: disable|adb shell setprop debug.hwui.show_layers_updates false|$BLUE
-Show GPU view updates: enable|adb shell setprop debug.hwui.show_non_rect_clip true|$BLUE
-Show GPU view updates: disable|adb shell setprop debug.hwui.show_non_rect_clip false|$BLUE
+Show surface updates: enable|adb shell setprop debug.hwui.show_dirty_regions true|$GREEN
+Show surface updates: disable|adb shell setprop debug.hwui.show_dirty_regions false|$RED
+Show hardware layers updates: enable|adb shell setprop debug.hwui.show_layers_updates true|$GREEN
+Show hardware layers updates: disable|adb shell setprop debug.hwui.show_layers_updates false|$RED
+Show GPU view updates: enable|adb shell setprop debug.hwui.show_non_rect_clip true|$GREEN
+Show GPU view updates: disable|adb shell setprop debug.hwui.show_non_rect_clip false|$RED
 Force RTL layout direction: enable|adb shell settings put global debug.force_rtl 1|$CYAN
 Force RTL layout direction: disable|adb shell settings put global debug.force_rtl 0|$CYAN
 EOF
 
-  # Build the fzf input: colorized description
+  # Build the fzf input: colorized description, sorted before coloring
   local fzf_input
-  fzf_input=$(awk -F'|' -v reset="$RESET" '{print $3 $1 reset}' "$tmpfile")
+  fzf_input=$(sort "$tmpfile" | uniq | awk -F'|' -v reset="$RESET" '{print $3 $1 reset}')
 
   # fzf: show colorized label, preview the shell command (no color in preview, sorted options)
   local selected_label
-  selected_label=$(echo "$fzf_input" | sort | \
+  selected_label=$(echo "$fzf_input" | \
     fzf --ansi \
         --color="hl:-1:underline,hl+:-1:underline:reverse" \
         --prompt="Dev Option > " --height=50% --border \
