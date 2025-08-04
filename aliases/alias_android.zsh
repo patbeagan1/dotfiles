@@ -113,51 +113,63 @@ adevopts() {
 
   # Write all options to the temp file: description|command|color
   cat > "$tmpfile" <<EOF
-Show layout bounds|adb shell setprop debug.layout true|$BLUE
-Hide layout bounds|adb shell setprop debug.layout false|$BLUE
-Show GPU overdraw|adb shell setprop debug.hwui.overdraw show|$BLUE
-Hide GPU overdraw|adb shell setprop debug.hwui.overdraw false|$BLUE
-Show pointer location|adb shell settings put system pointer_location 1|$BLUE
-Hide pointer location|adb shell settings put system pointer_location 0|$BLUE
-Show touches|adb shell settings put system show_touches 1|$BLUE
-Hide touches|adb shell settings put system show_touches 0|$BLUE
-Show CPU usage|adb shell setprop debug.cpuusage true|$BLUE
-Hide CPU usage|adb shell setprop debug.cpuusage false|$BLUE
-Show ANR dialog|adb shell settings put global anr_show_background 1|$BLUE
-Hide ANR dialog|adb shell settings put global anr_show_background 0|$BLUE
+Layout bounds: show|adb shell setprop debug.layout true|$BLUE
+Layout bounds: hide|adb shell setprop debug.layout false|$BLUE
+GPU overdraw: show|adb shell setprop debug.hwui.overdraw show|$BLUE
+GPU overdraw: hide|adb shell setprop debug.hwui.overdraw false|$BLUE
+Pointer location: show|adb shell settings put system pointer_location 1|$BLUE
+Pointer location: hide|adb shell settings put system pointer_location 0|$BLUE
+Touches: show|adb shell settings put system show_touches 1|$BLUE
+Touches: hide|adb shell settings put system show_touches 0|$BLUE
+CPU usage: show|adb shell setprop debug.cpuusage true|$BLUE
+CPU usage: hide|adb shell setprop debug.cpuusage false|$BLUE
+ANR dialog: show|adb shell settings put global anr_show_background 1|$BLUE
+ANR dialog: hide|adb shell settings put global anr_show_background 0|$BLUE
 
-Enable strict mode|adb shell setprop persist.sys.strictmode.visual 1|$GREEN
-Disable strict mode|adb shell setprop persist.sys.strictmode.visual 0|$RED
-Enable GPU rendering profile bars|adb shell settings put global debug_hwui_profile bars|$GREEN
-Disable GPU rendering profile|adb shell settings put global debug_hwui_profile off|$RED
-Enable force GPU rendering|adb shell settings put global force_gpu_rendering 1|$GREEN
-Disable force GPU rendering|adb shell settings put global force_gpu_rendering 0|$RED
-Enable 'Don't keep activities'|adb shell settings put global always_finish_activities 1|$GREEN
-Disable 'Don't keep activities'|adb shell settings put global always_finish_activities 0|$RED
-Enable USB debugging|adb shell settings put global adb_enabled 1|$GREEN
-Disable USB debugging|adb shell settings put global adb_enabled 0|$RED
-Enable stay awake while charging|adb shell settings put global stay_on_while_plugged_in 3|$GREEN
-Disable stay awake while charging|adb shell settings put global stay_on_while_plugged_in 0|$RED
+Strict mode: enable|adb shell setprop persist.sys.strictmode.visual 1|$GREEN
+Strict mode: disable|adb shell setprop persist.sys.strictmode.visual 0|$RED
+GPU rendering profile bars: enable|adb shell settings put global debug_hwui_profile bars|$GREEN
+GPU rendering profile: disable|adb shell settings put global debug_hwui_profile off|$RED
+Force GPU rendering: enable|adb shell settings put global force_gpu_rendering 1|$GREEN
+Force GPU rendering: disable|adb shell settings put global force_gpu_rendering 0|$RED
+Don't keep activities: enable|adb shell settings put global always_finish_activities 1|$GREEN
+Don't keep activities: disable|adb shell settings put global always_finish_activities 0|$RED
+USB debugging: enable|adb shell settings put global adb_enabled 1|$GREEN
+USB debugging: disable|adb shell settings put global adb_enabled 0|$RED
+Stay awake while charging: enable|adb shell settings put global stay_on_while_plugged_in 3|$GREEN
+Stay awake while charging: disable|adb shell settings put global stay_on_while_plugged_in 0|$RED
 
-Limit background processes: none|adb shell settings put global limit_background_processes 0|$YELLOW
-Limit background processes: standard|adb shell settings put global limit_background_processes 4|$YELLOW
-Limit background processes: 1|adb shell settings put global limit_background_processes 1|$YELLOW
-Limit background processes: 2|adb shell settings put global limit_background_processes 2|$YELLOW
-Limit background processes: 3|adb shell settings put global limit_background_processes 3|$YELLOW
-Limit background processes: 4|adb shell settings put global limit_background_processes 4|$YELLOW
+Background processes limit: none|adb shell settings put global limit_background_processes 0|$YELLOW
+Background processes limit: standard|adb shell settings put global limit_background_processes 4|$YELLOW
+Background processes limit: 1|adb shell settings put global limit_background_processes 1|$YELLOW
+Background processes limit: 2|adb shell settings put global limit_background_processes 2|$YELLOW
+Background processes limit: 3|adb shell settings put global limit_background_processes 3|$YELLOW
+Background processes limit: 4|adb shell settings put global limit_background_processes 4|$YELLOW
 
-Set all animation scales to 0 (off)|adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0|$CYAN
-Set all animation scales to 0.5x|adb shell settings put global window_animation_scale 0.5; adb shell settings put global transition_animation_scale 0.5; adb shell settings put global animator_duration_scale 0.5|$CYAN
-Set all animation scales to 1x|adb shell settings put global window_animation_scale 1; adb shell settings put global transition_animation_scale 1; adb shell settings put global animator_duration_scale 1|$CYAN
+Animation scales: set to 0 (off)|adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0|$CYAN
+Animation scales: set to 0.5x|adb shell settings put global window_animation_scale 0.5; adb shell settings put global transition_animation_scale 0.5; adb shell settings put global animator_duration_scale 0.5|$CYAN
+Animation scales: set to 1x|adb shell settings put global window_animation_scale 1; adb shell settings put global transition_animation_scale 1; adb shell settings put global animator_duration_scale 1|$CYAN
 
-Enable demo mode|adb shell settings put global sysui_demo_allowed 1; adb shell am broadcast -a com.android.systemui.demo -e command enter|$MAGENTA
-Disable demo mode|adb shell am broadcast -a com.android.systemui.demo -e command exit|$MAGENTA
-Set battery to 100% (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false|$MAGENTA
-Set battery to 50% (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged false|$MAGENTA
-Show network as full (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e datatype lte -e level 4|$MAGENTA
-Hide notifications (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false|$MAGENTA
-Show notifications (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible true|$MAGENTA
-Set clock to 12:34 (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1234|$MAGENTA
+Demo mode: enable|adb shell settings put global sysui_demo_allowed 1; adb shell am broadcast -a com.android.systemui.demo -e command enter|$MAGENTA
+Demo mode: disable|adb shell am broadcast -a com.android.systemui.demo -e command exit|$MAGENTA
+Battery (demo mode): set to 100%|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false|$MAGENTA
+Battery (demo mode): set to 50%|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged false|$MAGENTA
+Network (demo mode): show as full|adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e datatype lte -e level 4|$MAGENTA
+Notifications (demo mode): hide|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false|$MAGENTA
+Notifications (demo mode): show|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible true|$MAGENTA
+Clock (demo mode): set to 12:34|adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1234|$MAGENTA
+
+# Additional options from @web (examples, add more as needed)
+Data saver: enable|adb shell settings put global data_saver_mode 1|$CYAN
+Data saver: disable|adb shell settings put global data_saver_mode 0|$CYAN
+Show surface updates: enable|adb shell setprop debug.hwui.show_dirty_regions true|$BLUE
+Show surface updates: disable|adb shell setprop debug.hwui.show_dirty_regions false|$BLUE
+Show hardware layers updates: enable|adb shell setprop debug.hwui.show_layers_updates true|$BLUE
+Show hardware layers updates: disable|adb shell setprop debug.hwui.show_layers_updates false|$BLUE
+Show GPU view updates: enable|adb shell setprop debug.hwui.show_non_rect_clip true|$BLUE
+Show GPU view updates: disable|adb shell setprop debug.hwui.show_non_rect_clip false|$BLUE
+Force RTL layout direction: enable|adb shell settings put global debug.force_rtl 1|$CYAN
+Force RTL layout direction: disable|adb shell settings put global debug.force_rtl 0|$CYAN
 EOF
 
   # Build the fzf input: colorized description
