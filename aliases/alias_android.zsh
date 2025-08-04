@@ -164,9 +164,9 @@ EOF
   local fzf_input
   fzf_input=$(awk -F'|' -v reset="$RESET" '{print $3 $1 reset}' "$tmpfile")
 
-  # fzf: show colorized label, preview the shell command (colorized)
+  # fzf: show colorized label, preview the shell command (no color in preview, sorted options)
   local selected_label
-  selected_label=$(echo "$fzf_input" | \
+  selected_label=$(echo "$fzf_input" | sort | \
     fzf --ansi \
         --color="hl:-1:underline,hl+:-1:underline:reverse" \
         --prompt="Dev Option > " --height=50% --border \
@@ -174,14 +174,8 @@ EOF
           label=$(echo {} | sed "s/\x1b\[[0-9;]*m//g")
           entry=$(awk -F"|" -v desc="$label" '\''$1 == desc {print $0}'\'' '"$tmpfile"')
           cmd=$(echo "$entry" | awk -F"|" '\''{print $2}'\'')
-          color=$(echo "$entry" | awk -F"|" '\''{print $3}'\'')
-          reset="'"$RESET"'"
           if [[ -n "$cmd" ]]; then
-            if command -v bat &>/dev/null; then
-              printf "%b%s%b\n" "$color" "$cmd" "$reset" | bat --color=always -l sh -p
-            else
-              printf "%b%s%b\n" "$color" "$cmd" "$reset"
-            fi
+            echo "$cmd"
           fi
         ' \
         --preview-window='down,3,wrap')
