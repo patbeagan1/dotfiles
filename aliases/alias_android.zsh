@@ -107,110 +107,79 @@ adevopts() {
   local MAGENTA='\033[0;35m'
   local RESET='\033[0m'
 
-  # List of developer options toggles, grouped and colorized by action
-  local -a toggles=(
-    # Show/Hide group (Blue)
-    "${BLUE}Layout bounds show${RESET}|adb shell setprop debug.layout true"
-    "${BLUE}Layout bounds hide${RESET}|adb shell setprop debug.layout false"
-    "${BLUE}GPU overdraw show${RESET}|adb shell setprop debug.hwui.overdraw show"
-    "${BLUE}GPU overdraw hide${RESET}|adb shell setprop debug.hwui.overdraw false"
-    "${BLUE}Pointer location show${RESET}|adb shell settings put system pointer_location 1"
-    "${BLUE}Pointer location hide${RESET}|adb shell settings put system pointer_location 0"
-    "${BLUE}Touches show${RESET}|adb shell settings put system show_touches 1"
-    "${BLUE}Touches hide${RESET}|adb shell settings put system show_touches 0"
-    "${BLUE}CPU usage show${RESET}|adb shell setprop debug.cpuusage true"
-    "${BLUE}CPU usage hide${RESET}|adb shell setprop debug.cpuusage false"
-    "${BLUE}ANR dialog show${RESET}|adb shell settings put global anr_show_background 1"
-    "${BLUE}ANR dialog hide${RESET}|adb shell settings put global anr_show_background 0"
-    "${BLUE}Show layout updates${RESET}|adb shell settings put global debug_layout true"
-    "${BLUE}Hide layout updates${RESET}|adb shell settings put global debug_layout false"
-    "${BLUE}Show surface updates${RESET}|adb shell setprop debug.hwui.show_dirty_regions true"
-    "${BLUE}Hide surface updates${RESET}|adb shell setprop debug.hwui.show_dirty_regions false"
-    "${BLUE}Show hardware layers updates${RESET}|adb shell setprop debug.hwui.show_layers_updates true"
-    "${BLUE}Hide hardware layers updates${RESET}|adb shell setprop debug.hwui.show_layers_updates false"
+  # List of developer options: (label, shell command, color)
+  local -a options=(
+    "Show layout bounds|adb shell setprop debug.layout true|$BLUE"
+    "Hide layout bounds|adb shell setprop debug.layout false|$BLUE"
+    "Show GPU overdraw|adb shell setprop debug.hwui.overdraw show|$BLUE"
+    "Hide GPU overdraw|adb shell setprop debug.hwui.overdraw false|$BLUE"
+    "Show pointer location|adb shell settings put system pointer_location 1|$BLUE"
+    "Hide pointer location|adb shell settings put system pointer_location 0|$BLUE"
+    "Show touches|adb shell settings put system show_touches 1|$BLUE"
+    "Hide touches|adb shell settings put system show_touches 0|$BLUE"
+    "Show CPU usage|adb shell setprop debug.cpuusage true|$BLUE"
+    "Hide CPU usage|adb shell setprop debug.cpuusage false|$BLUE"
+    "Show ANR dialog|adb shell settings put global anr_show_background 1|$BLUE"
+    "Hide ANR dialog|adb shell settings put global anr_show_background 0|$BLUE"
 
-    # Enable/Disable group (Green/Red)
-    "${GREEN}Strict mode enable${RESET}|adb shell setprop persist.sys.strictmode.visual 1"
-    "${RED}Strict mode disable${RESET}|adb shell setprop persist.sys.strictmode.visual 0"
-    "${GREEN}GPU rendering profile bars enable${RESET}|adb shell settings put global debug_hwui_profile bars"
-    "${RED}GPU rendering profile disable${RESET}|adb shell settings put global debug_hwui_profile off"
-    "${GREEN}Force GPU rendering enable${RESET}|adb shell settings put global force_gpu_rendering 1"
-    "${RED}Force GPU rendering disable${RESET}|adb shell settings put global force_gpu_rendering 0"
-    "${GREEN}Don't keep activities enable${RESET}|adb shell settings put global always_finish_activities 1"
-    "${RED}Don't keep activities disable${RESET}|adb shell settings put global always_finish_activities 0"
-    "${GREEN}USB debugging enable${RESET}|adb shell settings put global adb_enabled 1"
-    "${RED}USB debugging disable${RESET}|adb shell settings put global adb_enabled 0"
-    "${GREEN}Stay awake while charging enable${RESET}|adb shell settings put global stay_on_while_plugged_in 3"
-    "${RED}Stay awake while charging disable${RESET}|adb shell settings put global stay_on_while_plugged_in 0"
-    "${GREEN}Show taps enable${RESET}|adb shell settings put system show_touches 1"
-    "${RED}Show taps disable${RESET}|adb shell settings put system show_touches 0"
-    "${GREEN}Show pointer location enable${RESET}|adb shell settings put system pointer_location 1"
-    "${RED}Show pointer location disable${RESET}|adb shell settings put system pointer_location 0"
-    "${GREEN}Show CPU usage enable${RESET}|adb shell setprop debug.cpuusage true"
-    "${RED}Show CPU usage disable${RESET}|adb shell setprop debug.cpuusage false"
-    "${GREEN}Show ANR dialog enable${RESET}|adb shell settings put global anr_show_background 1"
-    "${RED}Show ANR dialog disable${RESET}|adb shell settings put global anr_show_background 0"
-    "${GREEN}Show layout bounds enable${RESET}|adb shell setprop debug.layout true"
-    "${RED}Show layout bounds disable${RESET}|adb shell setprop debug.layout false"
-    "${GREEN}Show GPU overdraw enable${RESET}|adb shell setprop debug.hwui.overdraw show"
-    "${RED}Show GPU overdraw disable${RESET}|adb shell setprop debug.hwui.overdraw false"
-    "${GREEN}Show hardware layers updates enable${RESET}|adb shell setprop debug.hwui.show_layers_updates true"
-    "${RED}Show hardware layers updates disable${RESET}|adb shell setprop debug.hwui.show_layers_updates false"
-    "${GREEN}Show surface updates enable${RESET}|adb shell setprop debug.hwui.show_dirty_regions true"
-    "${RED}Show surface updates disable${RESET}|adb shell setprop debug.hwui.show_dirty_regions false"
-    "${GREEN}Force RTL layout direction enable${RESET}|adb shell settings put global debug.force_rtl 1"
-    "${RED}Force RTL layout direction disable${RESET}|adb shell settings put global debug.force_rtl 0"
-    "${GREEN}Window animation scale 0.5x${RESET}|adb shell settings put global window_animation_scale 0.5"
-    "${GREEN}Window animation scale 1x${RESET}|adb shell settings put global window_animation_scale 1"
-    "${GREEN}Window animation scale 0x (off)${RESET}|adb shell settings put global window_animation_scale 0"
-    "${GREEN}Transition animation scale 0.5x${RESET}|adb shell settings put global transition_animation_scale 0.5"
-    "${GREEN}Transition animation scale 1x${RESET}|adb shell settings put global transition_animation_scale 1"
-    "${GREEN}Transition animation scale 0x (off)${RESET}|adb shell settings put global transition_animation_scale 0"
-    "${GREEN}Animator duration scale 0.5x${RESET}|adb shell settings put global animator_duration_scale 0.5"
-    "${GREEN}Animator duration scale 1x${RESET}|adb shell settings put global animator_duration_scale 1"
-    "${GREEN}Animator duration scale 0x (off)${RESET}|adb shell settings put global animator_duration_scale 0"
-    "${GREEN}Show visual feedback for taps enable${RESET}|adb shell settings put system show_touches 1"
-    "${RED}Show visual feedback for taps disable${RESET}|adb shell settings put system show_touches 0"
-    "${GREEN}Show screen updates enable${RESET}|adb shell setprop debug.hwui.show_dirty_regions true"
-    "${RED}Show screen updates disable${RESET}|adb shell setprop debug.hwui.show_dirty_regions false"
-    "${GREEN}Show GPU view updates enable${RESET}|adb shell setprop debug.hwui.show_layers_updates true"
-    "${RED}Show GPU view updates disable${RESET}|adb shell setprop debug.hwui.show_layers_updates false"
-    "${GREEN}Show hardware layers updates enable${RESET}|adb shell setprop debug.hwui.show_layers_updates true"
-    "${RED}Show hardware layers updates disable${RESET}|adb shell setprop debug.hwui.show_layers_updates false"
-    "${GREEN}Show ANR dialog enable${RESET}|adb shell settings put global anr_show_background 1"
-    "${RED}Show ANR dialog disable${RESET}|adb shell settings put global anr_show_background 0"
+    "Enable strict mode|adb shell setprop persist.sys.strictmode.visual 1|$GREEN"
+    "Disable strict mode|adb shell setprop persist.sys.strictmode.visual 0|$RED"
+    "Enable GPU rendering profile bars|adb shell settings put global debug_hwui_profile bars|$GREEN"
+    "Disable GPU rendering profile|adb shell settings put global debug_hwui_profile off|$RED"
+    "Enable force GPU rendering|adb shell settings put global force_gpu_rendering 1|$GREEN"
+    "Disable force GPU rendering|adb shell settings put global force_gpu_rendering 0|$RED"
+    "Enable 'Don't keep activities'|adb shell settings put global always_finish_activities 1|$GREEN"
+    "Disable 'Don't keep activities'|adb shell settings put global always_finish_activities 0|$RED"
+    "Enable USB debugging|adb shell settings put global adb_enabled 1|$GREEN"
+    "Disable USB debugging|adb shell settings put global adb_enabled 0|$RED"
+    "Enable stay awake while charging|adb shell settings put global stay_on_while_plugged_in 3|$GREEN"
+    "Disable stay awake while charging|adb shell settings put global stay_on_while_plugged_in 0|$RED"
 
-    # Background process limit (Yellow)
-    "${YELLOW}Background process limit: no background processes enable${RESET}|adb shell settings put global limit_background_processes 0"
-    "${YELLOW}Background process limit: standard limit enable${RESET}|adb shell settings put global limit_background_processes 4"
-    "${YELLOW}Background process limit: 1 process${RESET}|adb shell settings put global limit_background_processes 1"
-    "${YELLOW}Background process limit: 2 processes${RESET}|adb shell settings put global limit_background_processes 2"
-    "${YELLOW}Background process limit: 3 processes${RESET}|adb shell settings put global limit_background_processes 3"
-    "${YELLOW}Background process limit: 4 processes${RESET}|adb shell settings put global limit_background_processes 4"
+    "Limit background processes: none|adb shell settings put global limit_background_processes 0|$YELLOW"
+    "Limit background processes: standard|adb shell settings put global limit_background_processes 4|$YELLOW"
+    "Limit background processes: 1|adb shell settings put global limit_background_processes 1|$YELLOW"
+    "Limit background processes: 2|adb shell settings put global limit_background_processes 2|$YELLOW"
+    "Limit background processes: 3|adb shell settings put global limit_background_processes 3|$YELLOW"
+    "Limit background processes: 4|adb shell settings put global limit_background_processes 4|$YELLOW"
 
-    # Animation scales (Cyan)
-    "${CYAN}Set all animation scales to 0 (off)${RESET}|adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0"
-    "${CYAN}Set all animation scales to 0.5x${RESET}|adb shell settings put global window_animation_scale 0.5; adb shell settings put global transition_animation_scale 0.5; adb shell settings put global animator_duration_scale 0.5"
-    "${CYAN}Set all animation scales to 1x${RESET}|adb shell settings put global window_animation_scale 1; adb shell settings put global transition_animation_scale 1; adb shell settings put global animator_duration_scale 1"
+    "Set all animation scales to 0 (off)|adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0|$CYAN"
+    "Set all animation scales to 0.5x|adb shell settings put global window_animation_scale 0.5; adb shell settings put global transition_animation_scale 0.5; adb shell settings put global animator_duration_scale 0.5|$CYAN"
+    "Set all animation scales to 1x|adb shell settings put global window_animation_scale 1; adb shell settings put global transition_animation_scale 1; adb shell settings put global animator_duration_scale 1|$CYAN"
 
-    # Miscellaneous (Magenta)
-    "${MAGENTA}Show touches${RESET}|adb shell settings put system show_touches 1"
-    "${MAGENTA}Hide touches${RESET}|adb shell settings put system show_touches 0"
-    "${MAGENTA}Enable demo mode${RESET}|adb shell settings put global sysui_demo_allowed 1; adb shell am broadcast -a com.android.systemui.demo -e command enter"
-    "${MAGENTA}Disable demo mode${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command exit"
-    "${MAGENTA}Set battery to 100% (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false"
-    "${MAGENTA}Set battery to 50% (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged false"
-    "${MAGENTA}Show network as full (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e datatype lte -e level 4"
-    "${MAGENTA}Hide notifications (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false"
-    "${MAGENTA}Show notifications (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible true"
-    "${MAGENTA}Set clock to 12:34 (demo mode)${RESET}|adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1234"
+    "Enable demo mode|adb shell settings put global sysui_demo_allowed 1; adb shell am broadcast -a com.android.systemui.demo -e command enter|$MAGENTA"
+    "Disable demo mode|adb shell am broadcast -a com.android.systemui.demo -e command exit|$MAGENTA"
+    "Set battery to 100% (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false|$MAGENTA"
+    "Set battery to 50% (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 50 -e plugged false|$MAGENTA"
+    "Show network as full (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e datatype lte -e level 4|$MAGENTA"
+    "Hide notifications (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false|$MAGENTA"
+    "Show notifications (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible true|$MAGENTA"
+    "Set clock to 12:34 (demo mode)|adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1234|$MAGENTA"
   )
 
+  # Build the fzf input: colorized label, and keep the command and color for preview
+  local fzf_input
+  fzf_input=$(for opt in "${options[@]}"; do
+    IFS='|' read -r label cmd color <<< "$opt"
+    # Colorize label for the menu, but keep cmd and color for preview
+    printf "%b%s%b|%s|%s\n" "$color" "$label" "$RESET" "$cmd" "$color"
+  done)
+
+  # fzf: show colorized label, preview the shell command (colorized)
   local selected
-  selected=$(printf '%s\n' "${toggles[@]}" | \
-    fzf --ansi --prompt="Dev Option > " --height=50% --border \
-        --preview="echo {} | sed 's/|.*//'" \
-        --preview-window='down,3,wrap' | cut -d'|' -f2-)
+  selected=$(echo "$fzf_input" | \
+    fzf --ansi \
+        --color="hl:-1:underline,hl+:-1:underline:reverse" \
+        --prompt="Dev Option > " --height=50% --border \
+        --preview='
+          IFS="|" read -r _ cmd color <<< "{}"
+          if command -v bat &>/dev/null; then
+            printf "%b%s%b\n" "$color" "$cmd" "\033[0m" | bat --color=always -l sh -p
+          else
+            printf "%b%s%b\n" "$color" "$cmd" "\033[0m"
+          fi
+        ' \
+        --preview-window='down,3,wrap' \
+        | awk -F"|" '{print $2}')
 
   if [[ -n "$selected" ]]; then
     echo "Applying: $selected"
