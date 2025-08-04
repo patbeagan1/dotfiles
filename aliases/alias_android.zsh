@@ -247,7 +247,7 @@ EOF
 
 # fzf launcher for adb commands.
 # Usage: Type 'afh' and press Enter.
-afh() {
+adb-fzf-help() {
   # 1. Check for dependencies
   if ! command -v fzf &>/dev/null || ! command -v adb &>/dev/null; then
     echo "Error: This function requires 'fzf' and 'adb' to be installed." >&2
@@ -287,7 +287,7 @@ afh() {
 
 # fzf launcher for Android emulators.
 # Usage: Type 'avd' and press Enter to select and launch an AVD.
-avd() {
+emulator-fzf-help() {
   # 1. Check for dependencies
   if ! command -v fzf &>/dev/null || ! command -v emulator &>/dev/null; then
     echo "Error: This function requires 'fzf' and 'emulator' to be installed." >&2
@@ -326,7 +326,7 @@ avd() {
 
 # fzf helper for avdmanager.
 # Usage: Type 'avdm' and press Enter to select an action.
-avdm() {
+avdmanager-fzf-help() {
   # 1. Check for dependencies
   if ! command -v fzf &>/dev/null || ! command -v avdmanager &>/dev/null; then
     echo "Error: This function requires 'fzf' and 'avdmanager' to be installed." >&2
@@ -357,7 +357,7 @@ avdm() {
 
 # fzf helper for sdkmanager.
 # Usage: Type 'sdkm' and press Enter to select packages to install.
-sdkm() {
+sdkmanager-fzf-help() {
   # 1. Check for dependencies
   if ! command -v fzf &>/dev/null || ! command -v sdkmanager &>/dev/null; then
     echo "Error: This function requires 'fzf' and 'sdkmanager' to be installed." >&2
