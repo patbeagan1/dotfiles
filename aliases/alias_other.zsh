@@ -76,8 +76,25 @@ function envsec() {
       echo "✅ Secret for $key saved. (encrypted: $([[ $plain == true ]] && echo "no" || echo "yes"))"
       ;;
     load)
+      local key_to_load="$1"
+      if [[ -z "$key_to_load" ]]; then
+        echo "Usage: envsec load <KEY|--all>"
+        return 1
+      fi
+
+      local keys_to_process
+      if [[ "$key_to_load" == "--all" ]]; then
+        keys_to_process=$(yq eval 'keys | .[]' "$config_file")
+      else
+        if ! yq eval "has(\"$key_to_load\")" "$config_file" | grep -q true; then
+          echo "❌ Key '$key_to_load' not found."
+          return 1
+        fi
+        keys_to_process="$key_to_load"
+      fi
+
       local decrypted
-      for key in $(yq eval 'keys | .[]' "$config_file"); do
+      for key in $keys_to_process; do
         local encrypted=$(yq eval ".\"$key\".encrypted" "$config_file")
         local raw_value=$(yq eval ".\"$key\".value" "$config_file")
 
@@ -93,7 +110,12 @@ function envsec() {
 
         export "$key=$decrypted"
       done
-      echo "✅ Secrets loaded into environment."
+
+      if [[ "$key_to_load" == "--all" ]]; then
+        echo "✅ All secrets loaded into environment."
+      else
+        echo "✅ Secret '$key_to_load' loaded into environment."
+      fi
       ;;
     list)
       echo "🔐 Stored secrets:"
