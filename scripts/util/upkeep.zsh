@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-PROJECT_DIR="${PROJECT_DIR:-$HOME/projects/my-project}"
+PROJECT_DIR="${PROJECT_DIR:-.}"
 LICENSE_FILE="$PROJECT_DIR/LICENSE"
 CURRENT_YEAR=$(date +%Y)
 TAG_NAME="upkeep-$CURRENT_YEAR"
