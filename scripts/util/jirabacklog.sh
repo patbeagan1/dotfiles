@@ -1,11 +1,3 @@
-#!/usr/bin/env zsh 
-
-# Function to list Jira backlog items and their assignees for a project.
-# It requires jq to be installed (brew install jq).
-#
-# Usage: jirabacklog <PROJECT_KEY>
-# Example: jirabacklog AC
-#
 function jirabacklog() {
   # 1. Validate input
   if [[ -z "$1" ]]; then
@@ -21,14 +13,33 @@ function jirabacklog() {
     return 1
   fi
 
-  local project_key=$1
+  # 3. Read or prompt for Jira instance subdomain (copied from jirasprintmine)
+  local jira_subdomain_file="$HOME/.jira_instance_subdomain"
+  local JIRA_INSTANCE_SUBDOMAIN=""
 
-  # 3. Run the command and process the output
-  acli jira workitem search --jql="project = '${project_key}' AND sprint is EMPTY ORDER BY Rank ASC" --json 2>/dev/null | \
-  jq -r '.[] |
-    # Extract the base Jira URL from the 'self' link to build the ticket URL
-  ('https://alltrails.atlassian.net' as $baseUrl) |
-    # Format and print the ticket info
-    "🎟️  \(.fields.summary) - \(.fields.assignee.displayName // "Unassigned")\n\($baseUrl)/browse/\(.key)\n"'
+  if [[ -f "$jira_subdomain_file" ]]; then
+    JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
+  fi
+  if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+    read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
+    if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+      echo "Jira instance subdomain is required."
+      return 1
+    fi
+    echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
+  fi
+
+  local project_key=$1
+  local jql_query
+
+  # 4. Safely build the JQL query string using printf
+  printf -v jql_query "project = '%s' AND sprint is EMPTY ORDER BY Rank ASC" "${project_key}"
+
+  # 5. Run the command and process the output, using the dynamic Jira subdomain
+  acli jira workitem search --jql="$jql_query" --json 2>/dev/null | \
+  JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" jq -r '
+    .[] |
+    "🎟️  \(.fields.summary) - \(.fields.assignee.displayName // "Unassigned")\nhttps://" + (env.JIRA_INSTANCE_SUBDOMAIN) + ".atlassian.net/browse/" + .key + "\n"
+  '
 }
 jirabacklog "$@"
