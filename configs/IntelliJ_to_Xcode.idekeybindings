@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Menu Key Bindings</key>
+    <dict>
+        <key>Key Bindings</key>
+        <array>
+            <!-- Navigation -->
+            <dict>
+                <key>Action</key>
+                <string>goToFile:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧O</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>goToSymbol:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥O</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>goToLine:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘L</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>goToNextIssue:</string>
+                <key>Keyboard Shortcut</key>
+                <string>F2</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>goToPreviousIssue:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⇧F2</string>
+            </dict>
+            
+            <!-- Search and Replace -->
+            <dict>
+                <key>Action</key>
+                <string>find:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘F</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>findAndReplace:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘R</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>findInProject:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧F</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>findInProjectAndReplace:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧R</string>
+            </dict>
+            
+            <!-- Code Navigation -->
+            <dict>
+                <key>Action</key>
+                <string>jumpToDefinition:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘B</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>jumpToDefinition:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥B</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>findCallHierarchy:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌥F7</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>findTypeHierarchy:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧H</string>
+            </dict>
+            
+            <!-- Refactoring -->
+            <dict>
+                <key>Action</key>
+                <string>refactor:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥R</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>rename:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⇧F6</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>extractMethod:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥M</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>extractVariable:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥V</string>
+            </dict>
+            
+            <!-- Code Generation -->
+            <dict>
+                <key>Action</key>
+                <string>insertTemplate:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘J</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>insertTemplate:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥J</string>
+            </dict>
+            
+            <!-- Editing -->
+            <dict>
+                <key>Action</key>
+                <string>duplicateLine:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘D</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>deleteLine:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌫</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveLineUp:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌥⇧↑</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveLineDown:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌥⇧↓</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>commentSelection:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘/</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>commentSelection:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥/</string>
+            </dict>
+            
+            <!-- Multiple Cursors -->
+            <dict>
+                <key>Action</key>
+                <string>addCursorAbove:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌥⇧↑</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>addCursorBelow:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌥⇧↓</string>
+            </dict>
+            
+            <!-- Code Folding -->
+            <dict>
+                <key>Action</key>
+                <string>fold:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥-</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>unfold:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥+</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>foldAll:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥⇧-</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>unfoldAll:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥⇧+</string>
+            </dict>
+            
+            <!-- Window Management -->
+            <dict>
+                <key>Action</key>
+                <string>showNavigator:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘1</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>showInspector:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥1</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>showDebugArea:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧Y</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>showUtilities:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥0</string>
+            </dict>
+            
+            <!-- Build and Run -->
+            <dict>
+                <key>Action</key>
+                <string>build:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘F9</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>run:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘R</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>stop:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘.</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>debug:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘D</string>
+            </dict>
+            
+            <!-- Debugging -->
+            <dict>
+                <key>Action</key>
+                <string>stepOver:</string>
+                <key>Keyboard Shortcut</key>
+                <string>F8</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>stepInto:</string>
+                <key>Keyboard Shortcut</key>
+                <string>F7</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>stepOut:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⇧F8</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>continueExecution:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥P</string>
+            </dict>
+            
+            <!-- Version Control -->
+            <dict>
+                <key>Action</key>
+                <string>showSourceControlNavigator:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘2</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>commit:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘K</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>push:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧K</string>
+            </dict>
+            
+            <!-- Quick Actions -->
+            <dict>
+                <key>Action</key>
+                <string>showQuickActions:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥A</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>showDocumentation:</string>
+                <key>Keyboard Shortcut</key>
+                <string>F1</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>showQuickHelp:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⌥?</string>
+            </dict>
+            
+            <!-- File Operations -->
+            <dict>
+                <key>Action</key>
+                <string>newFile:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘N</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>newProject:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧N</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>openFile:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘O</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>save:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘S</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>saveAll:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧S</string>
+            </dict>
+            
+            <!-- Selection and Movement -->
+            <dict>
+                <key>Action</key>
+                <string>selectWord:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘W</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>extendSelection:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘⇧W</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveToBeginningOfLine:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘←</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveToEndOfLine:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘→</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveToBeginningOfDocument:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘↑</string>
+            </dict>
+            <dict>
+                <key>Action</key>
+                <string>moveToEndOfDocument:</string>
+                <key>Keyboard Shortcut</key>
+                <string>⌘↓</string>
+            </dict>
+        </array>
+        <key>Version</key>
+        <integer>3</integer>
+    </dict>
+</dict>
+</dict>
+</plist>
