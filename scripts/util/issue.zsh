@@ -88,7 +88,9 @@ list_notes() {
   local filter_label="$1"
   echo "Fetching issues from the current repository..."
 
-  local args=("--state" "open" "--json" "number,title,labels")
+  # Note: --limit 1000 is used to fetch up to 1000 issues, which is the current maximum supported by gh issue list.
+  # See: https://www.mankier.com/1/gh-issue-list
+  local args=("--state" "open" "--json" "number,title,labels" "--limit" "1000")
   if [[ -n "$filter_label" ]]; then
     args+=("--label" "$filter_label")
   fi
