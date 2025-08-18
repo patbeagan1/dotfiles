@@ -28,7 +28,6 @@ safe_source() {
     
     if [[ -f "$file" ]]; then
         source "$file"
-        echo "✅ Loaded: $description"
     else
         echo "⚠️  Warning: $description not found at $file"
     fi
@@ -43,6 +42,7 @@ safe_source "$LIBBEAGAN_HOME/configs/config-zsh.zsh" "ZSH configuration"
 safe_source "$LIBBEAGAN_HOME/configs/config-omzsh.zsh" "Oh My Zsh configuration"
 safe_source "$LIBBEAGAN_HOME/configs/config-golang.zsh" "Go configuration"
 safe_source "$LIBBEAGAN_HOME/configs/config-android.zsh" "Android configuration"
+safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
 
 ###########################################################
 # Personal scripts

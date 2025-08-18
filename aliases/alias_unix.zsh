@@ -1,3 +1,4 @@
+alias is=is-test
 alias mkdir="mkdir -pv"
 alias cpv='rsync -ah --info=progress2' # use like cp, but with a progress bar
 alias findempty="find . -type f -empty "
