@@ -18,7 +18,7 @@ NOTE_LABEL="note-app"
 # ------------------------------------------------------------------------------
 
 # Get the user's preferred editor, or default to vim
-EDITOR="${EDITOR:-vim}"
+EDITOR="${EDITOR:-nvim}"
 
 # Function for error handling
 _error() {
@@ -47,7 +47,7 @@ _get_body_from_editor() {
 # Function to select a note using fzf
 _select_note_with_fzf() {
   local list_output
-  list_output=$(gh issue list --label "$NOTE_LABEL" --state "open" \
+  list_output=$(gh issue list --state "open" \
     --json number,title | jq -r '.[] | "\(.number) \(.title)"' | fzf)
   
   if [[ -z "$list_output" ]]; then
@@ -85,9 +85,15 @@ create_note() {
 
 # Function to list all notes
 list_notes() {
-  echo "Fetching notes from the current repository..."
-  gh issue list --label "$NOTE_LABEL" --state "open" \
-    --json number,title | jq -r '.[] | "(\(.number)) \(.title)"'
+  local filter_label="$1"
+  echo "Fetching issues from the current repository..."
+
+  local args=("--state" "open" "--json" "number,title,labels")
+  if [[ -n "$filter_label" ]]; then
+    args+=("--label" "$filter_label")
+  fi
+
+  gh issue list "${args[@]}" | jq -r '.[] | "(\(.number)) \(.title) [\((.labels | map(.name) | join(", ")))]"'
 }
 
 # Function to view a specific note
@@ -203,7 +209,8 @@ case "$1" in
     create_note
     ;;
   list)
-    list_notes
+    shift
+    list_notes "$1"
     ;;
   view)
     shift
@@ -260,7 +267,7 @@ case "$1" in
     echo ""
     echo "Commands:"
     echo "  create                Create a new note (opens editor)."
-    echo "  list                  List all open notes."
+    echo "  list [<label>]        List all open issues, optionally filtering by label."
     echo "  view [<issue_number>] View a specific note. If no number is given, a selector will appear."
     echo "  open [<issue_number>] Open a note in your web browser. If no number is given, a selector will appear."
     echo "  edit [<issue_number>] Edit a specific note. If no number is given, a selector will appear."
