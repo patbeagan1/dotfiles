@@ -170,10 +170,10 @@ comment_note() {
 }
 
 
-# Function to "delete" (close) a note
-delete_note() {
+# Function to "close" a note
+close_note() {
   local issue_number="$1"
-  echo "Are you sure you want to delete note #$issue_number? (y/N)"
+  echo "Are you sure you want to close note #$issue_number? (y/N)"
   read -r confirmation
   
   if [[ "$confirmation" =~ ^[Yy]$ ]]; then
@@ -185,7 +185,7 @@ delete_note() {
       echo "Note #$issue_number closed successfully."
     fi
   else
-    echo "Deletion canceled."
+    echo "Close canceled."
   fi
 }
 
@@ -252,14 +252,14 @@ case "$1" in
       comment_note "$@"
     fi
     ;;
-  delete)
+  close)
     shift
     if [[ -z "$1" ]]; then
       issue_number=$(_select_note_with_fzf)
       [[ -z "$issue_number" ]] && exit 0
-      delete_note "$issue_number"
+      close_note "$issue_number"
     else
-      delete_note "$@"
+      close_note "$@"
     fi
     ;;
   *)
