@@ -233,7 +233,22 @@ Fixes: $issue_url"
     _error "Failed to commit changes. Issue will not be closed."
   fi
 
-  echo "Commit successful! Closing issue #$issue_number..."
+  local commit_hash=$(git rev-parse HEAD)
+  local short_commit_hash=$(git rev-parse --short HEAD)
+  
+  echo "Commit successful! Adding commit reference to issue #$issue_number..."
+  
+  # Add commit hash as a comment to the issue
+  local comment_body="🔧 Fixed in commit: $commit_hash"
+  gh issue comment "$issue_number" --body "$comment_body" > /dev/null
+  
+  if [[ "$?" -ne 0 ]]; then
+    echo "Warning: Failed to add commit reference as comment to issue #$issue_number."
+  else
+    echo "Added commit reference as comment to issue #$issue_number."
+  fi
+  
+  echo "Closing issue #$issue_number..."
   gh issue close "$issue_number"
   
   if [[ "$?" -ne 0 ]]; then
@@ -241,7 +256,7 @@ Fixes: $issue_url"
     exit 1
   else
     echo "Issue #$issue_number closed successfully."
-    echo "Commit hash: $(git rev-parse --short HEAD)"
+    echo "Commit hash: $short_commit_hash"
   fi
 }
 
