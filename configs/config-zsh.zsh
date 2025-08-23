@@ -2,8 +2,8 @@
 # Zsh configuration
 
 HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
-HISTSIZE=2000
-SAVEHIST=5000
+HISTSIZE=9999
+SAVEHIST=9999
 setopt AUTO_CD
 setopt EXTENDED_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
@@ -41,6 +41,3 @@ zstyle ':completion:*' verbose true
 
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-
-echo `export GEM_HOME=$HOME/.gem` >> $HOME/.bashrc

@@ -172,10 +172,10 @@ comment_note() {
 }
 
 
-# Function to "delete" (close) a note
-delete_note() {
+# Function to "close" a note
+close_note() {
   local issue_number="$1"
-  echo "Are you sure you want to delete note #$issue_number? (y/N)"
+  echo "Are you sure you want to close note #$issue_number? (y/N)"
   read -r confirmation
   
   if [[ "$confirmation" =~ ^[Yy]$ ]]; then
@@ -187,7 +187,63 @@ delete_note() {
       echo "Note #$issue_number closed successfully."
     fi
   else
-    echo "Deletion canceled."
+    echo "Close canceled."
+  fi
+}
+
+# Function to commit all changes and close an issue
+close_with_commit() {
+  # Check if there are any changes to commit
+  if git diff --quiet && git diff --cached --quiet; then
+    _error "No changes to commit. Please make some changes first."
+  fi
+
+  echo "Selecting issue to close with commit..."
+  local issue_number=$(_select_note_with_fzf)
+  [[ -z "$issue_number" ]] && exit 0
+
+  echo "Fetching issue details for commit message..."
+  local issue_data=$(gh issue view "$issue_number" --json title,url)
+  local issue_title=$(echo "$issue_data" | jq -r '.title')
+  local issue_url=$(echo "$issue_data" | jq -r '.url')
+
+  if [[ -z "$issue_title" || -z "$issue_url" ]]; then
+    _error "Failed to fetch issue details for #$issue_number."
+  fi
+
+  echo "Enter commit message (or press Enter to use default):"
+  echo "Default: Fix: $issue_title"
+  read -r custom_message
+
+  local commit_message
+  if [[ -z "$custom_message" ]]; then
+    commit_message="Fix: $issue_title"
+  else
+    commit_message="$custom_message"
+  fi
+
+  # Add the issue URL to the commit message
+  commit_message="$commit_message
+
+Fixes: $issue_url"
+
+  echo "Committing changes..."
+  git add -A
+  git commit -m "$commit_message"
+  
+  if [[ "$?" -ne 0 ]]; then
+    _error "Failed to commit changes. Issue will not be closed."
+  fi
+
+  echo "Commit successful! Closing issue #$issue_number..."
+  gh issue close "$issue_number"
+  
+  if [[ "$?" -ne 0 ]]; then
+    echo "Warning: Commit was successful, but failed to close issue #$issue_number. You may need to close it manually."
+    exit 1
+  else
+    echo "Issue #$issue_number closed successfully."
+    echo "Commit hash: $(git rev-parse --short HEAD)"
   fi
 }
 
@@ -254,15 +310,18 @@ case "$1" in
       comment_note "$@"
     fi
     ;;
-  delete)
+  close)
     shift
     if [[ -z "$1" ]]; then
       issue_number=$(_select_note_with_fzf)
       [[ -z "$issue_number" ]] && exit 0
-      delete_note "$issue_number"
+      close_note "$issue_number"
     else
-      delete_note "$@"
+      close_note "$@"
     fi
+    ;;
+  closeWithCommit)
+    close_with_commit
     ;;
   *)
     echo "Usage: note <command> [arguments]"
@@ -274,6 +333,7 @@ case "$1" in
     echo "  open [<issue_number>] Open a note in your web browser. If no number is given, a selector will appear."
     echo "  edit [<issue_number>] Edit a specific note. If no number is given, a selector will appear."
     echo "  comment [<issue_number>] Add a comment to a specific note. If no number is given, a selector will appear."
-    echo "  delete [<issue_number>] Close a specific note. If no number is given, a selector will appear."
+    echo "  close [<issue_number>] Close a specific note. If no number is given, a selector will appear."
+    echo "  closeWithCommit       Commit all changes (like git commit -am) and close a selected issue."
     ;;
 esac
