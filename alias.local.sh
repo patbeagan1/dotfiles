@@ -8,6 +8,9 @@ if [ "$CURRENT_COMPUTER" = "framework" ]; then
     cal
     echo 
     restic_backup() { restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~; }  
+    alias monorepo='/home/patrick/repo/incubator/__monorepo/tools/monorepo'
+    alias m='monorepo'
+    source "/home/patrick/.local/share/swiftly/env.sh"
     intake() { echo "\n$@" >>~/repo/internal/Notes/Zettel/Intake.md; }
     declare -A holidays=(
        	 ["2023-12-25"]="Xmas 2023"
