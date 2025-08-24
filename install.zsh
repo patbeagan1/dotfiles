@@ -95,6 +95,29 @@ function source_alias() {
 safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
 
 ###########################################################
+# Completions
+###########################################################
+echo "🔧 Setting up Zsh completions..."
+local completions_dir="$LIBBEAGAN_HOME/completions"
+if [[ -d "$completions_dir" ]]; then
+    # Add completions directory to fpath if not already present
+    if [[ ! "$fpath" =~ "$completions_dir" ]]; then
+        fpath=("$completions_dir" $fpath)
+        echo "✅ Added completions directory to fpath"
+        
+        # Initialize completions if compinit is available
+        if command -v compinit >/dev/null 2>&1; then
+            autoload -Uz compinit && compinit
+            echo "✅ Initialized Zsh completions"
+        fi
+    else
+        echo "✅ Completions directory already in fpath"
+    fi
+else
+    echo "⚠️  Warning: Completions directory not found: $completions_dir"
+fi
+
+###########################################################
 # Dependencies
 ###########################################################
 echo "📦 Checking dependencies..."
@@ -102,3 +125,4 @@ safe_source "$LIBBEAGAN_HOME/dependencies.sh" "Dependencies"
 
 echo "🎉 libbeagan installation complete!"
 echo "   Type 'libbeagan_dependencies' to check for missing tools."
+echo "   Tab completion is available for supported commands."
