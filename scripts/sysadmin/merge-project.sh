@@ -31,6 +31,9 @@ merge-project () {
 		echo 'requires <repo> <default-branch>'
 		return 1
 	fi
+	if git remote | grep -q "^repo-$1$"; then
+		git remote remove repo-"$1"
+	fi
 	git remote add -f repo-"$1" git@github.com:patbeagan1/"$1".git
 	git merge repo-"$1"/"$2" --allow-unrelated-histories
 }
