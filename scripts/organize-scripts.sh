@@ -67,6 +67,7 @@ create_readme_template() {
     local language=""
     case "$script_ext" in
         "sh") language="bash" ;;
+        "zsh") language="zsh" ;;
         "py") language="python" ;;
         "js") language="javascript" ;;
         "lua") language="lua" ;;
@@ -78,7 +79,7 @@ create_readme_template() {
     local description=""
     if [[ -f "$script_path" ]]; then
         case "$script_ext" in
-            "sh"|"py"|"pl")
+            "sh"|"zsh"|"py"|"pl")
                 description=$(head -20 "$script_path" | grep -E "^#[^!]" | head -5 | sed 's/^# *//' | tr '\n' ' ' | sed 's/  */ /g' | trim || echo "")
                 ;;
             "js")
@@ -158,7 +159,7 @@ create_metadata() {
   "author": "$author",
   "license": "MIT",
   "type": "script",
-  "language": "$(case "$script_ext" in "sh") echo "bash" ;; "py") echo "python" ;; "js") echo "javascript" ;; "lua") echo "lua" ;; "exs") echo "elixir" ;; *) echo "$script_ext" ;; esac)",
+  "language": "$(case "$script_ext" in "sh") echo "bash" ;; "zsh") echo "zsh" ;; "py") echo "python" ;; "js") echo "javascript" ;; "lua") echo "lua" ;; "exs") echo "elixir" ;; *) echo "$script_ext" ;; esac)",
   "executable": "$script_name.$script_ext",
   "source_path": "source/$script_name/$script_name.$script_ext",
   "install_path": "dist/$script_name",
@@ -185,7 +186,7 @@ create_completion_stub() {
     if [[ -f "$script_path" ]]; then
         # Look for common help patterns
         case "$script_ext" in
-            "sh")
+            "sh"|"zsh")
                 help_options=$(grep -E "^\s*-[a-zA-Z]|\s*--[a-zA-Z-]+" "$script_path" | head -5 | sed 's/.*\(-[a-zA-Z]\|--[a-zA-Z-]\+\).*/\1/' | sort -u | tr '\n' ' ' || echo "")
                 usage_info=$(grep -E "^#.*[Uu]sage:" "$script_path" | head -1 | sed 's/^#.*[Uu]sage:\s*//' || echo "")
                 ;;
@@ -384,7 +385,7 @@ main() {
     echo
     
     # Process each script type
-    local file_patterns=("*.sh" "*.py" "*.js" "*.lua" "*.exs" "*.pl" "*.rb")
+    local file_patterns=("*.sh" "*.py" "*.js" "*.lua" "*.exs" "*.pl" "*.rb" "*.zsh")
     local total_processed=0
     
     for pattern in "${file_patterns[@]}"; do

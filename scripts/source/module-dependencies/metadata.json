@@ -1,0 +1,13 @@
+{
+  "name": "module-dependencies",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "zsh",
+  "executable": "module-dependencies.zsh",
+  "source_path": "source/module-dependencies/module-dependencies.zsh",
+  "install_path": "dist/module-dependencies",
+  "completion_path": "completions/_module-dependencies"
+}

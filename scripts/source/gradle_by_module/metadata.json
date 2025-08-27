@@ -1,0 +1,13 @@
+{
+  "name": "gradle_by_module",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "zsh",
+  "executable": "gradle_by_module.zsh",
+  "source_path": "source/gradle_by_module/gradle_by_module.zsh",
+  "install_path": "dist/gradle_by_module",
+  "completion_path": "completions/_gradle_by_module"
+}

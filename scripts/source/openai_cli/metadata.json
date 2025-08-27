@@ -5,9 +5,9 @@
   "author": "Generated",
   "license": "MIT",
   "type": "script",
-  "language": "python",
-  "executable": "openai_cli.py",
-  "source_path": "source/openai_cli/openai_cli.py",
+  "language": "zsh",
+  "executable": "openai_cli.zsh",
+  "source_path": "source/openai_cli/openai_cli.zsh",
   "install_path": "dist/openai_cli",
   "completion_path": "completions/_openai_cli"
 }

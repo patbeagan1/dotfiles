@@ -1,19 +1,17 @@
-#compdef openai_cli
+#compdef wgeti-polite
 
-# Zsh completion for openai_cli
+# Zsh completion for wgeti-polite
 # Generated automatically - customize as needed
 
 
-_openai_cli() {
+_wgeti-polite() {
     local context state line
     typeset -A opt_args
     
     _arguments -C \
         '(-h --help)'{-h,--help}'[Show help information]' \
         '(-v --version)'{-v,--version}'[Show version information]' \
-        '-d[Custom option]' \
-        '-H[Custom option]' \
-        '-T[Custom option]' \        '*::arg:_files'
+        '-r[Custom option]' \        '*::arg:_files'
 }
 
-_openai_cli "$@"
+_wgeti-polite "$@"

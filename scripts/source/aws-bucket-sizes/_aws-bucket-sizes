@@ -1,19 +1,19 @@
-#compdef openai_cli
+#compdef aws-bucket-sizes
 
-# Zsh completion for openai_cli
+# Zsh completion for aws-bucket-sizes
 # Generated automatically - customize as needed
 
 
-_openai_cli() {
+_aws-bucket-sizes() {
     local context state line
     typeset -A opt_args
     
     _arguments -C \
         '(-h --help)'{-h,--help}'[Show help information]' \
         '(-v --version)'{-v,--version}'[Show version information]' \
-        '-d[Custom option]' \
-        '-H[Custom option]' \
-        '-T[Custom option]' \        '*::arg:_files'
+        '---[Custom option]' \
+        '-r[Custom option]' \
+        '-s[Custom option]' \        '*::arg:_files'
 }
 
-_openai_cli "$@"
+_aws-bucket-sizes "$@"

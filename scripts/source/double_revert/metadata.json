@@ -1,0 +1,13 @@
+{
+  "name": "double_revert",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "zsh",
+  "executable": "double_revert.zsh",
+  "source_path": "source/double_revert/double_revert.zsh",
+  "install_path": "dist/double_revert",
+  "completion_path": "completions/_double_revert"
+}

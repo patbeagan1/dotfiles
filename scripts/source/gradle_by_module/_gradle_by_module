@@ -1,10 +1,10 @@
-#compdef openai_cli
+#compdef gradle_by_module
 
-# Zsh completion for openai_cli
+# Zsh completion for gradle_by_module
 # Generated automatically - customize as needed
 
 
-_openai_cli() {
+_gradle_by_module() {
     local context state line
     typeset -A opt_args
     
@@ -12,8 +12,8 @@ _openai_cli() {
         '(-h --help)'{-h,--help}'[Show help information]' \
         '(-v --version)'{-v,--version}'[Show version information]' \
         '-d[Custom option]' \
-        '-H[Custom option]' \
-        '-T[Custom option]' \        '*::arg:_files'
+        '-h[Custom option]' \
+        '-t[Custom option]' \        '*::arg:_files'
 }
 
-_openai_cli "$@"
+_gradle_by_module "$@"
