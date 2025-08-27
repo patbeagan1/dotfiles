@@ -7,18 +7,33 @@
 # 3. Move the script into its new directory
 # 4. Generate a template README for each script
 #
-# Usage: ./organize-scripts.sh [--dry-run]
+# Usage: ./organize-scripts.sh [--dry-run] [--publish]
 
 set -euo pipefail
 
 # Parse command line arguments
 DRY_RUN=false
-if [[ "${1:-}" == "--dry-run" ]]; then
-    DRY_RUN=true
-fi
+PUBLISH_MODE=false
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        --publish)
+            PUBLISH_MODE=true
+            ;;
+        *)
+            echo "Unknown argument: $arg"
+            echo "Usage: $0 [--dry-run] [--publish]"
+            exit 1
+            ;;
+    esac
+done
 
 SCRIPTS_ROOT="/home/patrick/repo/incubator/dotfiles/scripts"
 BACKUP_DIR="$SCRIPTS_ROOT/.backup-$(date +%Y%m%d_%H%M%S)"
+DIST_DIR="$SCRIPTS_ROOT/dist"
+COMPLETIONS_DIR="$SCRIPTS_ROOT/completions"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -102,6 +117,88 @@ EOF
     print_status "$GREEN" "  ✓ Created README.md"
 }
 
+# Function to create metadata.json for each script
+create_metadata() {
+    local script_path="$1"
+    local script_name="$2"
+    local script_dir="$3"
+    local script_ext="$4"
+    
+    local metadata_path="$script_dir/metadata.json"
+    
+    # Extract version from script if available
+    local version="1.0.0"
+    if [[ -f "$script_path" ]]; then
+        local version_line=$(grep -E "^#.*[Vv]ersion:?\s*[0-9]" "$script_path" | head -1 || echo "")
+        if [[ -n "$version_line" ]]; then
+            version=$(echo "$version_line" | sed -E 's/.*[Vv]ersion:?\s*([0-9][0-9.]*).*/\1/')
+        fi
+    fi
+    
+    # Extract author from script if available
+    local author="Generated"
+    if [[ -f "$script_path" ]]; then
+        local author_line=$(grep -E "^#.*[Aa]uthor:?\s*" "$script_path" | head -1 || echo "")
+        if [[ -n "$author_line" ]]; then
+            author=$(echo "$author_line" | sed -E 's/.*[Aa]uthor:?\s*(.*)/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        fi
+    fi
+    
+    # Extract description from README if it exists
+    local description="A utility script"
+    if [[ -f "$script_dir/README.md" ]]; then
+        description=$(grep -A 1 "## Description" "$script_dir/README.md" | tail -1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    fi
+    
+    cat > "$metadata_path" << EOF
+{
+  "name": "$script_name",
+  "version": "$version",
+  "description": "$description",
+  "author": "$author",
+  "license": "MIT",
+  "type": "script",
+  "language": "$(case "$script_ext" in "sh") echo "bash" ;; "py") echo "python" ;; "js") echo "javascript" ;; "lua") echo "lua" ;; "exs") echo "elixir" ;; *) echo "$script_ext" ;; esac)",
+  "executable": "$script_name.$script_ext",
+  "install_path": "dist/$script_name",
+  "completion_path": "completions/_$script_name"
+}
+EOF
+    
+    print_status "$GREEN" "  ✓ Created metadata.json"
+}
+
+# Function to create zsh completion stub
+create_completion_stub() {
+    local script_name="$1"
+    local script_dir="$2"
+    local script_ext="$3"
+    
+    local completion_path="$script_dir/_$script_name"
+    
+    cat > "$completion_path" << EOF
+#compdef $script_name
+
+# Zsh completion for $script_name
+# Generated automatically - customize as needed
+
+_$script_name() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \\
+        '(-h --help)'{-h,--help}'[Show help information]' \\
+        '(-v --version)'{-v,--version}'[Show version information]' \\
+        '*::arg:_files'
+}
+
+_$script_name "\$@"
+EOF
+    
+    print_status "$GREEN" "  ✓ Created zsh completion stub"
+}
+
+
 # Function to process a single script file
 process_script() {
     local script_path="$1"
@@ -165,6 +262,27 @@ process_script() {
         print_status "$YELLOW" "  - README.md already exists, skipping"
     fi
     
+    # Create metadata.json
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_status "$BLUE" "  [DRY RUN] Would create metadata.json"
+    else
+        create_metadata "$script_path" "$script_name" "$target_dir" "$script_ext"
+    fi
+    
+    # Create zsh completion stub
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_status "$BLUE" "  [DRY RUN] Would create zsh completion stub"
+    else
+        create_completion_stub "$script_name" "$target_dir" "$script_ext"
+    fi
+    
+    # Create install script
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_status "$BLUE" "  [DRY RUN] Would create install.sh"
+    else
+        create_install_script "$script_name" "$target_dir" "$script_ext"
+    fi
+    
     # Make script executable
     if [[ "$DRY_RUN" == "true" ]]; then
         print_status "$BLUE" "  [DRY RUN] Would make script executable"
@@ -173,7 +291,40 @@ process_script() {
         print_status "$GREEN" "  ✓ Made script executable"
     fi
     
+    # Handle publish mode - create symlinks in dist and completions directories
+    if [[ "$PUBLISH_MODE" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
+        publish_script "$script_name" "$target_dir" "$script_full_name"
+    elif [[ "$PUBLISH_MODE" == "true" ]] && [[ "$DRY_RUN" == "true" ]]; then
+        print_status "$BLUE" "  [DRY RUN] Would publish script to dist directory"
+    fi
+    
     echo
+}
+
+# Function to publish a script (create symlinks in dist and completions)
+publish_script() {
+    local script_name="$1"
+    local script_dir="$2"
+    local script_full_name="$3"
+    
+    # Create dist directory if it doesn't exist
+    mkdir -p "$DIST_DIR"
+    mkdir -p "$COMPLETIONS_DIR"
+    
+    # Create symlink in dist directory
+    local dist_link="$DIST_DIR/$script_name"
+    if [[ ! -L "$dist_link" ]]; then
+        ln -sf "../$script_name/$script_full_name" "$dist_link"
+        print_status "$GREEN" "  ✓ Published to dist/$script_name"
+    fi
+    
+    # Create symlink for completion in completions directory
+    local completion_source="$script_dir/_$script_name"
+    local completion_link="$COMPLETIONS_DIR/_$script_name"
+    if [[ -f "$completion_source" ]] && [[ ! -L "$completion_link" ]]; then
+        ln -sf "../$script_name/_$script_name" "$completion_link"
+        print_status "$GREEN" "  ✓ Published completion to completions/_$script_name"
+    fi
 }
 
 # Function to create backup
@@ -204,6 +355,9 @@ main() {
     print_status "$BLUE" "=== Script Organization Tool ==="
     if [[ "$DRY_RUN" == "true" ]]; then
         print_status "$YELLOW" "*** DRY RUN MODE - No changes will be made ***"
+    fi
+    if [[ "$PUBLISH_MODE" == "true" ]]; then
+        print_status "$YELLOW" "*** PUBLISH MODE - Creating dist and completions symlinks ***"
     fi
     print_status "$BLUE" "This will organize all scripts into individual directories with README templates"
     echo
@@ -246,10 +400,25 @@ main() {
     print_status "$GREEN" "=== Organization Complete ==="
     print_status "$GREEN" "✓ Processed $total_processed script files"
     print_status "$GREEN" "✓ Created individual directories with README templates"
-    print_status "$GREEN" "✓ Backup created at: $BACKUP_DIR"
+    print_status "$GREEN" "✓ Generated metadata.json for each script"
+    print_status "$GREEN" "✓ Created zsh completion stubs"
+    print_status "$GREEN" "✓ Generated install.sh scripts"
+    if [[ "$DRY_RUN" == "false" ]]; then
+        print_status "$GREEN" "✓ Backup created at: $BACKUP_DIR"
+    fi
+    if [[ "$PUBLISH_MODE" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
+        print_status "$GREEN" "✓ Published scripts to dist/ directory"
+        print_status "$GREEN" "✓ Published completions to completions/ directory"
+    fi
     echo
     print_status "$BLUE" "You can now find each script in its own directory with documentation."
-    print_status "$BLUE" "Remember to update the README files with more specific information about each script."
+    print_status "$BLUE" "Remember to update the README files and completions with more specific information."
+    if [[ "$PUBLISH_MODE" == "true" ]]; then
+        echo
+        print_status "$BLUE" "Published scripts are available in:"
+        print_status "$BLUE" "  - dist/ directory (for PATH integration)"
+        print_status "$BLUE" "  - completions/ directory (for zsh completions)"
+    fi
 }
 
 # Run main function

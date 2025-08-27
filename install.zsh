@@ -49,27 +49,38 @@ safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
 # Add script directories to PATH
 ###########################################################
 echo "🔧 Adding script directories to PATH..."
-local script_dirs=(
-    "android"
-    "dev"
-    "documentation"
-    "file_management"
-    "image_manipulation"
-    "math"
-    "sysadmin"
-    "util"
-    "vcs"
-)
+# Add dist directory to PATH (contains symlinks to all scripts)
+local dist_path="$LIBBEAGAN_HOME/scripts/dist"
+if [[ -d "$dist_path" ]]; then
+    export PATH="$PATH:$dist_path"
+    echo "✅ Added scripts dist directory to PATH"
+else
+    echo "⚠️  Warning: Scripts dist directory not found: $dist_path"
+    echo "   Run 'organize-scripts.sh --publish' to create it"
+    
+    # Fallback: add individual script directories for backward compatibility
+    local script_dirs=(
+        "android"
+        "dev"
+        "documentation"
+        "file_management"
+        "image_manipulation"
+        "math"
+        "sysadmin"
+        "util"
+        "vcs"
+    )
 
-for dir in "${script_dirs[@]}"; do
-    local script_path="$LIBBEAGAN_HOME/scripts/$dir"
-    if [[ -d "$script_path" ]]; then
-        export PATH="$PATH:$script_path"
-        echo "✅ Added to PATH: $dir"
-    else
-        echo "⚠️  Warning: Script directory not found: $script_path"
-    fi
-done
+    for dir in "${script_dirs[@]}"; do
+        local script_path="$LIBBEAGAN_HOME/scripts/$dir"
+        if [[ -d "$script_path" ]]; then
+            export PATH="$PATH:$script_path"
+            echo "✅ Added to PATH: $dir"
+        else
+            echo "⚠️  Warning: Script directory not found: $script_path"
+        fi
+    done
+fi
 
 ###########################################################
 # Aliases
