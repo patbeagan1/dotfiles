@@ -328,29 +328,6 @@ publish_script() {
     fi
 }
 
-# Function to create backup
-create_backup() {
-    if [[ "$DRY_RUN" == "true" ]]; then
-        print_status "$BLUE" "[DRY RUN] Would create backup at: $BACKUP_DIR"
-        echo
-        return
-    fi
-    
-    print_status "$BLUE" "Creating backup at: $BACKUP_DIR"
-    mkdir -p "$BACKUP_DIR"
-    
-    # Find all script files and copy them to backup
-    find "$SCRIPTS_ROOT" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.js" -o -name "*.lua" -o -name "*.exs" -o -name "*.pl" -o -name "*.rb" \) ! -path "$BACKUP_DIR/*" ! -name "organize-scripts.sh" | while read -r file; do
-        local rel_path="${file#$SCRIPTS_ROOT/}"
-        local backup_file="$BACKUP_DIR/$rel_path"
-        mkdir -p "$(dirname "$backup_file")"
-        cp "$file" "$backup_file"
-    done
-    
-    print_status "$GREEN" "✓ Backup created successfully"
-    echo
-}
-
 # Main execution
 main() {
     print_status "$BLUE" "=== Script Organization Tool ==="
@@ -370,9 +347,6 @@ main() {
     fi
     
     cd "$SCRIPTS_ROOT"
-    
-    # Create backup
-    create_backup
     
     # Find and process all script files
     print_status "$BLUE" "Processing script files..."
