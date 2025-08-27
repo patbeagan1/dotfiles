@@ -1,0 +1,13 @@
+{
+  "name": "mtg-booster",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "javascript",
+  "executable": "mtg-booster.js",
+  "source_path": "source/mtg-booster/mtg-booster.js",
+  "install_path": "dist/mtg-booster",
+  "completion_path": "completions/_mtg-booster"
+}

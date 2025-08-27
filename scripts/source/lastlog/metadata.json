@@ -1,0 +1,13 @@
+{
+  "name": "lastlog",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "lastlog.sh",
+  "source_path": "source/lastlog/lastlog.sh",
+  "install_path": "dist/lastlog",
+  "completion_path": "completions/_lastlog"
+}

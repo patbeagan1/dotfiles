@@ -1,0 +1,13 @@
+{
+  "name": "ebook-from",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "ebook-from.sh",
+  "source_path": "source/ebook-from/ebook-from.sh",
+  "install_path": "dist/ebook-from",
+  "completion_path": "completions/_ebook-from"
+}

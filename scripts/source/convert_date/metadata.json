@@ -1,0 +1,13 @@
+{
+  "name": "convert_date",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "elixir",
+  "executable": "convert_date.exs",
+  "source_path": "source/convert_date/convert_date.exs",
+  "install_path": "dist/convert_date",
+  "completion_path": "completions/_convert_date"
+}

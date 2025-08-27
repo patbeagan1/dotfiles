@@ -1,0 +1,13 @@
+{
+  "name": "dot2pdf",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "dot2pdf.sh",
+  "source_path": "source/dot2pdf/dot2pdf.sh",
+  "install_path": "dist/dot2pdf",
+  "completion_path": "completions/_dot2pdf"
+}

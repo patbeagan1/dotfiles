@@ -1,0 +1,13 @@
+{
+  "name": "image-stitch",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "image-stitch.py",
+  "source_path": "source/image-stitch/image-stitch.py",
+  "install_path": "dist/image-stitch",
+  "completion_path": "completions/_image-stitch"
+}

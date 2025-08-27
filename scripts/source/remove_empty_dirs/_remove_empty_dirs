@@ -1,0 +1,16 @@
+#compdef remove_empty_dirs
+
+# Zsh completion for remove_empty_dirs
+# Generated automatically - customize as needed
+
+_remove_empty_dirs() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_remove_empty_dirs "$@"

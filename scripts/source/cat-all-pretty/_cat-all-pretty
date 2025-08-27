@@ -1,0 +1,16 @@
+#compdef cat-all-pretty
+
+# Zsh completion for cat-all-pretty
+# Generated automatically - customize as needed
+
+_cat-all-pretty() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_cat-all-pretty "$@"

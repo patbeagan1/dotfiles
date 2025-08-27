@@ -1,0 +1,13 @@
+{
+  "name": "pause",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "pause.sh",
+  "source_path": "source/pause/pause.sh",
+  "install_path": "dist/pause",
+  "completion_path": "completions/_pause"
+}

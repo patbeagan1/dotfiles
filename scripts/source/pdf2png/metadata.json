@@ -1,0 +1,13 @@
+{
+  "name": "pdf2png",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "pdf2png.sh",
+  "source_path": "source/pdf2png/pdf2png.sh",
+  "install_path": "dist/pdf2png",
+  "completion_path": "completions/_pdf2png"
+}

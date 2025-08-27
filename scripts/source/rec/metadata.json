@@ -1,0 +1,13 @@
+{
+  "name": "rec",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "rec.sh",
+  "source_path": "source/rec/rec.sh",
+  "install_path": "dist/rec",
+  "completion_path": "completions/_rec"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "svn",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "svn.sh",
+  "source_path": "source/svn/svn.sh",
+  "install_path": "dist/svn",
+  "completion_path": "completions/_svn"
+}

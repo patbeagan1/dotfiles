@@ -1,0 +1,13 @@
+{
+  "name": "fix_script",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "fix_script.sh",
+  "source_path": "source/fix_script/fix_script.sh",
+  "install_path": "dist/fix_script",
+  "completion_path": "completions/_fix_script"
+}

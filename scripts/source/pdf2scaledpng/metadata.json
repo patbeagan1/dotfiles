@@ -1,0 +1,13 @@
+{
+  "name": "pdf2scaledpng",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "pdf2scaledpng.sh",
+  "source_path": "source/pdf2scaledpng/pdf2scaledpng.sh",
+  "install_path": "dist/pdf2scaledpng",
+  "completion_path": "completions/_pdf2scaledpng"
+}

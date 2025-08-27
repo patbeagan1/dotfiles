@@ -1,0 +1,13 @@
+{
+  "name": "imagefix",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "imagefix.sh",
+  "source_path": "source/imagefix/imagefix.sh",
+  "install_path": "dist/imagefix",
+  "completion_path": "completions/_imagefix"
+}

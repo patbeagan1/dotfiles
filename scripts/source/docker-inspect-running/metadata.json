@@ -1,0 +1,13 @@
+{
+  "name": "docker-inspect-running",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "docker-inspect-running.sh",
+  "source_path": "source/docker-inspect-running/docker-inspect-running.sh",
+  "install_path": "dist/docker-inspect-running",
+  "completion_path": "completions/_docker-inspect-running"
+}

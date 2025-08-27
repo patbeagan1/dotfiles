@@ -1,0 +1,16 @@
+#compdef install-deb
+
+# Zsh completion for install-deb
+# Generated automatically - customize as needed
+
+_install-deb() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_install-deb "$@"

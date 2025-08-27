@@ -1,0 +1,13 @@
+{
+  "name": "autogit",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "autogit.py",
+  "source_path": "source/autogit/autogit.py",
+  "install_path": "dist/autogit",
+  "completion_path": "completions/_autogit"
+}

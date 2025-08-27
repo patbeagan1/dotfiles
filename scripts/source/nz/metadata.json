@@ -1,0 +1,13 @@
+{
+  "name": "nz",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "nz.sh",
+  "source_path": "source/nz/nz.sh",
+  "install_path": "dist/nz",
+  "completion_path": "completions/_nz"
+}

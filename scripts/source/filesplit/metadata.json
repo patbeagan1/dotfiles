@@ -1,0 +1,13 @@
+{
+  "name": "filesplit",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "filesplit.py",
+  "source_path": "source/filesplit/filesplit.py",
+  "install_path": "dist/filesplit",
+  "completion_path": "completions/_filesplit"
+}

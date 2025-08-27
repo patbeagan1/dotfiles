@@ -1,0 +1,13 @@
+{
+  "name": "crossview_to_parallel",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "crossview_to_parallel.sh",
+  "source_path": "source/crossview_to_parallel/crossview_to_parallel.sh",
+  "install_path": "dist/crossview_to_parallel",
+  "completion_path": "completions/_crossview_to_parallel"
+}

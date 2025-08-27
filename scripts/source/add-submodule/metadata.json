@@ -1,0 +1,13 @@
+{
+  "name": "add-submodule",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "add-submodule.sh",
+  "source_path": "source/add-submodule/add-submodule.sh",
+  "install_path": "dist/add-submodule",
+  "completion_path": "completions/_add-submodule"
+}

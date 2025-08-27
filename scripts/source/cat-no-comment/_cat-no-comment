@@ -1,0 +1,16 @@
+#compdef cat-no-comment
+
+# Zsh completion for cat-no-comment
+# Generated automatically - customize as needed
+
+_cat-no-comment() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_cat-no-comment "$@"

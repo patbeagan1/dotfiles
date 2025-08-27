@@ -1,0 +1,13 @@
+{
+  "name": "xmas",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "xmas.py",
+  "source_path": "source/xmas/xmas.py",
+  "install_path": "dist/xmas",
+  "completion_path": "completions/_xmas"
+}

@@ -21,8 +21,8 @@ This tool organizes scripts into individual directories with complete publishing
 ## What It Does
 
 ### 1. Script Organization
-- Creates individual directories for each script (flat structure under scripts/)
-- Moves scripts from category subdirectories to their own directories
+- Creates individual directories for each script (flat structure under scripts/source/)
+- Moves scripts from category subdirectories to their own source directories
 - Maintains backup of original structure
 
 ### 2. Documentation Generation
@@ -53,26 +53,25 @@ After organization:
 scripts/
 ├── organize-scripts.sh          # This tool
 ├── README-organize.md           # This documentation
+├── source/                      # All organized scripts
+│   ├── pasteToEmulator/        # Individual script directory
+│   │   ├── pasteToEmulator.sh  # The actual script
+│   │   ├── README.md           # Documentation
+│   │   ├── metadata.json       # Package metadata
+│   │   └── _pasteToEmulator    # Zsh completion
+│   └── deeplink/
+│       ├── deeplink.sh
+│       ├── README.md
+│       ├── metadata.json
+│       └── _deeplink
 ├── dist/                        # Symlinks to all scripts (for PATH)
-│   ├── pasteToEmulator -> ../pasteToEmulator/pasteToEmulator.sh
-│   ├── deeplink -> ../deeplink/deeplink.sh
+│   ├── pasteToEmulator -> ../source/pasteToEmulator/pasteToEmulator.sh
+│   ├── deeplink -> ../source/deeplink/deeplink.sh
 │   └── ...
-├── completions/                 # Symlinks to all completions (for zsh)
-│   ├── _pasteToEmulator -> ../pasteToEmulator/_pasteToEmulator
-│   ├── _deeplink -> ../deeplink/_deeplink
-│   └── ...
-├── pasteToEmulator/            # Individual script directory
-│   ├── pasteToEmulator.sh      # The actual script
-│   ├── README.md               # Documentation
-│   ├── metadata.json           # Package metadata
-│   ├── _pasteToEmulator        # Zsh completion
-│   └── install.sh              # Installation script
-└── deeplink/
-    ├── deeplink.sh
-    ├── README.md
-    ├── metadata.json
-    ├── _deeplink
-    └── install.sh
+└── completions/                 # Symlinks to all completions (for zsh)
+    ├── _pasteToEmulator -> ../source/pasteToEmulator/_pasteToEmulator
+    ├── _deeplink -> ../source/deeplink/_deeplink
+    └── ...
 ```
 
 ## Package Distribution

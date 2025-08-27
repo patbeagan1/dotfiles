@@ -1,0 +1,13 @@
+{
+  "name": "emoji_block_text",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "javascript",
+  "executable": "emoji_block_text.js",
+  "source_path": "source/emoji_block_text/emoji_block_text.js",
+  "install_path": "dist/emoji_block_text",
+  "completion_path": "completions/_emoji_block_text"
+}

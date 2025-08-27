@@ -1,0 +1,13 @@
+{
+  "name": "compare_directories",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "compare_directories.py",
+  "source_path": "source/compare_directories/compare_directories.py",
+  "install_path": "dist/compare_directories",
+  "completion_path": "completions/_compare_directories"
+}

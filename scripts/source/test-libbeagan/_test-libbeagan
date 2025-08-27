@@ -1,0 +1,16 @@
+#compdef test-libbeagan
+
+# Zsh completion for test-libbeagan
+# Generated automatically - customize as needed
+
+_test-libbeagan() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_test-libbeagan "$@"

@@ -1,0 +1,13 @@
+{
+  "name": "prev-command",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "prev-command.sh",
+  "source_path": "source/prev-command/prev-command.sh",
+  "install_path": "dist/prev-command",
+  "completion_path": "completions/_prev-command"
+}

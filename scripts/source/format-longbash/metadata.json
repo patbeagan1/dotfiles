@@ -1,0 +1,13 @@
+{
+  "name": "format-longbash",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "javascript",
+  "executable": "format-longbash.js",
+  "source_path": "source/format-longbash/format-longbash.js",
+  "install_path": "dist/format-longbash",
+  "completion_path": "completions/_format-longbash"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "cputemp-mac",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "cputemp-mac.sh",
+  "source_path": "source/cputemp-mac/cputemp-mac.sh",
+  "install_path": "dist/cputemp-mac",
+  "completion_path": "completions/_cputemp-mac"
+}

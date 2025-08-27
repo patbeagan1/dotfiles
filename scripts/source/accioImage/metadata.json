@@ -1,0 +1,13 @@
+{
+  "name": "accioImage",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "accioImage.py",
+  "source_path": "source/accioImage/accioImage.py",
+  "install_path": "dist/accioImage",
+  "completion_path": "completions/_accioImage"
+}

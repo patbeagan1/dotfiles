@@ -1,0 +1,13 @@
+{
+  "name": "remove_empty_dirs",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "remove_empty_dirs.sh",
+  "source_path": "source/remove_empty_dirs/remove_empty_dirs.sh",
+  "install_path": "dist/remove_empty_dirs",
+  "completion_path": "completions/_remove_empty_dirs"
+}

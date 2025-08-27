@@ -1,0 +1,13 @@
+{
+  "name": "cbr-show",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "cbr-show.sh",
+  "source_path": "source/cbr-show/cbr-show.sh",
+  "install_path": "dist/cbr-show",
+  "completion_path": "completions/_cbr-show"
+}

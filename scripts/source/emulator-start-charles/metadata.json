@@ -1,0 +1,13 @@
+{
+  "name": "emulator-start-charles",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "emulator-start-charles.sh",
+  "source_path": "source/emulator-start-charles/emulator-start-charles.sh",
+  "install_path": "dist/emulator-start-charles",
+  "completion_path": "completions/_emulator-start-charles"
+}

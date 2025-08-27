@@ -1,0 +1,13 @@
+{
+  "name": "convert-date",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "lua",
+  "executable": "convert-date.lua",
+  "source_path": "source/convert-date/convert-date.lua",
+  "install_path": "dist/convert-date",
+  "completion_path": "completions/_convert-date"
+}

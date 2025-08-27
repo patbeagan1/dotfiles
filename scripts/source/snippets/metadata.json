@@ -1,0 +1,13 @@
+{
+  "name": "snippets",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "snippets.sh",
+  "source_path": "source/snippets/snippets.sh",
+  "install_path": "dist/snippets",
+  "completion_path": "completions/_snippets"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "lastmod",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "lastmod.sh",
+  "source_path": "source/lastmod/lastmod.sh",
+  "install_path": "dist/lastmod",
+  "completion_path": "completions/_lastmod"
+}

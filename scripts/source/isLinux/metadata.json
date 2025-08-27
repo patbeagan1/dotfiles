@@ -1,0 +1,13 @@
+{
+  "name": "isLinux",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "isLinux.sh",
+  "source_path": "source/isLinux/isLinux.sh",
+  "install_path": "dist/isLinux",
+  "completion_path": "completions/_isLinux"
+}

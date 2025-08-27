@@ -1,0 +1,13 @@
+{
+  "name": "img_wiggle_parallel",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "img_wiggle_parallel.sh",
+  "source_path": "source/img_wiggle_parallel/img_wiggle_parallel.sh",
+  "install_path": "dist/img_wiggle_parallel",
+  "completion_path": "completions/_img_wiggle_parallel"
+}

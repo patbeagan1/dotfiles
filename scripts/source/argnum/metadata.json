@@ -1,0 +1,13 @@
+{
+  "name": "argnum",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "argnum.sh",
+  "source_path": "source/argnum/argnum.sh",
+  "install_path": "dist/argnum",
+  "completion_path": "completions/_argnum"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "search-ddg-from-file",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "search-ddg-from-file.sh",
+  "source_path": "source/search-ddg-from-file/search-ddg-from-file.sh",
+  "install_path": "dist/search-ddg-from-file",
+  "completion_path": "completions/_search-ddg-from-file"
+}

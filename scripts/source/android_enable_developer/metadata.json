@@ -1,0 +1,13 @@
+{
+  "name": "android_enable_developer",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "android_enable_developer.sh",
+  "source_path": "source/android_enable_developer/android_enable_developer.sh",
+  "install_path": "dist/android_enable_developer",
+  "completion_path": "completions/_android_enable_developer"
+}

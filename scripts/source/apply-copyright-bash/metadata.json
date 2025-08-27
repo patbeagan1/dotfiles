@@ -1,0 +1,13 @@
+{
+  "name": "apply-copyright-bash",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "apply-copyright-bash.sh",
+  "source_path": "source/apply-copyright-bash/apply-copyright-bash.sh",
+  "install_path": "dist/apply-copyright-bash",
+  "completion_path": "completions/_apply-copyright-bash"
+}

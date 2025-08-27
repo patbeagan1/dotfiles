@@ -1,0 +1,13 @@
+{
+  "name": "note",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "lua",
+  "executable": "note.lua",
+  "source_path": "source/note/note.lua",
+  "install_path": "dist/note",
+  "completion_path": "completions/_note"
+}

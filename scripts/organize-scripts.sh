@@ -32,6 +32,7 @@ done
 
 SCRIPTS_ROOT="/home/patrick/repo/incubator/dotfiles/scripts"
 BACKUP_DIR="$SCRIPTS_ROOT/.backup-$(date +%Y%m%d_%H%M%S)"
+SOURCE_DIR="$SCRIPTS_ROOT/source"
 DIST_DIR="$SCRIPTS_ROOT/dist"
 COMPLETIONS_DIR="$SCRIPTS_ROOT/completions"
 
@@ -160,6 +161,7 @@ create_metadata() {
   "type": "script",
   "language": "$(case "$script_ext" in "sh") echo "bash" ;; "py") echo "python" ;; "js") echo "javascript" ;; "lua") echo "lua" ;; "exs") echo "elixir" ;; *) echo "$script_ext" ;; esac)",
   "executable": "$script_name.$script_ext",
+  "source_path": "source/$script_name/$script_name.$script_ext",
   "install_path": "dist/$script_name",
   "completion_path": "completions/_$script_name"
 }
@@ -224,18 +226,24 @@ process_script() {
         return
     fi
     
-    # Determine target directory (flat structure under scripts/)
-    local target_dir="$SCRIPTS_ROOT/$script_name"
+    # Determine target directory (flat structure under scripts/source/)
+    local target_dir="$SOURCE_DIR/$script_name"
     
     print_status "$BLUE" "Processing: $relative_path"
+    
+    # Create source directory if needed
+    if [[ "$DRY_RUN" == "false" ]] && [[ ! -d "$SOURCE_DIR" ]]; then
+        mkdir -p "$SOURCE_DIR"
+        print_status "$GREEN" "  ✓ Created source directory"
+    fi
     
     # Create target directory
     if [[ ! -d "$target_dir" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
-            print_status "$BLUE" "  [DRY RUN] Would create directory: $script_name/"
+            print_status "$BLUE" "  [DRY RUN] Would create directory: source/$script_name/"
         else
             mkdir -p "$target_dir"
-            print_status "$GREEN" "  ✓ Created directory: $script_name/"
+            print_status "$GREEN" "  ✓ Created directory: source/$script_name/"
         fi
     fi
     
@@ -243,10 +251,10 @@ process_script() {
     local new_script_path="$target_dir/$script_full_name"
     if [[ "$script_path" != "$new_script_path" ]]; then
         if [[ "$DRY_RUN" == "true" ]]; then
-            print_status "$BLUE" "  [DRY RUN] Would move script to: $script_name/$script_full_name"
+            print_status "$BLUE" "  [DRY RUN] Would move script to: source/$script_name/$script_full_name"
         else
             mv "$script_path" "$new_script_path"
-            print_status "$GREEN" "  ✓ Moved script to: $script_name/$script_full_name"
+            print_status "$GREEN" "  ✓ Moved script to: source/$script_name/$script_full_name"
         fi
     fi
     
@@ -275,14 +283,7 @@ process_script() {
     else
         create_completion_stub "$script_name" "$target_dir" "$script_ext"
     fi
-    
-    # Create install script
-    if [[ "$DRY_RUN" == "true" ]]; then
-        print_status "$BLUE" "  [DRY RUN] Would create install.sh"
-    else
-        create_install_script "$script_name" "$target_dir" "$script_ext"
-    fi
-    
+
     # Make script executable
     if [[ "$DRY_RUN" == "true" ]]; then
         print_status "$BLUE" "  [DRY RUN] Would make script executable"
@@ -314,7 +315,7 @@ publish_script() {
     # Create symlink in dist directory
     local dist_link="$DIST_DIR/$script_name"
     if [[ ! -L "$dist_link" ]]; then
-        ln -sf "../$script_name/$script_full_name" "$dist_link"
+        ln -sf "../source/$script_name/$script_full_name" "$dist_link"
         print_status "$GREEN" "  ✓ Published to dist/$script_name"
     fi
     
@@ -322,7 +323,7 @@ publish_script() {
     local completion_source="$script_dir/_$script_name"
     local completion_link="$COMPLETIONS_DIR/_$script_name"
     if [[ -f "$completion_source" ]] && [[ ! -L "$completion_link" ]]; then
-        ln -sf "../$script_name/_$script_name" "$completion_link"
+        ln -sf "../source/$script_name/_$script_name" "$completion_link"
         print_status "$GREEN" "  ✓ Published completion to completions/_$script_name"
     fi
 }

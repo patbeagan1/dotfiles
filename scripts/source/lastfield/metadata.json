@@ -1,0 +1,13 @@
+{
+  "name": "lastfield",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "lastfield.sh",
+  "source_path": "source/lastfield/lastfield.sh",
+  "install_path": "dist/lastfield",
+  "completion_path": "completions/_lastfield"
+}

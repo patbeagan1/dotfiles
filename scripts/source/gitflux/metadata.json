@@ -1,0 +1,13 @@
+{
+  "name": "gitflux",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "gitflux.sh",
+  "source_path": "source/gitflux/gitflux.sh",
+  "install_path": "dist/gitflux",
+  "completion_path": "completions/_gitflux"
+}

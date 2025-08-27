@@ -1,0 +1,13 @@
+{
+  "name": "gallery",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "gallery.sh",
+  "source_path": "source/gallery/gallery.sh",
+  "install_path": "dist/gallery",
+  "completion_path": "completions/_gallery"
+}

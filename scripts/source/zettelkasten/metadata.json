@@ -1,0 +1,13 @@
+{
+  "name": "zettelkasten",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "zettelkasten.py",
+  "source_path": "source/zettelkasten/zettelkasten.py",
+  "install_path": "dist/zettelkasten",
+  "completion_path": "completions/_zettelkasten"
+}

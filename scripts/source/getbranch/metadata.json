@@ -1,0 +1,13 @@
+{
+  "name": "getbranch",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "getbranch.sh",
+  "source_path": "source/getbranch/getbranch.sh",
+  "install_path": "dist/getbranch",
+  "completion_path": "completions/_getbranch"
+}

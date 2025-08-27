@@ -1,0 +1,13 @@
+{
+  "name": "img_gif_to_spritesheet",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "img_gif_to_spritesheet.sh",
+  "source_path": "source/img_gif_to_spritesheet/img_gif_to_spritesheet.sh",
+  "install_path": "dist/img_gif_to_spritesheet",
+  "completion_path": "completions/_img_gif_to_spritesheet"
+}

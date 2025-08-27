@@ -1,0 +1,13 @@
+{
+  "name": "partify",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Sean Ezrol",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "partify.sh",
+  "source_path": "source/partify/partify.sh",
+  "install_path": "dist/partify",
+  "completion_path": "completions/_partify"
+}

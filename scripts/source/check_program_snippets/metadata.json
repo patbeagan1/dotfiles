@@ -1,0 +1,13 @@
+{
+  "name": "check_program_snippets",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "check_program_snippets.sh",
+  "source_path": "source/check_program_snippets/check_program_snippets.sh",
+  "install_path": "dist/check_program_snippets",
+  "completion_path": "completions/_check_program_snippets"
+}

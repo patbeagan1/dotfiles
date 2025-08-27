@@ -1,0 +1,13 @@
+{
+  "name": "bcommit",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "bcommit.sh",
+  "source_path": "source/bcommit/bcommit.sh",
+  "install_path": "dist/bcommit",
+  "completion_path": "completions/_bcommit"
+}

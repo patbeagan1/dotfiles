@@ -1,0 +1,13 @@
+{
+  "name": "note-aggron",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "note-aggron.sh",
+  "source_path": "source/note-aggron/note-aggron.sh",
+  "install_path": "dist/note-aggron",
+  "completion_path": "completions/_note-aggron"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "lookbehind",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "lookbehind.sh",
+  "source_path": "source/lookbehind/lookbehind.sh",
+  "install_path": "dist/lookbehind",
+  "completion_path": "completions/_lookbehind"
+}

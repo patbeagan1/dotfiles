@@ -1,0 +1,16 @@
+#compdef trackusage-impl
+
+# Zsh completion for trackusage-impl
+# Generated automatically - customize as needed
+
+_trackusage-impl() {
+    local context state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '*::arg:_files'
+}
+
+_trackusage-impl "$@"

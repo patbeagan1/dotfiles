@@ -1,0 +1,13 @@
+{
+  "name": "vid-compress",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "vid-compress.sh",
+  "source_path": "source/vid-compress/vid-compress.sh",
+  "install_path": "dist/vid-compress",
+  "completion_path": "completions/_vid-compress"
+}

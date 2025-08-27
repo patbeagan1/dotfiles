@@ -1,0 +1,13 @@
+{
+  "name": "mountcd",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "mountcd.sh",
+  "source_path": "source/mountcd/mountcd.sh",
+  "install_path": "dist/mountcd",
+  "completion_path": "completions/_mountcd"
+}

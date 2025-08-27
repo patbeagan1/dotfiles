@@ -1,0 +1,13 @@
+{
+  "name": "android-dump",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "android-dump.sh",
+  "source_path": "source/android-dump/android-dump.sh",
+  "install_path": "dist/android-dump",
+  "completion_path": "completions/_android-dump"
+}

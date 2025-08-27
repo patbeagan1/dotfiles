@@ -1,0 +1,13 @@
+{
+  "name": "scan-local-ports",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "scan-local-ports.sh",
+  "source_path": "source/scan-local-ports/scan-local-ports.sh",
+  "install_path": "dist/scan-local-ports",
+  "completion_path": "completions/_scan-local-ports"
+}

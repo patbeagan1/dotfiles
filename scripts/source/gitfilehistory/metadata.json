@@ -1,0 +1,13 @@
+{
+  "name": "gitfilehistory",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "gitfilehistory.sh",
+  "source_path": "source/gitfilehistory/gitfilehistory.sh",
+  "install_path": "dist/gitfilehistory",
+  "completion_path": "completions/_gitfilehistory"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "check_program",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "check_program.py",
+  "source_path": "source/check_program/check_program.py",
+  "install_path": "dist/check_program",
+  "completion_path": "completions/_check_program"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "jirabacklog",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "jirabacklog.sh",
+  "source_path": "source/jirabacklog/jirabacklog.sh",
+  "install_path": "dist/jirabacklog",
+  "completion_path": "completions/_jirabacklog"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "myip_to_qr",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "myip_to_qr.sh",
+  "source_path": "source/myip_to_qr/myip_to_qr.sh",
+  "install_path": "dist/myip_to_qr",
+  "completion_path": "completions/_myip_to_qr"
+}

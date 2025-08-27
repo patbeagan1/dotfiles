@@ -1,0 +1,13 @@
+{
+  "name": "img_to_qrcode_set",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "img_to_qrcode_set.py",
+  "source_path": "source/img_to_qrcode_set/img_to_qrcode_set.py",
+  "install_path": "dist/img_to_qrcode_set",
+  "completion_path": "completions/_img_to_qrcode_set"
+}

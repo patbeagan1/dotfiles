@@ -1,0 +1,13 @@
+{
+  "name": "install-deb",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "install-deb.sh",
+  "source_path": "source/install-deb/install-deb.sh",
+  "install_path": "dist/install-deb",
+  "completion_path": "completions/_install-deb"
+}

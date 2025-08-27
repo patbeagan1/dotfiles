@@ -1,0 +1,13 @@
+{
+  "name": "basename",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "basename.sh",
+  "source_path": "source/basename/basename.sh",
+  "install_path": "dist/basename",
+  "completion_path": "completions/_basename"
+}

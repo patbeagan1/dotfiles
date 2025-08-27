@@ -1,0 +1,13 @@
+{
+  "name": "pystart_script",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "pystart_script.py",
+  "source_path": "source/pystart_script/pystart_script.py",
+  "install_path": "dist/pystart_script",
+  "completion_path": "completions/_pystart_script"
+}

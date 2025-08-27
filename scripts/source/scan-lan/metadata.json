@@ -1,0 +1,13 @@
+{
+  "name": "scan-lan",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "scan-lan.sh",
+  "source_path": "source/scan-lan/scan-lan.sh",
+  "install_path": "dist/scan-lan",
+  "completion_path": "completions/_scan-lan"
+}

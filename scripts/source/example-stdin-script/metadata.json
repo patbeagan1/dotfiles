@@ -1,0 +1,13 @@
+{
+  "name": "example-stdin-script",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "bash",
+  "executable": "example-stdin-script.sh",
+  "source_path": "source/example-stdin-script/example-stdin-script.sh",
+  "install_path": "dist/example-stdin-script",
+  "completion_path": "completions/_example-stdin-script"
+}

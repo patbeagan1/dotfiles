@@ -1,0 +1,13 @@
+{
+  "name": "starlog",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "python",
+  "executable": "starlog.py",
+  "source_path": "source/starlog/starlog.py",
+  "install_path": "dist/starlog",
+  "completion_path": "completions/_starlog"
+}
