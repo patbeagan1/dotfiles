@@ -31,7 +31,6 @@ for arg in "$@"; do
 done
 
 SCRIPTS_ROOT="/home/patrick/repo/incubator/dotfiles/scripts"
-BACKUP_DIR="$SCRIPTS_ROOT/.backup-$(date +%Y%m%d_%H%M%S)"
 SOURCE_DIR="$SCRIPTS_ROOT/source"
 DIST_DIR="$SCRIPTS_ROOT/dist"
 COMPLETIONS_DIR="$SCRIPTS_ROOT/completions"
@@ -378,9 +377,6 @@ main() {
     print_status "$GREEN" "✓ Generated metadata.json for each script"
     print_status "$GREEN" "✓ Created zsh completion stubs"
     print_status "$GREEN" "✓ Generated install.sh scripts"
-    if [[ "$DRY_RUN" == "false" ]]; then
-        print_status "$GREEN" "✓ Backup created at: $BACKUP_DIR"
-    fi
     if [[ "$PUBLISH_MODE" == "true" ]] && [[ "$DRY_RUN" == "false" ]]; then
         print_status "$GREEN" "✓ Published scripts to dist/ directory"
         print_status "$GREEN" "✓ Published completions to completions/ directory"
