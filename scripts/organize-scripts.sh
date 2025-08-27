@@ -174,14 +174,46 @@ create_completion_stub() {
     local script_name="$1"
     local script_dir="$2"
     local script_ext="$3"
+    local script_path="$script_dir/$script_name.$script_ext"
     
     local completion_path="$script_dir/_$script_name"
+    
+    # Try to extract help information from the script
+    local help_options=""
+    local usage_info=""
+    
+    if [[ -f "$script_path" ]]; then
+        # Look for common help patterns
+        case "$script_ext" in
+            "sh")
+                help_options=$(grep -E "^\s*-[a-zA-Z]|\s*--[a-zA-Z-]+" "$script_path" | head -5 | sed 's/.*\(-[a-zA-Z]\|--[a-zA-Z-]\+\).*/\1/' | sort -u | tr '\n' ' ' || echo "")
+                usage_info=$(grep -E "^#.*[Uu]sage:" "$script_path" | head -1 | sed 's/^#.*[Uu]sage:\s*//' || echo "")
+                ;;
+            "py")
+                help_options=$(grep -E "^\s*parser\.add_argument\(.*-[a-zA-Z]|\s*add_argument\(.*--[a-zA-Z-]+" "$script_path" | head -5 | sed -E 's/.*(-[a-zA-Z]+|--[a-zA-Z-]+).*/\1/' | sort -u | tr '\n' ' ' || echo "")
+                usage_info=$(grep -E "^#.*[Uu]sage:|^\s*\"\"\".*[Uu]sage:" "$script_path" | head -1 | sed -E 's/^#.*[Uu]sage:\s*|^\s*\"\"\".*[Uu]sage:\s*//' || echo "")
+                ;;
+        esac
+    fi
+    
+    # Build arguments section
+    local arguments_section=""
+    if [[ -n "$help_options" ]]; then
+        for opt in $help_options; do
+            if [[ "$opt" =~ ^--.*$ ]]; then
+                arguments_section="${arguments_section}        '$opt[Custom option]' \\\\\n"
+            elif [[ "$opt" =~ ^-.*$ ]]; then
+                arguments_section="${arguments_section}        '$opt[Custom option]' \\\\\n"
+            fi
+        done
+    fi
     
     cat > "$completion_path" << EOF
 #compdef $script_name
 
 # Zsh completion for $script_name
 # Generated automatically - customize as needed
+$(if [[ -n "$usage_info" ]]; then echo "# Usage: $usage_info"; fi)
 
 _$script_name() {
     local context state line
@@ -190,7 +222,7 @@ _$script_name() {
     _arguments -C \\
         '(-h --help)'{-h,--help}'[Show help information]' \\
         '(-v --version)'{-v,--version}'[Show version information]' \\
-        '*::arg:_files'
+$(echo -e "$arguments_section")        '*::arg:_files'
 }
 
 _$script_name "\$@"
@@ -365,7 +397,7 @@ main() {
             }
             total_processed=$((total_processed + 1))
             pattern_count=$((pattern_count + 1))
-        done < <(find "$SCRIPTS_ROOT" -type f -name "$pattern" ! -path "*/.*" ! -name "organize-scripts.sh" -print0)
+        done < <(find "$SCRIPTS_ROOT" -type f -name "$pattern" ! -path "*/.*" ! -path "$SOURCE_DIR/*" ! -path "$DIST_DIR/*" ! -path "$COMPLETIONS_DIR/*" ! -name "organize-scripts.sh" -print0)
         print_status "$BLUE" "Completed pattern: $pattern (processed: $pattern_count, total so far: $total_processed)"
     done
     

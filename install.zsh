@@ -86,23 +86,47 @@ safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
 # Completions
 ###########################################################
 echo "🔧 Setting up Zsh completions..."
+
+# Add main completions directory
 local completions_dir="$LIBBEAGAN_HOME/completions"
+local script_completions_dir="$LIBBEAGAN_HOME/scripts/completions"
+
+# Track if we need to reinitialize completions
+local need_compinit=false
+
+# Add main completions directory
 if [[ -d "$completions_dir" ]]; then
-    # Add completions directory to fpath if not already present
     if [[ ! "$fpath" =~ "$completions_dir" ]]; then
         fpath=("$completions_dir" $fpath)
-        echo "✅ Added completions directory to fpath"
-        
-        # Initialize completions if compinit is available
-        if command -v compinit >/dev/null 2>&1; then
-            autoload -Uz compinit && compinit
-            echo "✅ Initialized Zsh completions"
-        fi
+        echo "✅ Added main completions directory to fpath"
+        need_compinit=true
     else
-        echo "✅ Completions directory already in fpath"
+        echo "✅ Main completions directory already in fpath"
     fi
 else
-    echo "⚠️  Warning: Completions directory not found: $completions_dir"
+    echo "⚠️  Warning: Main completions directory not found: $completions_dir"
+fi
+
+# Add script completions directory
+if [[ -d "$script_completions_dir" ]]; then
+    if [[ ! "$fpath" =~ "$script_completions_dir" ]]; then
+        fpath=("$script_completions_dir" $fpath)
+        echo "✅ Added script completions directory to fpath"
+        need_compinit=true
+    else
+        echo "✅ Script completions directory already in fpath"
+    fi
+else
+    echo "⚠️  Warning: Script completions directory not found: $script_completions_dir"
+    echo "   Run 'organize-scripts.sh --publish' to create it"
+fi
+
+# Initialize completions if needed
+if [[ "$need_compinit" == "true" ]]; then
+    if command -v compinit >/dev/null 2>&1; then
+        autoload -Uz compinit && compinit
+        echo "✅ Initialized Zsh completions"
+    fi
 fi
 
 ###########################################################
