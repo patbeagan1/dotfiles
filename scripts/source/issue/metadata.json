@@ -1,0 +1,13 @@
+{
+  "name": "issue",
+  "version": "1.0.0",
+  "description": "A script for automated tasks.",
+  "author": "Generated",
+  "license": "MIT",
+  "type": "script",
+  "language": "zsh",
+  "executable": "issue.zsh",
+  "source_path": "source/issue/issue.zsh",
+  "install_path": "dist/issue",
+  "completion_path": "completions/_issue"
+}
