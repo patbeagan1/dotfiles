@@ -1,6 +1,0 @@
-{
-	"dependencies": {
-		"express": "^4.18.2",
-		"jszip": "^3.10.1"
-	}
-}
