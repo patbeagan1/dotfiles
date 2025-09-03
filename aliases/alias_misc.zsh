@@ -55,7 +55,7 @@ nv() {
   fi
 }
 
-alias verify-hash='isLinux.sh && sha256sum || shasum -a 256'
+alias verify-hash='is-test system os linux && sha256sum || shasum -a 256'
 alias verify-directory-contents='rsync -rvcn'
 
 alias show-hardware-displays='sudo lshw -numeric -C display'
@@ -89,7 +89,7 @@ caturl () {
 
 alias jslint='npm run lint --silent -- --frail'
 
-alias slp='isMac.sh && pmset sleepnow || systemctl suspend'
+alias slp='is-test system os mac && pmset sleepnow || systemctl suspend'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 
