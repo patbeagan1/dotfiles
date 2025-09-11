@@ -44,4 +44,6 @@ if [ "$CURRENT_COMPUTER" = "mac_2022" ]; then
     echo ' |_|  |_|\__,_|\___| |_____|\___/_____|_____| '
     echo
     echo "Current release: \033[31;1;4m$(cd $RELEASE_DIR && getCurrentRelease)\033[0m"
+
+    javaSet17
 fi
