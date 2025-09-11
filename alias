@@ -26,12 +26,12 @@ source_alias alias_unix.zsh
 # source_alias alias_hoiday_prompt.zsh
 # source_alias alias_recco.zsh
 
-if isMac.sh; then
+if is-test system os mac; then
   source_alias alias_machine_mac.zsh
 #  source_alias alias_recco_mac.zsh
 fi
 
-if isLinux.sh; then
+if is-test system os linux; then
   source_alias alias_machine_linux.zsh
 #  source_alias alias_recco_linux.zsh
 fi

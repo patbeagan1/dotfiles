@@ -1,1 +1,1 @@
-alias battery='isLinux.sh && upower -d || echo Linux only'
+alias battery='is-test system os linux && upower -d || echo Linux only'

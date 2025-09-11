@@ -2,8 +2,8 @@
 # Zsh configuration
 
 HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
-HISTSIZE=2000
-SAVEHIST=5000
+HISTSIZE=9999
+SAVEHIST=9999
 setopt AUTO_CD
 setopt EXTENDED_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
@@ -22,12 +22,19 @@ bindkey -e
 autoload -Uz compinit
 compinit
 
+# Add script completions to fpath if available
+if [[ -n "$LIBBEAGAN_HOME" ]] && [[ -d "$LIBBEAGAN_HOME/scripts/completions" ]]; then
+    fpath=("$LIBBEAGAN_HOME/scripts/completions" $fpath)
+    # Re-initialize completions with new fpath
+    autoload -Uz compinit && compinit
+fi
+
 zstyle ':completion:*' auto-description 'specify: %d'
 zstyle ':completion:*' completer _expand _complete _correct _approximate
 zstyle ':completion:*' format 'Completing %d'
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*' menu select=2
-if isLinux.sh; then 
+if is-test system os linux; then 
   eval "$(dircolors -b)"
 fi
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
@@ -41,6 +48,3 @@ zstyle ':completion:*' verbose true
 
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-
-echo `export GEM_HOME=$HOME/.gem` >> $HOME/.bashrc
