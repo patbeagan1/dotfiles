@@ -1,7 +1,22 @@
 #!/usr/bin/env zsh
 # (c) 2022 Pat Beagan: MIT License
 
-echo "Welcome to libbeagan."
+# Verbose mode - quiet by default, enable with VERBOSE=true or --verbose
+VERBOSE_MODE=${VERBOSE_MODE:-false}
+
+# Check for --verbose flag
+if [[ "$1" == "--verbose" ]]; then
+    VERBOSE_MODE=true
+fi
+
+# Function to print messages only if in verbose mode
+print_info() {
+    if [[ "$VERBOSE_MODE" == "true" ]]; then
+        echo "$@"
+    fi
+}
+
+print_info "Welcome to libbeagan."
 
 # Function to safely source files
 safe_source() {
@@ -45,23 +60,10 @@ validate_env() {
         echo "   Please ensure the path is correct."
         has_errors=true
     else
-        echo "✅ Using libbeagan from: $LIBBEAGAN_HOME"
+        print_info "✅ Using libbeagan from: $LIBBEAGAN_HOME"
     fi
 
-    # Validate LIBBEAGAN_SCRIPTS (with fallback)
-    if [[ ! -v LIBBEAGAN_SCRIPTS ]]; then
-        echo '❌ Error: LIBBEAGAN_SCRIPTS environment variable is not set and cannot fallback.'
-        echo '   Please add the following to your ~/.zshrc file:'
-        echo '   export LIBBEAGAN_SCRIPTS="$HOME/libbeagan/scripts"'
-        echo
-        has_errors=true
-    elif [[ ! -d "$LIBBEAGAN_SCRIPTS" ]]; then
-        echo "❌ Error: LIBBEAGAN_SCRIPTS directory does not exist: $LIBBEAGAN_SCRIPTS"
-        echo "   Please ensure the path is correct."
-        has_errors=true
-    else
-        echo "✅ Using scripts from: $LIBBEAGAN_SCRIPTS"
-    fi
+    # Note: LIBBEAGAN_SCRIPTS validation is now handled by scripts/install.sh
 
     if [[ "$has_errors" == "true" ]]; then
         return 1
@@ -71,7 +73,7 @@ validate_env() {
 }
 
 load_configurations() {
-    echo "📁 Loading configurations..."
+    print_info "📁 Loading configurations..."
     safe_source "$LIBBEAGAN_HOME/configs/config-zsh.zsh" "ZSH configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-omzsh.zsh" "Oh My Zsh configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-golang.zsh" "Go configuration"
@@ -79,82 +81,66 @@ load_configurations() {
     safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
 }
 
-add_script_paths() {
-    echo "🔧 Adding script directories to PATH..."
-    local dist_path="$LIBBEAGAN_SCRIPTS/dist"
-    if [[ -d "$dist_path" ]]; then
-        export PATH="$PATH:$dist_path"
-        echo "✅ Added scripts dist directory to PATH"
-    else
-        echo "⚠️  Warning: Scripts dist directory not found: $dist_path"
-        echo "   Run 'organize-scripts.sh --publish' to create it"
-    fi
-}
 
 load_aliases() {
-    echo "📝 Loading aliases..."
+    print_info "📝 Loading aliases..."
     safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
 }
 
 setup_completions() {
-    echo "🔧 Setting up Zsh completions..."
+    print_info "🔧 Setting up Zsh completions..."
 
     local completions_dir="$LIBBEAGAN_HOME/completions"
-    local script_completions_dir="$LIBBEAGAN_SCRIPTS/completions"
     local need_compinit=false
 
     # Add main completions directory
     if [[ -d "$completions_dir" ]]; then
         if [[ ! "$fpath" =~ "$completions_dir" ]]; then
             fpath=("$completions_dir" $fpath)
-            echo "✅ Added main completions directory to fpath"
+            print_info "✅ Added main completions directory to fpath"
             need_compinit=true
         else
-            echo "✅ Main completions directory already in fpath"
+            print_info "✅ Main completions directory already in fpath"
         fi
     else
         echo "⚠️  Warning: Main completions directory not found: $completions_dir"
-    fi
-
-    # Add script completions directory
-    if [[ -d "$script_completions_dir" ]]; then
-        if [[ ! "$fpath" =~ "$script_completions_dir" ]]; then
-            fpath=("$script_completions_dir" $fpath)
-            echo "✅ Added script completions directory to fpath"
-            need_compinit=true
-        else
-            echo "✅ Script completions directory already in fpath"
-        fi
-    else
-        echo "⚠️  Warning: Script completions directory not found: $script_completions_dir"
-        echo "   Run 'organize-scripts.sh --publish' to create it"
     fi
 
     # Initialize completions if needed
     if [[ "$need_compinit" == "true" ]]; then
         if command -v compinit >/dev/null 2>&1; then
             autoload -Uz compinit && compinit
-            echo "✅ Initialized Zsh completions"
+            print_info "✅ Initialized Zsh completions"
         fi
     fi
 }
 
+setup_scripts() {
+    print_info "🔧 Setting up scripts..."
+    if [[ -f "$LIBBEAGAN_SCRIPTS/install.sh" ]]; then
+        source "$LIBBEAGAN_SCRIPTS/install.sh"
+    else
+        echo "⚠️  Warning: Script installation file not found at $LIBBEAGAN_SCRIPTS/install.sh"
+        echo "   Scripts may not be properly configured."
+    fi
+}
+
 check_dependencies() {
-    echo "📦 Checking dependencies..."
+    print_info "📦 Checking dependencies..."
     safe_source "$LIBBEAGAN_HOME/dependencies.sh" "Dependencies"
 }
 
 main() {
     validate_env || return 1
     load_configurations || return 1
-    add_script_paths || return 1
+    setup_scripts || return 1
     load_aliases || return 1
     setup_completions || return 1
     check_dependencies || return 1
 
-    echo "🎉 libbeagan installation complete!"
-    echo "   Type 'libbeagan_dependencies' to check for missing tools."
-    echo "   Tab completion is available for supported commands."
+    print_info "🎉 libbeagan installation complete!"
+    print_info "   Type 'libbeagan_dependencies' to check for missing tools."
+    print_info "   Tab completion is available for supported commands."
 }
 
 main
