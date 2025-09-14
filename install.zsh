@@ -81,6 +81,23 @@ load_configurations() {
     safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
 }
 
+load_machine_specific_config() {
+    print_info "🖥️  Loading machine-specific configuration..."
+    
+    # Loop through all machine-specific configuration files
+    local machines_dir="$LIBBEAGAN_HOME/configs/machines"
+    if [[ -d "$machines_dir" ]]; then
+        for machine_file in "$machines_dir"/*.zsh; do
+            if [[ -f "$machine_file" ]]; then
+                local machine_name=$(basename "$machine_file" .zsh)
+                safe_source "$machine_file" "$machine_name configuration"
+            fi
+        done
+    else
+        print_info "ℹ️  No machines directory found at: $machines_dir"
+    fi
+}
+
 
 load_aliases() {
     print_info "📝 Loading aliases..."
@@ -133,6 +150,7 @@ check_dependencies() {
 main() {
     validate_env || return 1
     load_configurations || return 1
+    load_machine_specific_config || return 1
     setup_scripts || return 1
     load_aliases || return 1
     setup_completions || return 1
