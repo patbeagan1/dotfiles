@@ -86,9 +86,21 @@ HYPHEN_INSENSITIVE="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
     git
-    adb
-    zsh-autosuggestions
     z
+    dotenv
+    extract
+    gradle
+    colored-man-pages
+    kubectl
+    npm
+    node
+    python
+    pip
+    vscode
+    docker
+    docker-compose
+    command-not-found
+    web-search
 )
 
 
