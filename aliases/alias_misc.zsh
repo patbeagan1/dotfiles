@@ -89,7 +89,7 @@ caturl () {
 
 alias jslint='npm run lint --silent -- --frail'
 
-alias slp='is-test system os mac && pmset sleepnow || systemctl suspend'
+alias slp='command -v is-test >/dev/null || { echo "is-test not installed, please install it."; return 1; }; is-test system os mac && pmset sleepnow || systemctl suspend'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 

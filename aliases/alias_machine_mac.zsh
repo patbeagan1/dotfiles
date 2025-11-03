@@ -6,6 +6,8 @@ alias mac_hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killa
 alias readOutLoud='say -v Moira -i -f'
 alias read_out_loud=readOutLoud
 
+alias java_list='/bin/zsh -lc "/usr/libexec/java_home -V 2>&1 | cat'
+
 if which /usr/libexec/java_home >/dev/null; then
     alias javaSet7='export JAVA_HOME=$(/usr/libexec/java_home -v 1.7); java -version'
     alias javaSet8='export JAVA_HOME=$(/usr/libexec/java_home -v 1.8); java -version'
