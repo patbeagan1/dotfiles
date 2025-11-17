@@ -34,6 +34,8 @@ alias android-app-info='adb shell dumpsys package'
 
 alias android-start-emu-fzf='emulator -avd $(emulator -list-avds | fzf)'
 
+alias android-record='scrcpy -m720 --max-fps=60 -d --record=file.mp4 && mv file.mp4 ~/Downloads'
+
 # Function to search and execute ADB commands using fzf
 androidl () {
     local commands=(

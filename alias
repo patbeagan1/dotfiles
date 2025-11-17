@@ -1,6 +1,6 @@
 # This file and all dependencies should be able to be run multiple times per session.
 
-alias savedalias='source ~/libbeagan/alias'
+alias savedalias="source $LIBBEAGAN_HOME/alias" 
 alias refresh='savedalias; hash -r'
 
 source_alias alias_android.zsh

@@ -115,17 +115,17 @@ alias histg="history | grep"
 alias historyg="history | grep"
 alias jslint='npm run lint --silent -- --frail'
 
-# Fuzzy search through history and insert the selected command on the command line (zsh only)
-fzf-history-widget() {
-  local selected
-  selected=$(history | sed 's/^ *//g' | cut -d' ' -f3-99 | fzf --height 40% --reverse --prompt="History> ")
-  if [[ -n "$selected" ]]; then
-    LBUFFER+="$selected"
-    zle reset-prompt
-  fi
-}
-zle -N fzf-history-widget
-bindkey '^R' fzf-history-widget
+# # Fuzzy search through history and insert the selected command on the command line (zsh only)
+# fzf-history-widget() {
+#   local selected
+#   selected=$(history | sed 's/^ *//g' | cut -d' ' -f3-99 | fzf --height 40% --reverse --prompt="History> ")
+#   if [[ -n "$selected" ]]; then
+#     LBUFFER+="$selected"
+#     zle reset-prompt
+#   fi
+# }
+# zle -N fzf-history-widget
+# bindkey '^R' fzf-history-widget
 
 
 #==========================================
