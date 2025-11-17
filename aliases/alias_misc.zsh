@@ -197,3 +197,100 @@ alias g1='git log --pretty=oneline'
 
 function inspect () { cat "$(which "$1")"; }
 alias i='inspect'
+
+
+function gwd() {
+    # Usage: gwd <new-branch-name>
+    if [ -z "$1" ]; then
+        echo "Error: Please provide a name for the new worktree/branch."
+        return 1
+    fi
+
+    local branch_name="$1"
+    local new_dir="../$branch_name"
+
+    # Early safety: check for uncommitted changes in the current repo
+    if [[ -n "$(git status --porcelain)" ]]; then
+        echo "⚠️  Warning: You have uncommitted changes in the current repository. Please commit, stash, or discard them before proceeding."
+        return 1
+    fi
+
+    # Early safety: refuse to proceed if destination dir already exists
+    if [[ -e "$new_dir" ]]; then
+        echo "⚠️  Directory '$new_dir' already exists. Please remove it or choose a different branch name."
+        return 1
+    fi
+
+    # 1. Update remote refs to ensure origin/develop is fresh
+    echo "🔄 Fetching latest from origin..."
+    git fetch origin develop
+    if [[ $? -ne 0 ]]; then
+        echo "❌ Error: 'git fetch origin develop' failed."
+        return 1
+    fi
+
+    # Early return if the branch already exists
+    if git show-ref --verify --quiet "refs/heads/$branch_name"; then
+        echo "⚠️  Branch '$branch_name' already exists. Please choose a different name."
+        return 1
+    fi
+
+    # 2. Create worktree based explicitly on origin/develop
+    #    (This creates the folder and the branch simultaneously)
+    if ! git worktree add -b "$branch_name" "$new_dir" origin/develop; then
+        echo "❌ Error: Failed to create worktree for branch '$branch_name'."
+        return 1
+    fi
+
+    # 3. Enter the new directory
+    if ! pushd "$new_dir" > /dev/null; then
+        echo "❌ Error: Failed to enter new worktree directory '$new_dir'."
+        return 1
+    fi
+
+    # 4. Push the new branch and set the upstream to origin
+    echo "🚀 Setting upstream origin/$branch_name..."
+    if ! git push --set-upstream origin "$branch_name"; then
+        echo "❌ Error: Failed to push and set upstream for branch '$branch_name'."
+        popd > /dev/null
+        return 1
+    fi
+
+    # Try to guess the Jira ticket key from the branch name ("ABC-123" pattern)
+    if [[ "$branch_name" =~ ([A-Z][A-Z0-9]+-[0-9]+) ]]; then
+        ticket_key="${BASH_REMATCH[1]}"
+        echo "🔗 Found Jira ticket key: $ticket_key"
+
+        # Get Jira instance subdomain from cache or prompt (reuse infrastructure)
+        jira_subdomain_file="$HOME/.jira_instance_subdomain"
+        JIRA_INSTANCE_SUBDOMAIN=""
+        if [[ -f "$jira_subdomain_file" ]]; then
+            JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
+        fi
+        if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+            read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
+            if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+                echo "⚠️  Jira instance subdomain is required. Skipping ticket metadata prompt."
+            else
+                echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
+            fi
+        fi
+
+        # Fetch ticket details using acli (accepts JIRA_INSTANCE_SUBDOMAIN in env)
+        if [[ -n "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
+            jira_json=$(JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" acli jira workitem view "$ticket_key" -f 'summary,description' 2>/dev/null)
+            ticket_description=$(echo "$jira_json")
+
+            if [[ -n "$ticket_description" ]]; then
+                # Run cursor-agent with the ticket content as a prompt
+                echo -e "Jira Ticket Description:\n$ticket_description\n" | cursor-agent -p
+            fi
+        fi
+    fi
+
+    # 5. Open Cursor in the current directory
+    cursor .
+
+    # 6. Return to the original directory
+    popd > /dev/null
+}
