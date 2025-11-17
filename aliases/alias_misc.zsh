@@ -256,9 +256,13 @@ function gwd() {
         return 1
     fi
 
-    # Try to guess the Jira ticket key from the branch name ("ABC-123" pattern)
-    if [[ "$branch_name" =~ ([A-Z][A-Z0-9]+-[0-9]+) ]]; then
-        ticket_key="${BASH_REMATCH[1]}"
+    # Extract the second component from the branch name (assuming "user/JIRA_ID/rest" structure)
+    local branch_parts
+    IFS='/' read -ra branch_parts <<< "$branch_name"
+    second_part="${branch_parts[1]}"
+    # Only treat as a Jira ticket key if it matches the "ABC-123" pattern and is not "chore"
+    if [[ "$second_part" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]]; then
+        ticket_key="$second_part"
         echo "🔗 Found Jira ticket key: $ticket_key"
 
         # Get Jira instance subdomain from cache or prompt (reuse infrastructure)
