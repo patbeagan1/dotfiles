@@ -1,3 +1,14 @@
+##Monorepo
+# mdo: Run monorepo commands for the current project directory
+# Usage: mdo <script_name> [args...]
+# Example: When in artrank directory, "mdo start" executes "../monorepo run artrank start"
+mdo() {
+    local project_name="${PWD##*/}"
+    ../monorepo run "$project_name" "$@"
+}
+alias nvimg='alacritty --command nvim'
+
+
 alias gemini-cli='npx https://github.com/google-gemini/gemini-cli'
 
 function prettyCSV() { cat "$1" | column -t -s ","; }
