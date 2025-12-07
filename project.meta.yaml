@@ -1,0 +1,40 @@
+name: dotfiles
+description: A collection of shell functions and scripts for zsh, including aliases, configurations, and utilities. Designed to be sourced into your zsh environment for enhanced productivity and automation.
+language: shell
+tags:
+- shell
+- zsh
+- dotfiles
+- configuration
+- aliases
+- utilities
+release_branch: master
+has_release_script: false
+release_repo: patbeagan1/dotfiles
+
+scripts:
+  install:
+    command: "./install.zsh"
+  test:
+    command: "make test"
+  lint:
+    command: "make lint"
+  publish:
+    command: "../monorepo subtree push dotfiles"
+  pull:
+    command: "../monorepo subtree pull dotfiles"
+
+subtree:
+  repo: git@github.com:patbeagan1/dotfiles.git
+  prefix: dotfiles
+  branch: master
+
+roadmap:
+  todo: []
+  in_progress: []
+  done: []
+
+isPubliclyDocumented: true
+publicGithubRepo: https://github.com/patbeagan1/dotfiles
+publishNameOnCargo:
+publishNameOnPip:
