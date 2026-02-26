@@ -1,0 +1,84 @@
+#!/bin/bash
+# Installation script for Emacs IntelliJ-like configuration
+# This script helps set up the Emacs configuration for developers advanced with IntelliJ
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Configuration
+EMACS_CONFIG_DIR="${HOME}/.emacs.d"
+CONFIG_FILE="init.el"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_FILE="${SOURCE_DIR}/${CONFIG_FILE}"
+
+echo -e "${GREEN}Emacs IntelliJ Configuration Installer${NC}"
+echo "=========================================="
+echo ""
+
+# Check if Emacs is installed
+if ! command -v emacs &> /dev/null; then
+    echo -e "${RED}Error: Emacs is not installed.${NC}"
+    echo "Please install Emacs first:"
+    echo "  macOS: brew install emacs"
+    echo "  Ubuntu/Debian: sudo apt-get install emacs"
+    echo "  Fedora: sudo dnf install emacs"
+    exit 1
+fi
+
+echo -e "${GREEN}✓${NC} Emacs found: $(emacs --version | head -n1)"
+echo ""
+
+# Check if config directory exists
+if [ ! -d "$EMACS_CONFIG_DIR" ]; then
+    echo "Creating Emacs config directory: $EMACS_CONFIG_DIR"
+    mkdir -p "$EMACS_CONFIG_DIR"
+fi
+
+# Check if init.el already exists
+if [ -f "${EMACS_CONFIG_DIR}/init.el" ]; then
+    echo -e "${YELLOW}Warning: ${EMACS_CONFIG_DIR}/init.el already exists.${NC}"
+    read -p "Do you want to backup the existing file? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        BACKUP_FILE="${EMACS_CONFIG_DIR}/init.el.backup.$(date +%Y%m%d_%H%M%S)"
+        cp "${EMACS_CONFIG_DIR}/init.el" "$BACKUP_FILE"
+        echo -e "${GREEN}✓${NC} Backup created: $BACKUP_FILE"
+    else
+        read -p "Overwrite existing file? (y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled."
+            exit 0
+        fi
+    fi
+fi
+
+# Copy configuration file
+echo "Installing configuration..."
+cp "$SOURCE_FILE" "${EMACS_CONFIG_DIR}/init.el"
+echo -e "${GREEN}✓${NC} Configuration installed to ${EMACS_CONFIG_DIR}/init.el"
+echo ""
+
+# Check if we should create a symbolic link instead
+read -p "Would you prefer to use a symbolic link instead? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    rm "${EMACS_CONFIG_DIR}/init.el"
+    ln -s "$SOURCE_FILE" "${EMACS_CONFIG_DIR}/init.el"
+    echo -e "${GREEN}✓${NC} Symbolic link created"
+fi
+
+echo ""
+echo -e "${GREEN}Installation complete!${NC}"
+echo ""
+echo "Next steps:"
+echo "1. Start Emacs: emacs"
+echo "2. Wait for packages to install (first startup may take a few minutes)"
+echo "3. Review the README-emacs-intellij.md for keybinding reference"
+echo ""
+echo "For help, see: ${SOURCE_DIR}/README-emacs-intellij.md"

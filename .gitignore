@@ -3,3 +3,7 @@
 scripts/util/my-video.webm
 *node_modules
 *.vscode
+
+# Local bin scripts (not tracked)
+binlocal/*
+!binlocal/.gitkeep

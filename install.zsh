@@ -79,6 +79,7 @@ load_configurations() {
     safe_source "$LIBBEAGAN_HOME/configs/config-golang.zsh" "Go configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-android.zsh" "Android configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
+    safe_source "$LIBBEAGAN_HOME/configs/config-emacs.zsh" "emacs configuration"
 }
 
 load_machine_specific_config() {
@@ -99,9 +100,44 @@ load_machine_specific_config() {
 }
 
 
+# Load alias files from aliases/ by prefix (like #ifdef in C).
+# Prefixes: alias_ (always) | aliasmac_ | aliaslinux_ | aliasinteractive_ | aliaslogin_ | aliasdebug_ | aliasroot_
+# Set LIBBEAGAN_ALIAS_DEBUG to print each alias file as it is loaded.
+_libbeagan_load_aliases() {
+    local aliases_dir="$LIBBEAGAN_HOME/aliases"
+    if [[ ! -d "$aliases_dir" ]]; then
+        return 0
+    fi
+    for f in "${aliases_dir}"/*.zsh(N); do
+        [[ -f "$f" ]] || continue
+        local name="${f:t:r}"
+        local do_load=false
+        if [[ "$name" == aliasmac_* ]]; then
+            command is-test system os mac &>/dev/null && do_load=true
+        elif [[ "$name" == aliaslinux_* ]]; then
+            command is-test system os linux &>/dev/null && do_load=true
+        elif [[ "$name" == aliasinteractive_* ]]; then
+            [[ -o interactive ]] && do_load=true
+        elif [[ "$name" == aliaslogin_* ]]; then
+            [[ -o login ]] && do_load=true
+        elif [[ "$name" == aliasdebug_* ]]; then
+            [[ -n "${DEBUG:-}" ]] && do_load=true
+        elif [[ "$name" == aliasroot_* ]]; then
+            [[ $EUID -eq 0 ]] && do_load=true
+        elif [[ "$name" == alias_* ]]; then
+            do_load=true
+        fi
+        if [[ "$do_load" == true ]]; then
+            [[ -n "${LIBBEAGAN_ALIAS_DEBUG:-}" ]] && echo "[alias] $name" >&2
+            safe_source "$f" "$name"
+        fi
+    done
+}
+
 load_aliases() {
     print_info "📝 Loading aliases..."
     safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
+    _libbeagan_load_aliases
 }
 
 setup_completions() {

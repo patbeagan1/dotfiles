@@ -8,33 +8,37 @@ tags:
 - configuration
 - aliases
 - utilities
-release_branch: master
-has_release_script: false
-release_repo: patbeagan1/dotfiles
-
 scripts:
   install:
-    command: "./install.zsh"
+    command: ./install.zsh
   test:
-    command: "make test"
+    command: make test
   lint:
-    command: "make lint"
+    command: make lint
   publish:
-    command: "../monorepo subtree push dotfiles"
+    command: ../monorepo subtree push dotfiles
   pull:
-    command: "../monorepo subtree pull dotfiles"
-
+    command: ../monorepo subtree pull dotfiles
 subtree:
   repo: git@github.com:patbeagan1/dotfiles.git
   prefix: dotfiles
   branch: master
-
 roadmap:
-  todo: []
-  in_progress: []
-  done: []
-
-isPubliclyDocumented: true
-publicGithubRepo: https://github.com/patbeagan1/dotfiles
-publishNameOnCargo:
-publishNameOnPip:
+  todo:
+  - Add more robust automated installation for different OSes (macOS, Linux)
+  - Expand test coverage for shell functions and scripts
+  - Refactor alias organization for better discoverability
+  - Add support for Fish and Bash configuration
+  - Enhanced bootstrap/setup/docs for new machines
+  in_progress:
+  - Modularize core scripts into well-documented files
+  - Improve make lint/test commands for CI compatibility
+  - Review and update README/docs to cover advanced usage
+  done:
+  - Core zsh aliases, functions, and utilities curated
+  - Initial make test and make lint integration
+  - Subtree integration and publish/pull script support
+  - Public documentation and GitHub repo established
+publishing:
+- target: github-projects
+- target: docs

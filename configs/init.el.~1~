@@ -1,0 +1,607 @@
+;;; init.el --- Emacs configuration for developers advanced with IntelliJ
+;;; Commentary:
+;;; This configuration provides IntelliJ-like keybindings and features for Emacs.
+;;; It's designed for developers who are experienced with IntelliJ IDEA and want
+;;; similar functionality in Emacs.
+;;; Code:
+
+;;; ============================================================================
+;;; Package Management
+;;; ============================================================================
+
+;; Initialize package.el
+(require 'package)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/") t)
+(package-initialize)
+
+;; Bootstrap use-package if not installed
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+
+;;; ============================================================================
+;;; Core Settings
+;;; ============================================================================
+
+;; Disable startup screen
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-message t)
+(setq initial-scratch-message "")
+
+;; Better defaults
+(setq-default
+ ;; Indentation
+ indent-tabs-mode nil
+ tab-width 4
+ ;; Scrolling
+ scroll-step 1
+ scroll-margin 3
+ scroll-conservatively 10000
+ ;; Line numbers
+ display-line-numbers-type 'relative
+ ;; Backup files
+ backup-instead-of-copying t
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ version-control t
+ ;; UI
+ tool-bar-mode nil
+ menu-bar-mode nil
+ scroll-bar-mode nil
+ ;; Performance
+ gc-cons-threshold (* 50 1024 1024)
+ read-process-output-max (* 1024 1024))
+
+;; Enable line numbers
+(global-display-line-numbers-mode)
+
+;; Enable column numbers
+(setq column-number-mode t)
+
+;; Enable recent files
+(recentf-mode 1)
+(setq recentf-max-menu-items 50)
+
+;; Save place in files
+(save-place-mode 1)
+
+;;; ============================================================================
+;;; IntelliJ-like Keybindings
+;;; ============================================================================
+
+;; Use Cmd on macOS, Ctrl on Linux/Windows
+(defvar intellij-modifier
+  (if (eq system-type 'darwin) 'super 'control)
+  "Modifier key for IntelliJ-like bindings (super on macOS, control on Linux)")
+
+(defun intellij-key (key)
+  "Convert IntelliJ-style keybinding to Emacs format.
+   Examples: 'C-s' -> 'C-s', 'M-s' -> 'M-s', 'C-M-s' -> 'C-M-s'"
+  (let ((prefix (if (eq intellij-modifier 'super) "s-" "C-")))
+    (kbd (replace-regexp-in-string "^C-" prefix key))))
+
+;;; ============================================================================
+;;; Essential Packages
+;;; ============================================================================
+
+;; Ivy/Counsel for IntelliJ-like navigation
+(use-package ivy
+  :ensure t
+  :diminish ivy-mode
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t
+        ivy-count-format "(%d/%d) "
+        ivy-height 20
+        enable-recursive-minibuffers t))
+
+(use-package counsel
+  :ensure t
+  :after ivy
+  :bind
+  (("M-x" . counsel-M-x)
+   ("C-x C-f" . counsel-find-file)
+   ("C-x b" . counsel-switch-buffer)
+   ("C-x C-r" . counsel-recentf)))
+
+(use-package swiper
+  :ensure t
+  :after ivy
+  :bind
+  (("C-s" . swiper)
+   ("C-r" . swiper)))
+
+;; Projectile for project management (like IntelliJ projects)
+(use-package projectile
+  :ensure t
+  :diminish projectile-mode
+  :config
+  (projectile-mode +1)
+  (setq projectile-completion-system 'ivy
+        projectile-switch-project-action 'projectile-dired))
+
+(use-package counsel-projectile
+  :ensure t
+  :after (projectile counsel)
+  :config
+  (counsel-projectile-mode))
+
+;;; ============================================================================
+;;; Navigation (IntelliJ-style)
+;;; ============================================================================
+
+;; Go to File (Cmd+Shift+O / Ctrl+Shift+O)
+(global-set-key (kbd "C-S-o") 'counsel-find-file)
+
+;; Go to Symbol (Cmd+Alt+O / Ctrl+Alt+O)
+(global-set-key (kbd "C-M-o") 'counsel-imenu)
+
+;; Go to Line (Cmd+L / Ctrl+L)
+(global-set-key (kbd "C-l") 'goto-line)
+
+;; Recent Files (Cmd+E / Ctrl+E)
+(global-set-key (kbd "C-e") 'counsel-recentf)
+
+;; Recent Locations (Cmd+Shift+E / Ctrl+Shift+E)
+(use-package recentf-ext
+  :ensure t)
+(global-set-key (kbd "C-S-e") 'ivy-switch-buffer)
+
+;; Go to Class (Cmd+N / Ctrl+N) - Create new file in IntelliJ, but we'll use for new file
+(global-set-key (kbd "C-n") 'find-file)
+
+;; Find in Project (Cmd+Shift+F / Ctrl+Shift+F)
+(global-set-key (kbd "C-S-f") 'counsel-grep-or-swiper)
+
+;; Replace in Project (Cmd+Shift+R / Ctrl+Shift+R)
+(global-set-key (kbd "C-S-r") 'counsel-projectile-ag)
+
+;;; ============================================================================
+;;; Code Navigation
+;;; ============================================================================
+
+;; LSP for IntelliJ-like code intelligence
+(use-package lsp-mode
+  :ensure t
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook
+  ((python-mode . lsp)
+   (rust-mode . lsp)
+   (go-mode . lsp)
+   (java-mode . lsp)
+   (kotlin-mode . lsp)
+   (typescript-mode . lsp)
+   (javascript-mode . lsp)
+   (js-mode . lsp))
+  :commands lsp)
+
+(use-package lsp-ui
+  :ensure t
+  :after lsp-mode
+  :config
+  (setq lsp-ui-doc-enable t
+        lsp-ui-sideline-enable t
+        lsp-ui-imenu-enable t
+        lsp-ui-flycheck-enable t))
+
+;;(use-package company-lsp
+;;  :ensure t
+;;  :after (company lsp-mode)
+;;  :config
+;;  (push 'company-lsp company-backends))
+
+;; Company for autocompletion (like IntelliJ's autocomplete)
+(use-package company
+  :ensure t
+  :diminish company-mode
+  :config
+  (global-company-mode)
+  (setq company-idle-delay 0.3
+        company-minimum-prefix-length 2
+        company-tooltip-limit 10
+        company-show-numbers t
+        company-selection-wrap-around t)
+  :bind
+  (("C-<tab>" . company-complete)
+   ("C-M-<tab>" . company-complete-common)))
+
+;; Jump to Definition (Cmd+B / Ctrl+B)
+(global-set-key (kbd "C-b") 'xref-find-definitions)
+
+;; Find Usages (Alt+F7)
+;; (global-set-key (kbd "M-F7") 'xref-find-references)
+
+;; Go to Implementation (Cmd+Alt+B / Ctrl+Alt+B)
+(global-set-key (kbd "C-M-b") 'lsp-find-implementation)
+
+;;; ============================================================================
+;;; Editing (IntelliJ-style)
+;;; ============================================================================
+
+;; Multiple Cursors (like IntelliJ's multi-caret)
+(use-package multiple-cursors
+  :ensure t
+  :bind
+  (("C-S-c" . mc/edit-lines)
+   ("C->" . mc/mark-next-like-this)
+   ("C-<" . mc/mark-previous-like-this)
+   ("C-c C-<" . mc/mark-all-like-this)))
+
+;; Duplicate Line (Cmd+D / Ctrl+D)
+(defun duplicate-line()
+  "Duplicate current line"
+  (interactive)
+  (move-beginning-of-line 1)
+  (kill-line)
+  (yank)
+  (open-line 1)
+  (next-line 1)
+  (yank))
+(global-set-key (kbd "C-d") 'duplicate-line)
+
+;; Delete Line (Cmd+Backspace / Ctrl+Backspace)
+(global-set-key (kbd "C-<backspace>") 'kill-whole-line)
+
+;; Move Line Up/Down (Alt+Shift+Up/Down)
+(defun move-line-up ()
+  "Move the current line up."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2))
+(defun move-line-down ()
+  "Move the current line down."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1))
+(global-set-key (kbd "M-S-<up>") 'move-line-up)
+(global-set-key (kbd "M-S-<down>") 'move-line-down)
+
+;; Comment/Uncomment (Cmd+/ / Ctrl+/)
+(global-set-key (kbd "C-/") 'comment-or-uncomment-region)
+
+;; Join Lines (Cmd+Shift+J / Ctrl+Shift+J)
+(global-set-key (kbd "C-S-j") 'join-line)
+
+;;; ============================================================================
+;;; Code Folding
+;;; ============================================================================
+
+;; Hideshow for code folding
+(use-package hideshow
+  :ensure nil
+  :init
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
+  :bind
+  (("C-=" . hs-toggle-hiding)
+   ("C-+" . hs-show-block)
+   ("C--" . hs-hide-block)
+   ("C-<" . hs-hide-all)
+   ("C->" . hs-show-all)))
+
+;; Fold (Cmd+Alt+- / Ctrl+Alt+-)
+(global-set-key (kbd "C-M--") 'hs-toggle-hiding)
+
+;; Unfold (Cmd+Alt++ / Ctrl+Alt++)
+(global-set-key (kbd "C-M-=") 'hs-show-block)
+
+;; Fold All (Cmd+Alt+Shift+- / Ctrl+Alt+Shift+-)
+(global-set-key (kbd "C-M-S--") 'hs-hide-all)
+
+;; Unfold All (Cmd+Alt+Shift++ / Ctrl+Alt+Shift++)
+(global-set-key (kbd "C-M-S-=") 'hs-show-all)
+
+;;; ============================================================================
+;;; Refactoring
+;;; ============================================================================
+
+;; Rename Symbol (Shift+F6)
+;; (global-set-key (kbd "S-F6") 'lsp-rename)
+
+;; Extract Method (Cmd+Alt+M / Ctrl+Alt+M)
+;; Note: This requires language-specific support
+(global-set-key (kbd "C-M-m") 'lsp-execute-code-action)
+
+;; Extract Variable (Cmd+Alt+V / Ctrl+Alt+V)
+(global-set-key (kbd "C-M-v") 'lsp-execute-code-action)
+
+;;; ============================================================================
+;;; Window Management
+;;; ============================================================================
+
+;; Project View (Cmd+1 / Ctrl+1) - Show project tree
+(global-set-key (kbd "C-1") 'projectile-dired)
+
+;; Structure View (Cmd+7 / Ctrl+7) - Show file structure
+(global-set-key (kbd "C-7") 'counsel-imenu)
+
+;; Terminal (Alt+F12)
+;; (use-package vterm
+;;  :ensure t
+;;  :bind
+;;  (("M-F12" . vterm)))
+;; (global-set-key (kbd "M-F12") 'vterm)
+
+;;; ============================================================================
+;;; Search and Replace
+;;; ============================================================================
+
+;; Find (Cmd+F / Ctrl+F)
+(global-set-key (kbd "C-f") 'swiper)
+
+;; Replace (Cmd+R / Ctrl+R)
+(global-set-key (kbd "C-r") 'query-replace)
+
+;; Find Next/Previous
+(global-set-key (kbd "C-g") 'isearch-repeat-forward)
+
+;;; ============================================================================
+;;; Version Control (Git)
+;;; ============================================================================
+
+;; Magit for Git integration (like IntelliJ's VCS)
+(use-package magit
+  :ensure t
+  :bind
+  (("C-x g" . magit-status)
+   ("C-x C-g" . magit-status)))
+
+;; Git Gutter for showing changes
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode +1)
+  :bind
+  (("C-x C-g" . git-gutter-mode)))
+
+;; Commit (Cmd+K / Ctrl+K)
+(global-set-key (kbd "C-k") 'magit-commit)
+
+;; Push (Cmd+Shift+K / Ctrl+Shift+K)
+(global-set-key (kbd "C-S-k") 'magit-push)
+
+;;; ============================================================================
+;;; Build and Run
+;;; ============================================================================
+
+;; Compile (Cmd+F9 / Ctrl+F9)
+(global-set-key (kbd "C-<f9>") 'compile)
+
+;; Run (Cmd+R / Ctrl+R) - Note: C-r is replace, so we'll use C-c r
+(global-set-key (kbd "C-c r") 'projectile-run-project)
+
+;; Stop (Cmd+. / Ctrl+.)
+(global-set-key (kbd "C-.") 'kill-compilation)
+
+;;; ============================================================================
+;;; Code Analysis
+;;; ============================================================================
+
+;; Flycheck for error checking (like IntelliJ's inspections)
+(use-package flycheck
+  :ensure t
+  :init
+  (global-flycheck-mode)
+  :config
+  (setq flycheck-check-syntax-automatically '(save mode-enabled)))
+
+;; Next Error (F2)
+(global-set-key (kbd "<f2>") 'flycheck-next-error)
+
+;; Previous Error (Shift+F2)
+(global-set-key (kbd "S-<f2>") 'flycheck-previous-error)
+
+;;; ============================================================================
+;;; Code Templates
+;;; ============================================================================
+
+;; YASnippet for code templates (like IntelliJ's live templates)
+(use-package yasnippet
+  :ensure t
+  :config
+  (yas-global-mode 1)
+  (yas-reload-all))
+
+(use-package yasnippet-snippets
+  :ensure t
+  :after yasnippet)
+
+;; Insert Template (Cmd+J / Ctrl+J)
+(global-set-key (kbd "C-j") 'yas-expand)
+
+;;; ============================================================================
+;;; Language Support
+;;; ============================================================================
+
+;; Python
+(use-package python-mode
+  :ensure t)
+
+;; Rust
+(use-package rust-mode
+  :ensure t)
+
+;; Go
+(use-package go-mode
+  :ensure t)
+
+;; Java
+(use-package java-mode
+  :ensure nil)
+
+;; Kotlin
+(use-package kotlin-mode
+  :ensure t)
+
+;; TypeScript/JavaScript
+(use-package typescript-mode
+  :ensure t)
+
+;;; ============================================================================
+;;; UI Enhancements
+;;; ============================================================================
+
+;; Theme (using a modern theme)
+(use-package doom-themes
+  :ensure t
+  :config
+  (load-theme 'doom-one t))
+
+;; Modeline
+(use-package doom-modeline
+  :ensure t
+  :init
+  (doom-modeline-mode 1))
+
+;; Smooth scrolling
+(use-package smooth-scrolling
+  :ensure t
+  :config
+  (smooth-scrolling-mode 1))
+
+;;; ============================================================================
+;;; IntelliJ-specific Workarounds
+;;; ============================================================================
+
+;; Smart Parens for better bracket handling
+(use-package smartparens
+  :ensure t
+  :config
+  (smartparens-global-mode t)
+  (show-paren-mode t))
+
+;; Expand Region for IntelliJ-like selection expansion
+(use-package expand-region
+  :ensure t
+  :bind
+  (("C-=" . er/expand-region)
+   ("C--" . er/contract-region)))
+
+;; Ace Window for window switching (like IntelliJ's window navigation)
+(use-package ace-window
+  :ensure t
+  :bind
+  (("M-o" . ace-window)))
+
+;;; ============================================================================
+;;; Custom Functions
+;;; ============================================================================
+
+;; Quick Open (like IntelliJ's double-shift)
+(defun quick-open ()
+  "Quick open file or symbol (IntelliJ double-shift equivalent)"
+  (interactive)
+  (counsel-find-file))
+(global-set-key (kbd "C-S-S") 'quick-open)
+
+;; Show Intention Actions (Cmd+Alt+Enter / Ctrl+Alt+Enter)
+(defun show-intention-actions ()
+  "Show intention actions (like IntelliJ's Alt+Enter)"
+  (interactive)
+  (if (bound-and-true-p lsp-mode)
+      (lsp-execute-code-action)
+    (message "No code actions available")))
+(global-set-key (kbd "C-M-<return>") 'show-intention-actions)
+
+;;; ============================================================================
+;;; Final Setup
+;;; ============================================================================
+
+;; Auto-save
+(auto-save-mode t)
+(setq auto-save-interval 300)
+
+;; Auto-revert
+(global-auto-revert-mode t)
+
+;; Enable which-key for keybinding help
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+;; Custom variables
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes t)
+ '(package-selected-packages
+   '(which-key ace-window expand-region smartparens smooth-scrolling doom-modeline doom-themes typescript-mode kotlin-mode go-mode rust-mode python-mode yasnippet-snippets yasnippet flycheck git-gutter magit recentf-ext multiple-cursors lsp-ui counsel-projectile company)))
+
+;;; ============================================================================
+;;; Keybinding Reference (IntelliJ -> Emacs)
+;;; ============================================================================
+;;;
+;;; Navigation:
+;;;   Cmd+Shift+O (Ctrl+Shift+O) -> Go to File
+;;;   Cmd+Alt+O (Ctrl+Alt+O)     -> Go to Symbol
+;;;   Cmd+L (Ctrl+L)              -> Go to Line
+;;;   Cmd+E (Ctrl+E)              -> Recent Files
+;;;   Cmd+B (Ctrl+B)              -> Jump to Definition
+;;;   Alt+F7                      -> Find Usages
+;;;   Cmd+Alt+B (Ctrl+Alt+B)     -> Go to Implementation
+;;;
+;;; Search:
+;;;   Cmd+F (Ctrl+F)              -> Find
+;;;   Cmd+R (Ctrl+R)              -> Replace
+;;;   Cmd+Shift+F (Ctrl+Shift+F) -> Find in Project
+;;;   Cmd+Shift+R (Ctrl+Shift+R) -> Replace in Project
+;;;
+;;; Editing:
+;;;   Cmd+D (Ctrl+D)              -> Duplicate Line
+;;;   Cmd+Backspace               -> Delete Line
+;;;   Alt+Shift+Up/Down           -> Move Line Up/Down
+;;;   Cmd+/ (Ctrl+/)              -> Comment/Uncomment
+;;;   Cmd+Shift+J (Ctrl+Shift+J) -> Join Lines
+;;;
+;;; Code Folding:
+;;;   Cmd+Alt+- (Ctrl+Alt+-)      -> Fold
+;;;   Cmd+Alt++ (Ctrl+Alt++)      -> Unfold
+;;;   Cmd+Alt+Shift+-             -> Fold All
+;;;   Cmd+Alt+Shift++             -> Unfold All
+;;;
+;;; Refactoring:
+;;;   Shift+F6                    -> Rename Symbol
+;;;   Cmd+Alt+M (Ctrl+Alt+M)     -> Extract Method
+;;;   Cmd+Alt+V (Ctrl+Alt+V)     -> Extract Variable
+;;;
+;;; Windows:
+;;;   Cmd+1 (Ctrl+1)              -> Project View
+;;;   Cmd+7 (Ctrl+7)              -> Structure View
+;;;   Alt+F12                     -> Terminal
+;;;
+;;; Version Control:
+;;;   Cmd+K (Ctrl+K)              -> Commit
+;;;   Cmd+Shift+K (Ctrl+Shift+K) -> Push
+;;;
+;;; Build/Run:
+;;;   Cmd+F9 (Ctrl+F9)            -> Build
+;;;   C-c r                       -> Run
+;;;   Cmd+. (Ctrl+.)              -> Stop
+;;;
+;;; Code Analysis:
+;;;   F2                          -> Next Error
+;;;   Shift+F2                    -> Previous Error
+;;;
+;;; Templates:
+;;;   Cmd+J (Ctrl+J)              -> Insert Template
+;;;
+;;; ============================================================================
+
+(provide 'init)
+;;; init.el ends here
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

@@ -1,0 +1,227 @@
+#!/bin/bash
+
+#===================================================
+dumpdir="$HOME/Downloads/"
+myhomedir="$HOME/Downloads/MyHome/"
+
+help () {
+  echo
+  echo "Sorts the $dumpdir directory into $myhomedir."
+  echo "If you would rather sort the current directory, use with --local instead."
+  echo
+}
+
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+
+  case $key in
+    --local)
+      dumpdir="`pwd`"
+      myhomedir="`pwd`/MyHome"
+      shift # past argument
+      ;;
+    -h)
+      help
+      exit
+      ;;
+    *)
+      shift;
+      ;;
+  esac
+done
+
+dumpdir+="/"
+myhomedir+="/"
+#===================================================
+
+echo `date`
+echo "Cleaning up the $dumpdir folder..."
+if [ ! -d "$myhomedir" ]; then mkdir "$myhomedir"; fi
+
+#===================================================
+chkmk () {
+  cd "$myhomedir"
+  if [ ! -d "$1" ]; then
+    echo Creating "$1";
+    mkdir "$1";
+  else
+    echo Visiting "$1";
+  fi
+}
+
+movefiles () {
+  chkmk "$1"
+  cd "$dumpdir"
+  declare -a temp=("${!2}")
+  for i in "${temp[@]}"; do
+
+    # grabbing all the files in the current directory, putting them into array
+    files=()
+    while IFS= read -d $'\0' -r file ; do
+      files=("${files[@]}" "$file")
+    done < <(find . -maxdepth 1 -type f -name "*$i" ! -path "./MyHome" ! -path '.'  -print0)
+
+    # I was running into problems when moving a large number of files
+    # the official docs just said to run mv in batches to get over the glob rescrictions
+    local stepSize=100
+    for ((i=0; i<${#files[*]}; i+=$stepSize)); do
+      if [ ${#files[*]} -gt $stepSize ]; then
+        echo Batch "$i"
+      fi
+      if [ "$(uname -s)" = "Darwin" ]; then
+        gmv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+      else
+        mv --backup=numbered  "${files[@]:i:100}" "$myhomedir""$1";
+      fi
+    done
+  done
+  cd - > /dev/null
+}
+
+#===================================================
+# /bin for executables and source code.
+code=(
+  ".py" ".pyc" ".pyo"
+  ".c" ".cpp" ".out"
+  ".hs" 
+  ".java" ".class" ".kt" ".ks" ".kts" ".jar"
+  ".sh" ".pl" ".scpt" ".applescript")
+movefiles bin code[@]
+
+#===================================================
+# /etc: Config files, like which are commonly found in /etc on the machine
+config=(".cf" ".pem" ".crt" ".key" ".conf" ".rc")
+movefiles etc config[@]
+
+#===================================================
+# Creating the /var directory, for files which are intended to change a lot
+chkmk var
+
+log=(".log")
+movefiles var/log log[@]
+
+db=(".db" ".db3" ".sqlite" ".sqlite3" ".index")
+movefiles var/db db[@]
+
+#===================================================
+# /med is where the vast majority of the content is going to end up.
+# files here are sorted accoording to their extensions.
+chkmk med
+
+audio=(".flac" ".mp3" ".wav" ".mid" ".ogg");
+movefiles med/audio audio[@]
+
+doc=(
+  ".txt" ".TXT" 
+  ".odt" 
+  ".doc" ".docx" ".DOC"
+  ".rtf" 
+  ".pages"
+  ".ppt" ".pptx" 
+  ".xls" ".xlsx" 
+  ".md")
+movefiles med/doc doc[@]
+
+emu=(
+  ".gb" ".gbc" ".gba" # gameboy, gb color, gb advance
+  ".sav" ".fds" 
+  ".nes" ".ngc" 
+  ".ngp" 
+  ".rom" 
+  ".smc" # super nintendo
+  ".srm" 
+  ".tgc" 
+  ".z64" 
+  "(USA).7z" "(USA).zip" # these are common line endings for zipped roms
+  ".bin")
+movefiles med/emu emu[@]
+
+graphics=(
+  ".png" ".PNG" 
+  ".gif" ".GIF" 
+  ".JPG" ".jpg" ".jpeg" 
+  ".svg")
+movefiles med/pic graphics[@]
+
+links=(".url")
+movefiles med/bookmarks links[@]
+
+models=(".obj" ".mtl")
+movefiles med/models models[@]
+
+pdf=(".pdf" ".PDF" ".epub")
+movefiles med/pdf pdf[@]
+
+video=(".mp4" ".avi" ".wmv" ".mov" ".mkv" ".webm" ".swf")
+movefiles med/video video[@]
+
+data=(".csv" ".xml" ".json" ".yaml" ".plist" ".sql" ".graphml")
+movefiles med/data data[@]
+
+web=(".html" ".htm" ".mhtml" ".js" ".css")
+movefiles med/web web[@]
+
+#===================================================
+# /BIG is for things that shouldn't be backed up, since they are too large
+chkmk BIG
+
+ops=(
+  ".iso" ".img")
+movefiles BIG/OS ops[@]
+
+zip=(
+  ".zip" ".ZIP" 
+  ".tar" ".gz" ".tgz" 
+  ".bz2" 
+  ".xz" 
+  ".rar" 
+  ".7z")
+movefiles BIG/zip zip[@]
+
+packages=(
+  ".rpm" ".deb" 
+  ".dmg" ".app"
+  ".msi" 
+  ".dpkg" 
+  ".apk")
+movefiles BIG/packages packages[@]
+
+comics=(".cbz" ".cbr")
+movefiles BIG/comics comics[@]
+
+# a convenient location to temporarily mount other drives
+chkmk mnt
+
+# analogous to /tmp
+chkmk tmp
+
+# Projects - Things I've made, not code related.
+chkmk proj
+chkmk proj/Art
+chkmk proj/Music
+chkmk proj/Writing
+
+# Miscellaneous - all unmatched files go here
+mis=("")
+movefiles misc mis[@]
+
+#===================================================
+#=========Cleaning up individual files==============
+#===================================================
+
+# Sometimes downloading audio clips from facebook relabels them with 2 exts
+for file in $myhomedir/med/audio/*.mp3.mp3; do
+  mv -- "$file" "${file%.mp3}" 2>/dev/null
+done
+
+# Sometimes downloading audio clips from FB makes them jpgs
+for file in $myhomedir/med/pics/audioclip-*; do
+  mv -- "$file" $myhomedir/misc 2>/dev/null
+done
+
+# Removing empty directories in med
+find $myhomedir/med -type d -empty -prune -exec rmdir {} \;
+
+#===================================================
+echo "Done cleaning. If a file appears lost, check Misc."
