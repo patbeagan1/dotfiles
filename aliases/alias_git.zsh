@@ -1,3 +1,4 @@
+save () { git commit -am "commit to save" } 
 switchoc () { git switch "$1" 2>/dev/null || git switch -c "$1"; git fetch "$1" 2>/dev/null; }
 # Alias for viewing the last commit in a concise format
 alias gitl='git last --oneline | cat'
@@ -430,6 +431,28 @@ jirabranch() {
   # Create and checkout the branch
   echo "Creating branch: $branch_name"
   git co -b "$branch_name"
+
+  # Prepare the prompt for cursor-agent using the ticket summary and details from acli
+  local ticket_details
+  ticket_details="$(acli jira workitem view "$ticket_key" -f summary,description)"
+
+  # If ticket_details is empty, set a fallback message
+  if [[ -z "$ticket_details" ]]; then
+    ticket_details="Summary: $ticket_summary"$'\n'"Description: No description provided."
+  fi
+
+  # Compose the prompt for cursor-agent using a here-string to safely handle any characters
+  # Replace all single quotes in the description (or ticket_details) with double quotes
+  local ticket_details_cleaned
+  ticket_details_cleaned="${ticket_details//\'/\"}"
+
+  # Prepare the content to pass, newline separated
+  local cursor_input
+  cursor_input="${ticket_key}
+${ticket_details_cleaned}"
+
+  # Print the command so it appears on the command line surrounded by single quotes at the root
+  print -z "cursor-agent -- '$cursor_input'"
 }
 
 # fzf launcher for gh (GitHub CLI) commands.

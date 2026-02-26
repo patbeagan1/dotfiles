@@ -1,8 +1,10 @@
-
-alias q='duckduckgo.sh'
-alias q-heb="web-open.sh 'https://www.heb.com/search?Ns=product.salePrice%7C0&q='"
-alias q-android="web-open.sh 'https://developer.android.com/s/results?q='"
-alias q-maven="web-open.sh 'https://search.maven.org/search?q='"
+confluence() {
+    open 'https://alltrails.atlassian.net/wiki/search?text='"$1"
+}
+alias q='duckduckgo'
+alias q-heb="web-open 'https://www.heb.com/search?Ns=product.salePrice%7C0&q='"
+alias q-android="web-open 'https://developer.android.com/s/results?q='"
+alias q-maven="web-open 'https://search.maven.org/search?q='"
 alias dns_check='systemd-resolve --status'
 alias ports='netstat -vanp tcp'
 alias ip_local="ipconfig getifaddr en0"

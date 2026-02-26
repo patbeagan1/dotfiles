@@ -9,7 +9,7 @@ libbeagan_dependencies() {
     }
     print_clear() {
         if [ ! ${#util[@]} -eq 0 ]; then
-            echo "\nMissing $1 tools:\n${(o)util}"
+            # echo "\nMissing $1 tools:\n${(o)util}"
         fi
         util=()
     }
