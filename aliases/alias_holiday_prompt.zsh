@@ -8,17 +8,21 @@ set_holiday_prompt() {
   local easter_day=$(( easter_month / 31 + 1 ))
   easter_month=$(( easter_month % 31 + 3 ))
 
-  # 4th Thursday of November (Thanksgiving) — portable across GNU and BSD date
+  # 4th Thursday of November (Thanksgiving) — GNU date (Linux) vs BSD date (macOS)
   local thanksgiving_md=""
   local nov1_dow
-  if nov1_dow=$(date -d "$year-11-01" +%u 2>/dev/null); then
-    # GNU date: %u 1=Mon .. 7=Sun
-    local first_thu=$(( 1 + (4 - nov1_dow + 7) % 7 ))
-    thanksgiving_md=$(printf '11-%02d' $(( first_thu + 21 )))
-  elif nov1_dow=$(date -j -f "%Y-%m-%d" "$year-11-01" +%u 2>/dev/null); then
-    # BSD date (macOS)
-    local first_thu=$(( 1 + (4 - nov1_dow + 7) % 7 ))
-    thanksgiving_md=$(printf '11-%02d' $(( first_thu + 21 )))
+  if [[ "$(uname)" == Darwin ]]; then
+    # macOS/BSD date: -j -f to parse a date string (no -d)
+    if nov1_dow=$(date -j -f "%Y-%m-%d" "$year-11-01" +%u 2>/dev/null); then
+      local first_thu=$(( 1 + (4 - nov1_dow + 7) % 7 ))
+      thanksgiving_md=$(printf '11-%02d' $(( first_thu + 21 )))
+    fi
+  else
+    # Linux (GNU date): -d for date string
+    if nov1_dow=$(date -d "$year-11-01" +%u 2>/dev/null); then
+      local first_thu=$(( 1 + (4 - nov1_dow + 7) % 7 ))
+      thanksgiving_md=$(printf '11-%02d' $(( first_thu + 21 )))
+    fi
   fi
 
   # Start with the original prompt
