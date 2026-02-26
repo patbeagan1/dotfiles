@@ -1,3 +1,4 @@
+alias ss-plant='ss -plnt | sed -e "s/ \+$//"'
 confluence() {
     open 'https://alltrails.atlassian.net/wiki/search?text='"$1"
 }

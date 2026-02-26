@@ -7,10 +7,6 @@ echo '|__| |__  |    |    /  \    |__  |__)  /\   |\/| |__  |  | /  \ |__) |__/ 
 echo '|  | |___ |___ |___ \__/    |    |  \ /~~\  |  | |___ |/\| \__/ |  \ |  \ '
 echo
 
-# Show calendar
-cal
-echo 
-
 # Framework-specific functions
 restic_backup() { 
     restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~

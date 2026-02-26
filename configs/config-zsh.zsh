@@ -18,6 +18,14 @@ setopt histignorealldups sharehistory
 # Use emacs keybindings even if our EDITOR is set to vi
 bindkey -e
 
+# Add dotfiles bin directories to PATH when present
+if [[ -n "$LIBBEAGAN_HOME" ]] && [[ -d "$LIBBEAGAN_HOME/bin" ]]; then
+    path=("$LIBBEAGAN_HOME/bin" $path)
+fi
+if [[ -n "$LIBBEAGAN_HOME" ]] && [[ -d "$LIBBEAGAN_HOME/binlocal" ]]; then
+    path=("$LIBBEAGAN_HOME/binlocal" $path)
+fi
+
 # Use modern completion system
 autoload -Uz compinit
 compinit

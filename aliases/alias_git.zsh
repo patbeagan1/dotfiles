@@ -1,3 +1,5 @@
+alias cdworktree='cd $(~/repo/incubator-agent/Incubator/monorepo agent-pipeline cd | tail -1)'
+
 save () { git commit -am "commit to save" } 
 switchoc () { git switch "$1" 2>/dev/null || git switch -c "$1"; git fetch "$1" 2>/dev/null; }
 # Alias for viewing the last commit in a concise format

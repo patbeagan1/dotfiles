@@ -82,4 +82,4 @@ libbeagan_dependencies() {
     echo
 }
 
-libbeagan_dependencies
+echo check dependencies with 'libbeagan_dependencies'
