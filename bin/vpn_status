@@ -1,0 +1,196 @@
+# vpn_status -- Detect whether a VPN is active on macOS.
+# Checks route tables, utun interfaces, and macOS system VPN services.
+# Use -q for quiet mode (exit code only, no output).
+# Returns 0 if VPN is active, 1 if not.
+
+vpn_status() {
+    emulate -L zsh
+    setopt localoptions extendedglob
+
+    local quiet=0
+    local OPTIND OPTARG opt
+    while getopts 'q' opt; do
+        case $opt in
+            q) quiet=1 ;;
+            *)
+                print -u2 "Usage: vpn_status [-q]"
+                return 2
+                ;;
+        esac
+    done
+
+    local method interface ip_addr
+
+    # ---------------------------------------------------------------
+    # 1. Route-based detection (primary)
+    #    A full-tunnel VPN adds two routes: 0/1 and 128.0/1 through
+    #    a utun interface. This is the most reliable signal.
+    # ---------------------------------------------------------------
+    local route_output
+    route_output="$(netstat -rn -f inet 2>/dev/null)"
+
+    if [[ -n $route_output ]]; then
+        local -a lines=( "${(@f)route_output}" )
+        local has_0_1=0 has_128=0
+        local route_iface=""
+
+        local line
+        for line in "${lines[@]}"; do
+            # Match "0/1" route through a utun interface
+            if [[ $line == (#b)0/1[[:space:]]##*[[:space:]](utun[0-9]##)* ]]; then
+                has_0_1=1
+                route_iface=${match[1]}
+            fi
+            # Match "128.0/1" route through a utun interface
+            if [[ $line == (#b)128.0/1[[:space:]]##*[[:space:]](utun[0-9]##)* ]]; then
+                has_128=1
+            fi
+        done
+
+        if (( has_0_1 && has_128 )) && [[ -n $route_iface ]]; then
+            method="Route-based (full tunnel)"
+            interface=$route_iface
+
+            # Grab the IP from that interface
+            local if_output
+            if_output="$(ifconfig "$interface" 2>/dev/null)"
+            if [[ -n $if_output ]]; then
+                local if_line
+                for if_line in "${(@f)if_output}"; do
+                    if [[ $if_line == (#b)*inet[[:space:]]##([0-9.]##)[[:space:]]* ]]; then
+                        ip_addr=${match[1]}
+                        break
+                    fi
+                done
+            fi
+
+            if (( quiet )); then
+                return 0
+            fi
+            print "VPN Connected"
+            print "  Method:    $method"
+            print "  Interface: $interface"
+            [[ -n $ip_addr ]] && print "  IP:        $ip_addr"
+            return 0
+        fi
+    fi
+
+    # ---------------------------------------------------------------
+    # 2. Interface-based detection (secondary)
+    #    Look for utun interfaces with private IP addresses assigned.
+    #    Private ranges: 10.x, 172.16-31.x, 192.168.x
+    # ---------------------------------------------------------------
+    local all_if_output
+    all_if_output="$(ifconfig 2>/dev/null)"
+
+    if [[ -n $all_if_output ]]; then
+        local -a if_blocks
+        local current_iface="" current_block=""
+
+        local raw_line
+        for raw_line in "${(@f)all_if_output}"; do
+            # New interface header: starts with a non-whitespace char
+            if [[ $raw_line == (#b)([a-zA-Z][a-zA-Z0-9]##):[[:space:]]* ]]; then
+                # Process the previous block if it was a utun
+                if [[ -n $current_iface ]] && [[ $current_iface == utun* ]]; then
+                    if_blocks+=( "${current_iface}:${current_block}" )
+                fi
+                current_iface=${match[1]}
+                current_block=$raw_line
+            else
+                current_block+=$'\n'$raw_line
+            fi
+        done
+        # Don't forget the last block
+        if [[ -n $current_iface ]] && [[ $current_iface == utun* ]]; then
+            if_blocks+=( "${current_iface}:${current_block}" )
+        fi
+
+        local block_entry
+        for block_entry in "${if_blocks[@]}"; do
+            local iface_name=${block_entry%%:*}
+            local block_text=${block_entry#*:}
+
+            local bl
+            for bl in "${(@f)block_text}"; do
+                if [[ $bl == (#b)*inet[[:space:]]##([0-9.]##)[[:space:]]* ]]; then
+                    local candidate_ip=${match[1]}
+
+                    # Check if it's a private IP
+                    local is_private=0
+                    if [[ $candidate_ip == 10.* ]]; then
+                        is_private=1
+                    elif [[ $candidate_ip == 192.168.* ]]; then
+                        is_private=1
+                    elif [[ $candidate_ip == 172.* ]]; then
+                        # Check 172.16.0.0 - 172.31.255.255
+                        local second_octet=${${candidate_ip#*.}%%.*}
+                        if (( second_octet >= 16 && second_octet <= 31 )); then
+                            is_private=1
+                        fi
+                    fi
+
+                    if (( is_private )); then
+                        method="Interface-based (private IP on tunnel)"
+                        interface=$iface_name
+                        ip_addr=$candidate_ip
+
+                        if (( quiet )); then
+                            return 0
+                        fi
+                        print "VPN Connected"
+                        print "  Method:    $method"
+                        print "  Interface: $interface"
+                        print "  IP:        $ip_addr"
+                        return 0
+                    fi
+                fi
+            done
+        done
+    fi
+
+    # ---------------------------------------------------------------
+    # 3. macOS native VPN check
+    #    Use scutil --nc list to find connected system VPN services.
+    # ---------------------------------------------------------------
+    local scutil_output
+    scutil_output="$(scutil --nc list 2>/dev/null)"
+
+    if [[ -n $scutil_output ]]; then
+        local sc_line
+        for sc_line in "${(@f)scutil_output}"; do
+            if [[ $sc_line == *\(Connected\)* ]]; then
+                method="macOS system VPN service"
+
+                # Try to extract the service name (in quotes)
+                if [[ $sc_line == (#b)*\"([^\"]##)\"* ]]; then
+                    local svc_name=${match[1]}
+                fi
+
+                # Try to extract the interface from the service
+                if [[ $sc_line == (#b)*\[([^\]]##)\]* ]]; then
+                    interface=${match[1]}
+                fi
+
+                if (( quiet )); then
+                    return 0
+                fi
+                print "VPN Connected"
+                print "  Method:    $method"
+                [[ -n $svc_name ]] && print "  Service:   $svc_name"
+                [[ -n $interface ]] && print "  Interface: $interface"
+                return 0
+            fi
+        done
+    fi
+
+    # ---------------------------------------------------------------
+    # No VPN detected
+    # ---------------------------------------------------------------
+    if (( ! quiet )); then
+        print "VPN Disconnected"
+    fi
+    return 1
+}
+
+vpn_status "$@"
