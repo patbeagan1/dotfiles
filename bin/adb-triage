@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# (c) 2026 Pat Beagan: MIT License
+#
+# adb-triage: quick Android crash-triage primitives over adb.
+
+set -euo pipefail
+IFS=$'\n\t'
+
+scriptname="$(basename "$0")"
+
+error_exit() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+require_adb() {
+    command -v adb >/dev/null 2>&1 || error_exit "'adb' not found on PATH"
+}
+
+help() {
+    local code=${1:-0}
+    cat <<EOF
+Usage: $scriptname <subcommand> [args]
+
+Android crash-triage helpers — thin wrappers over adb that bundle the
+logcat-clear / action / logcat-grep incantations you'd otherwise retype.
+
+Subcommands:
+  launch <component>   Start an activity and dump any resulting crash lines.
+                       <component> is pkg/.Activity (e.g. com.foo/.BarActivity).
+  tap <x> <y>          Tap the device at (x, y) and dump any crash lines.
+  crash [pkg]          Dump recent FATAL/AndroidRuntime lines from logcat,
+                       optionally scoped to a package name.
+  pkgs [pattern]       List installed packages, optionally grepped for pattern.
+  pid <pkg>            Show pid and top activity info for a package.
+  tail <pkg>           Stream logcat scoped to the package's pid (Ctrl-C to stop).
+  shot [out]           Screencap and pull to 'out' (default: ./adb-triage-<ts>.png);
+                       opens in Preview on macOS.
+  info                 Print physical size and density.
+  clear                Clear logcat.
+  help | -h | --help   Show this help.
+
+Environment:
+  ADB_TRIAGE_PKG   Default package for subcommands that take [pkg].
+
+Examples:
+  $scriptname pkgs alltrails
+  $scriptname launch com.alltrails.app.coreservices/.CoreServicesActivity
+  $scriptname tap 540 820
+  $scriptname crash com.alltrails.app.coreservices
+  ADB_TRIAGE_PKG=com.foo $scriptname tail
+
+EOF
+    exit "$code"
+}
+
+_resolve_pkg() {
+    local pkg="${1:-${ADB_TRIAGE_PKG:-}}"
+    if [[ -z "$pkg" ]]; then
+        error_exit "missing package (pass as arg or set ADB_TRIAGE_PKG)"
+    fi
+    printf '%s' "$pkg"
+}
+
+_dump_crash() {
+    local pkg="${1:-}"
+    local grep_expr='FATAL|AndroidRuntime|CrashLogger|ComposeInternal'
+    if [[ -n "$pkg" ]]; then
+        adb logcat -d 2>&1 | grep -iE "$grep_expr" | grep -i "$pkg" | tail -120 || true
+    else
+        adb logcat -d 2>&1 | grep -iE "$grep_expr" | tail -120 || true
+    fi
+}
+
+cmd_launch() {
+    [[ $# -ge 1 ]] || error_exit "launch: need <component> (e.g. com.foo/.BarActivity)"
+    require_adb
+    local component="$1"
+    local pkg="${component%%/*}"
+    adb logcat -c
+    adb shell am start -n "$component"
+    sleep 3
+    _dump_crash "$pkg"
+}
+
+cmd_tap() {
+    [[ $# -ge 2 ]] || error_exit "tap: need <x> <y>"
+    require_adb
+    local x="$1" y="$2"
+    adb logcat -c
+    adb shell input tap "$x" "$y"
+    sleep 3
+    _dump_crash ""
+}
+
+cmd_crash() {
+    require_adb
+    local pkg="${1:-${ADB_TRIAGE_PKG:-}}"
+    _dump_crash "$pkg"
+}
+
+cmd_pkgs() {
+    require_adb
+    local pattern="${1:-}"
+    if [[ -n "$pattern" ]]; then
+        adb shell pm list packages | grep -i "$pattern" || true
+    else
+        adb shell pm list packages
+    fi
+}
+
+cmd_pid() {
+    require_adb
+    local pkg
+    pkg="$(_resolve_pkg "${1:-}")"
+    echo "=== pidof $pkg ==="
+    adb shell pidof "$pkg" || echo "(not running)"
+    echo "=== dumpsys activity activities ==="
+    adb shell dumpsys activity activities | grep -iE "realActivity|${pkg}" | head -20 || true
+}
+
+cmd_tail() {
+    require_adb
+    local pkg
+    pkg="$(_resolve_pkg "${1:-}")"
+    local pid
+    pid="$(adb shell pidof "$pkg" | tr -d '\r\n ')"
+    [[ -n "$pid" ]] || error_exit "tail: no running pid for $pkg"
+    echo "Streaming logcat for $pkg (pid $pid). Ctrl-C to stop." >&2
+    adb logcat --pid="$pid"
+}
+
+cmd_shot() {
+    require_adb
+    local out="${1:-./adb-triage-$(date +%Y%m%d-%H%M%S).png}"
+    local remote=/sdcard/adb-triage.png
+    adb shell screencap -p "$remote"
+    adb pull "$remote" "$out"
+    adb shell rm -f "$remote" >/dev/null 2>&1 || true
+    echo "Saved: $out"
+    if command -v open >/dev/null 2>&1; then
+        open "$out"
+    fi
+}
+
+cmd_info() {
+    require_adb
+    adb shell wm size
+    adb shell wm density
+}
+
+cmd_clear() {
+    require_adb
+    adb logcat -c
+}
+
+main() {
+    [[ $# -ge 1 ]] || help 1
+    local sub="$1"
+    shift
+    case "$sub" in
+        launch)             cmd_launch "$@" ;;
+        tap)                cmd_tap "$@" ;;
+        crash)              cmd_crash "$@" ;;
+        pkgs)               cmd_pkgs "$@" ;;
+        pid)                cmd_pid "$@" ;;
+        tail)               cmd_tail "$@" ;;
+        shot)               cmd_shot "$@" ;;
+        info)               cmd_info "$@" ;;
+        clear)              cmd_clear "$@" ;;
+        help|-h|--help)     help 0 ;;
+        *)
+            echo "unknown subcommand: $sub" >&2
+            help 1
+            ;;
+    esac
+}
+
+main "$@"
+
+if command -v trackusage.sh >/dev/null 2>&1; then
+    trackusage.sh "$0"
+fi

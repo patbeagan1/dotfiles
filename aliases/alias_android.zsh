@@ -36,6 +36,9 @@ alias android-start-emu-fzf='emulator -avd $(emulator -list-avds | fzf)'
 
 alias android-record='scrcpy -m720 --max-fps=60 -d --record=file.mp4 && mv file.mp4 ~/Downloads'
 
+# Shortcut for bin/adb-triage — Android crash triage helpers.
+alias adbt='adb-triage'
+
 # Function to search and execute ADB commands using fzf
 androidl () {
     local commands=(

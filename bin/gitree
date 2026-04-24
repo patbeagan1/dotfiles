@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# (c) 2026 Pat Beagan: MIT License
+#
+# gitree: print a tree of git repos and their current branches under a path.
+
+set -euo pipefail
+IFS=$'\n\t'
+
+scriptname="$(basename "$0")"
+
+error_exit() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+help() {
+    local code=${1:-0}
+    cat <<EOF
+Usage: $scriptname [path]
+
+Find every git repository under [path] (default: current directory) and
+print them as an ASCII tree. Each repo's current branch is shown as its
+single child. Detached HEADs render as 'HEAD (detached: <short-sha>)'.
+
+Options:
+  -h, --help    Show this help
+
+Examples:
+  $scriptname
+  $scriptname ~/Documents/Github
+EOF
+    exit "$code"
+}
+
+_branch_of() {
+    local dir="$1"
+    local branch
+    if branch=$(git -C "$dir" symbolic-ref --short HEAD 2>/dev/null); then
+        echo "$branch"
+        return
+    fi
+    local sha
+    sha=$(git -C "$dir" rev-parse --short HEAD 2>/dev/null) || { echo "?"; return; }
+    echo "HEAD (detached: $sha)"
+}
+
+main() {
+    local root="."
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help) help 0 ;;
+            --)        shift; break ;;
+            -*)        error_exit "unknown flag: $1" ;;
+            *)         root="$1"; shift ;;
+        esac
+    done
+
+    [[ -d "$root" ]] || error_exit "not a directory: $root"
+    root="${root%/}"
+    [[ -z "$root" ]] && root="/"
+
+    local repos=()
+    while IFS= read -r line; do
+        repos+=("$line")
+    done < <(find "$root" -name .git -prune -print 2>/dev/null | sed 's|/\.git$||' | sort)
+
+    echo "$root"
+
+    local n=${#repos[@]}
+    if (( n == 0 )); then
+        echo "(no git repositories found)"
+        return 0
+    fi
+
+    local i
+    for ((i=0; i<n; i++)); do
+        local repo="${repos[i]}"
+        local display="${repo#"$root"/}"
+        [[ "$display" == "$repo" ]] && display="."
+        local branch
+        branch=$(_branch_of "$repo")
+
+        if (( i == n - 1 )); then
+            printf '└── %s\n' "$display"
+            printf '    └── %s\n' "$branch"
+        else
+            printf '├── %s\n' "$display"
+            printf '│   └── %s\n' "$branch"
+        fi
+    done
+}
+
+main "$@"
+
+if command -v trackusage.sh >/dev/null 2>&1; then
+    trackusage.sh "$0"
+fi
