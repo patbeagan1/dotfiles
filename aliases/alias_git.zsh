@@ -1,3 +1,20 @@
+release-contains () { git branch -a --contains "$1" | grep release | grep remote | grep -E '\d+\.\d+\.\d+' | sed 's/^.*release/release/g' | sort -V | tail }
+
+release-contains () {
+    # Ensure a hash is provided
+    if [ -z "$1" ]; then return; fi
+
+    git branch -a --contains "$1" | 
+        grep "remotes" | 
+        grep "release" | 
+        grep -E '[0-9]+\.[0-9]+\.[0-9]+' | 
+        sed 's/^.*release\//release\//g' | 
+        sort -V | 
+        tail -n 10
+}
+
+alias find-release='release-contains "$(git log --oneline --color=always | fzf --ansi --preview "git show --stat {1}" | awk "{print \$1}")"'
+
 alias cdworktree='cd $(~/repo/incubator-agent/Incubator/monorepo agent-pipeline cd | tail -1)'
 
 save () { git commit -am "commit to save" } 
