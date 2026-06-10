@@ -1,0 +1,278 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: android utilities
+commands:
+  android-dump:
+    about: A script for automated tasks.
+    path: ../scripts/source/android-dump
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            android-dump
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_android-dump\" <<'JAN_EOF_android_dump__android_dump_1a56787e9d59'\n\
+            #compdef android-dump\n\n# Zsh completion for android-dump\n# Generated\
+            \ automatically - customize as needed\n\n_android-dump() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_android-dump \"$@\"\nJAN_EOF_android_dump__android_dump_1a56787e9d59\n\
+            chmod +x \"$tmpdir/_android-dump\" 2>/dev/null || true\ncat >\"$tmpdir/android-dump.sh\"\
+            \ <<'JAN_EOF_android_dump_android_dump_sh_920fa61e5d2c'\n#!/usr/bin/env\
+            \ zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\\
+            n\\t'\n\nscriptname=\"$(basename \"$0\")\"\n\nhelp () {\n    error_code=$?\n\
+            \    echo \"\nUsage: $scriptname [-h|--help]\n\nShows the current top\
+            \ activity on the connected Android device using adb.\nThis is useful\
+            \ for debugging and understanding what app is currently active.\n\nRequires:\n\
+            \  - ADB (Android Debug Bridge) to be installed and configured\n  - An\
+            \ Android device connected via USB with USB debugging enabled\n\nExamples:\n\
+            \  $scriptname          # Shows current top activity\n\"\n    exit $error_code\n\
+            }\n\nandroid-dump () {\n\tadb shell dumpsys activity top\n}\n\nandroid-dump\
+            \ \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_android_dump_android_dump_sh_920fa61e5d2c\n\
+            chmod +x \"$tmpdir/android-dump.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/android-dump.sh\" \"$@\"\n"
+          passthrough: true
+  android_dumpsys:
+    about: A script for automated tasks.
+    path: ../scripts/source/android_dumpsys
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            android_dumpsys
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_android_dumpsys\" <<'JAN_EOF_android_dumpsys__android_dumpsys_b1835a3c670b'\n\
+            #compdef android_dumpsys\n\n# Zsh completion for android_dumpsys\n# Generated\
+            \ automatically - customize as needed\n\n_android_dumpsys() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_android_dumpsys \"$@\"\nJAN_EOF_android_dumpsys__android_dumpsys_b1835a3c670b\n\
+            chmod +x \"$tmpdir/_android_dumpsys\" 2>/dev/null || true\ncat >\"$tmpdir/android_dumpsys.sh\"\
+            \ <<'JAN_EOF_android_dumpsys_android_dumpsys_sh_47fd694e4c7e'\n#!/bin/bash\n\
+            adb shell dumpsys activity top\nJAN_EOF_android_dumpsys_android_dumpsys_sh_47fd694e4c7e\n\
+            chmod +x \"$tmpdir/android_dumpsys.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/android_dumpsys.sh\" \"$@\"\n"
+          passthrough: true
+  android_enable_developer:
+    about: A script for automated tasks.
+    path: ../scripts/source/android_enable_developer
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            android_enable_developer
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_android_enable_developer\" <<'JAN_EOF_android_enable_developer__android_enable_develop_be56e4a6df62'\n\
+            #compdef android_enable_developer\n\n# Zsh completion for android_enable_developer\n\
+            # Generated automatically - customize as needed\n\n_android_enable_developer()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_android_enable_developer \"$@\"\n\
+            JAN_EOF_android_enable_developer__android_enable_develop_be56e4a6df62\n\
+            chmod +x \"$tmpdir/_android_enable_developer\" 2>/dev/null || true\ncat\
+            \ >\"$tmpdir/android_enable_developer.sh\" <<'JAN_EOF_android_enable_developer_android_enable_develope_735220236f38'\n\
+            #!/usr/bin/env zsh\n\nadb shell settings put global development_settings_enabled\
+            \ 1\nadb shell settings put global always_finish_activities 1\nJAN_EOF_android_enable_developer_android_enable_develope_735220236f38\n\
+            chmod +x \"$tmpdir/android_enable_developer.sh\" 2>/dev/null || true\n\
+            cd \"$tmpdir\"\nexec \"$tmpdir/android_enable_developer.sh\" \"$@\"\n"
+          passthrough: true
+  emulator-start-charles:
+    about: A script for automated tasks.
+    path: ../scripts/source/emulator-start-charles
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            emulator-start-charles
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_emulator-start-charles\" <<'JAN_EOF_emulator_start_charles__emulator_start_charles_de0e61f5eaa9'\n\
+            #compdef emulator-start-charles\n\n# Zsh completion for emulator-start-charles\n\
+            # Generated automatically - customize as needed\n\n_emulator-start-charles()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_emulator-start-charles \"$@\"\nJAN_EOF_emulator_start_charles__emulator_start_charles_de0e61f5eaa9\n\
+            chmod +x \"$tmpdir/_emulator-start-charles\" 2>/dev/null || true\ncat\
+            \ >\"$tmpdir/emulator-start-charles.sh\" <<'JAN_EOF_emulator_start_charles_emulator_start_charles_sh_642b226e999e'\n\
+            #!/usr/bin/env zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"\
+            $0\")\"\nhelp() {\n    error_code=$?\n    echo \"\nUsage: $scriptname\
+            \ [-h|--help]\n\nStarts an Android emulator with Charles Proxy configured\
+            \ for network debugging.\nAutomatically detects your local IP address\
+            \ and configures the emulator to use\nCharles Proxy running on port 8888.\n\
+            \nFeatures:\n  - Automatically finds your local IP address\n  - Uses fzf\
+            \ to select an emulator from available AVDs\n  - Configures HTTP proxy\
+            \ for network traffic inspection\n  - Optimized network settings (no delay,\
+            \ full speed)\n\nRequires:\n  - Android SDK with emulator tools\n  - Charles\
+            \ Proxy running on port 8888\n  - fzf for emulator selection\n\"\n   \
+            \ exit $error_code\n}\n\nmain() {\n\n    emulate -L zsh\n    zmodload\
+            \ zsh/zutil || return 1\n\n    local help\n    zparseopts -D -F -K --\
+            \ \\\n        {h,-help}=help ||\n        return 1\n\n    if (($#help));\
+            \ then help; fi\n\nemulator-start-charles () {\n\tlocal ip_address=\"\
+            $(ifconfig | grep 192 | sed 's/.*inet//g' | sed 's/netmask.*//g')\" local\
+            \ emu=\"$(emulator -list-avds | fzf)\" \n\temulator -netdelay none -netspeed\
+            \ full -http-proxy http://\"$ip_address\":8888 -avd \"$emu\"\n}\n\n  \
+            \  emulator-start-charles \"$@\" || help\n}\n\nmain \"$@\" || help\ntrackusage\
+            \ \"$0\"\nJAN_EOF_emulator_start_charles_emulator_start_charles_sh_642b226e999e\n\
+            chmod +x \"$tmpdir/emulator-start-charles.sh\" 2>/dev/null || true\ncd\
+            \ \"$tmpdir\"\nexec \"$tmpdir/emulator-start-charles.sh\" \"$@\"\n"
+          passthrough: true
+  gradle_by_module:
+    about: A script for automated tasks.
+    path: ../scripts/source/gradle_by_module
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gradle_by_module
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gradle_by_module\" <<'JAN_EOF_gradle_by_module__gradle_by_module_d8c0b4bd2af7'\n\
+            #compdef gradle_by_module\n\n# Zsh completion for gradle_by_module\n#\
+            \ Generated automatically - customize as needed\n\n\n_gradle_by_module()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '-d[Custom option]' \\\n        '-h[Custom option]' \\\n\
+            \        '-t[Custom option]' \\        '*::arg:_files'\n}\n\n_gradle_by_module\
+            \ \"$@\"\nJAN_EOF_gradle_by_module__gradle_by_module_d8c0b4bd2af7\nchmod\
+            \ +x \"$tmpdir/_gradle_by_module\" 2>/dev/null || true\ncat >\"$tmpdir/gradle_by_module.zsh\"\
+            \ <<'JAN_EOF_gradle_by_module_gradle_by_module_zsh_afc8c6bee8ca'\n#!/bin/zsh\n\
+            \nshow_help() {\n  cat <<EOF\nUsage: $(basename \"$0\") [options]\n\n\
+            Runs tests and/or detekt for modules changed compared to origin/develop.\n\
+            \nOptions:\n  --test         Run unit tests for changed modules\n  --detekt\
+            \       Run detekt for changed modules\n  -h, --help     Show this help\
+            \ message\n\nIf no options are provided, nothing will be run.\nEOF\n}\n\
+            \nrun_tests=0\nrun_detekt=0\n\n# Parse CLI flags (additive)\nfor arg in\
+            \ \"$@\"; do\n  case \"$arg\" in\n    --test)\n      run_tests=1\n   \
+            \   ;;\n    --detekt)\n      run_detekt=1\n      ;;\n    -h|--help)\n\
+            \      show_help\n      exit 0\n      ;;\n    *)\n      echo \"Unknown\
+            \ option: $arg\"\n      show_help\n      exit 1\n      ;;\n  esac\ndone\n\
+            \nif [[ $run_tests -eq 0 && $run_detekt -eq 0 ]]; then\n  echo \"Nothing\
+            \ to do: please specify --test and/or --detekt.\"\n  show_help\n  exit\
+            \ 0\nfi\n\n# Ensure you are in the root directory of your git repository\n\
+            if [ ! -d \".git\" ]; then\n  echo \"Error: Please run this script from\
+            \ the root of your git repository.\"\n  exit 1\nfi\n\n# 1. Get a list\
+            \ of changed files compared to the develop branch\nchanged_files=$(git\
+            \ diff --name-only origin/develop)\n\nif [ -z \"$changed_files\" ]; then\n\
+            \  echo \"No changes detected compared to the develop branch.\"\n  exit\
+            \ 0\nfi\n\n# An associative array to store the unique module paths\ntypeset\
+            \ -A changed_modules\n\n# 2. For each changed file, find the corresponding\
+            \ module\nfor file in ${(f)changed_files}; do\n  dir=$(dirname \"$file\"\
+            )\n  # Traverse up the directory tree to find the module root\n  while\
+            \ [ \"$dir\" != \".\" ]; do\n    if [ -f \"$dir/build.gradle.kts\" ] ||\
+            \ [ -f \"$dir/build.gradle\" ]; then\n      # Convert the directory path\
+            \ to a Gradle module path\n      module_path=\":${dir//\\//:}\"\n    \
+            \  changed_modules[$module_path]=1\n      break\n    fi\n    dir=$(dirname\
+            \ \"$dir\")\n  done\ndone\n\n# 3. Check if any modules were identified\n\
+            if [ ${#changed_modules[@]} -eq 0 ]; then\n  echo \"No changed modules\
+            \ with a build.gradle[.kts] file found.\"\n  exit 0\nfi\n\n# 4. Construct\
+            \ the gradlew command\ngradle_cmd=\"./gradlew --configure-on-demand\"\n\
+            gradle_tasks=()\n\nfor module in \"${(@k)changed_modules}\"; do\n  if\
+            \ [[ $run_tests -eq 1 ]]; then\n    gradle_tasks+=(\"${module}:testAlphaDebugUnitTest\"\
+            )\n  fi\n  if [[ $run_detekt -eq 1 ]]; then\n    gradle_tasks+=(\"${module}:detekt\"\
+            )\n  fi\ndone\n\nif [[ ${#gradle_tasks[@]} -eq 0 ]]; then\n  echo \"No\
+            \ tasks to run for the selected modules.\"\n  exit 0\nfi\n\necho \"Running\
+            \ for the following modules:\"\nfor module in \"${(@k)changed_modules}\"\
+            ; do\n  echo \"- $module\"\ndone\n\necho\necho \"Executing command: $gradle_cmd\
+            \ ${gradle_tasks[*]}\"\necho\n\neval \"$gradle_cmd ${gradle_tasks[*]}\"\
+            \nJAN_EOF_gradle_by_module_gradle_by_module_zsh_afc8c6bee8ca\nchmod +x\
+            \ \"$tmpdir/gradle_by_module.zsh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/gradle_by_module.zsh\" \"$@\"\n"
+          passthrough: true

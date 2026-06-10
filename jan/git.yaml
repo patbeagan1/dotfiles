@@ -1,0 +1,919 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: git utilities
+commands:
+  add-submodule:
+    about: A script for automated tasks.
+    path: ../scripts/source/add-submodule
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            add-submodule
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_add-submodule\" <<'JAN_EOF_add_submodule__add_submodule_36531f2d4fd4'\n\
+            #compdef add-submodule\n\n# Zsh completion for add-submodule\n# Generated\
+            \ automatically - customize as needed\n\n_add-submodule() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_add-submodule \"$@\"\nJAN_EOF_add_submodule__add_submodule_36531f2d4fd4\n\
+            chmod +x \"$tmpdir/_add-submodule\" 2>/dev/null || true\ncat >\"$tmpdir/add-submodule.sh\"\
+            \ <<'JAN_EOF_add_submodule_add_submodule_sh_9a6e0c506706'\n#!/usr/bin/env\
+            \ zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"$0\")\"\n\nusage()\
+            \ {\n  cat <<EOF\nUsage: $scriptname [-h|--help] [-b <branch>] <repo_url>\
+            \ [submodule_path]\n\nAdds a git submodule to the project.\n\nArguments:\n\
+            \  repo_url         The URL of the git repository to add as a submodule.\n\
+            \  submodule_path   (Optional) Path where the submodule will be placed.\
+            \ Defaults to the repo name.\n\nOptions:\n  -b, --branch     Specify a\
+            \ branch to track for the submodule.\n  -h, --help       Show this help\
+            \ message and exit.\n\nExamples:\n  $scriptname https://github.com/user/repo.git\n\
+            \  $scriptname -b main https://github.com/user/repo.git libs/repo\nEOF\n\
+            \  exit 1\n}\n\nadd_submodule() {\n  local branch=\"\"\n  local repo_url=\"\
+            \"\n  local submodule_path=\"\"\n\n  # Parse options\n  zparseopts -D\
+            \ -E -F -b:=branch_opt -branch:=branch_opt -h=help_opt -help=help_opt\n\
+            \n  if (( ${#help_opt} )); then\n    usage\n  fi\n\n  if (( ${#branch_opt}\
+            \ )); then\n    branch=\"${branch_opt[2]}\"\n    if [[ -z \"$branch\"\
+            \ ]]; then\n      echo \"❌ Error: --branch requires a value.\"\n     \
+            \ usage\n    fi\n  fi\n\n  # Shift parsed options\n  while [[ \"$1\" ==\
+            \ -* ]]; do shift; done\n\n  # Parse positional arguments\n  if [[ $#\
+            \ -lt 1 ]]; then\n    echo \"❌ Error: repo_url is required.\"\n    usage\n\
+            \  fi\n\n  repo_url=\"$1\"\n  submodule_path=\"${2:-}\"\n\n  # If submodule_path\
+            \ is not provided, derive from repo_url\n  if [[ -z \"$submodule_path\"\
+            \ ]]; then\n    submodule_path=\"${repo_url:t:r}\"\n  fi\n\n  echo \"\U0001F539\
+            \ Adding submodule:\"\n  echo \"    Repo URL:        $repo_url\"\n  echo\
+            \ \"    Submodule Path:  $submodule_path\"\n  if [[ -n \"$branch\" ]];\
+            \ then\n    echo \"    Branch:          $branch\"\n    git submodule add\
+            \ -b \"$branch\" \"$repo_url\" \"$submodule_path\"\n  else\n    git submodule\
+            \ add \"$repo_url\" \"$submodule_path\"\n  fi\n\n  echo \"\U0001F539 Initializing\
+            \ and updating submodule...\"\n  git submodule update --init --recursive\
+            \ \"$submodule_path\"\n\n  echo \"✅ Submodule added successfully.\"\n\
+            }\n\nadd_submodule \"$@\"\nJAN_EOF_add_submodule_add_submodule_sh_9a6e0c506706\n\
+            chmod +x \"$tmpdir/add-submodule.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/add-submodule.sh\" \"$@\"\n"
+          passthrough: true
+  autogit:
+    about: A script for automated tasks.
+    path: ../scripts/source/autogit
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            autogit
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_autogit\" <<'JAN_EOF_autogit__autogit_60d4f772af26'\n\
+            #compdef autogit\n\n# Zsh completion for autogit\n# Generated automatically\
+            \ - customize as needed\n\n_autogit() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_autogit \"\
+            $@\"\nJAN_EOF_autogit__autogit_60d4f772af26\nchmod +x \"$tmpdir/_autogit\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/autogit.py\" <<'JAN_EOF_autogit_autogit_py_344d63df589e'\n\
+            #!/usr/bin/env python3\n\nimport os\nimport subprocess\nimport time\n\n\
+            # ANSI code for start of line\nANSI_START_OF_LINE = '\\033[0G'\n\ndef\
+            \ has_changes():\n    \"\"\"\n    Checks if there are uncommitted changes\
+            \ in the git repository.\n\n    Returns:\n        bool: True if there\
+            \ are uncommitted changes, False otherwise.\n    \"\"\"\n    try:\n  \
+            \      output = subprocess.check_output(['git', 'status', '--porcelain'])\n\
+            \        return output.decode('utf-8') != ''\n    except subprocess.CalledProcessError\
+            \ as e:\n        print(f'Error checking git status: {e.output.decode(\"\
+            utf-8\")}')\n        return False\n\ndef main():\n    \"\"\"\n    Commits\
+            \ changes to the git repository every minute, if there are any.\n    Prints\
+            \ out the time of the last commit, overwriting the previous output.\n\
+            \    \"\"\"\n    # Check if current directory is a git repository\n  \
+            \  try:\n        subprocess.check_output(['git', 'rev-parse', '--is-inside-work-tree'])\n\
+            \    except subprocess.CalledProcessError:\n        print(\"The current\
+            \ directory is not a git repository.\")\n        return\n\n    while True:\n\
+            \        if has_changes():\n            current_time = time.strftime('%Y-%m-%d\
+            \ %H:%M:%S', time.localtime())\n            message = f'Standard commit\
+            \ at {current_time}'\n\n            try:\n                print(\"\")\n\
+            \                subprocess.check_call(['git', 'add', '.'])\n        \
+            \        subprocess.check_call(['git', 'commit', '-m', message])\n\n \
+            \               print(f'{ANSI_START_OF_LINE}Last sync: {current_time}',\
+            \ end='', flush=True)\n            except subprocess.CalledProcessError\
+            \ as e:\n                print(f'\\nError committing changes: {e.output.decode(\"\
+            utf-8\")}')\n\n        time.sleep(60)\n\nif __name__ == \"__main__\":\n\
+            \    main()\nJAN_EOF_autogit_autogit_py_344d63df589e\nchmod +x \"$tmpdir/autogit.py\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/autogit.py\" \"\
+            $@\"\n"
+          passthrough: true
+  bcommit:
+    about: A script for automated tasks.
+    path: ../scripts/source/bcommit
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            bcommit
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_bcommit\" <<'JAN_EOF_bcommit__bcommit_893a31eea55e'\n\
+            #compdef bcommit\n\n# Zsh completion for bcommit\n# Generated automatically\
+            \ - customize as needed\n\n_bcommit() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_bcommit \"\
+            $@\"\nJAN_EOF_bcommit__bcommit_893a31eea55e\nchmod +x \"$tmpdir/_bcommit\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/bcommit.sh\" <<'JAN_EOF_bcommit_bcommit_sh_cebc7fff5174'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nbcommit () \n{ \n\
+            \    if [ $(echo \"$@\" | grep -c .*[0-9].*) -eq 0 ]; then\n        function\
+            \ getbranch () \n        { \n            printf $(git rev-parse --abbrev-ref\
+            \ HEAD)\n        };\n        prefix=\"$(getbranch |sed 's/^lb-.*/PT/g'\
+            \ |sed 's/^fb-.*/PT/g' |sed 's/^fabric-.*/NOTICKET Fabric/g' |sed 's/^pt.*/PT/g'\
+            \ |sed 's/^PT.*/PT/g')\";\n        number=\"$(getbranch | sed 's/[^0-9]//g')\"\
+            ;\n        title=\"$(getbranch |sed 's/^lb-//g' |sed 's/^fb-//g' |sed\
+            \ 's/^fabric-//g' |sed 's/^pt//g' |sed 's/^PT//g' |tr '-' ' ' |tr '_'\
+            \ ' ' |sed 's/[0-9]//g' |sed 's/^ //g')\n\n\";\n        body=\"$(\necho\
+            \ $@ |sed 's/BULLET/\\\n- /g' |sed 's/NEWLINE/\\\n/g'\n)\n\n\";\n    \
+            \    ticketUrl=\"$(if [[ $(getbranch) != \"fabric-\"* ]] ; then\n    echo\
+            \ https://example.com/$(getbranch | sed 's/[^0-9]//g')\nelse\n    echo\
+            \ Fabric $(getbranch | sed 's/[^0-9]//g')\nfi)\n\";\n        commitText=\"\
+            $prefix$number $title$body$ticketUrl\";\n        echo \"$commitText\"\
+            ;\n        git commit -am \"$commitText\";\n        echo;\n        echo\
+            \ Use the below as a template for your Ticket.;\n        echo --------------------------------------------;\n\
+            \        echo;\n        echo \"$body\";\n        echo \"**This is ready\
+            \ for QA.**\";\n        echo;\n        echo Branch: $(getbranch);\n  \
+            \      echo MR: TBD;\n        echo FT: TBD;\n        echo ACC:;\n    \
+            \    echo - TBD;\n    else\n        echo \"There are numbers in \\\"$@\\\
+            \", fix your commit message first.\";\n    fi\n}\nbcommit \"$@\"\nJAN_EOF_bcommit_bcommit_sh_cebc7fff5174\n\
+            chmod +x \"$tmpdir/bcommit.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/bcommit.sh\" \"$@\"\n"
+          passthrough: true
+  check-all-git-repos:
+    about: A script for automated tasks.
+    path: ../scripts/source/check-all-git-repos
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            check-all-git-repos
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_check-all-git-repos\" <<'JAN_EOF_check_all_git_repos__check_all_git_repos_f06e3fbe2248'\n\
+            #compdef check-all-git-repos\n\n# Zsh completion for check-all-git-repos\n\
+            # Generated automatically - customize as needed\n\n_check-all-git-repos()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_check-all-git-repos \"$@\"\nJAN_EOF_check_all_git_repos__check_all_git_repos_f06e3fbe2248\n\
+            chmod +x \"$tmpdir/_check-all-git-repos\" 2>/dev/null || true\ncat >\"\
+            $tmpdir/check-all-git-repos.sh\" <<'JAN_EOF_check_all_git_repos_check_all_git_repos_sh_8bd7140055f6'\n\
+            #!/usr/bin/env zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"\
+            $0\")\"\nhelp() {\n    error_code=$?\n    echo \"\nUsage: $scriptname\
+            \ [-h|--help]\n\nChecks the git status of all repositories in the current\
+            \ directory.\nShows the status of each git repository with brief output\
+            \ format.\n\nFeatures:\n  - Iterates through all subdirectories\n  - Shows\
+            \ current directory path\n  - Displays git status in brief format (-sb)\n\
+            \  - Adds spacing between repositories for readability\n\nExamples:\n\
+            \  $scriptname          # Checks all git repos in current directory\n\"\
+            \n    exit $error_code\n}\n\nmain() {\n\n    emulate -L zsh\n    zmodload\
+            \ zsh/zutil || return 1\n\n    local help\n    zparseopts -D -F -K --\
+            \ \\\n        {h,-help}=help ||\n        return 1\n\n    if (($#help));\
+            \ then help; fi\n\ncheck-all-git-repos () {\n\tcdfirst=`pwd` \n\tfor i\
+            \ in *\n\tdo\n\t\tcd \"$i\" && pwd && git status -sb && echo && echo\n\
+            \t\tcd \"$cdfirst\"\n\tdone\n}\n\n    check-all-git-repos \"$@\" || help\n\
+            }\n\nmain \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_check_all_git_repos_check_all_git_repos_sh_8bd7140055f6\n\
+            chmod +x \"$tmpdir/check-all-git-repos.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/check-all-git-repos.sh\" \"$@\"\n"
+          passthrough: true
+  create-ticket:
+    about: A script for automated tasks.
+    path: ../scripts/source/create-ticket
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            create-ticket
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_create-ticket\" <<'JAN_EOF_create_ticket__create_ticket_0d7558bb1002'\n\
+            #compdef create-ticket\n\n# Zsh completion for create-ticket\n# Generated\
+            \ automatically - customize as needed\n\n_create-ticket() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_create-ticket \"$@\"\nJAN_EOF_create_ticket__create_ticket_0d7558bb1002\n\
+            chmod +x \"$tmpdir/_create-ticket\" 2>/dev/null || true\ncat >\"$tmpdir/create-ticket.sh\"\
+            \ <<'JAN_EOF_create_ticket_create_ticket_sh_83a076ee7c80'\n#!/bin/bash\n\
+            \ncurl --verbose \\\n  --get \\\n  --data-urlencode \"pid=10047\" \\\n\
+            \  --data-urlencode \"issuetype=10004\" \\\n  --data-urlencode \"components=10013\"\
+            \ \\\n  --data-urlencode \"priority=3\" \\\n  --data-urlencode \"customfield_10133=10197\"\
+            \ \\\n  --data-urlencode \"assignee=ug%3A03682da5-16e1-4bbe-a74c-1c2d69a71c10\"\
+            \ \\\n  --data-urlencode \"summary=$1\" \\\n  \"https://alltrails.atlassian.net/secure/CreateIssueDetails!init.jspa\"\
+            \nJAN_EOF_create_ticket_create_ticket_sh_83a076ee7c80\nchmod +x \"$tmpdir/create-ticket.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/create-ticket.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  gd:
+    about: 'A terminal UI for browsing `git diff` similar to gitg: list changed files
+      by name, then open a less-like diff view for each file.'
+    path: ../scripts/source/gd
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gd
+
+
+            A terminal UI for browsing `git diff` similar to gitg: list changed files
+            by name, then open a less-like diff view for each file.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gd\" <<'JAN_EOF_gd__gd_d27dca0c4ec3'\n#compdef\
+            \ gd\n\n# Zsh completion for gd (interactive git diff TUI)\n_gd() {\n\
+            \    local context state line\n    typeset -A opt_args\n\n    _arguments\
+            \ -C \\\n        '(-c --cached)'{-c,--cached}'[Show staged (cached) diff\
+            \ only]' \\\n        '(-h --help)'{-h,--help}'[Show help]' \\\n      \
+            \  '*::path:_files -/'\n}\n\n_gd \"$@\"\nJAN_EOF_gd__gd_d27dca0c4ec3\n\
+            chmod +x \"$tmpdir/_gd\" 2>/dev/null || true\ncat >\"$tmpdir/gd.py\" <<'JAN_EOF_gd_gd_py_6478a88d2b30'\n\
+            #!/usr/bin/env python3\n# (c) 2025 Pat Beagan: MIT License\n\"\"\"\nInteractive\
+            \ gd (git diff) TUI - like gitg.\nBrowse changed files by name, then view\
+            \ each file's diff with a less-like pager.\n\"\"\"\n\nimport curses\n\
+            import subprocess\nimport sys\nfrom pathlib import Path\n\n\ndef run_git(\n\
+            \    args: list[str], cwd: Path | None = None, allow_exit_1: bool = False\n\
+            ) -> subprocess.CompletedProcess:\n    \"\"\"Run git with args; raise\
+            \ on fatal errors. For diff, pass allow_exit_1=True (diff exits 1 when\
+            \ there are changes).\"\"\"\n    result = subprocess.run(\n        [\"\
+            git\"] + args,\n        cwd=cwd,\n        capture_output=True,\n     \
+            \   text=True,\n        timeout=30,\n    )\n    if result.returncode ==\
+            \ 0:\n        return result\n    if allow_exit_1 and result.returncode\
+            \ == 1:\n        return result\n    if \"fatal:\" in (result.stderr or\
+            \ \"\"):\n        raise RuntimeError(result.stderr.strip() or f\"git {'\
+            \ '.join(args)} failed\")\n    return result\n\n\ndef get_diff_files(cwd:\
+            \ Path, staged: bool) -> list[str]:\n    \"\"\"Return list of file paths\
+            \ that have diff (--name-only).\"\"\"\n    args = [\"diff\", \"--name-only\"\
+            ]\n    if staged:\n        args.append(\"--cached\")\n    r = run_git(args,\
+            \ cwd=cwd, allow_exit_1=True)\n    out = (r.stdout or \"\").strip()\n\
+            \    return [f for f in out.splitlines() if f] if out else []\n\n\ndef\
+            \ get_file_diff(cwd: Path, path: str, staged: bool) -> list[str]:\n  \
+            \  \"\"\"Return lines of diff for one file.\"\"\"\n    args = [\"diff\"\
+            , \"--\"]\n    if staged:\n        args = [\"diff\", \"--cached\", \"\
+            --\"]\n    args.append(path)\n    r = run_git(args, cwd=cwd, allow_exit_1=True)\n\
+            \    text = (r.stdout or \"\").strip()\n    return text.splitlines() if\
+            \ text else [\"(no diff)\"]\n\n\ndef find_repo_root(start: Path) -> Path\
+            \ | None:\n    \"\"\"Return git repo root containing start, or None.\"\
+            \"\"\n    p = start.resolve()\n    for _ in range(64):\n        if (p\
+            \ / \".git\").exists():\n            return p\n        parent = p.parent\n\
+            \        if parent == p:\n            break\n        p = parent\n    return\
+            \ None\n\n\n# ---------------------------------------------------------------------------\n\
+            # TUI: file list + detail (less-like) views\n# ---------------------------------------------------------------------------\n\
+            \nclass GdApp:\n    def __init__(self, stdscr, cwd: Path, staged: bool):\n\
+            \        self.stdscr = stdscr\n        self.cwd = cwd\n        self.staged\
+            \ = staged\n        self.files: list[str] = []\n        self.selection\
+            \ = 0\n        self.diff_lines: list[str] = []\n        self.diff_scroll\
+            \ = 0\n        self.diff_scroll_x = 0\n        self.diff_max_line_len\
+            \ = 0\n        self.view = \"list\"  # \"list\" | \"detail\"\n       \
+            \ self.detail_file: str | None = None\n        self.msg = \"\"\n\n   \
+            \ def load_files(self) -> None:\n        try:\n            self.files\
+            \ = get_diff_files(self.cwd, self.staged)\n        except RuntimeError\
+            \ as e:\n            self.files = []\n            self.msg = str(e)\n\
+            \        if not self.files and not self.msg:\n            self.msg = \"\
+            No changed files (try without --cached for working tree)\"\n\n    def\
+            \ open_detail(self) -> None:\n        if not self.files or self.selection\
+            \ >= len(self.files):\n            return\n        path = self.files[self.selection]\n\
+            \        self.detail_file = path\n        self.diff_lines = get_file_diff(self.cwd,\
+            \ path, self.staged)\n        self.diff_scroll = 0\n        self.diff_scroll_x\
+            \ = 0\n        self.diff_max_line_len = (\n            max(len(line) for\
+            \ line in self.diff_lines) if self.diff_lines else 0\n        )\n    \
+            \    self.view = \"detail\"\n\n    def close_detail(self) -> None:\n \
+            \       self.view = \"list\"\n        self.detail_file = None\n      \
+            \  self.diff_lines = []\n\n    def run(self) -> None:\n        curses.curs_set(0)\n\
+            \        curses.use_default_colors()\n        try:\n            curses.init_pair(1,\
+            \ curses.COLOR_GREEN, -1)\n            curses.init_pair(2, curses.COLOR_RED,\
+            \ -1)\n            curses.init_pair(3, curses.COLOR_CYAN, -1)\n      \
+            \      curses.init_pair(4, curses.COLOR_YELLOW, -1)\n        except curses.error:\n\
+            \            pass\n\n        self.load_files()\n\n        while True:\n\
+            \            self.draw()\n            try:\n                key = self.stdscr.getch()\n\
+            \            except (KeyboardInterrupt, EOFError):\n                break\n\
+            \n            if self.view == \"list\":\n                if key in (ord(\"\
+            q\"), ord(\"Q\"), 27):\n                    break\n                elif\
+            \ key in (curses.KEY_UP, ord(\"k\")):\n                    self.selection\
+            \ = max(0, self.selection - 1)\n                elif key in (curses.KEY_DOWN,\
+            \ ord(\"j\")):\n                    self.selection = min(len(self.files)\
+            \ - 1, self.selection + 1)\n                elif key in (curses.KEY_ENTER,\
+            \ ord(\"\\n\"), ord(\"\\r\")):\n                    if self.files:\n \
+            \                       self.open_detail()\n                elif key ==\
+            \ ord(\"g\"):\n                    self.selection = 0\n              \
+            \  elif key == ord(\"G\"):\n                    self.selection = max(0,\
+            \ len(self.files) - 1)\n            else:\n                # detail view\
+            \ (less-like)\n                if key in (ord(\"q\"), ord(\"Q\"), 27):\n\
+            \                    self.close_detail()\n                    continue\n\
+            \                h, w = self.stdscr.getmaxyx()\n                content_h\
+            \ = max(1, h - 2)\n                content_w = max(1, w - 1)\n       \
+            \         max_scroll = max(0, len(self.diff_lines) - content_h)\n    \
+            \            max_scroll_x = max(0, self.diff_max_line_len - content_w)\n\
+            \                if key in (curses.KEY_DOWN, ord(\"j\")):\n          \
+            \          self.diff_scroll = min(max_scroll, self.diff_scroll + 1)\n\
+            \                elif key in (curses.KEY_UP, ord(\"k\")):\n          \
+            \          self.diff_scroll = max(0, self.diff_scroll - 1)\n         \
+            \       elif key in (curses.KEY_NPAGE, ord(\" \")):\n                \
+            \    self.diff_scroll = min(max_scroll, self.diff_scroll + content_h)\n\
+            \                elif key in (curses.KEY_PPAGE, ord(\"b\")):\n       \
+            \             self.diff_scroll = max(0, self.diff_scroll - content_h)\n\
+            \                elif key in (curses.KEY_LEFT, ord(\"h\")):\n        \
+            \            self.diff_scroll_x = max(0, self.diff_scroll_x - 1)\n   \
+            \             elif key in (curses.KEY_RIGHT, ord(\"l\")):\n          \
+            \          self.diff_scroll_x = min(max_scroll_x, self.diff_scroll_x +\
+            \ 1)\n                elif key == ord(\"g\"):\n                    self.diff_scroll\
+            \ = 0\n                elif key == ord(\"G\"):\n                    self.diff_scroll\
+            \ = max_scroll\n                elif key == curses.KEY_HOME:\n       \
+            \             self.diff_scroll = 0\n                elif key == curses.KEY_END:\n\
+            \                    self.diff_scroll = max_scroll\n\n    def draw(self)\
+            \ -> None:\n        self.stdscr.erase()\n        h, w = self.stdscr.getmaxyx()\n\
+            \        if h < 2 or w < 2:\n            return\n\n        if self.view\
+            \ == \"list\":\n            self._draw_list(h, w)\n        else:\n   \
+            \         self._draw_detail(h, w)\n        self.stdscr.refresh()\n\n \
+            \   def _draw_list(self, h: int, w: int) -> None:\n        title = \"\
+            gd — git diff (files)\"\n        if self.staged:\n            title +=\
+            \ \" [staged]\"\n        self.stdscr.addstr(0, 0, title[: w - 1], curses.A_BOLD)\n\
+            \        self.stdscr.addstr(1, 0, \"j/k or ↑/↓ move  Enter open  q quit\"\
+            [: w - 1], curses.A_DIM)\n        y = 2\n        if self.msg:\n      \
+            \      self.stdscr.addstr(y, 0, self.msg[: w - 1])\n            return\n\
+            \        for i, path in enumerate(self.files):\n            if y >= h\
+            \ - 1:\n                break\n            attr = curses.A_REVERSE if\
+            \ i == self.selection else 0\n            line = path[: w - 1]\n     \
+            \       try:\n                self.stdscr.addstr(y, 0, line, attr)\n \
+            \           except curses.error:\n                pass\n            y\
+            \ += 1\n\n    def _draw_detail(self, h: int, w: int) -> None:\n      \
+            \  header = f\"diff — {self.detail_file or ''}\"\n        self.stdscr.addstr(0,\
+            \ 0, header[: w - 1], curses.A_BOLD)\n        hint = \"j/k ↑/↓  space/b\
+            \ pg  h/l ←/→  g/G top/end  q back\"\n        self.stdscr.addstr(1, 0,\
+            \ hint[: w - 1], curses.A_DIM)\n        content_h = max(1, h - 2)\n  \
+            \      start = self.diff_scroll\n        end = min(len(self.diff_lines),\
+            \ start + content_h)\n        content_w = max(1, w - 1)\n        for row,\
+            \ line in enumerate(self.diff_lines[start:end]):\n            if row +\
+            \ 2 >= h:\n                break\n            s = line[self.diff_scroll_x\
+            \ : self.diff_scroll_x + content_w]\n            attr = 0\n          \
+            \  if s.startswith(\"+\") and not s.startswith(\"+++\"):\n           \
+            \     try:\n                    attr = curses.color_pair(1)\n        \
+            \        except curses.error:\n                    pass\n            elif\
+            \ s.startswith(\"-\") and not s.startswith(\"---\"):\n               \
+            \ try:\n                    attr = curses.color_pair(2)\n            \
+            \    except curses.error:\n                    pass\n            try:\n\
+            \                self.stdscr.addstr(2 + row, 0, s, attr)\n           \
+            \ except curses.error:\n                pass\n\n\ndef main() -> int:\n\
+            \    import argparse\n    ap = argparse.ArgumentParser(\n        description=\"\
+            Interactive git diff TUI: browse changed files, view each diff (less-like).\"\
+            \n    )\n    ap.add_argument(\n        \"--cached\",\n        \"-c\",\n\
+            \        action=\"store_true\",\n        help=\"Show staged (cached) diff\
+            \ only\",\n    )\n    ap.add_argument(\n        \"path\",\n        nargs=\"\
+            ?\",\n        default=\".\",\n        help=\"Repository path (default:\
+            \ current directory)\",\n    )\n    args = ap.parse_args()\n    cwd =\
+            \ Path(args.path).resolve()\n    if not cwd.is_dir():\n        print(f\"\
+            gd: not a directory: {cwd}\", file=sys.stderr)\n        return 1\n   \
+            \ root = find_repo_root(cwd)\n    if not root:\n        print(\"gd: not\
+            \ a git repository\", file=sys.stderr)\n        return 1\n    try:\n \
+            \       curses.wrapper(lambda stdscr: GdApp(stdscr, root, args.cached).run())\n\
+            \    except RuntimeError as e:\n        print(f\"gd: {e}\", file=sys.stderr)\n\
+            \        return 1\n    return 0\n\n\nif __name__ == \"__main__\":\n  \
+            \  sys.exit(main())\nJAN_EOF_gd_gd_py_6478a88d2b30\nchmod +x \"$tmpdir/gd.py\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/gd.py\" \"$@\"\n"
+          passthrough: true
+  gitfile:
+    about: A script for automated tasks.
+    path: ../scripts/source/gitfile
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gitfile
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gitfile\" <<'JAN_EOF_gitfile__gitfile_ed4746ad3663'\n\
+            #compdef gitfile\n\n# Zsh completion for gitfile\n# Generated automatically\
+            \ - customize as needed\n\n_gitfile() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_gitfile \"\
+            $@\"\nJAN_EOF_gitfile__gitfile_ed4746ad3663\nchmod +x \"$tmpdir/_gitfile\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/gitfile.sh\" <<'JAN_EOF_gitfile_gitfile_sh_61c09d0317c6'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ngitfile () \n{ \n\
+            \    git status --porcelain | sed s/^...//\n}\n\ngitfile \"$@\"\nJAN_EOF_gitfile_gitfile_sh_61c09d0317c6\n\
+            chmod +x \"$tmpdir/gitfile.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/gitfile.sh\" \"$@\"\n"
+          passthrough: true
+  gitfilehistory:
+    about: A script for automated tasks.
+    path: ../scripts/source/gitfilehistory
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gitfilehistory
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gitfilehistory\" <<'JAN_EOF_gitfilehistory__gitfilehistory_0c75b99bbaf7'\n\
+            #compdef gitfilehistory\n\n# Zsh completion for gitfilehistory\n# Generated\
+            \ automatically - customize as needed\n\n_gitfilehistory() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_gitfilehistory \"$@\"\nJAN_EOF_gitfilehistory__gitfilehistory_0c75b99bbaf7\n\
+            chmod +x \"$tmpdir/_gitfilehistory\" 2>/dev/null || true\ncat >\"$tmpdir/gitfilehistory.sh\"\
+            \ <<'JAN_EOF_gitfilehistory_gitfilehistory_sh_d070ea1be00a'\n#!/bin/bash\n\
+            # (c) 2022 Pat Beagan: MIT License\n\ngitfilehistory () \n{ \n    git\
+            \ log -m --oneline --full-history --pretty=tformat:\"%h %ar %Cred%an %Creset%s\"\
+            \ --follow \"${1}\"\n}\n\ngitfilehistory \"$@\"\nJAN_EOF_gitfilehistory_gitfilehistory_sh_d070ea1be00a\n\
+            chmod +x \"$tmpdir/gitfilehistory.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/gitfilehistory.sh\" \"$@\"\n"
+          passthrough: true
+  gitflux:
+    about: A script for automated tasks.
+    path: ../scripts/source/gitflux
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gitflux
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gitflux\" <<'JAN_EOF_gitflux__gitflux_c4258fa23fbf'\n\
+            #compdef gitflux\n\n# Zsh completion for gitflux\n# Generated automatically\
+            \ - customize as needed\n\n_gitflux() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_gitflux \"\
+            $@\"\nJAN_EOF_gitflux__gitflux_c4258fa23fbf\nchmod +x \"$tmpdir/_gitflux\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/gitflux.sh\" <<'JAN_EOF_gitflux_gitflux_sh_a76a2c79c977'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ngitflux () \n{ \n\
+            \    for i in $(git ls-tree -r $(git rev-parse --abbrev-ref HEAD) --name-only);\n\
+            \    do\n        echo $(git log --oneline $i | wc -l) $i;\n    done\n\
+            }\n\ngitflux \"$@\"\nJAN_EOF_gitflux_gitflux_sh_a76a2c79c977\nchmod +x\
+            \ \"$tmpdir/gitflux.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"\
+            $tmpdir/gitflux.sh\" \"$@\"\n"
+          passthrough: true
+  gitsync:
+    about: A script for automated tasks.
+    path: ../scripts/source/gitsync
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            gitsync
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_gitsync\" <<'JAN_EOF_gitsync__gitsync_343209a296f1'\n\
+            #compdef gitsync\n\n# Zsh completion for gitsync\n# Generated automatically\
+            \ - customize as needed\n\n_gitsync() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_gitsync \"\
+            $@\"\nJAN_EOF_gitsync__gitsync_343209a296f1\nchmod +x \"$tmpdir/_gitsync\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/gitsync.sh\" <<'JAN_EOF_gitsync_gitsync_sh_9fefc34cfdf1'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ngitsync () \n{ \n\
+            \    git fetch origin \"$1\":\"$1\"\n}\n\ngitsync \"$@\"\nJAN_EOF_gitsync_gitsync_sh_9fefc34cfdf1\n\
+            chmod +x \"$tmpdir/gitsync.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/gitsync.sh\" \"$@\"\n"
+          passthrough: true
+  jj:
+    about: A script for automated tasks.
+    path: ../scripts/source/jj
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            jj
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_jj\" <<'JAN_EOF_jj__jj_0ef9d1044658'\n#compdef\
+            \ jj\n\n# Zsh completion for jj\n# Generated automatically - customize\
+            \ as needed\n\n_jj() {\n    local context state line\n    typeset -A opt_args\n\
+            \    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help\
+            \ information]' \\\n        '(-v --version)'{-v,--version}'[Show version\
+            \ information]' \\\n        '*::arg:_files'\n}\n\n_jj \"$@\"\nJAN_EOF_jj__jj_0ef9d1044658\n\
+            chmod +x \"$tmpdir/_jj\" 2>/dev/null || true\ncat >\"$tmpdir/jj.sh\" <<'JAN_EOF_jj_jj_sh_cdcaa72af963'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\njj () \n{ \n    javac\
+            \ ${1};\n    java $(echo ${1} | sed s/\\.java// )\n}\n\njj \"$@\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_jj_jj_sh_cdcaa72af963\nchmod +x \"$tmpdir/jj.sh\" 2>/dev/null\
+            \ || true\ncd \"$tmpdir\"\nexec \"$tmpdir/jj.sh\" \"$@\"\n"
+          passthrough: true
+  merge-project:
+    about: A script for automated tasks.
+    path: ../scripts/source/merge-project
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            merge-project
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_merge-project\" <<'JAN_EOF_merge_project__merge_project_b861c1ccd239'\n\
+            #compdef merge-project\n\n# Zsh completion for merge-project\n# Generated\
+            \ automatically - customize as needed\n\n_merge-project() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_merge-project \"$@\"\nJAN_EOF_merge_project__merge_project_b861c1ccd239\n\
+            chmod +x \"$tmpdir/_merge-project\" 2>/dev/null || true\ncat >\"$tmpdir/merge-project.sh\"\
+            \ <<'JAN_EOF_merge_project_merge_project_sh_67635b038c2d'\n#!/usr/bin/env\
+            \ zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"$0\")\"\nhelp()\
+            \ {\n    error_code=$?\n    echo \"\nUsage: $scriptname [-h|--help]\n\n\
+            This is used to merge other projects back into the incubator.\n\"\n  \
+            \  exit $error_code\n}\n\nmain() {\n\n    emulate -L zsh\n    zmodload\
+            \ zsh/zutil || return 1\n\n    local help\n    zparseopts -D -F -K --\
+            \ \\\n        {h,-help}=help ||\n        return 1\n\n    if (($#help));\
+            \ then help; fi\n\nmerge-project () {\n\tif [ $# -ne 2 ]\n\tthen\n\t\t\
+            echo 'requires <repo> <default-branch>'\n\t\treturn 1\n\tfi\n\tif git\
+            \ remote | grep -q \"^repo-$1$\"; then\n\t\tgit remote remove repo-\"\
+            $1\"\n\tfi\n\tgit remote add -f repo-\"$1\" git@github.com:patbeagan1/\"\
+            $1\".git\n\tgit merge repo-\"$1\"/\"$2\" --allow-unrelated-histories\n\
+            }\n\n    merge-project \"$@\" || help\n}\n\nmain \"$@\" || help\ntrackusage\
+            \ \"$0\"\nJAN_EOF_merge_project_merge_project_sh_67635b038c2d\nchmod +x\
+            \ \"$tmpdir/merge-project.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/merge-project.sh\" \"$@\"\n"
+          passthrough: true
+  mergetest:
+    about: A script for automated tasks.
+    path: ../scripts/source/mergetest
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            mergetest
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_mergetest\" <<'JAN_EOF_mergetest__mergetest_e03e9b78f88f'\n\
+            #compdef mergetest\n\n# Zsh completion for mergetest\n# Generated automatically\
+            \ - customize as needed\n\n_mergetest() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_mergetest \"\
+            $@\"\nJAN_EOF_mergetest__mergetest_e03e9b78f88f\nchmod +x \"$tmpdir/_mergetest\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/mergetest.sh\" <<'JAN_EOF_mergetest_mergetest_sh_d019ca05416c'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nmergetest () \n{ \n\
+            \    git merge --no-commit --no-ff \"$1\";\n    git merge --abort;\n \
+            \   echo \"Merge aborted\"\n}\n\nmergetest \"$@\"\nJAN_EOF_mergetest_mergetest_sh_d019ca05416c\n\
+            chmod +x \"$tmpdir/mergetest.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/mergetest.sh\" \"$@\"\n"
+          passthrough: true
+  repick:
+    about: A script for automated tasks.
+    path: ../scripts/source/repick
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            repick
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_repick\" <<'JAN_EOF_repick__repick_af92723b02dc'\n\
+            #compdef repick\n\n# Zsh completion for repick\n# Generated automatically\
+            \ - customize as needed\n\n_repick() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_repick \"$@\"\
+            \nJAN_EOF_repick__repick_af92723b02dc\nchmod +x \"$tmpdir/_repick\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/repick.sh\" <<'JAN_EOF_repick_repick_sh_a8fa712ef11b'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nrepick () \n{ \n \
+            \   function getbranch () \n    { \n        printf $(git rev-parse --abbrev-ref\
+            \ HEAD)\n    };\n    function reset_origin () \n    { \n        was_last_reset_successful=\"\
+            false\";\n        echo This is a hard reset.;\n        read -p \"Are you\
+            \ sure you want to check out origin/$(getbranch)? \" -n 1 -r;\n      \
+            \  echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n            git fetch\
+            \ && git reset --hard origin/$(getbranch);\n            was_last_reset_successful=\"\
+            true\";\n        fi\n    };\n    function get_longest_matching_branch\
+            \ () \n    { \n        echo \"$(git branch | grep $(getbranch) |  awk\
+            \ '{ print length($0) \" \" $0; }' $file | sort -r -n | cut -d ' ' -f\
+            \ 2- | head -1 )\" | sed 's/[[:blank:]]//g' | sed 's/*//g'\n    };\n \
+            \   if [ $# -ne 2 ]; then\n        echo \"You must supply the base branch\
+            \ as an argument.\";\n        echo \"Usage: resquash <base_branch> <base_commit>\"\
+            ;\n    else\n        a=\"$(getbranch)\";\n        b=\"$(get_longest_matching_branch)_old\"\
+            ;\n        c=\"$($2)\";\n        printf \"%s -> %s\\\\n\" \"$a\" \"$b\"\
+            ;\n        read -p \"Is the above backup branch named correctly?\" -n\
+            \ 1 -r;\n        echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n    \
+            \        git branch -m \"$b\";\n            git co \"$1\";\n         \
+            \   if [ \"$(getbranch)\" = \"$1\" ]; then\n                reset_origin;\n\
+            \                if [ \"$was_last_reset_successful\" = \"true\" ]; then\n\
+            \                    git co -b \"$a\";\n                    echo git cherry-pick\
+            \ \"$(git rev-parse $c)\"..\"$(git rev-parse $b)\";\n                \
+            \    read -p \"Continue with cherry pick?\" -n 1 -r;\n               \
+            \     if [[ $REPLY =~ ^[Yy]$ ]]; then\n                        git cherry-pick\
+            \ \"$(git rev-parse $c)\"..\"$(git rev-parse $b)\";\n                \
+            \    fi;\n                fi;\n            fi;\n        fi;\n    fi\n\
+            }\nrepick \"$@\"\nJAN_EOF_repick_repick_sh_a8fa712ef11b\nchmod +x \"$tmpdir/repick.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/repick.sh\" \"$@\"\
+            \n"
+          passthrough: true
+  resquash:
+    about: A script for automated tasks.
+    path: ../scripts/source/resquash
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            resquash
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_resquash\" <<'JAN_EOF_resquash__resquash_b19feeb168cf'\n\
+            #compdef resquash\n\n# Zsh completion for resquash\n# Generated automatically\
+            \ - customize as needed\n\n_resquash() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_resquash \"\
+            $@\"\nJAN_EOF_resquash__resquash_b19feeb168cf\nchmod +x \"$tmpdir/_resquash\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/resquash.sh\" <<'JAN_EOF_resquash_resquash_sh_9d327945ce1e'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nresquash () \n{ \n\
+            \    function getbranch () \n    { \n        printf $(git rev-parse --abbrev-ref\
+            \ HEAD)\n    };\n    function reset_origin () \n    { \n        was_last_reset_successful=\"\
+            false\";\n        echo This is a hard reset.;\n        read -p \"Are you\
+            \ sure you want to check out origin/$(getbranch)? \" -n 1 -r;\n      \
+            \  echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n            git fetch\
+            \ && git reset --hard origin/$(getbranch);\n            was_last_reset_successful=\"\
+            true\";\n        fi\n    };\n    function get_longest_matching_branch\
+            \ () \n    { \n        git for-each-ref --shell --format='%(refname)'\
+            \ refs/heads/ | grep --color=auto --color=auto \"${1}\" | awk '{print\
+            \ length, $0}' | sort -nr | head -1 | cut -d\" \" -f2 | sed 's/.*\\///'\
+            \ | tr \"'\" \" \" | tr -d \" \"\n    };\n    function perform_squash\
+            \ () \n    { \n        git branch -m \"$b\";\n        git checkout \"\
+            $1\";\n        if [ \"$(getbranch)\" = \"$1\" ]; then\n            printf\
+            \ \"Reset base branch with its origin first?\";\n            read;\n \
+            \           if [[ $REPLY =~ ^[Yy]$ ]]; then\n                reset_origin;\n\
+            \            else\n                was_last_reset_successful=\"true\"\
+            ;\n            fi;\n            if [ \"$was_last_reset_successful\" =\
+            \ \"true\" ]; then\n                git checkout -b \"$a\";\n        \
+            \        git merge --squash \"$b\";\n            fi;\n            echo\
+            \ \"The previous commits were:\";\n            echo \"$previous_commit\"\
+            ;\n        else\n            echo Failed to check out new branch.;\n \
+            \           printf \"Should I rename the branch?\\\\n%s -> %s\\\\n\" \"\
+            $(getbranch)\" \"$a\";\n            read;\n            if [[ $REPLY =~\
+            \ ^[Yy]$ ]]; then\n                git branch -m \"$a\";\n           \
+            \ fi;\n        fi\n    };\n    if [ $# -ne 1 ]; then\n        echo \"\
+            You must supply the base branch as an argument.\";\n        echo \"Usage:\
+            \ resquash <base_branch>\";\n    else\n        a=\"$(getbranch)\";\n \
+            \       b=\"$(get_longest_matching_branch \"${a}\")_old\";\n        previous_commit=\"\
+            $(git log -2)\";\n        printf \"%s -> %s\\\\n\" \"$a\" \"$b\";\n  \
+            \      read -p \"Is the above backup branch named correctly?\" -n 1 -r;\n\
+            \        echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n            perform_squash\
+            \ \"$1\";\n        fi;\n    fi\n}\n\nresquash \"$@\"\nJAN_EOF_resquash_resquash_sh_9d327945ce1e\n\
+            chmod +x \"$tmpdir/resquash.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/resquash.sh\" \"$@\"\n"
+          passthrough: true

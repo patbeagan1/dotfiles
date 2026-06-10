@@ -1,0 +1,938 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: media utilities
+commands:
+  chafa-interactive:
+    about: A script for automated tasks.
+    path: ../scripts/source/chafa-interactive
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            chafa-interactive
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_chafa-interactive\" <<'JAN_EOF_chafa_interactive__chafa_interactive_fec3de82a49f'\n\
+            #compdef chafa-interactive\n\n# Zsh completion for chafa-interactive\n\
+            # Generated automatically - customize as needed\n\n_chafa-interactive()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_chafa-interactive \"$@\"\nJAN_EOF_chafa_interactive__chafa_interactive_fec3de82a49f\n\
+            chmod +x \"$tmpdir/_chafa-interactive\" 2>/dev/null || true\ncat >\"$tmpdir/chafa-interactive.sh\"\
+            \ <<'JAN_EOF_chafa_interactive_chafa_interactive_sh_b4d7a1d9e916'\n#!/bin/bash\n\
+            \n# Check if file names are provided as arguments\nif [ $# -gt 0 ]; then\n\
+            \    # Use the provided file names\n    files=(\"$@\")\nelse\n    # Use\
+            \ the files in the current directory\n    files=(*)\nfi\n\ncount=${#files[@]}\n\
+            index=0\n\n# Function to display the current file\ndisplay_file() {\n\
+            \    clear\n    chafa \"${files[$index]}\"\n    # Move the cursor up to\
+            \ the top of the display\n    tput cup 0 0\n    # Write the informational\
+            \ line\n    echo \"Viewing file $((index + 1))/$count: ${files[$index]}\"\
+            \n    # Move the cursor back down to avoid overwriting the line\n    tput\
+            \ cup 1 0\n}\n\n# Trap the exit signal to clear the screen upon exit\n\
+            trap 'clear' EXIT\n\n# Display the first file\ndisplay_file\n\n# Listen\
+            \ for key-up events and navigate through the files\nwhile true; do\n \
+            \   read -rsn1 input\n    if [[ $input == $'\\x1B' ]]; then\n        read\
+            \ -rsn2 input\n        if [[ $input == '[A' ]] || [[ $input == '[D' ]];\
+            \ then\n            # Up arrow or left arrow: go to the previous file\n\
+            \            ((index--))\n            if ((index < 0)); then index=$((count\
+            \ - 1)); fi\n            display_file\n        elif [[ $input == '[B'\
+            \ ]] || [[ $input == '[C' ]]; then\n            # Down arrow or right\
+            \ arrow: go to the next file\n            ((index++))\n            if\
+            \ ((index >= count)); then index=0; fi\n            display_file\n   \
+            \     fi\n    fi\ndone\nJAN_EOF_chafa_interactive_chafa_interactive_sh_b4d7a1d9e916\n\
+            chmod +x \"$tmpdir/chafa-interactive.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/chafa-interactive.sh\" \"$@\"\n"
+          passthrough: true
+  comic:
+    about: A script for automated tasks.
+    path: ../scripts/source/comic
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            comic
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_comic\" <<'JAN_EOF_comic__comic_b8a1222478a5'\n\
+            #compdef comic\n\n# Zsh completion for comic\n# Generated automatically\
+            \ - customize as needed\n\n_comic() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_comic \"$@\"\
+            \nJAN_EOF_comic__comic_b8a1222478a5\nchmod +x \"$tmpdir/_comic\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/comic.sh\" <<'JAN_EOF_comic_comic_sh_95ea229e1d9f'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ncomic () \n{ \n  \
+            \  zip -r $1.zip $1;\n    mv $1.zip $1.cbz\n}\ncomic \"$@\"\n\ntrackusage\
+            \ \"$0\"\nJAN_EOF_comic_comic_sh_95ea229e1d9f\nchmod +x \"$tmpdir/comic.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/comic.sh\" \"$@\"\
+            \n"
+          passthrough: true
+  comicify:
+    about: A script for automated tasks.
+    path: ../scripts/source/comicify
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            comicify
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_comicify\" <<'JAN_EOF_comicify__comicify_e1d0b0f21923'\n\
+            #compdef comicify\n\n# Zsh completion for comicify\n# Generated automatically\
+            \ - customize as needed\n\n_comicify() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_comicify \"\
+            $@\"\nJAN_EOF_comicify__comicify_e1d0b0f21923\nchmod +x \"$tmpdir/_comicify\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/comicify.sh\" <<'JAN_EOF_comicify_comicify_sh_9541799a081f'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\ncomicify ()\n\
+            {\n    comic ()\n    {\n        name=$(echo \"$1\" | sed 's/\\///g')\n\
+            \        zip -r \"$name\".zip \"$name\";\n        mv \"$name\".zip \"\
+            $name\".cbz\n    }\n\n    for i in $(ls | grep -v .cbz);\n    do\n   \
+            \     match='false';\n        for j in $(ls | grep .cbz);\n        do\n\
+            \            if [[ \"$j\" =~ \"$i\" ]]; then\n                match='true';\n\
+            \                break;\n            fi;\n        done;\n        if [\
+            \ $match = 'true' ]; then\n            echo 'comicified   '\"$i\";\n \
+            \       else\n            [[ -d NOZIP ]] || mkdir NOZIP\n            if\
+            \ [ \"$i\" != \"NOZIP\" ]; then\n                echo 'comic create '\"\
+            $i\";\n                mv \"$i\"/*.webm NOZIP\n                comic \"\
+            $i\";\n            fi\n        fi;\n    done\n}\ncomicify\ntrackusage\
+            \ \"$0\"\nJAN_EOF_comicify_comicify_sh_9541799a081f\nchmod +x \"$tmpdir/comicify.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/comicify.sh\" \"\
+            $@\"\n"
+          passthrough: true
+  dot2pdf:
+    about: A script for automated tasks.
+    path: ../scripts/source/dot2pdf
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            dot2pdf
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_dot2pdf\" <<'JAN_EOF_dot2pdf__dot2pdf_a8826487d72e'\n\
+            #compdef dot2pdf\n\n# Zsh completion for dot2pdf\n# Generated automatically\
+            \ - customize as needed\n\n_dot2pdf() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_dot2pdf \"\
+            $@\"\nJAN_EOF_dot2pdf__dot2pdf_a8826487d72e\nchmod +x \"$tmpdir/_dot2pdf\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/dot2pdf.sh\" <<'JAN_EOF_dot2pdf_dot2pdf_sh_25d039241365'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\ndot2pdf () \n{ \n \
+            \   dot -Tpdf \"$1\" > \"$1\".pdf && open \"$1\".pdf\n}\n\ndot2pdf \"\
+            $@\"\ntrackusage \"$0\"\nJAN_EOF_dot2pdf_dot2pdf_sh_25d039241365\nchmod\
+            \ +x \"$tmpdir/dot2pdf.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/dot2pdf.sh\" \"$@\"\n"
+          passthrough: true
+  image-stitch:
+    about: A script for automated tasks.
+    path: ../scripts/source/image-stitch
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            image-stitch
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_image-stitch\" <<'JAN_EOF_image_stitch__image_stitch_baaae6fa5da1'\n\
+            #compdef image-stitch\n\n# Zsh completion for image-stitch\n# Generated\
+            \ automatically - customize as needed\n\n_image-stitch() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_image-stitch \"$@\"\nJAN_EOF_image_stitch__image_stitch_baaae6fa5da1\n\
+            chmod +x \"$tmpdir/_image-stitch\" 2>/dev/null || true\ncat >\"$tmpdir/image-stitch.py\"\
+            \ <<'JAN_EOF_image_stitch_image_stitch_py_0fe070d3c132'\n#!python3\n\n\
+            import sys\nimport cv2\nimport numpy as np\nimport time\n\n\"\"\"\nUse\
+            \ code to merge the frames: \nYou can also merge frames together using\
+            \ code, particularly in the context of computer vision and image processing.\
+            \ \nThis involves identifying common features in each frame and using\
+            \ them to align and blend the images.\n\na. Load the frames into the code\
+            \ as image arrays or matrices.\nb. Identify common features in each frame\
+            \ using feature detection algorithms such as SIFT or SURF.\nc. Use feature\
+            \ matching algorithms such as RANSAC or homography to align the frames\
+            \ together.\nd. Blend the frames together using techniques such as averaging\
+            \ or weighted averaging to create a seamless, large image.\n\"\"\"\n\n\
+            # # Load the video\n# video = cv2.VideoCapture('panning_video.mp4')\n\n\
+            # # Set the frame number to extract\n# frame_num = 100\n\n# # Extract\
+            \ the frame\n# video.set(cv2.CAP_PROP_POS_FRAMES, frame_num)\n# ret, frame\
+            \ = video.read()\n\n# # Save the frame as an image\n# cv2.imwrite('panning_frame.jpg',\
+            \ frame)\n\n\ndef main():\n    # Open the video file\n    # cap = cv2.VideoCapture(\"\
+            my-video.webm\")\n\n    images = []\n\n    # # Loop through all the frames\n\
+            \    # while cap.isOpened():\n    #     # Read a frame from the video\n\
+            \    #     ret, frame = cap.read()\n\n    #     # If the frame was read\
+            \ successfully\n    #     if ret == True:\n    #         # Do something\
+            \ with the frame here\n    #         # For example, display the frame\
+            \ in a window\n    #         cv2.imshow(\"Frame\", frame)\n\n    #   \
+            \      images.append(frame)\n\n    #         # Wait for a key press to\
+            \ exit\n    #         if cv2.waitKey(25) & 0xFF == ord(\"q\"):\n    #\
+            \             break\n    #     # If the frame could not be read\n    #\
+            \     else:\n    #         break\n\n    # cap.release()\n\n    for i in\
+            \ sys.argv:\n        if i == sys.argv[0]:\n            continue\n    \
+            \    out = cv2.imread(i)\n        out = cv2.transpose(out)\n        out\
+            \ = cv2.flip(out, flipCode=0)\n        images.append(out)\n\n    stitchy\
+            \ = cv2.Stitcher.create()\n    (dummy, output) = stitchy.stitch(images)\n\
+            \n    print(dummy)\n\n    if dummy != cv2.STITCHER_OK:\n        # checking\
+            \ if the stitching procedure is successful\n        # .stitch() function\
+            \ returns a true value if stitching is\n        # done successfully\n\
+            \        print(\"stitching ain't successful\")\n    else:\n        print(\"\
+            Your Panorama is ready!!!\")\n\n    cv2.imwrite(str(time.time()) + \"\
+            .jpg\", output)\n\n    # final output\n    cv2.imshow(\"final result\"\
+            , output)\n    cv2.waitKey(0)\n    cv2.destroyAllWindows()\n\n\nif __name__\
+            \ == \"__main__\":\n    main()\nJAN_EOF_image_stitch_image_stitch_py_0fe070d3c132\n\
+            chmod +x \"$tmpdir/image-stitch.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/image-stitch.py\" \"$@\"\n"
+          passthrough: true
+  imagefix:
+    about: A script for automated tasks.
+    path: ../scripts/source/imagefix
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            imagefix
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_imagefix\" <<'JAN_EOF_imagefix__imagefix_4606c99e198e'\n\
+            #compdef imagefix\n\n# Zsh completion for imagefix\n# Generated automatically\
+            \ - customize as needed\n\n_imagefix() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_imagefix \"\
+            $@\"\nJAN_EOF_imagefix__imagefix_4606c99e198e\nchmod +x \"$tmpdir/_imagefix\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/imagefix.sh\" <<'JAN_EOF_imagefix_imagefix_sh_36502edf2595'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\n\
+            IFS=$'\\n\\t'\n\nhelp () {\n    local bold='\\033[1m'\n    local normal='\\\
+            033[0m'\n    \n    error_code=$?\n    echo -e \"\nUsage: $bold imagefix\
+            \ filename.jpg [quality] $normal\nwhere quality is an int between 0 and\
+            \ 100\n\nDensity buckets are\n- MDPI (1x)\n- HDPI (1.5x)\n- XHDPI (2x)\n\
+            - XXHDPI (3x)\n- XXXHDPI (4x)\n\nThis script will assume that you are\
+            \ giving it the XXXHDPI version of a resource, and \ngenerate the remaining,\
+            \ lower density resources.\n\nIt also will yield a webp image, which has\
+            \ compression like JPG, \nwith the ability to have transparency.\n\noutput:\n\
+            mid.minecraft-mario.jpg\nminecraft-mario.jpg\nminecraft-mario.jpg.100%.webp\n\
+            minecraft-mario.jpg.25%.webp\nminecraft-mario.jpg.37%.webp\nminecraft-mario.jpg.50%.webp\n\
+            minecraft-mario.jpg.75%.webp\n\"\n    exit $error_code\n}\nimageFix()\
+            \ {\n    if [ -z \"${1+x}\" ]; then\n        return 1\n    fi\n\n    local\
+            \ quality=\"80\"\n    if [[ -n \"${2+x}\" ]]; then\n        quality=\"\
+            $2\"\n    fi\n\n    echo Proceeding with quality of \"$quality\"\n\n \
+            \   imageFixInner () {\n        magick \"$1\" \\\n        -resize \"$2\"\
+            \ \\\n        -quality $quality \\\n        mid.\"$1\"\n        \n   \
+            \     magick mid.\"$1\"\\\n        -define webp:alpha-compression=1\\\n\
+            \        -define webp:alpha-quality=0\\\n        -define webp:preprocessing=0\\\
+            \n        -define webp:lossless=false\\\n        -define webp:method=6\\\
+            \n        -define webp:near-lossless=70\\\n        -define webp:auto-filter=true\\\
+            \n        -resize '2000x2000>' \"$1\".\"$2\".min.webp\n        # options\
+            \ can be seen at https://imagemagick.org/script/webp.php\n\n        echo\
+            \ Finished \"$1\".\"$2\".min.webp\n    }\n\n    imageFixInner \"$1\" \"\
+            100%\"\n    imageFixInner \"$1\" \"75%\"\n    imageFixInner \"$1\" \"\
+            50%\"\n    imageFixInner \"$1\" \"37%\"\n    imageFixInner \"$1\" \"25%\"\
+            \n}\n\nimageFix \"$@\" || help\nJAN_EOF_imagefix_imagefix_sh_36502edf2595\n\
+            chmod +x \"$tmpdir/imagefix.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/imagefix.sh\" \"$@\"\n"
+          passthrough: true
+  img_gif_to_spritesheet:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_gif_to_spritesheet
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_gif_to_spritesheet
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_gif_to_spritesheet\" <<'JAN_EOF_img_gif_to_spritesheet__img_gif_to_spritesheet_bd85db10e1b3'\n\
+            #compdef img_gif_to_spritesheet\n\n# Zsh completion for img_gif_to_spritesheet\n\
+            # Generated automatically - customize as needed\n\n_img_gif_to_spritesheet()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_img_gif_to_spritesheet \"$@\"\nJAN_EOF_img_gif_to_spritesheet__img_gif_to_spritesheet_bd85db10e1b3\n\
+            chmod +x \"$tmpdir/_img_gif_to_spritesheet\" 2>/dev/null || true\ncat\
+            \ >\"$tmpdir/img_gif_to_spritesheet.sh\" <<'JAN_EOF_img_gif_to_spritesheet_img_gif_to_spritesheet_sh_34315f00e59a'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\n\
+            IFS=$'\\n\\t'\n\nimg_gif_to_spritesheet ()\n{\n    in=\"$1\";\n    out=\"\
+            $2\";\n\n    mkdir -p out-\"$out\"\n    cd out-\"$out\"\n\n    convert\
+            \ ../\"$in\" -resize 64x64 -gravity center -extent 64x64 -fill transparent\
+            \ \"interim.png\"\n    montage \"interim-\"* -background transparent -geometry\
+            \ 64x64+0+0 \"$out\"\n}\n\nimg_gif_to_spritesheet \"$@\"\ntrackusage \"\
+            $0\"\nJAN_EOF_img_gif_to_spritesheet_img_gif_to_spritesheet_sh_34315f00e59a\n\
+            chmod +x \"$tmpdir/img_gif_to_spritesheet.sh\" 2>/dev/null || true\ncd\
+            \ \"$tmpdir\"\nexec \"$tmpdir/img_gif_to_spritesheet.sh\" \"$@\"\n"
+          passthrough: true
+  img_resize_200:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_resize_200
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_resize_200
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_resize_200\" <<'JAN_EOF_img_resize_200__img_resize_200_338bd041d2bf'\n\
+            #compdef img_resize_200\n\n# Zsh completion for img_resize_200\n# Generated\
+            \ automatically - customize as needed\n\n_img_resize_200() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_img_resize_200 \"$@\"\nJAN_EOF_img_resize_200__img_resize_200_338bd041d2bf\n\
+            chmod +x \"$tmpdir/_img_resize_200\" 2>/dev/null || true\ncat >\"$tmpdir/img_resize_200.sh\"\
+            \ <<'JAN_EOF_img_resize_200_img_resize_200_sh_e02e824965f0'\n#!/bin/bash\n\
+            # (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\n\\t'\n\
+            \nimg_resize ()\n{\n    in=\"$1\";\n    out=\"$2\";\n    convert \"$in\"\
+            \ -resize 200x200 -gravity center -extent 200x200 -fill black \"$out\"\
+            \n}\n\nimg_resize \"$@\"\ntrackusage \"$0\"\nJAN_EOF_img_resize_200_img_resize_200_sh_e02e824965f0\n\
+            chmod +x \"$tmpdir/img_resize_200.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/img_resize_200.sh\" \"$@\"\n"
+          passthrough: true
+  img_resize_32:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_resize_32
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_resize_32
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_resize_32\" <<'JAN_EOF_img_resize_32__img_resize_32_23e0554bb5d6'\n\
+            #compdef img_resize_32\n\n# Zsh completion for img_resize_32\n# Generated\
+            \ automatically - customize as needed\n\n_img_resize_32() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_img_resize_32 \"$@\"\nJAN_EOF_img_resize_32__img_resize_32_23e0554bb5d6\n\
+            chmod +x \"$tmpdir/_img_resize_32\" 2>/dev/null || true\ncat >\"$tmpdir/img_resize_32.sh\"\
+            \ <<'JAN_EOF_img_resize_32_img_resize_32_sh_717a3b9fc98a'\n#!/bin/bash\n\
+            # (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\n\\t'\n\
+            \nimg_resize_32 ()\n{\n    in=\"$1\";\n    out=\"$2\";\n    convert \"\
+            $in\" -resize 32x32 -gravity center -extent 32x32 -fill white \"$out\"\
+            \n}\n\nimg_resize_32 \"$@\"\ntrackusage \"$0\"\nJAN_EOF_img_resize_32_img_resize_32_sh_717a3b9fc98a\n\
+            chmod +x \"$tmpdir/img_resize_32.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/img_resize_32.sh\" \"$@\"\n"
+          passthrough: true
+  img_resize_64:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_resize_64
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_resize_64
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_resize_64\" <<'JAN_EOF_img_resize_64__img_resize_64_3d3e218c31ab'\n\
+            #compdef img_resize_64\n\n# Zsh completion for img_resize_64\n# Generated\
+            \ automatically - customize as needed\n\n_img_resize_64() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_img_resize_64 \"$@\"\nJAN_EOF_img_resize_64__img_resize_64_3d3e218c31ab\n\
+            chmod +x \"$tmpdir/_img_resize_64\" 2>/dev/null || true\ncat >\"$tmpdir/img_resize_64.sh\"\
+            \ <<'JAN_EOF_img_resize_64_img_resize_64_sh_51fc8b1a28fa'\n#!/bin/bash\n\
+            # (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\n\\t'\n\
+            \nimg_resize_64 ()\n{\n    in=\"$1\";\n    out=\"$2\";\n    convert \"\
+            $in\" -resize 64x64 -gravity center -extent 64x64 -fill transparent \"\
+            $out\"\n}\n\nimg_resize_64 \"$@\"\ntrackusage \"$0\"\nJAN_EOF_img_resize_64_img_resize_64_sh_51fc8b1a28fa\n\
+            chmod +x \"$tmpdir/img_resize_64.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/img_resize_64.sh\" \"$@\"\n"
+          passthrough: true
+  img_to_qrcode_set:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_to_qrcode_set
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_to_qrcode_set
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_to_qrcode_set\" <<'JAN_EOF_img_to_qrcode_set__img_to_qrcode_set_a0dc1154ed63'\n\
+            #compdef img_to_qrcode_set\n\n# Zsh completion for img_to_qrcode_set\n\
+            # Generated automatically - customize as needed\n\n_img_to_qrcode_set()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_img_to_qrcode_set \"$@\"\nJAN_EOF_img_to_qrcode_set__img_to_qrcode_set_a0dc1154ed63\n\
+            chmod +x \"$tmpdir/_img_to_qrcode_set\" 2>/dev/null || true\ncat >\"$tmpdir/img_to_qrcode_set.py\"\
+            \ <<'JAN_EOF_img_to_qrcode_set_img_to_qrcode_set_py_24523e8eade4'\n#!/usr/bin/env\
+            \ python3\n\nimport numpy as np\nfrom PIL import Image, ImageDraw, ImageColor\n\
+            import qrcode\nfrom io import BytesIO\nimport base64\nimport argparse\n\
+            import lzma\n\n\ndef image_to_data_uri(img):\n    buffered = BytesIO()\n\
+            \    img.save(buffered, format=\"webp\")\n    data_uri = (\n        f\"\
+            data:image/webp;base64,{base64.b64encode(buffered.getvalue()).decode()}\"\
+            \n    )\n    return to_itty(f\"\"\"<img src=\"{data_uri}\"/>\"\"\")\n\n\
+            \ndef divide_image(img, image_path, section_size):\n    img = Image.open(image_path)\n\
+            \    img_width, img_height = img.size\n\n    sections = []\n    for y\
+            \ in range(0, img_height, section_size):\n        for x in range(0, img_width,\
+            \ section_size):\n            box = (x, y, x + section_size, y + section_size)\n\
+            \            section = img.crop(box)\n            sections.append(section)\n\
+            \n    return sections\n\n\ndef to_itty(s):\n    return \"https://itty.bitty.site/#/\"\
+            \ + base64.b64encode(\n        lzma.compress(bytes(s, encoding=\"utf-8\"\
+            ), format=lzma.FORMAT_ALONE, preset=9)\n    ).decode(\"utf-8\")\n\n\n\
+            def create_qr_codes(sections):\n    qr_images = []\n    for section in\
+            \ sections:\n        data_uri = image_to_data_uri(section)\n        qr\
+            \ = qrcode.QRCode(version=None, box_size=1, border=5)\n        qr.add_data(data_uri)\n\
+            \        qr.make(fit=True)\n        qr_img = qr.make_image(fill=\"black\"\
+            , back_color=\"white\")\n        qr_images.append(qr_img)\n\n    return\
+            \ qr_images\n\n\ndef montage_with_qr(sections, qr_images, section_size):\n\
+            \    section_size = 177 + 20  # width of module 40 qr code with 10 px\
+            \ border\n    halfsize = int(section_size / 2)\n\n    num_sections = len(sections)\n\
+            \    img_width = section_size + halfsize\n    montage_width = int(np.ceil(np.sqrt(num_sections)))\n\
+            \    montage_height = int(np.ceil(num_sections / montage_width))\n   \
+            \ montage_img = Image.new(\n        \"RGB\", (montage_width * img_width,\
+            \ montage_height * section_size)\n    )\n\n    draw = ImageDraw.Draw(montage_img)\n\
+            \n    for i, (section, qr_img) in enumerate(zip(sections, qr_images)):\n\
+            \        x = (i % montage_width) * img_width\n        y = (i // montage_width)\
+            \ * section_size\n\n        draw.line([(0, y), (montage_width * img_width,\
+            \ y)], fill=(255, 0, 255), width=2)\n        montage_img.paste(section.resize((halfsize,\
+            \ section_size)), (x, y))\n        montage_img.paste(\n            qr_img,\
+            \ (x + halfsize, y)  # .resize((section_size, section_size)),\n      \
+            \  )\n\n    return montage_img\n\n\ndef main(image_path, output_path):\n\
+            \    section_size = 60\n    img = Image.open(image_path)\n\n    sections\
+            \ = divide_image(img, image_path, section_size)\n    qr_images = create_qr_codes(sections)\n\
+            \    montage_img = montage_with_qr(sections, qr_images, section_size)\n\
+            \    montage_img.save(output_path)\n\nif __name__ == \"__main__\":\n \
+            \   \"\"\"\n    Next steps:\n    - Clone this script\n    - Have new version\
+            \ print out the base image first, with a grid that has an overlay with\
+            \ number coordinates\n    - Similar to an archeological dig site. \n \
+            \   - Then, add the QR codes one by one to the bottom, with a numbered\
+            \ title.\n    - Would make it more printer-friendly. \n    - Could have\
+            \ something like 4 QR per row, to make sure that the QR codes would have\
+            \ the proper DPI when printed.  \n    \"\"\"\n    parser = argparse.ArgumentParser(\n\
+            \        description=\"Create a montage of image sections and their QR\
+            \ codes.\"\n    )\n    parser.add_argument(\"image_path\", help=\"Path\
+            \ to the input image\")\n    parser.add_argument(\"output_path\", help=\"\
+            Path for saving the output montage\")\n    args = parser.parse_args()\n\
+            \n    main(args.image_path, args.output_path)\nJAN_EOF_img_to_qrcode_set_img_to_qrcode_set_py_24523e8eade4\n\
+            chmod +x \"$tmpdir/img_to_qrcode_set.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/img_to_qrcode_set.py\" \"$@\"\n"
+          passthrough: true
+  img_wiggle_parallel:
+    about: A script for automated tasks.
+    path: ../scripts/source/img_wiggle_parallel
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            img_wiggle_parallel
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_img_wiggle_parallel\" <<'JAN_EOF_img_wiggle_parallel__img_wiggle_parallel_383f1428767b'\n\
+            #compdef img_wiggle_parallel\n\n# Zsh completion for img_wiggle_parallel\n\
+            # Generated automatically - customize as needed\n\n_img_wiggle_parallel()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_img_wiggle_parallel \"$@\"\nJAN_EOF_img_wiggle_parallel__img_wiggle_parallel_383f1428767b\n\
+            chmod +x \"$tmpdir/_img_wiggle_parallel\" 2>/dev/null || true\ncat >\"\
+            $tmpdir/img_wiggle_parallel.sh\" <<'JAN_EOF_img_wiggle_parallel_img_wiggle_parallel_sh_493a24e43147'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\nimg_wiggle_parallel\
+            \ ()\n{\n    convert -crop 50%x100% +repage \"$1\" mid.jpg;\n    convert\
+            \ -delay 15 -loop 0 mid*.jpg out.gif\n}\nimg_wiggle_parallel \"$@\"\n\
+            trackusage \"$0\"\nJAN_EOF_img_wiggle_parallel_img_wiggle_parallel_sh_493a24e43147\n\
+            chmod +x \"$tmpdir/img_wiggle_parallel.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/img_wiggle_parallel.sh\" \"$@\"\n"
+          passthrough: true
+  multi-qr:
+    about: A script for automated tasks.
+    path: ../scripts/source/multi-qr
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            multi-qr
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_multi-qr\" <<'JAN_EOF_multi_qr__multi_qr_565b56f64e21'\n\
+            #compdef multi-qr\n\n# Zsh completion for multi-qr\n# Generated automatically\
+            \ - customize as needed\n\n_multi-qr() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_multi-qr \"\
+            $@\"\nJAN_EOF_multi_qr__multi_qr_565b56f64e21\nchmod +x \"$tmpdir/_multi-qr\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/multi-qr.sh\" <<'JAN_EOF_multi_qr_multi_qr_sh_5b409771cfdf'\n\
+            #!/usr/bin/env zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"\
+            $0\")\"\nhelp() {\n    error_code=$?\n    echo \"\nUsage: $scriptname\
+            \ [-h|--help] <file>\n\nCreates multiple QR codes from a large file by\
+            \ splitting it into chunks.\nEach chunk is converted to a tiny URL and\
+            \ then to a QR code.\n\nProcess:\n1. Splits input file into 2KB chunks\n\
+            2. Converts each chunk to tiny URL using itty.bitty.site\n3. Generates\
+            \ QR code for each tiny URL\n4. Combines all QR codes into a single vertical\
+            \ image\n5. Opens the combined image\n\nArguments:\n  file    File to\
+            \ split and convert to QR codes\n\nExamples:\n  $scriptname large_document.txt\n\
+            \  $scriptname /path/to/big_file.pdf\n\"\n    exit $error_code\n}\n\n\
+            qr () {\n    local filename=\"/tmp/qr-output-$(python3 -c 'import time;\
+            \ print(time.time())').png\"\n    qrencode -l L -v 1 -o \"$filename\"\
+            \ \"$1\" && echo \"$filename\" >> x0_qrfile.txt\n}\nfunction qr_itty ()\
+            \ { qr $(itty \"$1\"); }\nfunction qr_itty_cat () { qr_itty \"`cat $1`\"\
+            ; }\n\nmain() {\n\n    emulate -L zsh\n    zmodload zsh/zutil || return\
+            \ 1\n\n    local help\n    zparseopts -D -F -K -- \\\n        {h,-help}=help\
+            \ ||\n        return 1\n\n    if (($#help)); then help; fi\n\nmulti-qr\
+            \ () {\n\trm x0*\n\tsplit -d -b2k -a6 \"$1\"\n\tfor i in x000*\n\tdo\n\
+            \t\techo \"$i\"\n\t\tqr_itty_cat \"$i\"\n\tdone\n\tconvert -append @x0_qrfile.txt\
+            \ x0_out.png\n\topen x0_out.png\n}\n\n    multi-qr \"$@\" || help\n}\n\
+            \nmain \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_multi_qr_multi_qr_sh_5b409771cfdf\n\
+            chmod +x \"$tmpdir/multi-qr.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/multi-qr.sh\" \"$@\"\n"
+          passthrough: true
+  pdf2png:
+    about: A script for automated tasks.
+    path: ../scripts/source/pdf2png
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            pdf2png
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_pdf2png\" <<'JAN_EOF_pdf2png__pdf2png_5e456c3c3632'\n\
+            #compdef pdf2png\n\n# Zsh completion for pdf2png\n# Generated automatically\
+            \ - customize as needed\n\n_pdf2png() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_pdf2png \"\
+            $@\"\nJAN_EOF_pdf2png__pdf2png_5e456c3c3632\nchmod +x \"$tmpdir/_pdf2png\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/pdf2png.sh\" <<'JAN_EOF_pdf2png_pdf2png_sh_1b9bf808d8cb'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\npdf2png () \n{ \n \
+            \   convert -verbose -density 400 -trim \"$1\" -quality 100 -flatten -sharpen\
+            \ 0x1.0 \"$1\".png\n}\n\npdf2png \"$@\"\ntrackusage \"$0\"\nJAN_EOF_pdf2png_pdf2png_sh_1b9bf808d8cb\n\
+            chmod +x \"$tmpdir/pdf2png.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/pdf2png.sh\" \"$@\"\n"
+          passthrough: true
+  pdf2scaledpng:
+    about: A script for automated tasks.
+    path: ../scripts/source/pdf2scaledpng
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            pdf2scaledpng
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_pdf2scaledpng\" <<'JAN_EOF_pdf2scaledpng__pdf2scaledpng_ec26e7c1c91b'\n\
+            #compdef pdf2scaledpng\n\n# Zsh completion for pdf2scaledpng\n# Generated\
+            \ automatically - customize as needed\n\n_pdf2scaledpng() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_pdf2scaledpng \"$@\"\nJAN_EOF_pdf2scaledpng__pdf2scaledpng_ec26e7c1c91b\n\
+            chmod +x \"$tmpdir/_pdf2scaledpng\" 2>/dev/null || true\ncat >\"$tmpdir/pdf2scaledpng.sh\"\
+            \ <<'JAN_EOF_pdf2scaledpng_pdf2scaledpng_sh_c02714cba722'\n#!/bin/bash\n\
+            \n\npdf2scaledpng \"$@\"\n#!/bin/bash\n\npdf2scaledpng () \n{ \n    local\
+            \ filename=\"$1\";\n    local outputbase=\"$1\".png;\n    pdf2png \"$filename\"\
+            ;\n    pngresize \"$outputbase\" 25 mdpi;\n    pngresize \"$outputbase\"\
+            \ 37 hdpi;\n    pngresize \"$outputbase\" 50 xhdpi;\n    pngresize \"\
+            $outputbase\" 75 xxhdpi;\n    pngresize \"$outputbase\" 100 xxxhdpi\n\
+            }\n\npdf2scaledpng \"$@\"\ntrackusage \"$0\"\nJAN_EOF_pdf2scaledpng_pdf2scaledpng_sh_c02714cba722\n\
+            chmod +x \"$tmpdir/pdf2scaledpng.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/pdf2scaledpng.sh\" \"$@\"\n"
+          passthrough: true
+  pngresize:
+    about: A script for automated tasks.
+    path: ../scripts/source/pngresize
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            pngresize
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_pngresize\" <<'JAN_EOF_pngresize__pngresize_6a31d90d735d'\n\
+            #compdef pngresize\n\n# Zsh completion for pngresize\n# Generated automatically\
+            \ - customize as needed\n\n_pngresize() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_pngresize \"\
+            $@\"\nJAN_EOF_pngresize__pngresize_6a31d90d735d\nchmod +x \"$tmpdir/_pngresize\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/pngresize.sh\" <<'JAN_EOF_pngresize_pngresize_sh_342d274221de'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\npngresize () \n{ \n\
+            \    convert -verbose -resize \"$2\"% -quality 100 \"$1\" \"$1\".\"$3\"\
+            .png\n}\n\npngresize \"$@\"\ntrackusage \"$0\"\nJAN_EOF_pngresize_pngresize_sh_342d274221de\n\
+            chmod +x \"$tmpdir/pngresize.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/pngresize.sh\" \"$@\"\n"
+          passthrough: true
+  qrencoder:
+    about: A script for automated tasks.
+    path: ../scripts/source/qrencoder
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            qrencoder
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_qrencoder\" <<'JAN_EOF_qrencoder__qrencoder_2a2c1bf86315'\n\
+            #compdef qrencoder\n\n# Zsh completion for qrencoder\n# Generated automatically\
+            \ - customize as needed\n\n_qrencoder() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_qrencoder \"\
+            $@\"\nJAN_EOF_qrencoder__qrencoder_2a2c1bf86315\nchmod +x \"$tmpdir/_qrencoder\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/qrencoder.sh\" <<'JAN_EOF_qrencoder_qrencoder_sh_3bc451ddb8cf'\n\
+            qr() {\n    local filename=\"/tmp/qr-output-$(python3 -c 'import time;\
+            \ print(time.time())').png\"\n    qrencode -l L -v 1 -o \"$filename\"\
+            \ \"$1\" &&\n        echo \"$filename\" &&\n        open \"$filename\"\
+            \n}\nqr \"$1\"\ntrackusage \"$0\"\nJAN_EOF_qrencoder_qrencoder_sh_3bc451ddb8cf\n\
+            chmod +x \"$tmpdir/qrencoder.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/qrencoder.sh\" \"$@\"\n"
+          passthrough: true
+  vid-compress:
+    about: A script for automated tasks.
+    path: ../scripts/source/vid-compress
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            vid-compress
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_vid-compress\" <<'JAN_EOF_vid_compress__vid_compress_e31e2660c4c2'\n\
+            #compdef vid-compress\n\n# Zsh completion for vid-compress\n# Generated\
+            \ automatically - customize as needed\n\n_vid-compress() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_vid-compress \"$@\"\nJAN_EOF_vid_compress__vid_compress_e31e2660c4c2\n\
+            chmod +x \"$tmpdir/_vid-compress\" 2>/dev/null || true\ncat >\"$tmpdir/vid-compress.sh\"\
+            \ <<'JAN_EOF_vid_compress_vid_compress_sh_182b3a0ae93f'\n#!/usr/bin/env\
+            \ zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"$0\")\"\nhelp()\
+            \ {\n    error_code=$?\n    echo \"\nUsage: $scriptname [-h|--help]\n\n\
+            Compresses a video file with h265 compression \nhttps://unix.stackexchange.com/questions/28803/how-can-i-reduce-a-videos-size-with-ffmpeg\n\
+            \nGood for compressing videos so that they fit in github PRs. \n\"\n \
+            \   exit $error_code\n}\n\nmain() {\n\n    emulate -L zsh\n    zmodload\
+            \ zsh/zutil || return 1\n\n    local help\n    zparseopts -D -F -K --\
+            \ \\\n        {h,-help}=help ||\n        return 1\n\n    if (($#help));\
+            \ then help; fi\n\nvid-compress () {\n\tffmpeg -i \"$1\" -vcodec libx265\
+            \ -crf 28 output.mp4\n}\n\n    vid-compress \"$@\" || help\n}\n\nmain\
+            \ \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_vid_compress_vid_compress_sh_182b3a0ae93f\n\
+            chmod +x \"$tmpdir/vid-compress.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/vid-compress.sh\" \"$@\"\n"
+          passthrough: true

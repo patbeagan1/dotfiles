@@ -1,0 +1,592 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: text utilities
+commands:
+  append_keyword:
+    about: A script for automated tasks.
+    path: ../scripts/source/append_keyword
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            append_keyword
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_append_keyword\" <<'JAN_EOF_append_keyword__append_keyword_8adc22db64ef'\n\
+            #compdef append_keyword\n\n# Zsh completion for append_keyword\n# Generated\
+            \ automatically - customize as needed\n\n_append_keyword() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_append_keyword \"$@\"\nJAN_EOF_append_keyword__append_keyword_8adc22db64ef\n\
+            chmod +x \"$tmpdir/_append_keyword\" 2>/dev/null || true\ncat >\"$tmpdir/append_keyword.sh\"\
+            \ <<'JAN_EOF_append_keyword_append_keyword_sh_b74588f4e4ec'\n#!/bin/bash\n\
+            # (c) 2022 Pat Beagan: MIT License\nphoto=\"'$1'\"\nshift\ncmd=\"exiftool\
+            \ \"\nfor i in \"$@\"; do\n        cmd=\"$cmd-IPTC:Keywords+='$i' \"\n\
+            done\ncmd=\"$cmd $photo\"\necho \"$cmd\"\neval \"$cmd\"\n\ntrackusage\
+            \ \"$0\"\nJAN_EOF_append_keyword_append_keyword_sh_b74588f4e4ec\nchmod\
+            \ +x \"$tmpdir/append_keyword.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/append_keyword.sh\" \"$@\"\n"
+          passthrough: true
+  dequote:
+    about: A script for automated tasks.
+    path: ../scripts/source/dequote
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            dequote
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_dequote\" <<'JAN_EOF_dequote__dequote_fbb1477f65ed'\n\
+            #compdef dequote\n\n# Zsh completion for dequote\n# Generated automatically\
+            \ - customize as needed\n\n_dequote() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_dequote \"\
+            $@\"\nJAN_EOF_dequote__dequote_fbb1477f65ed\nchmod +x \"$tmpdir/_dequote\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/dequote.sh\" <<'JAN_EOF_dequote_dequote_sh_5ea548453cd5'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ndequote () \n{ \n\
+            \    eval printf %s \"$1\" 2> /dev/null\n}\ndequote \"$@\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_dequote_dequote_sh_5ea548453cd5\nchmod +x \"$tmpdir/dequote.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/dequote.sh\" \"\
+            $@\"\n"
+          passthrough: true
+  dictionary:
+    about: A script for automated tasks.
+    path: ../scripts/source/dictionary
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            dictionary
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_dictionary\" <<'JAN_EOF_dictionary__dictionary_f250cb02256c'\n\
+            #compdef dictionary\n\n# Zsh completion for dictionary\n# Generated automatically\
+            \ - customize as needed\n\n_dictionary() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_dictionary\
+            \ \"$@\"\nJAN_EOF_dictionary__dictionary_f250cb02256c\nchmod +x \"$tmpdir/_dictionary\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/dictionary.sh\" <<'JAN_EOF_dictionary_dictionary_sh_97a621ad4972'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ndictionary () \n{\
+            \ \n    curl \"dict://dict.org/d:$1\"\n}\n\ndictionary \"$@\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_dictionary_dictionary_sh_97a621ad4972\nchmod +x \"$tmpdir/dictionary.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/dictionary.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  emoji_block_text:
+    about: A script for automated tasks.
+    path: ../scripts/source/emoji_block_text
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            emoji_block_text
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_emoji_block_text\" <<'JAN_EOF_emoji_block_text__emoji_block_text_7745b2051cbc'\n\
+            #compdef emoji_block_text\n\n# Zsh completion for emoji_block_text\n#\
+            \ Generated automatically - customize as needed\n\n_emoji_block_text()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_emoji_block_text \"$@\"\nJAN_EOF_emoji_block_text__emoji_block_text_7745b2051cbc\n\
+            chmod +x \"$tmpdir/_emoji_block_text\" 2>/dev/null || true\ncat >\"$tmpdir/emoji_block_text.js\"\
+            \ <<'JAN_EOF_emoji_block_text_emoji_block_text_js_2b4c666180d5'\n#!/usr/bin/env\
+            \ node\n\nconst chars = {\n  ' ': [\n    [0,0,0],\n    [0,0,0],\n    [0,0,0],\n\
+            \    [0,0,0],\n    [0,0,0]\n  ],\n  'A': [\n    [1,1,1],\n    [1,0,1],\n\
+            \    [1,1,1],\n    [1,0,1],\n    [1,0,1]\n  ],\n  'B': [\n    [1,1,1],\n\
+            \    [1,0,1],\n    [1,1,0],\n    [1,0,1],\n    [1,1,1]\n  ],\n  'C': [\n\
+            \    [1,1,1],\n    [1,0,0],\n    [1,0,0],\n    [1,0,0],\n    [1,1,1]\n\
+            \  ],\n  'D': [\n    [1,1,0],\n    [1,0,1],\n    [1,0,1],\n    [1,0,1],\n\
+            \    [1,1,0]\n  ],\n  'E': [\n    [1,1,1],\n    [1,0,0],\n    [1,1,1],\n\
+            \    [1,0,0],\n    [1,1,1]\n  ],\n  'F': [\n    [1,1,1],\n    [1,0,0],\n\
+            \    [1,1,1],\n    [1,0,0],\n    [1,0,0]\n  ],\n  'G': [\n    [1,1,1],\n\
+            \    [1,0,0],\n    [1,0,0],\n    [1,0,1],\n    [1,1,1]\n  ],\n  'H': [\n\
+            \    [1,0,1],\n    [1,0,1],\n    [1,1,1],\n    [1,0,1],\n    [1,0,1]\n\
+            \  ],\n  'I': [\n    [1,1,1],\n    [0,1,0],\n    [0,1,0],\n    [0,1,0],\n\
+            \    [1,1,1]\n  ],\n  'J': [\n    [0,0,1],\n    [0,0,1],\n    [0,0,1],\n\
+            \    [1,0,1],\n    [1,1,1]\n  ],\n  'K': [\n    [1,0,1],\n    [1,1,0],\n\
+            \    [1,1,0],\n    [1,0,1],\n    [1,0,1]\n  ],\n  'L': [\n    [1,0,0],\n\
+            \    [1,0,0],\n    [1,0,0],\n    [1,0,0],\n    [1,1,1]\n  ],\n  'M': [\n\
+            \    [0,0,0],\n    [1,0,1],\n    [1,1,1],\n    [1,0,1],\n    [1,0,1]\n\
+            \  ],\n  'N': [\n    [1,1,1],\n    [1,0,1],\n    [1,0,1],\n    [1,0,1],\n\
+            \    [1,0,1]\n  ],\n  'O': [\n    [1,1,1],\n    [1,0,1],\n    [1,0,1],\n\
+            \    [1,0,1],\n    [1,1,1]\n  ],\n  'P': [\n    [1,1,1],\n    [1,0,1],\n\
+            \    [1,1,1],\n    [1,0,0],\n    [1,0,0]\n  ],\n  'Q': [\n    [1,1,1],\n\
+            \    [1,0,1],\n    [1,0,1],\n    [1,1,1],\n    [1,1,1]\n  ],\n  'R': [\n\
+            \    [1,1,0],\n    [1,0,1],\n    [1,1,0],\n    [1,0,1],\n    [1,0,1]\n\
+            \  ],\n  'S': [\n    [1,1,1],\n    [1,0,0],\n    [1,1,1],\n    [0,0,1],\n\
+            \    [1,1,1]\n  ],\n  'T': [\n    [1,1,1],\n    [0,1,0],\n    [0,1,0],\n\
+            \    [0,1,0],\n    [0,1,0]\n  ],\n  'U': [\n    [1,0,1],\n    [1,0,1],\n\
+            \    [1,0,1],\n    [1,0,1],\n    [1,1,1]\n  ],\n  'V': [\n    [1,0,1],\n\
+            \    [1,0,1],\n    [1,0,1],\n    [1,0,1],\n    [0,1,0]\n  ],\n  'W': [\n\
+            \    [0,0,0],\n    [1,0,1],\n    [1,0,1],\n    [1,1,1],\n    [1,0,1]\n\
+            \  ],\n  'X': [\n    [1,0,1],\n    [0,1,0],\n    [0,1,0],\n    [0,1,0],\n\
+            \    [1,0,1]\n  ],\n  'Y': [\n    [1,0,1],\n    [1,0,1],\n    [1,1,1],\n\
+            \    [0,1,0],\n    [0,1,0]\n  ],\n  'Z': [\n    [1,1,1],\n    [0,0,1],\n\
+            \    [1,1,1],\n    [1,0,0],\n    [1,1,1]\n  ]\n}\n\nlet fill = ':shipit:';\n\
+            let blank = ':blank:';\n\nconst input = process.argv[2].toUpperCase();\n\
+            if (process.argv[3]) {\n  fill = `:${process.argv[3]}:`;\n}\nif (process.argv[4])\
+            \ {\n  blank = `:${process.argv[4]}:`;\n}\n\nfor(var i=0;i<5;i++) {\n\
+            \  const char = input.split('');\n  for (var c = 0;c<char.length; c++)\
+            \ {\n    let m = chars[char[c]];\n    if (m)\n    {\n      for(var x=0;x<3;x++)\
+            \ {\n        process.stdout.write(m[i][x] ? fill : blank);\n      }\n\
+            \      if (c < (char.length-1)) process.stdout.write(blank);\n    }\n\
+            \  }\n  process.stdout.write('\\r\\n');\n}\nJAN_EOF_emoji_block_text_emoji_block_text_js_2b4c666180d5\n\
+            chmod +x \"$tmpdir/emoji_block_text.js\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/emoji_block_text.js\" \"$@\"\n"
+          passthrough: true
+  format-latex-color:
+    about: A script for automated tasks.
+    path: ../scripts/source/format-latex-color
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            format-latex-color
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_format-latex-color\" <<'JAN_EOF_format_latex_color__format_latex_color_cac297b77f24'\n\
+            #compdef format-latex-color\n\n# Zsh completion for format-latex-color\n\
+            # Generated automatically - customize as needed\n\n_format-latex-color()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_format-latex-color \"$@\"\nJAN_EOF_format_latex_color__format_latex_color_cac297b77f24\n\
+            chmod +x \"$tmpdir/_format-latex-color\" 2>/dev/null || true\ncat >\"\
+            $tmpdir/format-latex-color.py\" <<'JAN_EOF_format_latex_color_format_latex_color_py_a25639d6e892'\n\
+            #!/usr/bin/env python3\n\nimport argparse\nimport random\n\ndef colorize_text(text,\
+            \ method=\"word_by_word\", colors=None, keyword_map=None):\n    \"\"\"\
+            \n    Colorizes text for LaTeX rendering in GitHub Markdown, explicitly\
+            \ adding \\\\space.\n\n    Args:\n        text (str): The input text to\
+            \ colorize.\n        method (str): The colorization method.\n        \
+            \              Options: \"word_by_word\", \"keyword\", \"random\".\n \
+            \       colors (list, optional): A list of LaTeX color names to use.\n\
+            \                                 Defaults to [\"red\", \"lightblue\"\
+            , \"orange\", \"green\", \"yellow\", \"blue\", \"purple\"].\n        keyword_map\
+            \ (dict, optional): A dictionary mapping keywords to LaTeX color names\n\
+            \                                      for the \"keyword\" method.\n\n\
+            \    Returns:\n        str: The colorized text formatted for LaTeX with\
+            \ explicit \\\\space.\n    \"\"\"\n    if colors is None:\n        colors\
+            \ = [\"red\", \"lightblue\", \"orange\", \"green\", \"yellow\", \"blue\"\
+            , \"purple\"]\n\n    words = text.split()\n    colorized_parts = []\n\n\
+            \    for i, word in enumerate(words):\n        current_color = \"\"\n\
+            \        if method == \"word_by_word\":\n            current_color = colors[i\
+            \ % len(colors)]\n            colorized_parts.append(f\"\\\\color{{{current_color}}}{word}\"\
+            )\n        elif method == \"keyword\":\n            if keyword_map is\
+            \ None:\n                raise ValueError(\"keyword_map must be provided\
+            \ for 'keyword' method.\")\n            \n            matched = False\n\
+            \            for keyword, color in keyword_map.items():\n            \
+            \    if keyword.lower() in word.lower():\n                    current_color\
+            \ = color\n                    colorized_parts.append(f\"\\\\color{{{current_color}}}{word}\"\
+            )\n                    matched = True\n                    break\n   \
+            \         if not matched:\n                colorized_parts.append(word)\
+            \ # Append uncolored word if no keyword match\n        elif method ==\
+            \ \"random\":\n            current_color = random.choice(colors)\n   \
+            \         colorized_parts.append(f\"\\\\color{{{current_color}}}{word}\"\
+            )\n        else:\n            raise ValueError(f\"Unknown colorization\
+            \ method: {method}\")\n\n        # Add \\space after each word, except\
+            \ for the last one\n        if i < len(words) - 1:\n            colorized_parts.append(\"\
+            \ \\\\space \")\n\n    return \"$$\" + \"\".join(colorized_parts) + \"\
+            $$\"\n\n\ndef main():\n    parser = argparse.ArgumentParser(\n       \
+            \ description=\"Colorizes text for LaTeX rendering in GitHub Markdown.\"\
+            ,\n        formatter_class=argparse.RawTextHelpFormatter # For better\
+            \ formatting of help message\n    )\n\n    parser.add_argument(\n    \
+            \    \"text\",\n        type=str,\n        help=\"The input text to colorize.\
+            \ Enclose in quotes if it contains spaces.\"\n    )\n\n    parser.add_argument(\n\
+            \        \"-m\", \"--method\",\n        type=str,\n        choices=[\"\
+            word_by_word\", \"keyword\", \"random\"],\n        default=\"word_by_word\"\
+            ,\n        help=\"Colorization method.\\n\"\n             \"  word_by_word:\
+            \ Cycle through colors for each word.\\n\"\n             \"  keyword:\
+            \ Color specific keywords (requires -k/--keywords).\\n\"\n           \
+            \  \"  random: Assign a random color to each word.\"\n    )\n\n    parser.add_argument(\n\
+            \        \"-c\", \"--colors\",\n        type=str,\n        nargs=\"*\"\
+            , # Allows zero or more arguments\n        default=[\"red\", \"lightblue\"\
+            , \"orange\", \"green\", \"yellow\", \"blue\", \"purple\"],\n        help=\"\
+            List of LaTeX color names (e.g., red blue green). \\n\"\n            \
+            \ \"  Applies to 'word_by_word' and 'random' methods.\"\n    )\n\n   \
+            \ parser.add_argument(\n        \"-k\", \"--keywords\",\n        type=str,\n\
+            \        nargs=\"*\", # Allows zero or more arguments\n        metavar=\"\
+            KEYWORD:COLOR\",\n        help=\"For 'keyword' method: specify keywords\
+            \ and their colors. \\n\"\n             \"  Format: KEYWORD1:COLOR1 KEYWORD2:COLOR2.\\\
+            n\"\n             \"  Example: API:green breaking:red\"\n    )\n\n   \
+            \ args = parser.parse_args()\n\n    keyword_map = None\n    if args.method\
+            \ == \"keyword\":\n        if not args.keywords:\n            parser.error(\"\
+            The 'keyword' method requires --keywords to be specified.\")\n       \
+            \ keyword_map = {}\n        for item in args.keywords:\n            if\
+            \ ':' not in item:\n                parser.error(f\"Invalid keyword format\
+            \ '{item}'. Expected KEYWORD:COLOR.\")\n            key, color = item.split(':',\
+            \ 1)\n            keyword_map[key] = color\n\n    try:\n        colored_output\
+            \ = colorize_text(\n            text=args.text,\n            method=args.method,\n\
+            \            colors=args.colors,\n            keyword_map=keyword_map\n\
+            \        )\n        print(colored_output)\n    except ValueError as e:\n\
+            \        parser.error(e)\n\nif __name__ == \"__main__\":\n    main()\n\
+            JAN_EOF_format_latex_color_format_latex_color_py_a25639d6e892\nchmod +x\
+            \ \"$tmpdir/format-latex-color.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/format-latex-color.py\" \"$@\"\n"
+          passthrough: true
+  quote:
+    about: A script for automated tasks.
+    path: ../scripts/source/quote
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            quote
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_quote\" <<'JAN_EOF_quote__quote_500889461425'\n\
+            #compdef quote\n\n# Zsh completion for quote\n# Generated automatically\
+            \ - customize as needed\n\n_quote() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_quote \"$@\"\
+            \nJAN_EOF_quote__quote_500889461425\nchmod +x \"$tmpdir/_quote\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/quote.sh\" <<'JAN_EOF_quote_quote_sh_0089cfa5f4dd'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nquote () \n{ \n  \
+            \  local quoted=${1//\\'/\\'\\\\\\'\\'};\n    printf \"'%s'\" \"$quoted\"\
+            \n}\n\nquote \"$@\"\ntrackusage \"$0\"\nJAN_EOF_quote_quote_sh_0089cfa5f4dd\n\
+            chmod +x \"$tmpdir/quote.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/quote.sh\" \"$@\"\n"
+          passthrough: true
+  simplify-prose:
+    about: A script for automated tasks.
+    path: ../scripts/source/simplify-prose
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            simplify-prose
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_simplify-prose\" <<'JAN_EOF_simplify_prose__simplify_prose_07590cf83e45'\n\
+            #compdef simplify-prose\n\n# Zsh completion for simplify-prose\n# Generated\
+            \ automatically - customize as needed\n\n_simplify-prose() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_simplify-prose \"$@\"\nJAN_EOF_simplify_prose__simplify_prose_07590cf83e45\n\
+            chmod +x \"$tmpdir/_simplify-prose\" 2>/dev/null || true\ncat >\"$tmpdir/simplify-prose.sh\"\
+            \ <<'JAN_EOF_simplify_prose_simplify_prose_sh_0592843e90ef'\n#!/usr/bin/env\
+            \ zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\\
+            n\\t'\n\nhelp() {\n  error_code=$?\n  echo \"\nHelps to break up large\
+            \ blocks of text by putting common punctuation on different lines.\n \
+            \ Paragraphs are shown with horizontal rules,\n  Sentences are shown by\
+            \ new paragraphs,\n  Commas are shown as new lines that are indented.\n\
+            \nThis helps when reading thick prose from before 1900,\n  because it\
+            \ allows you to more easily filter out the sentences that are irrelevant,\n\
+            \  and double back to the parts that have become relveant again, once\
+            \ a stack of clauses resolves.\n\nRequired mode flag\n  -l: legal mode\n\
+            \  -p: prose mode\n\nErrs:\n  1: generic\n  2: missing mode flag\n\"\n\
+            \  if [[ ! $error_code -eq 0 ]]; then echo \"Err: $error_code\"; fi\n\
+            }\n\nremove_leading_whitespace() {\n  # removes leading whitespace\n \
+            \ sed 's/^[ ]*\\(.*$\\)/\\1/'\n}\n\nreplace_known_abbreviations() {\n\
+            \  sed 's/U\\.S\\./U-S-/ig' |\n    sed 's/U\\.S\\.A\\./U-S-A-/ig' |\n\
+            \    sed 's/i\\.e\\./i-e-/g' |\n    sed 's/_i\\.e_\\./i-e-/g' |\n    sed\
+            \ 's/e\\.g\\./e-g-/g'\n}\n\nreplace_quoted_punctuation() {\n  sed 's/\\\
+            .\"/\"\\./g' |\n    sed 's/\\,\"/\"\\,/g' |\n    sed 's/\\?\"/\"\\?/g'\
+            \ |\n    sed 's/\\!\"/\"\\!/g' |\n    sed 's/\\;\"/\"\\;/g' |\n    sed\
+            \ 's/\\:\"/\"\\:/g' |\n    sed \"s/\\.'/'\\./g\" |\n    sed \"s/\\,'/'\\\
+            ,/g\" |\n    sed \"s/\\?'/'\\?/g\" |\n    sed \"s/\\:'/'\\:/g\" |\n  \
+            \  sed \"s/\\;'/'\\;/g\" |\n    sed \"s/\\!'/'\\!/g\"\n}\n\nreplace_parenthesized_punctuation()\
+            \ {\n  sed 's/\\.)/)\\./g' |\n    sed 's/\\!)/)\\!/g' |\n    sed 's/\\\
+            ,)/)\\,/g'\n}\n\ntransliterate_for_font_compatibility() {\n  sed 's/“/\"\
+            /g' |\n    sed 's/”/\"/g' |\n    sed \"s/’/\\'/g\" |\n    sed \"s/‘/\\\
+            '/g\"\n}\n\nreplace_punctuation() {\n  sed 's/,/,\\n /g' |\n    sed 's/;/;\\\
+            n /g' |\n    sed 's/:/:\\n /g' |\n    sed 's/\\./\\.\\n\\n/g' |\n    sed\
+            \ 's/\\?/\\?\\n\\n/g' |\n    sed 's/\\!/\\!\\n\\n/g' |\n    sed 's/—/--/g'\n\
+            }\n\nreplace_conjunction() {\n  sed 's/ and /\\n  and /g' |\n    sed 's/\
+            \ AND /\\n  AND /g' |\n    sed 's/ or /\\n  or /g' |\n    sed 's/ OR /\\\
+            n  OR /g'\n}\n\nreplace_double_spaces() {\n  sed 's/  / /g'\n}\n\nreduce_newlines()\
+            \ {\n  tr '\\n' '\\r' |\n    sed 's/\\r\\r/NEWLINE-MAGIC-9182/g' |\n \
+            \   sed 's/NEWLINE-MAGIC-9182NEWLINE-MAGIC-9182/\\n\\n/g' |\n    sed 's/NEWLINE-MAGIC-9182/\
+            \ /g'\n}\n\nincrease_newlines() {\n  tr '\\n' '\\r' |\n    sed 's/\\r/\\\
+            r\\r/g' |\n    tr '\\r' '\\n'\n}\n\nreduce_newlines_after_conjunction()\
+            \ {\n  tr '\\n' '\\r' |\n    sed -E 's/\\r[ ]*\\r[ ]*and/\\r  and/g' |\n\
+            \    sed -E 's/\\r[ ]*\\r[ ]*or/\\r  or/g' |\n    tr '\\r' '\\n'\n}\n\n\
+            save_generic_abbreviations() {\n  sed -E 's/(\\.)([^ ])/DOT-MAGIC-9876\\\
+            2/g'\n}\n\nfinalize_generic_abbrevations() {\n  sed -E 's/DOT-MAGIC-9876/\\\
+            ./g'\n}\n\nformat_core() {\n  transliterate_for_font_compatibility |\n\
+            \    replace_double_spaces |\n    replace_known_abbreviations |\n    replace_quoted_punctuation\
+            \ |\n    replace_parenthesized_punctuation |\n    save_generic_abbreviations\
+            \ |\n    replace_punctuation |\n    finalize_generic_abbrevations\n}\n\
+            \nsimplify-prose-legal() {\n  cat \"$1\" |\n    remove_leading_whitespace\
+            \ |\n    increase_newlines |\n    tr \"\\n\" \" \" |\n    format_core\
+            \ |\n    replace_conjunction |\n    reduce_newlines_after_conjunction\
+            \ |\n    awk '{print ++count \"\\t\" \"| \" $0}'\n}\n\nsimplify-prose()\
+            \ {\n  cat \"$1\" |\n    remove_leading_whitespace |\n    reduce_newlines\
+            \ |\n    tr \"\\n\" \"\\r\" |\n    sed 's/\\r\\r/\\n--------\\n\\n /g'\
+            \ |\n    format_core |\n    awk '/--------/ {print ++count, $0} !/--------/\
+            \ {print}'\n}\n\nif [ ! $# -eq 2 ]; then\n  help\nelif [ \"$1\" = \"-l\"\
+            \ ]; then\n  shift\n  simplify-prose-legal \"$@\" || help\nelif [ \"$1\"\
+            \ = \"-p\" ]; then\n  shift\n  simplify-prose \"$@\" || help\nelse\n \
+            \ help\nfi\ntrackusage \"$0\"\nJAN_EOF_simplify_prose_simplify_prose_sh_0592843e90ef\n\
+            chmod +x \"$tmpdir/simplify-prose.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/simplify-prose.sh\" \"$@\"\n"
+          passthrough: true
+  text-to-keypad:
+    about: A script for automated tasks.
+    path: ../scripts/source/text-to-keypad
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            text-to-keypad
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_text-to-keypad\" <<'JAN_EOF_text_to_keypad__text_to_keypad_2e081d7738c7'\n\
+            #compdef text-to-keypad\n\n# Zsh completion for text-to-keypad\n# Generated\
+            \ automatically - customize as needed\n\n_text-to-keypad() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_text-to-keypad \"$@\"\nJAN_EOF_text_to_keypad__text_to_keypad_2e081d7738c7\n\
+            chmod +x \"$tmpdir/_text-to-keypad\" 2>/dev/null || true\ncat >\"$tmpdir/text-to-keypad.py\"\
+            \ <<'JAN_EOF_text_to_keypad_text_to_keypad_py_172e3de3627d'\n#!/usr/bin/env\
+            \ python3\nimport sys\n\ndef keypad_translate(text):\n    key_dict = {'a':\
+            \ '2', 'b': '2', 'c': '2',\n                'd': '3', 'e': '3', 'f': '3',\n\
+            \                'g': '4', 'h': '4', 'i': '4',\n                'j': '5',\
+            \ 'k': '5', 'l': '5',\n                'm': '6', 'n': '6', 'o': '6',\n\
+            \                'p': '7', 'q': '7', 'r': '7', 's': '7',\n           \
+            \     't': '8', 'u': '8', 'v': '8',\n                'w': '9', 'x': '9',\
+            \ 'y': '9', 'z': '9'}\n\n    translated_text = ''\n    for char in text:\n\
+            \        if char.lower() in key_dict:\n            translated_text +=\
+            \ key_dict[char.lower()]\n        else:\n            translated_text +=\
+            \ char.lower()\n    return translated_text\n\ntext = \" \".join(sys.argv[1:])\n\
+            print(keypad_translate(text))   # Output: '112'\nJAN_EOF_text_to_keypad_text_to_keypad_py_172e3de3627d\n\
+            chmod +x \"$tmpdir/text-to-keypad.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/text-to-keypad.py\" \"$@\"\n"
+          passthrough: true
+  tocamelcase:
+    about: A script for automated tasks.
+    path: ../scripts/source/tocamelcase
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            tocamelcase
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_tocamelcase\" <<'JAN_EOF_tocamelcase__tocamelcase_d0bd3341a0af'\n\
+            #compdef tocamelcase\n\n# Zsh completion for tocamelcase\n# Generated\
+            \ automatically - customize as needed\n\n_tocamelcase() {\n    local context\
+            \ state line\n    typeset -A opt_args\n    \n    _arguments -C \\\n  \
+            \      '(-h --help)'{-h,--help}'[Show help information]' \\\n        '(-v\
+            \ --version)'{-v,--version}'[Show version information]' \\\n        '*::arg:_files'\n\
+            }\n\n_tocamelcase \"$@\"\nJAN_EOF_tocamelcase__tocamelcase_d0bd3341a0af\n\
+            chmod +x \"$tmpdir/_tocamelcase\" 2>/dev/null || true\ncat >\"$tmpdir/tocamelcase.sh\"\
+            \ <<'JAN_EOF_tocamelcase_tocamelcase_sh_4511cf500364'\n#!/bin/bash \n\
+            # (c) 2022 Pat Beagan: MIT License\n\ntocamelcase () \n{ \n    echo \"\
+            $1\" | perl -pe 's/(^|_)./uc($&)/ge;s/_//g'\n}\n\ntocamelcase \"$@\"\n\
+            JAN_EOF_tocamelcase_tocamelcase_sh_4511cf500364\nchmod +x \"$tmpdir/tocamelcase.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/tocamelcase.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  tosnakecase:
+    about: A script for automated tasks.
+    path: ../scripts/source/tosnakecase
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            tosnakecase
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_tosnakecase\" <<'JAN_EOF_tosnakecase__tosnakecase_cf2145692c68'\n\
+            #compdef tosnakecase\n\n# Zsh completion for tosnakecase\n# Generated\
+            \ automatically - customize as needed\n\n_tosnakecase() {\n    local context\
+            \ state line\n    typeset -A opt_args\n    \n    _arguments -C \\\n  \
+            \      '(-h --help)'{-h,--help}'[Show help information]' \\\n        '(-v\
+            \ --version)'{-v,--version}'[Show version information]' \\\n        '*::arg:_files'\n\
+            }\n\n_tosnakecase \"$@\"\nJAN_EOF_tosnakecase__tosnakecase_cf2145692c68\n\
+            chmod +x \"$tmpdir/_tosnakecase\" 2>/dev/null || true\ncat >\"$tmpdir/tosnakecase.sh\"\
+            \ <<'JAN_EOF_tosnakecase_tosnakecase_sh_a76814513c94'\n#!/bin/bash \n\
+            # (c) 2022 Pat Beagan: MIT License\n\ntosnakecase () \n{ \n    echo \"\
+            $1\" | perl -pe 's/([a-z0-9])([A-Z])/$1_\\L$2/g'\n}\n\ntosnakecase \"\
+            $@\"\nJAN_EOF_tosnakecase_tosnakecase_sh_a76814513c94\nchmod +x \"$tmpdir/tosnakecase.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/tosnakecase.sh\"\
+            \ \"$@\"\n"
+          passthrough: true

@@ -1,0 +1,452 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: time utilities
+commands:
+  days_until:
+    about: A script for automated tasks.
+    path: ../scripts/source/days_until
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            days_until
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_days_until\" <<'JAN_EOF_days_until__days_until_e63108634711'\n\
+            #compdef days_until\n\n# Zsh completion for days_until\n# Generated automatically\
+            \ - customize as needed\n\n_days_until() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_days_until\
+            \ \"$@\"\nJAN_EOF_days_until__days_until_e63108634711\nchmod +x \"$tmpdir/_days_until\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/days_until.py\" <<'JAN_EOF_days_until_days_until_py_43b0ef65d76f'\n\
+            #!/usr/bin/env python3 \n\nimport sys\nimport argparse\nfrom datetime\
+            \ import datetime\nimport math\n\ndef calculate_time_until(event_date_str,\
+            \ event_name):\n    try:\n        # Parsing the event date\n        event_date\
+            \ = datetime.strptime(event_date_str, \"%Y-%m-%d\")\n    except ValueError:\n\
+            \        raise ValueError(\"Date must be in YYYY-MM-DD format\")\n\n \
+            \   # Current date and time\n    current_date = datetime.now()\n    \n\
+            \    # Time until the event\n    time_until = event_date - current_date\n\
+            \n    if time_until.days == -1:\n        return f\"Today is {event_name}\"\
+            \n    \n    # Offset to midnight\n    curr_day = datetime.now()\n    offset\
+            \ = datetime.now() - datetime(year=curr_day.year, month=curr_day.month,\
+            \ day=curr_day.day)\n\n    if str(time_until) != str(abs(time_until)):\n\
+            \        raise ValueError(\"Time can't be negative\")\n\n    # Extract\
+            \ years, months, weeks, and days\n    v = datetime.min + time_until +\
+            \ offset\n    years = v.year - 1 \n    months = v.month - 1\n    weeks\
+            \ = (v.day - 1) / 7\n    days = (v.day - 1) % 7 \n\n    years = int(years)\n\
+            \    months = int(months)\n    weeks = int(weeks)\n    days = int(days)\n\
+            \n    # Creating parts of the output string\n    parts = []\n    if years\
+            \ > 0:\n        parts.append(f\"{years} years\")\n    if months > 0:\n\
+            \        parts.append(f\"{months} months\")\n    if weeks > 0 and months\
+            \ == 0:\n        parts.append(f\"{weeks} weeks\")\n    if days > 0 and\
+            \ months == 0:\n        parts.append(f\"{days} days\")\n\n    # Joining\
+            \ the parts with commas and adding the event name\n    output = \", \"\
+            .join(parts)\n    output += f\" until {event_name}\"\n\n    return output\n\
+            \ndef main():\n    parser = argparse.ArgumentParser(description=\"Calculate\
+            \ time until a specified event date.\")\n    parser.add_argument(\"event_date\"\
+            , help=\"The date of the event in YYYY-MM-DD format\")\n    parser.add_argument(\"\
+            event_name\", help=\"The name of the event\")\n\n    args = parser.parse_args()\n\
+            \n    try:\n        result = calculate_time_until(args.event_date, args.event_name)\n\
+            \        print(result)\n    except ValueError as e:\n        print(f\"\
+            Error: {e}\", file=sys.stderr)\n\nif __name__ == \"__main__\":\n    main()\n\
+            JAN_EOF_days_until_days_until_py_43b0ef65d76f\nchmod +x \"$tmpdir/days_until.py\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/days_until.py\"\
+            \ \"$@\"\n"
+          passthrough: true
+  halloween-countdown:
+    about: Shows the number of days until Halloween. If Halloween has already passed
+      this year, it shows days until next year's Halloween.
+    path: ../scripts/source/halloween-countdown
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            halloween-countdown
+
+
+            Shows the number of days until Halloween. If Halloween has already passed
+            this year, it shows days until next year''s Halloween.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/halloween-countdown.sh\" <<'JAN_EOF_halloween_countdown_halloween_countdown_sh_1d015369f085'\n\
+            #!/bin/bash\n# Halloween Countdown Script\n# Shows days until Halloween\n\
+            \nHALLOWEEN_DATE=$(date -d \"$(date +%Y)-10-31\" +%s 2>/dev/null || date\
+            \ -j -f \"%Y-%m-%d\" \"$(date +%Y)-10-31\" +%s 2>/dev/null)\nCURRENT_DATE=$(date\
+            \ +%s)\n\nif [ -z \"$HALLOWEEN_DATE\" ]; then\n    # Fallback calculation\n\
+            \    YEAR=$(date +%Y)\n    HALLOWEEN_DATE=$(date -d \"$YEAR-10-31\" +%s\
+            \ 2>/dev/null || echo \"\")\nfi\n\nif [ -n \"$HALLOWEEN_DATE\" ] && [\
+            \ \"$HALLOWEEN_DATE\" -gt \"$CURRENT_DATE\" ]; then\n    DAYS=$(( ($HALLOWEEN_DATE\
+            \ - $CURRENT_DATE) / 86400 ))\n    echo \"\U0001F383 $DAYS days until\
+            \ Halloween! \U0001F383\"\nelif [ -n \"$HALLOWEEN_DATE\" ]; then\n   \
+            \ # Halloween has passed this year, show next year\n    YEAR=$(( $(date\
+            \ +%Y) + 1 ))\n    NEXT_HALLOWEEN=$(date -d \"$YEAR-10-31\" +%s 2>/dev/null\
+            \ || date -j -f \"%Y-%m-%d\" \"$YEAR-10-31\" +%s 2>/dev/null)\n    if\
+            \ [ -n \"$NEXT_HALLOWEEN\" ]; then\n        DAYS=$(( ($NEXT_HALLOWEEN\
+            \ - $CURRENT_DATE) / 86400 ))\n        echo \"\U0001F383 $DAYS days until\
+            \ next Halloween! \U0001F383\"\n    else\n        echo \"\U0001F383 Happy\
+            \ Halloween! \U0001F383\"\n    fi\nelse\n    echo \"\U0001F383 Happy Halloween!\
+            \ \U0001F383\"\nfi\nJAN_EOF_halloween_countdown_halloween_countdown_sh_1d015369f085\n\
+            chmod +x \"$tmpdir/halloween-countdown.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/halloween-countdown.sh\" \"$@\"\n"
+          passthrough: true
+  halloween-decorate:
+    about: Adds spooky ASCII art decoration to the terminal for Halloween. Optionally
+      sets terminal colors to a spooky orange/yellow theme.
+    path: ../scripts/source/halloween-decorate
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            halloween-decorate
+
+
+            Adds spooky ASCII art decoration to the terminal for Halloween. Optionally
+            sets terminal colors to a spooky orange/yellow theme.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/halloween-decorate.sh\" <<'JAN_EOF_halloween_decorate_halloween_decorate_sh_8431f60c4843'\n\
+            #!/bin/bash\n# Halloween Decoration Script\n# Adds spooky ASCII art to\
+            \ terminal\n\necho \"\"\necho \"    .-.\"\necho \"   (o o) boo!\"\necho\
+            \ \"   | O \\\\\"\necho \"   \\\\   \\\\\"\necho \"    \\`~~~'\"\necho\
+            \ \"\"\necho \"\U0001F383 Happy Halloween! \U0001F47B\"\necho \"\"\n\n\
+            # Optional: Set terminal colors to spooky theme\nif command -v tput >/dev/null\
+            \ 2>&1; then\n    echo -e \"\\033[0;33m\"  # Orange/yellow\nfi\nJAN_EOF_halloween_decorate_halloween_decorate_sh_8431f60c4843\n\
+            chmod +x \"$tmpdir/halloween-decorate.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/halloween-decorate.sh\" \"$@\"\n"
+          passthrough: true
+  pause:
+    about: A script for automated tasks.
+    path: ../scripts/source/pause
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            pause
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_pause\" <<'JAN_EOF_pause__pause_353edec844f2'\n\
+            #compdef pause\n\n# Zsh completion for pause\n# Generated automatically\
+            \ - customize as needed\n\n_pause() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_pause \"$@\"\
+            \nJAN_EOF_pause__pause_353edec844f2\nchmod +x \"$tmpdir/_pause\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/pause.sh\" <<'JAN_EOF_pause_pause_sh_d8a48e9ad185'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\npause () \n{ \n  \
+            \  read -p \"$*\"\n}\n\npause \"$@\"\ntrackusage \"$0\"\nJAN_EOF_pause_pause_sh_d8a48e9ad185\n\
+            chmod +x \"$tmpdir/pause.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/pause.sh\" \"$@\"\n"
+          passthrough: true
+  pomodoro:
+    about: A script for automated tasks.
+    path: ../scripts/source/pomodoro
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            pomodoro
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_pomodoro\" <<'JAN_EOF_pomodoro__pomodoro_9bb76d3a0034'\n\
+            #compdef pomodoro\n\n# Zsh completion for pomodoro\n# Generated automatically\
+            \ - customize as needed\n\n_pomodoro() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_pomodoro \"\
+            $@\"\nJAN_EOF_pomodoro__pomodoro_9bb76d3a0034\nchmod +x \"$tmpdir/_pomodoro\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/pomodoro.sh\" <<'JAN_EOF_pomodoro_pomodoro_sh_7e898addbea7'\n\
+            sleep 25m\nappletoast \"Pomodoro\" \"Take a 5 minute break\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_pomodoro_pomodoro_sh_7e898addbea7\nchmod +x \"$tmpdir/pomodoro.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/pomodoro.sh\" \"\
+            $@\"\n"
+          passthrough: true
+  timeclock:
+    about: A script for automated tasks.
+    path: ../scripts/source/timeclock
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            timeclock
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_timeclock\" <<'JAN_EOF_timeclock__timeclock_c5a531fe1076'\n\
+            #compdef timeclock\n\n# Zsh completion for timeclock\n# Generated automatically\
+            \ - customize as needed\n\n_timeclock() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_timeclock \"\
+            $@\"\nJAN_EOF_timeclock__timeclock_c5a531fe1076\nchmod +x \"$tmpdir/_timeclock\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/timeclock.sh\" <<'JAN_EOF_timeclock_timeclock_sh_c6fc411ca0f7'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ntimeclock () \n{ \n\
+            \    printf \"%s\\t|%s\\n\" \"$1\" \"`date`\" >> ~/timeclock.log\n}\n\n\
+            timeclock \"$@\"\nJAN_EOF_timeclock_timeclock_sh_c6fc411ca0f7\nchmod +x\
+            \ \"$tmpdir/timeclock.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"\
+            $tmpdir/timeclock.sh\" \"$@\"\n"
+          passthrough: true
+  xmas:
+    about: A script for automated tasks.
+    path: ../scripts/source/xmas
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            xmas
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_xmas\" <<'JAN_EOF_xmas__xmas_acfc9deaff12'\n#compdef\
+            \ xmas\n\n# Zsh completion for xmas\n# Generated automatically - customize\
+            \ as needed\n\n_xmas() {\n    local context state line\n    typeset -A\
+            \ opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_xmas \"$@\"\
+            \nJAN_EOF_xmas__xmas_acfc9deaff12\nchmod +x \"$tmpdir/_xmas\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/xmas.py\" <<'JAN_EOF_xmas_xmas_py_4d0621d6fbfd'\n\
+            #!/usr/bin/env python3\nimport argparse\nimport random\n\ncurrent_line\
+            \ = 1\ndef line_print(s):\n    global current_line\n    print(f\"{str(current_line).zfill(2)}\
+            \ {s}\")\n    current_line += 1\n\ndef create_christmas_tree(height, tree_color,\
+            \ bauble_color, garland_color, border_color):\n    \"\"\"Generate a Christmas\
+            \ tree ASCII art with baubles, garlands, and a festive border.\"\"\"\n\
+            \    border = f\"   {border_color}{'*' * (height * 2 + 1)}\\033[0m\"\n\
+            \    print(border)\n    for i in range(height):\n        row = ''\n  \
+            \      for j in range(2 * i + 1):\n            char = '*' if random.random()\
+            \ > 0.1 else 'O'\n            color = bauble_color if char == 'O' else\
+            \ garland_color if j % 3 == 0 else tree_color\n            row += f\"\
+            {color}{char}\\033[0m\"\n        line_print(f\"{border_color}*{tree_color}{'\
+            \ ' * (height - i - 1)}{row}{border_color}{' ' * (height - i - 1)}*\\\
+            033[0m\")\n    print(f\"   {border_color}*{tree_color}{(' ' * (height\
+            \ - 1)) + '*'}{border_color}{' ' * (height - 1)}*\\033[0m\")\n    print(border)\n\
+            \ndef convert_color(color_str):\n    \"\"\"Converts a color string 'R,G,B'\
+            \ to an ANSI escape sequence.\"\"\"\n    r, g, b = map(int, color_str.split(','))\n\
+            \    return f\"\\033[38;2;{r};{g};{b}m\"\n\ndef parse_arguments():\n \
+            \   \"\"\"Parse command line arguments for the script.\"\"\"\n    parser\
+            \ = argparse.ArgumentParser(description='Generate a festive Christmas\
+            \ tree ASCII art with a border.')\n    parser.add_argument('-H', '--height',\
+            \ type=int, default=10, help='Height of the Christmas tree')\n    parser.add_argument('-C',\
+            \ '--color', type=str, default='34,139,34', help='RGB color for the tree')\n\
+            \    parser.add_argument('-B', '--bauble', type=str, default='255,0,0',\
+            \ help='RGB color for the baubles')\n    parser.add_argument('-G', '--garland',\
+            \ type=str, default='255,215,0', help='RGB color for the garlands')\n\
+            \    parser.add_argument('-BR', '--border', type=str, default='128,128,128',\
+            \ help='RGB color for the border')\n    return parser.parse_args()\n\n\
+            if __name__ == \"__main__\":\n    args = parse_arguments()\n    tree_color\
+            \ = convert_color(args.color)\n    bauble_color = convert_color(args.bauble)\n\
+            \    garland_color = convert_color(args.garland)\n    border_color = convert_color(args.border)\n\
+            \    create_christmas_tree(args.height, tree_color, bauble_color, garland_color,\
+            \ border_color)\nJAN_EOF_xmas_xmas_py_4d0621d6fbfd\nchmod +x \"$tmpdir/xmas.py\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/xmas.py\" \"$@\"\
+            \n"
+          passthrough: true
+  xmas-countdown:
+    about: Shows the number of days until Christmas. If Christmas has already passed
+      this year, it shows days until next year's Christmas.
+    path: ../scripts/source/xmas-countdown
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            xmas-countdown
+
+
+            Shows the number of days until Christmas. If Christmas has already passed
+            this year, it shows days until next year''s Christmas.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/xmas-countdown.sh\" <<'JAN_EOF_xmas_countdown_xmas_countdown_sh_efa6fe54a844'\n\
+            #!/bin/bash\n# Christmas Countdown Script\n# Shows days until Christmas\n\
+            \nXMAS_DATE=$(date -d \"$(date +%Y)-12-25\" +%s 2>/dev/null || date -j\
+            \ -f \"%Y-%m-%d\" \"$(date +%Y)-12-25\" +%s 2>/dev/null)\nCURRENT_DATE=$(date\
+            \ +%s)\n\nif [ -z \"$XMAS_DATE\" ]; then\n    # Fallback calculation\n\
+            \    YEAR=$(date +%Y)\n    XMAS_DATE=$(date -d \"$YEAR-12-25\" +%s 2>/dev/null\
+            \ || echo \"\")\nfi\n\nif [ -n \"$XMAS_DATE\" ] && [ \"$XMAS_DATE\" -gt\
+            \ \"$CURRENT_DATE\" ]; then\n    DAYS=$(( ($XMAS_DATE - $CURRENT_DATE)\
+            \ / 86400 ))\n    echo \"\U0001F384 $DAYS days until Christmas! \U0001F384\
+            \"\nelif [ -n \"$XMAS_DATE\" ]; then\n    # Christmas has passed this\
+            \ year, show next year\n    YEAR=$(( $(date +%Y) + 1 ))\n    NEXT_XMAS=$(date\
+            \ -d \"$YEAR-12-25\" +%s 2>/dev/null || date -j -f \"%Y-%m-%d\" \"$YEAR-12-25\"\
+            \ +%s 2>/dev/null)\n    if [ -n \"$NEXT_XMAS\" ]; then\n        DAYS=$((\
+            \ ($NEXT_XMAS - $CURRENT_DATE) / 86400 ))\n        echo \"\U0001F384 $DAYS\
+            \ days until next Christmas! \U0001F384\"\n    else\n        echo \"\U0001F384\
+            \ Merry Christmas! \U0001F384\"\n    fi\nelse\n    echo \"\U0001F384 Merry\
+            \ Christmas! \U0001F384\"\nfi\nJAN_EOF_xmas_countdown_xmas_countdown_sh_efa6fe54a844\n\
+            chmod +x \"$tmpdir/xmas-countdown.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/xmas-countdown.sh\" \"$@\"\n"
+          passthrough: true
+  xmas-decorate:
+    about: Adds festive ASCII art decoration to the terminal for Christmas. Optionally
+      sets terminal colors to a festive green theme.
+    path: ../scripts/source/xmas-decorate
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            xmas-decorate
+
+
+            Adds festive ASCII art decoration to the terminal for Christmas. Optionally
+            sets terminal colors to a festive green theme.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/xmas-decorate.sh\" <<'JAN_EOF_xmas_decorate_xmas_decorate_sh_8f116a869cef'\n\
+            #!/bin/bash\n# Christmas Decoration Script\n# Adds festive ASCII art to\
+            \ terminal\n\necho \"\"\necho \"     *\"\necho \"    / \\\\\"\necho \"\
+            \   /   \\\\\"\necho \"  /     \\\\\"\necho \" /       \\\\\"\necho \"\
+            \ |       |\"\necho \" |       |\"\necho \" |       |\"\necho \" |   \
+            \    |\"\necho \" |_______|\"\necho \"\"\necho \"\U0001F384 Merry Christmas!\
+            \ \U0001F385\"\necho \"\"\n\n# Optional: Set terminal colors to festive\
+            \ theme\nif command -v tput >/dev/null 2>&1; then\n    echo -e \"\\033[0;32m\"\
+            \  # Green\nfi\nJAN_EOF_xmas_decorate_xmas_decorate_sh_8f116a869cef\n\
+            chmod +x \"$tmpdir/xmas-decorate.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/xmas-decorate.sh\" \"$@\"\n"
+          passthrough: true

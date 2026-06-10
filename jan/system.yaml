@@ -1,0 +1,859 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: system utilities
+commands:
+  cputemp:
+    about: A cross-platform CPU temperature monitoring script that works on both macOS
+      and Linux systems.
+    path: ../scripts/source/cputemp
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            cputemp
+
+
+            A cross-platform CPU temperature monitoring script that works on both
+            macOS and Linux systems.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_cputemp\" <<'JAN_EOF_cputemp__cputemp_5faedc0a2f0f'\n\
+            #compdef cputemp\n\n# Zsh completion for cputemp\n\n# Completion function\
+            \ for cputemp\n_cputemp() {\n    # Add any specific completions here if\
+            \ needed\n    # For now, no arguments are expected\n    _arguments '*:\
+            \ :->args'\n}\n\n# Call the completion function\n_cputemp \"$@\"\nJAN_EOF_cputemp__cputemp_5faedc0a2f0f\n\
+            chmod +x \"$tmpdir/_cputemp\" 2>/dev/null || true\ncat >\"$tmpdir/cputemp.sh\"\
+            \ <<'JAN_EOF_cputemp_cputemp_sh_33b1f768b7b1'\n#!/bin/bash\n# (c) 2022\
+            \ Pat Beagan: MIT License\n# Cross-platform CPU temperature monitoring\
+            \ script\n# Supports macOS (via iStats) and Linux (via /sys/class/thermal)\n\
+            \ncheck_install() {\n    if hash \"$1\" 2>/dev/null; then\n        return\
+            \ 0\n    else\n        read -p \"$1 is not installed. Want to install\
+            \ it?\" -n 1 -r;\n        echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n\
+            \            local com=\"\"\n            case \"$1\" in\n            \
+            \    iStats*)\n                    com=\"gem install iStats\"\n      \
+            \          ;;\n                *)\n                    com=\"\"\n    \
+            \            ;;\n            esac;\n            if [[ -n \"$com\" ]];\
+            \ then\n                eval \"$com\"\n                return $?\n   \
+            \         fi\n        fi\n        return 1\n    fi\n}\n\ncputemp () {\n\
+            \    if is-test system os mac; then\n        if ! check_install iStats;\
+            \ then\n            echo \"iStats is required for macOS CPU temperature\
+            \ monitoring.\"\n            echo \"Please install it with: gem install\
+            \ iStats\"\n            exit 1\n        fi\n        \n        c=$(iStats\
+            \ | grep 'CPU temp' | sed s/[a-zA-Z\\ :]*// | sed s/°.*//);\n        if\
+            \ [[ -n \"$c\" ]]; then\n            echo \"9*$c/5+32\" | bc -l;\n   \
+            \     else\n            echo \"Could not read CPU temperature from iStats\"\
+            \n            exit 1\n        fi\n    elif is-test system os linux; then\n\
+            \        if [[ ! -d \"/sys/class/thermal\" ]]; then\n            echo\
+            \ \"Thermal monitoring not available on this Linux system\"\n        \
+            \    exit 1\n        fi\n        \n        paste \\\n            <(cat\
+            \ /sys/class/thermal/thermal_zone*/type) \\\n            <(cat /sys/class/thermal/thermal_zone*/temp)\
+            \ | \\\n            column -s $'\\t' -t | \\\n            sed 's/\\(.\\\
+            )..$/.\\1°C/'\n    else\n        echo \"Unsupported operating system.\
+            \ This script works on macOS and Linux.\"\n        exit 1\n    fi\n}\n\
+            \ncputemp \"$@\"\ntrackusage \"$0\"\nJAN_EOF_cputemp_cputemp_sh_33b1f768b7b1\n\
+            chmod +x \"$tmpdir/cputemp.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/cputemp.sh\" \"$@\"\n"
+          passthrough: true
+  cputemp-linux-sorted:
+    about: A script for automated tasks.
+    path: ../scripts/source/cputemp-linux-sorted
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            cputemp-linux-sorted
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_cputemp-linux-sorted\" <<'JAN_EOF_cputemp_linux_sorted__cputemp_linux_sorted_9583e6eae834'\n\
+            #compdef cputemp-linux-sorted\n\n# Zsh completion for cputemp-linux-sorted\n\
+            # Generated automatically - customize as needed\n\n_cputemp-linux-sorted()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_cputemp-linux-sorted \"$@\"\nJAN_EOF_cputemp_linux_sorted__cputemp_linux_sorted_9583e6eae834\n\
+            chmod +x \"$tmpdir/_cputemp-linux-sorted\" 2>/dev/null || true\ncat >\"\
+            $tmpdir/cputemp-linux-sorted.sh\" <<'JAN_EOF_cputemp_linux_sorted_cputemp_linux_sorted_sh_38eb37854748'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\ncputemp |\n\
+            \    awk '{ \n         printf \"%s \", $NF; \n         for(i=1;i<NF;i++){\n\
+            \             printf \"%s \", $i\n         }; \n        printf \"\\n\"\
+            \ \n    }' |\n    sort -nr\nJAN_EOF_cputemp_linux_sorted_cputemp_linux_sorted_sh_38eb37854748\n\
+            chmod +x \"$tmpdir/cputemp-linux-sorted.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/cputemp-linux-sorted.sh\" \"$@\"\n"
+          passthrough: true
+  cputemp-linux-track:
+    about: A script for automated tasks.
+    path: ../scripts/source/cputemp-linux-track
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            cputemp-linux-track
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_cputemp-linux-track\" <<'JAN_EOF_cputemp_linux_track__cputemp_linux_track_e5529591aed5'\n\
+            #compdef cputemp-linux-track\n\n# Zsh completion for cputemp-linux-track\n\
+            # Generated automatically - customize as needed\n\n_cputemp-linux-track()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_cputemp-linux-track \"$@\"\nJAN_EOF_cputemp_linux_track__cputemp_linux_track_e5529591aed5\n\
+            chmod +x \"$tmpdir/_cputemp-linux-track\" 2>/dev/null || true\ncat >\"\
+            $tmpdir/cputemp-linux-track.sh\" <<'JAN_EOF_cputemp_linux_track_cputemp_linux_track_sh_9975e7f53d5a'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\ntrackusage \"$0\"\n\
+            loop -c cputemp\nJAN_EOF_cputemp_linux_track_cputemp_linux_track_sh_9975e7f53d5a\n\
+            chmod +x \"$tmpdir/cputemp-linux-track.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/cputemp-linux-track.sh\" \"$@\"\n"
+          passthrough: true
+  cputemp-mac:
+    about: cputemp-mac utility script
+    path: ../scripts/source/cputemp-mac
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            cputemp-mac
+
+
+            cputemp-mac utility script
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/cputemp-mac.sh\" <<'JAN_EOF_cputemp_mac_cputemp_mac_sh_866c0261cb5f'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\ncheck_install() {\n\
+            \    if hash \"$1\" 2>/dev/null; then\n        return 0\n    else\n  \
+            \      read -p \"$1 is not installed. Want to install it?\" -n 1 -r;\n\
+            \        echo;\n        if [[ $REPLY =~ ^[Yy]$ ]]; then\n            local\
+            \ com=\"\"\n            case \"$1\" in\n                iStats*)\n   \
+            \                 com=\"gem install iStats\"\n                ;;\n   \
+            \             *)\n                    com=\"\"\n                ;;\n \
+            \           esac;\n            if [[ -n \"$com\" ]]; then\n          \
+            \      eval \"$com\"\n                return $?\n            fi\n    \
+            \    fi\n        return 1\n    fi\n}\n\ncputemp () {\n    if is-test system\
+            \ os mac; then\n        if ! check_install iStats; then\n            echo\
+            \ \"iStats is required for macOS CPU temperature monitoring.\"\n     \
+            \       echo \"Please install it with: gem install iStats\"\n        \
+            \    exit 1\n        fi\n        \n        c=$(iStats | grep 'CPU temp'\
+            \ | sed s/[a-zA-Z\\ :]*// | sed s/°.*//);\n        if [[ -n \"$c\" ]];\
+            \ then\n            echo \"9*$c/5+32\" | bc -l;\n        else\n      \
+            \      echo \"Could not read CPU temperature from iStats\"\n         \
+            \   exit 1\n        fi\n    elif is-test system os linux; then\n     \
+            \   if [[ ! -d \"/sys/class/thermal\" ]]; then\n            echo \"Thermal\
+            \ monitoring not available on this Linux system\"\n            exit 1\n\
+            \        fi\n        \n        paste \\\n            <(cat /sys/class/thermal/thermal_zone*/type)\
+            \ \\\n            <(cat /sys/class/thermal/thermal_zone*/temp) | \\\n\
+            \            column -s $'\\t' -t | \\\n            sed 's/\\(.\\)..$/.\\\
+            1°C/'\n    else\n        echo \"Unsupported operating system. This script\
+            \ works on macOS and Linux.\"\n        exit 1\n    fi\n}\n\ncputemp \"\
+            $@\"\ntrackusage \"$0\"\nJAN_EOF_cputemp_mac_cputemp_mac_sh_866c0261cb5f\n\
+            chmod +x \"$tmpdir/cputemp-mac.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/cputemp-mac.sh\" \"$@\"\n"
+          passthrough: true
+  install-deb:
+    about: A script for automated tasks.
+    path: ../scripts/source/install-deb
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            install-deb
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_install-deb\" <<'JAN_EOF_install_deb__install_deb_75f5f2b005bc'\n\
+            #compdef install-deb\n\n# Zsh completion for install-deb\n# Generated\
+            \ automatically - customize as needed\n\n_install-deb() {\n    local context\
+            \ state line\n    typeset -A opt_args\n    \n    _arguments -C \\\n  \
+            \      '(-h --help)'{-h,--help}'[Show help information]' \\\n        '(-v\
+            \ --version)'{-v,--version}'[Show version information]' \\\n        '*::arg:_files'\n\
+            }\n\n_install-deb \"$@\"\nJAN_EOF_install_deb__install_deb_75f5f2b005bc\n\
+            chmod +x \"$tmpdir/_install-deb\" 2>/dev/null || true\ncat >\"$tmpdir/install-deb.sh\"\
+            \ <<'JAN_EOF_install_deb_install_deb_sh_481446d99114'\n#!/usr/bin/env\
+            \ zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\nIFS=$'\\\
+            n\\t'\n\nscriptname=\"$(basename \"$0\")\"\n\nhelp () {\n    error_code=$?\n\
+            \    echo \"\nUsage: $scriptname [-h|--help] <deb_file>\n\nInstalls a\
+            \ Debian package (.deb file) using dpkg with sudo privileges.\nThis is\
+            \ a simple wrapper around 'sudo dpkg -i' for convenience.\n\nArguments:\n\
+            \  deb_file    Path to the .deb file to install\n\nExamples:\n  $scriptname\
+            \ package.deb\n  $scriptname /path/to/package.deb\n\nNote: Requires sudo\
+            \ privileges to install packages.\n\"\n    if [[ ! $error_code -eq 0 ]];\
+            \ then echo \"Err: $error_code\"; fi\n}\n\ninstall () {\n\tsudo dpkg -i\
+            \ \"$1\"\n}\n\ninstall \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_install_deb_install_deb_sh_481446d99114\n\
+            chmod +x \"$tmpdir/install-deb.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/install-deb.sh\" \"$@\"\n"
+          passthrough: true
+  lsdaemons:
+    about: A script for automated tasks.
+    path: ../scripts/source/lsdaemons
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            lsdaemons
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_lsdaemons\" <<'JAN_EOF_lsdaemons__lsdaemons_8d20775ca061'\n\
+            #compdef lsdaemons\n\n# Zsh completion for lsdaemons\n# Generated automatically\
+            \ - customize as needed\n\n_lsdaemons() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_lsdaemons \"\
+            $@\"\nJAN_EOF_lsdaemons__lsdaemons_8d20775ca061\nchmod +x \"$tmpdir/_lsdaemons\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/lsdaemons.sh\" <<'JAN_EOF_lsdaemons_lsdaemons_sh_09a9368c8dab'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nlsdaemons () \n{ \n\
+            \    ps -eo 'tty,pid,comm' | grep --color=auto ^?\n}\n\nlsdaemons \"$@\"\
+            \ntrackusage \"$0\"\nJAN_EOF_lsdaemons_lsdaemons_sh_09a9368c8dab\nchmod\
+            \ +x \"$tmpdir/lsdaemons.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/lsdaemons.sh\" \"$@\"\n"
+          passthrough: true
+  machinetype:
+    about: A script for automated tasks.
+    path: ../scripts/source/machinetype
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            machinetype
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_machinetype\" <<'JAN_EOF_machinetype__machinetype_9dfca5bf52b3'\n\
+            #compdef machinetype\n\n# Zsh completion for machinetype\n# Generated\
+            \ automatically - customize as needed\n\n_machinetype() {\n    local context\
+            \ state line\n    typeset -A opt_args\n    \n    _arguments -C \\\n  \
+            \      '(-h --help)'{-h,--help}'[Show help information]' \\\n        '(-v\
+            \ --version)'{-v,--version}'[Show version information]' \\\n        '*::arg:_files'\n\
+            }\n\n_machinetype \"$@\"\nJAN_EOF_machinetype__machinetype_9dfca5bf52b3\n\
+            chmod +x \"$tmpdir/_machinetype\" 2>/dev/null || true\ncat >\"$tmpdir/machinetype.sh\"\
+            \ <<'JAN_EOF_machinetype_machinetype_sh_5da5c7ddc654'\n#!/bin/bash \n\
+            # (c) 2022 Pat Beagan: MIT License\n\nmachinetype () \n{ \n    unameOut=\"\
+            $(uname -s)\";\n    case \"${unameOut}\" in \n        Linux*)\n      \
+            \      machine=Linux\n        ;;\n        Darwin*)\n            machine=Mac\n\
+            \        ;;\n        CYGWIN*)\n            machine=Cygwin\n        ;;\n\
+            \        MINGW*)\n            machine=MinGw\n        ;;\n        *)\n\
+            \            machine=\"UNKNOWN:${unameOut}\"\n        ;;\n    esac;\n\
+            \    echo -n ${machine}\n}\n\nmachinetype \"$@\"\ntrackusage \"$0\"\n\
+            JAN_EOF_machinetype_machinetype_sh_5da5c7ddc654\nchmod +x \"$tmpdir/machinetype.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/machinetype.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  sdk:
+    about: A script for automated tasks.
+    path: ../scripts/source/sdk
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            sdk
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_sdk\" <<'JAN_EOF_sdk__sdk_f65971f25b85'\n#compdef\
+            \ sdk\n\n# Zsh completion for sdk\n# Generated automatically - customize\
+            \ as needed\n\n_sdk() {\n    local context state line\n    typeset -A\
+            \ opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_sdk \"$@\"\n\
+            JAN_EOF_sdk__sdk_f65971f25b85\nchmod +x \"$tmpdir/_sdk\" 2>/dev/null ||\
+            \ true\ncat >\"$tmpdir/sdk.sh\" <<'JAN_EOF_sdk_sdk_sh_ca989e36ec33'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nsdk () \n{ \n    COMMAND=\"\
+            $1\";\n    QUALIFIER=\"$2\";\n    case \"$COMMAND\" in \n        l)\n\
+            \            COMMAND=\"list\"\n        ;;\n        ls)\n            COMMAND=\"\
+            list\"\n        ;;\n        h)\n            COMMAND=\"help\"\n       \
+            \ ;;\n        v)\n            COMMAND=\"version\"\n        ;;\n      \
+            \  u)\n            COMMAND=\"use\"\n        ;;\n        i)\n         \
+            \   COMMAND=\"install\"\n        ;;\n        rm)\n            COMMAND=\"\
+            uninstall\"\n        ;;\n        c)\n            COMMAND=\"current\"\n\
+            \        ;;\n        ug)\n            COMMAND=\"upgrade\"\n        ;;\n\
+            \        outdated)\n            COMMAND=\"upgrade\"\n        ;;\n    \
+            \    o)\n            COMMAND=\"upgrade\"\n        ;;\n        d)\n   \
+            \         COMMAND=\"default\"\n        ;;\n        b)\n            COMMAND=\"\
+            broadcast\"\n        ;;\n    esac;\n    mkdir -p \"$SDKMAN_DIR\";\n  \
+            \  SDKMAN_AVAILABLE=\"true\";\n    if [ -z \"$SDKMAN_OFFLINE_MODE\" ];\
+            \ then\n        SDKMAN_OFFLINE_MODE=\"false\";\n    fi;\n    __sdkman_update_broadcast_and_service_availability;\n\
+            \    if [ -f \"${SDKMAN_DIR}/etc/config\" ]; then\n        source \"${SDKMAN_DIR}/etc/config\"\
+            ;\n    fi;\n    if [[ -z \"$COMMAND\" ]]; then\n        __sdk_help;\n\
+            \        return 1;\n    fi;\n    CMD_FOUND=\"\";\n    CMD_TARGET=\"${SDKMAN_DIR}/src/sdkman-${COMMAND}.sh\"\
+            ;\n    if [[ -f \"$CMD_TARGET\" ]]; then\n        CMD_FOUND=\"$CMD_TARGET\"\
+            ;\n    fi;\n    CMD_TARGET=\"${SDKMAN_DIR}/ext/sdkman-${COMMAND}.sh\"\
+            ;\n    if [[ -f \"$CMD_TARGET\" ]]; then\n        CMD_FOUND=\"$CMD_TARGET\"\
+            ;\n    fi;\n    if [[ -z \"$CMD_FOUND\" ]]; then\n        echo \"Invalid\
+            \ command: $COMMAND\";\n        __sdk_help;\n    fi;\n    local sdkman_valid_candidate=$(echo\
+            \ ${SDKMAN_CANDIDATES[@]} | grep -w \"$QUALIFIER\");\n    if [[ -n \"\
+            $QUALIFIER\" && \"$COMMAND\" != \"offline\" && \"$COMMAND\" != \"flush\"\
+            \ && \"$COMMAND\" != \"selfupdate\" && -z \"$sdkman_valid_candidate\"\
+            \ ]]; then\n        echo \"\";\n        __sdkman_echo_red \"Stop! $QUALIFIER\
+            \ is not a valid candidate.\";\n        return 1;\n    fi;\n    if [[\
+            \ \"$COMMAND\" == \"offline\" && -n \"$QUALIFIER\" && -z $(echo \"enable\
+            \ disable\" | grep -w \"$QUALIFIER\") ]]; then\n        echo \"\";\n \
+            \       __sdkman_echo_red \"Stop! $QUALIFIER is not a valid offline mode.\"\
+            ;\n    fi;\n    CONVERTED_CMD_NAME=$(echo \"$COMMAND\" | tr '-' '_');\n\
+            \    if [ -n \"$CMD_FOUND\" ]; then\n        __sdk_\"$CONVERTED_CMD_NAME\"\
+            \ \"$QUALIFIER\" \"$3\" \"$4\";\n    fi;\n    if [[ \"$COMMAND\" != \"\
+            selfupdate\" ]]; then\n        __sdkman_auto_update \"$SDKMAN_REMOTE_VERSION\"\
+            \ \"$SDKMAN_VERSION\";\n    fi\n}\nsdk \"$@\"\nJAN_EOF_sdk_sdk_sh_ca989e36ec33\n\
+            chmod +x \"$tmpdir/sdk.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/sdk.sh\" \"$@\"\n"
+          passthrough: true
+  server:
+    about: A script for automated tasks.
+    path: ../scripts/source/server
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            server
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_server\" <<'JAN_EOF_server__server_02bc39a058fe'\n\
+            #compdef server\n\n# Zsh completion for server\n# Generated automatically\
+            \ - customize as needed\n\n_server() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_server \"$@\"\
+            \nJAN_EOF_server__server_02bc39a058fe\nchmod +x \"$tmpdir/_server\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/server.sh\" <<'JAN_EOF_server_server_sh_fdaec6394e77'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nserver () \n{ \n \
+            \   if [ $# -lt 2 ]; then\n        port=\"$1\";\n        if [ -z \"$port\"\
+            \ ]; then\n            port=\"8000\";\n        fi;\n        echo Running\
+            \ server on \"$port\";\n        python -m SimpleHTTPServer \"$port\";\n\
+            \    else\n        echo Too many arguments.;\n    fi\n}\n\nserver \"$@\"\
+            \ntrackusage \"$0\"\nJAN_EOF_server_server_sh_fdaec6394e77\nchmod +x \"\
+            $tmpdir/server.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/server.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  task:
+    about: A script for automated tasks.
+    path: ../scripts/source/task
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            task
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_task\" <<'JAN_EOF_task__task_62b5128d005e'\n#compdef\
+            \ task\n\n# Zsh completion for task\n# Generated automatically - customize\
+            \ as needed\n\n_task() {\n    local context state line\n    typeset -A\
+            \ opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_task \"$@\"\
+            \nJAN_EOF_task__task_62b5128d005e\nchmod +x \"$tmpdir/_task\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/task.py\" <<'JAN_EOF_task_task_py_ad20eac2af7a'\n\
+            #!/usr/bin/env python3\n# (c) 2022 Pat Beagan: MIT License\n\nimport argparse\n\
+            import csv\nimport datetime\nimport logging\nimport sys\nfrom argparse\
+            \ import Namespace\nfrom dataclasses import dataclass\nfrom pathlib import\
+            \ Path\n\nimport humanize\nimport pandas as pd\nfrom dateutil.parser import\
+            \ parser\n\nseconds_in_day = 86400\n\n\ndef main():\n    local_parser\
+            \ = LocalParser()\n    args = local_parser.parse()\n    main = Main()\n\
+            \n    if args.verbose:\n        logging.basicConfig(level=logging.DEBUG)\n\
+            \n    if args.read or args.next:\n        csv = main.read_tasks(\n   \
+            \         DataMapper(\n                sprint_manager=SprintManager(\n\
+            \                    sprint_length=args.sprint_length if args.sprint_length\
+            \ else 14,\n                    sprint_points=args.sprint_points if args.sprint_points\
+            \ else 60,\n                )\n            )\n        )\n        print_final_results(args,\
+            \ csv)\n    elif args.init:\n        main.init_tasks()\n    else:\n  \
+            \      main.append_tasks(\n            Row(\n                datetime.datetime.now(),\n\
+            \                local_parser.get_due_timestamp(args.due),\n         \
+            \       args.estimate if args.estimate else 10,\n                args.priority\
+            \ if args.priority else 10,\n                \" \".join(args.name),\n\
+            \            )\n        )\n\n\ndef print_final_results(args, csv):\n \
+            \   csv[\"Con\"] = csv[\"Confidence\"]\n    output = csv[[\"Due\", \"\
+            Con\", \"Name\"]]\n    if args.next:\n        entry = output.iloc[0]\n\
+            \        print(f\"Due  : {entry['Due']}\")\n        print(f\"Name : {entry['Name']}\"\
+            )\n    else:\n        logging.info(\"\\n\" + csv.to_string())\n      \
+            \  print(output)\n\n\n@dataclass\nclass Row:\n    submitted: datetime\n\
+            \    due: datetime\n    estimate: str\n    priority: str\n    name: str\n\
+            \n\nclass LocalParser:\n    def parse(self) -> Namespace:\n        parser\
+            \ = argparse.ArgumentParser()\n        parser.add_argument(\"--estimate\"\
+            , \"-e\", type=int)\n        parser.add_argument(\n            \"--due\"\
+            , \"-d\", choices=[\"day\", \"week\", \"sprint\", \"month\", \"year\"\
+            ]\n        )\n        parser.add_argument(\"--priority\", \"-p\", type=int)\n\
+            \        parser.add_argument(\"--read\", \"-r\", action=\"store_true\"\
+            )\n        parser.add_argument(\"--sprint-length\", \"-sl\", type=int)\n\
+            \        parser.add_argument(\"--sprint-points\", \"-sp\", type=int)\n\
+            \        parser.add_argument(\"--init\", action=\"store_true\")\n    \
+            \    parser.add_argument(\"--next\", action=\"store_true\")\n        parser.add_argument(\"\
+            --verbose\", \"-v\", action=\"store_true\")\n        parser.add_argument(\"\
+            name\", nargs=\"+\" if self.is_name_required() else \"*\")\n        args\
+            \ = parser.parse_args()\n        return args\n\n    @staticmethod\n  \
+            \  def get_due_timestamp(it) -> datetime:\n        current = datetime.datetime.now()\n\
+            \        if it == \"day\":\n            return current + datetime.timedelta(days=1)\n\
+            \        if it == \"week\":\n            return current + datetime.timedelta(weeks=1)\n\
+            \        if it == \"sprint\":\n            return current + datetime.timedelta(weeks=2)\n\
+            \        if it == \"month\":\n            return current + datetime.timedelta(weeks=4)\n\
+            \        if it == \"year\":\n            return current + datetime.timedelta(weeks=52)\n\
+            \        else:\n            return current + datetime.timedelta(weeks=4)\n\
+            \n    @staticmethod\n    def is_name_required():\n        return not any([it\
+            \ in sys.argv for it in [\"--read\", \"--init\", \"--next\"]])\n\n\n@dataclass()\n\
+            class SprintManager:\n    sprint_points: int = 50\n    sprint_length:\
+            \ int = 14  # days\n    sprint: int = 1\n    count: int = 0\n\n    def\
+            \ reset(self):\n        self.count = 0\n        self.sprint = 0\n\n  \
+            \  def apply_ticket(self, it):\n        if (self.count + it) < self.sprint_points:\n\
+            \            self.count += it\n            return self.sprint\n      \
+            \  else:\n            self.count = it\n            self.sprint += 1\n\
+            \            return self.sprint\n\n    def sprint_completion_date(self,\
+            \ sprint: int):\n        return datetime.datetime.now() + datetime.timedelta(\n\
+            \            days=((sprint) * self.sprint_length)\n        )\n\n    def\
+            \ ticket_completion_time(self, estimate: int):\n        return datetime.timedelta(\n\
+            \            days=estimate * (self.sprint_length / self.sprint_points)\n\
+            \        )\n\n    def ticket_remaining_time(self, estimate: int):\n  \
+            \      return (\n            datetime.timedelta(days=self.sprint_length)\n\
+            \            - self.ticket_completion_time(estimate)\n            - self.ticket_completion_time(self.count)\n\
+            \        )\n\n\nclass DataMapper:\n    def __init__(self, sprint_manager:\
+            \ SprintManager):\n        self.parser = parser()\n        self.sprint_manager\
+            \ = sprint_manager\n\n    def map_submission(self, it):\n        due =\
+            \ self.parser.parse(it[\"Due\"])\n        return (due - datetime.datetime.now()).total_seconds()\
+            \ / seconds_in_day\n\n    def map_human_time_due(self, it):\n        due\
+            \ = self.parser.parse(it[\"Due\"])\n        submission_due = datetime.datetime.now()\
+            \ - due\n        return humanize.naturaltime(submission_due)\n\n    def\
+            \ map_human_time_submitted(self, it):\n        submission = self.parser.parse(str(it[\"\
+            Submitted\"]))\n        return humanize.naturaltime(datetime.datetime.now()\
+            \ - submission)\n\n    def map_adjusted_priority(self, it):\n        return\
+            \ it[\"Time Remaining\"] * it[\"Priority\"] * it[\"Estimate\"]\n\n   \
+            \ def map_sprints(self, it: int):\n        return self.sprint_manager.apply_ticket(it)\n\
+            \n    def map_sprint_confidence(self, it):\n        sprint = it[\"Sprint\"\
+            ]\n        due = self.parser.parse(str(it[\"Due\"]))\n        estimate\
+            \ = it[\"Estimate\"]\n        self.sprint_manager.apply_ticket(estimate)\n\
+            \        sprint_completion_date = self.sprint_manager.sprint_completion_date(sprint)\n\
+            \        ticket_remaining_time = self.sprint_manager.ticket_remaining_time(estimate)\n\
+            \        return ((due - (sprint_completion_date - ticket_remaining_time))).days\n\
+            \n    def map_on_track(self):\n        last = self.IntByReference()\n\n\
+            \        def accumulate(it):\n            last.value += it\n         \
+            \   return last.value\n\n        return accumulate\n\n    @dataclass\n\
+            \    class IntByReference:\n        value: int = 0\n\n\nclass Main:\n\
+            \    def __init__(self):\n        self.filename = f\"{Path.home()}/tasks.csv\"\
+            \n        self.columns = [\"Submitted\", \"Due\", \"Estimate\", \"Priority\"\
+            , \"Name\"]\n\n    def init_tasks(self):\n        with open(self.filename,\
+            \ \"w\") as f:\n            f.write(\"\\t\".join(self.columns))\n    \
+            \        f.write(\"\\n\")\n\n    def read_tasks(self, mapper: DataMapper):\n\
+            \        self.data_mapper = mapper\n        csv = pd.read_csv(self.filename,\
+            \ delimiter=\"\\t\")\n        # 1 means to operate on the rows, not the\
+            \ columns.\n        csv[\"Time Remaining\"] = csv.apply(self.data_mapper.map_submission,\
+            \ axis=1)\n        csv[\"Adjusted Priority\"] = csv.apply(\n         \
+            \   self.data_mapper.map_adjusted_priority, axis=1\n        )\n      \
+            \  csv = csv.sort_values(by=[\"Adjusted Priority\"])\n        csv[\"Sprint\"\
+            ] = csv[\"Estimate\"].apply(self.data_mapper.map_sprints)\n        self.data_mapper.sprint_manager.reset()\n\
+            \        csv[\"Confidence\"] = csv.apply(self.data_mapper.map_sprint_confidence,\
+            \ axis=1)\n        csv[\"On track\"] = csv[\"Confidence\"].apply(self.data_mapper.map_on_track())\n\
+            \        csv[\"Submitted\"] = csv.apply(self.data_mapper.map_human_time_submitted,\
+            \ axis=1)\n        csv[\"Due\"] = csv.apply(self.data_mapper.map_human_time_due,\
+            \ axis=1)\n        return csv\n\n    def append_tasks(self, row: Row):\n\
+            \        with open(self.filename, \"a\") as csv_file:\n            writer\
+            \ = csv.writer(csv_file, delimiter=\"\\t\", quotechar=\"|\")\n       \
+            \     writer.writerow(\n                [row.submitted, row.due, row.estimate,\
+            \ row.priority, row.name]\n            )\n            print(\"Success!\"\
+            )\n\n\nif __name__ == \"__main__\":\n    main()\nJAN_EOF_task_task_py_ad20eac2af7a\n\
+            chmod +x \"$tmpdir/task.py\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/task.py\" \"$@\"\n"
+          passthrough: true
+  trackusage:
+    about: A script for automated tasks.
+    path: ../scripts/source/trackusage
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            trackusage
+
+
+            A script for automated tasks.
+
+
+            Bundled dependencies (on PATH when run): trackusage-impl
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_trackusage\" <<'JAN_EOF_trackusage__trackusage_38feeb982b44'\n\
+            #compdef trackusage\n\n# Zsh completion for trackusage\n# Generated automatically\
+            \ - customize as needed\n\n_trackusage() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_trackusage\
+            \ \"$@\"\nJAN_EOF_trackusage__trackusage_38feeb982b44\nchmod +x \"$tmpdir/_trackusage\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/trackusage.sh\" <<'JAN_EOF_trackusage_trackusage_sh_b8b7a72802be'\n\
+            #!/usr/bin/env bash\n# (c) 2022 Pat Beagan: MIT License\nset -euo pipefail\n\
+            \n# Lists by reversed size because we keep track of the number of bytes\
+            \ in each file\n# We care the most about the most used ones.\n\nfoldername=\"\
+            $HOME/p-tracked-commands\"\nif [ \"$1\" == \"-h\" ]; then\n    echo \"\
+            Options are:\"\n    echo \"-a print all\"\n    echo \"-m print most used\"\
+            \nelif [ \"$1\" == \"-a\" ]; then\n    echo Printing all tracked commands\n\
+            \    ls -lSrc \"$foldername\"\n    exit 0\nelif [ \"$1\" == \"-m\" ];\
+            \ then\n    echo Printing most used tracked commands\n    ls -lSrc \"\
+            $foldername\" | tail\n    exit 0\nfi\n\ntrackusage-impl $(basename \"\
+            $1\")\nJAN_EOF_trackusage_trackusage_sh_b8b7a72802be\nchmod +x \"$tmpdir/trackusage.sh\"\
+            \ 2>/dev/null || true\nmkdir -p \"$tmpdir/bin\"\ncat >\"$tmpdir/bin/trackusage-impl\"\
+            \ <<'JAN_EOF_dep_trackusage_trackusage_impl_e44ba501f6d4'\n#!/usr/bin/env\
+            \ bash\n# (c) 2022 Pat Beagan: MIT License\nset -euo pipefail\n\nif [\
+            \ -z \"$1\" ]; then\n    echo \"Requires a command name, to track usages.\"\
+            \n    exit 1;\nfi\nfoldername=\"$HOME/p-tracked-commands\"\nmkdir -p \"\
+            $foldername\"\necho >> \"$foldername\"/\"$(basename \"$1\")\"\nJAN_EOF_dep_trackusage_trackusage_impl_e44ba501f6d4\n\
+            chmod +x \"$tmpdir/bin/trackusage-impl\"\nexport PATH=\"$tmpdir/bin:$PATH\"\
+            \ncd \"$tmpdir\"\nexec \"$tmpdir/trackusage.sh\" \"$@\"\n"
+          passthrough: true
+    dependencies:
+    - trackusage-impl
+  trackusage-impl:
+    about: A script for automated tasks.
+    path: ../scripts/source/trackusage-impl
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            trackusage-impl
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_trackusage-impl\" <<'JAN_EOF_trackusage_impl__trackusage_impl_0677b11dca5d'\n\
+            #compdef trackusage-impl\n\n# Zsh completion for trackusage-impl\n# Generated\
+            \ automatically - customize as needed\n\n_trackusage-impl() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_trackusage-impl \"$@\"\nJAN_EOF_trackusage_impl__trackusage_impl_0677b11dca5d\n\
+            chmod +x \"$tmpdir/_trackusage-impl\" 2>/dev/null || true\ncat >\"$tmpdir/trackusage-impl.sh\"\
+            \ <<'JAN_EOF_trackusage_impl_trackusage_impl_sh_e44ba501f6d4'\n#!/usr/bin/env\
+            \ bash\n# (c) 2022 Pat Beagan: MIT License\nset -euo pipefail\n\nif [\
+            \ -z \"$1\" ]; then\n    echo \"Requires a command name, to track usages.\"\
+            \n    exit 1;\nfi\nfoldername=\"$HOME/p-tracked-commands\"\nmkdir -p \"\
+            $foldername\"\necho >> \"$foldername\"/\"$(basename \"$1\")\"\nJAN_EOF_trackusage_impl_trackusage_impl_sh_e44ba501f6d4\n\
+            chmod +x \"$tmpdir/trackusage-impl.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/trackusage-impl.sh\" \"$@\"\n"
+          passthrough: true
+  upkeep:
+    about: A script for automated tasks.
+    path: ../scripts/source/upkeep
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            upkeep
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_upkeep\" <<'JAN_EOF_upkeep__upkeep_8e4bf42f09a4'\n\
+            #compdef upkeep\n\n# Zsh completion for upkeep\n# Generated automatically\
+            \ - customize as needed\n\n\n_upkeep() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '-t[Custom option]' \\\n        '-v[Custom\
+            \ option]' \\        '*::arg:_files'\n}\n\n_upkeep \"$@\"\nJAN_EOF_upkeep__upkeep_8e4bf42f09a4\n\
+            chmod +x \"$tmpdir/_upkeep\" 2>/dev/null || true\ncat >\"$tmpdir/upkeep.zsh\"\
+            \ <<'JAN_EOF_upkeep_upkeep_zsh_9b6ca5d6285b'\n#!/bin/zsh\n\n###############################################################################\n\
+            # upkeep.zsh - Strict, cross-language, yearly maintenance script\n# Languages:\
+            \ Python, Node.js, Rust, Kotlin\n# Features: Cache cleanup, update, format,\
+            \ lint, test, LICENSE update, Git tag\n###############################################################################\n\
+            \nset -euo pipefail\n\nPROJECT_DIR=\"${PROJECT_DIR:-.}\"\nLICENSE_FILE=\"\
+            $PROJECT_DIR/LICENSE\"\nCURRENT_YEAR=$(date +%Y)\nTAG_NAME=\"upkeep-$CURRENT_YEAR\"\
+            \nLOG_FILE=\"$PROJECT_DIR/upkeep-$CURRENT_YEAR.log\"\n\nif [[ \"$OSTYPE\"\
+            \ == \"darwin\"* ]]; then\n  SED_INPLACE=(-i '')\nelse\n  SED_INPLACE=(-i)\n\
+            fi\n\ncd \"$PROJECT_DIR\" || { echo \"❌ Project directory not found: $PROJECT_DIR\"\
+            ; exit 1 }\n\nlog() { echo \"\U0001F539 $1\"; }\nwarn() { echo \"⚠️  $1\"\
+            ; }\ndie() { echo \"❌ $1\"; exit 1; }\n\ncheck_tool() {\n  local cmd=\"\
+            $1\"\n  local min_version=\"$2\"\n  local version_command=\"$3\"\n\n \
+            \ if ! command -v \"$cmd\" >/dev/null; then\n    die \"Required tool '$cmd'\
+            \ is not installed.\"\n  fi\n\n  local version\n  version=$(eval \"$version_command\"\
+            ) || die \"Failed to get version of $cmd\"\n  log \"$cmd version: $version\"\
+            \n\n  # Optional: implement version comparison if strict matching is needed\n\
+            }\n\nclean_common_caches() {\n  log \"\U0001F9F9 Cleaning cache files...\"\
+            \n  find . -type d -name \"__pycache__\" -exec rm -r {} + 2>/dev/null\n\
+            \  find . -type f \\( -name \"*.pyc\" -o -name \"*~\" \\) -delete\n}\n\
+            \nupdate_license_year() {\n  if [[ -f \"$LICENSE_FILE\" ]]; then\n   \
+            \ log \"\U0001F4DC Updating LICENSE year to $CURRENT_YEAR...\"\n    sed\
+            \ \"${SED_INPLACE[@]}\" -E \"s/(Copyright [0-9]{4})(-[0-9]{4})?/\\1-$CURRENT_YEAR/\"\
+            \ \"$LICENSE_FILE\"\n  else\n    warn \"LICENSE file not found.\"\n  fi\n\
+            }\n\nwrite_log() {\n  log \"\U0001F4DD Writing log to $LOG_FILE\"\n  {\n\
+            \    echo \"Upkeep run on $(date)\"\n    echo \"Python: $(python3 --version\
+            \ 2>/dev/null || echo 'Not installed')\"\n    echo \"uv: $(uv --version\
+            \ 2>/dev/null || echo 'Not installed')\"\n    echo \"Node: $(node --version\
+            \ 2>/dev/null || echo 'Not installed')\"\n    echo \"Rust: $(rustc --version\
+            \ 2>/dev/null || echo 'Not installed')\"\n    echo \"Kotlin: $(kotlinc\
+            \ -version 2>/dev/null || echo 'Not installed')\"\n  } > \"$LOG_FILE\"\
+            \n}\n\ngit_commit_and_tag() {\n  if git rev-parse --is-inside-work-tree\
+            \ > /dev/null 2>&1; then\n    log \"\U0001F504 Committing and tagging\
+            \ in Git...\"\n    git add .\n    git commit -m \"\U0001F527 Yearly upkeep:\
+            \ $CURRENT_YEAR\" || warn \"Nothing to commit.\"\n\n    if git rev-parse\
+            \ \"$TAG_NAME\" >/dev/null 2>&1; then\n      warn \"Tag $TAG_NAME already\
+            \ exists. Skipping.\"\n    else\n      git tag \"$TAG_NAME\"\n      git\
+            \ push origin \"$(git rev-parse --abbrev-ref HEAD)\" --tags\n    fi\n\
+            \  else\n    warn \"Not a Git repository.\"\n  fi\n}\n\n# === PYTHON ===\n\
+            \nhandle_python_project() {\n  [[ ! -f \"pyproject.toml\" ]] && return\n\
+            \  log \"\U0001F40D Python project detected\"\n\n  check_tool uv \"0.1.0\"\
+            \ \"uv --version\"\n  check_tool python3 \"3.8.0\" \"python3 --version\"\
+            \n  check_tool black \"22.0\" \"uv pip run black --version\"\n  check_tool\
+            \ flake8 \"5.0\" \"uv pip run flake8 --version\"\n  check_tool pytest\
+            \ \"7.0\" \"uv pip run pytest --version\"\n\n  function update_python_deps()\
+            \ {\n    log \"\U0001F4E6 Updating Python dependencies via uv...\"\n \
+            \   uv self upgrade\n    uv pip install -U uv black flake8 pytest\n  \
+            \  uv pip sync --upgrade\n  }\n\n  function format_python_code() {\n \
+            \   log \"\U0001F3A8 Formatting Python code...\"\n    uv pip run black\
+            \ .\n  }\n\n  function lint_python_code() {\n    log \"\U0001F50D Linting\
+            \ Python code...\"\n    uv pip run flake8 .\n  }\n\n  function test_python_code()\
+            \ {\n    log \"\U0001F9EA Running Python tests...\"\n    uv pip run pytest\n\
+            \  }\n\n  update_python_deps\n  format_python_code\n  lint_python_code\n\
+            \  test_python_code\n}\n\n# === NODE.JS ===\n\nhandle_node_project() {\n\
+            \  [[ ! -f \"package.json\" ]] && return\n  log \"\U0001F4E6 Node.js project\
+            \ detected\"\n\n  check_tool node \"16.0.0\" \"node --version\"\n  check_tool\
+            \ npm \"8.0.0\" \"npm --version\"\n  check_tool npx \"8.0.0\" \"npx --version\"\
+            \n\n  function update_node_deps() {\n    log \"⬆️ Updating Node.js dependencies...\"\
+            \n    npm update\n  }\n\n  function lint_node_code() {\n    if [[ -f \"\
+            .eslintrc.js\" || -f \".eslintrc.json\" ]]; then\n      check_tool eslint\
+            \ \"8.0.0\" \"npx eslint --version\"\n      log \"\U0001F50D Linting JS/TS\
+            \ code...\"\n      npx eslint .\n    fi\n  }\n\n  function format_node_code()\
+            \ {\n    if [[ -f \"prettier.config.js\" || -f \".prettierrc\" ]]; then\n\
+            \      check_tool prettier \"2.0.0\" \"npx prettier --version\"\n    \
+            \  log \"\U0001F3A8 Formatting code with Prettier...\"\n      npx prettier\
+            \ --write .\n    fi\n  }\n\n  function test_node_code() {\n    log \"\U0001F9EA\
+            \ Running Node.js tests...\"\n    npm test\n  }\n\n  update_node_deps\n\
+            \  lint_node_code\n  format_node_code\n  test_node_code\n}\n\n# === RUST\
+            \ ===\n\nhandle_rust_project() {\n  [[ ! -f \"Cargo.toml\" ]] && return\n\
+            \  log \"\U0001F980 Rust project detected\"\n\n  check_tool cargo \"1.60\"\
+            \ \"cargo --version\"\n\n  function update_rust_deps() {\n    log \"⬆️\
+            \ Updating Rust dependencies...\"\n    cargo update\n  }\n\n  function\
+            \ format_rust_code() {\n    log \"\U0001F3A8 Formatting Rust code...\"\
+            \n    cargo fmt\n  }\n\n  function lint_rust_code() {\n    log \"\U0001F50D\
+            \ Linting Rust code...\"\n    cargo clippy\n  }\n\n  function test_rust_code()\
+            \ {\n    log \"\U0001F9EA Running Rust tests...\"\n    cargo test\n  }\n\
+            \n  update_rust_deps\n  format_rust_code\n  lint_rust_code\n  test_rust_code\n\
+            }\n\n# === KOTLIN ===\n\nhandle_kotlin_project() {\n  [[ ! -f \"build.gradle.kts\"\
+            \ && ! -f \"build.gradle\" ]] && return\n  log \"\U0001F916 Kotlin/Gradle\
+            \ project detected\"\n\n  check_tool ./gradlew \"7.0\" \"./gradlew --version\
+            \ | grep Gradle\"\n\n  function update_kotlin_deps() {\n    log \"⬆️ Checking\
+            \ Kotlin dependency updates...\"\n    ./gradlew dependencyUpdates\n  }\n\
+            \n  function format_kotlin_code() {\n    if grep -q \"ktlint\" build.gradle*;\
+            \ then\n      log \"\U0001F3A8 Formatting Kotlin code with ktlint...\"\
+            \n      ./gradlew ktlintFormat\n    elif grep -q \"spotless\" build.gradle*;\
+            \ then\n      log \"\U0001F3A8 Formatting Kotlin code with Spotless...\"\
+            \n      ./gradlew spotlessApply\n    else\n      warn \"No Kotlin formatter\
+            \ configured\"\n    fi\n  }\n\n  function lint_kotlin_code() {\n    if\
+            \ grep -q \"detekt\" build.gradle*; then\n      log \"\U0001F50D Linting\
+            \ Kotlin code with detekt...\"\n      ./gradlew detekt\n    else\n   \
+            \   warn \"No Kotlin linter configured\"\n    fi\n  }\n\n  function test_kotlin_code()\
+            \ {\n    log \"\U0001F9EA Running Kotlin tests...\"\n    ./gradlew test\n\
+            \  }\n\n  update_kotlin_deps\n  format_kotlin_code\n  lint_kotlin_code\n\
+            \  test_kotlin_code\n}\n\n# === MAIN ===\n\nmain() {\n  log \"\U0001F680\
+            \ Running strict yearly upkeep on: $PROJECT_DIR\"\n  echo \"\U0001F4C6\
+            \ $(date)\"\n\n  clean_common_caches\n\n  handle_python_project\n  handle_node_project\n\
+            \  handle_rust_project\n  handle_kotlin_project\n\n  update_license_year\n\
+            \  write_log\n  git_commit_and_tag\n\n  log \"✅ Yearly upkeep complete.\"\
+            \n}\n\nmain \"$@\"\nJAN_EOF_upkeep_upkeep_zsh_9b6ca5d6285b\nchmod +x \"\
+            $tmpdir/upkeep.zsh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/upkeep.zsh\"\
+            \ \"$@\"\n"
+          passthrough: true

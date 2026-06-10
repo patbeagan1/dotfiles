@@ -1,0 +1,26 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: Personal utilities from the monorepo `scripts/source` tree (auto-generated).
+commands:
+  git:
+    include: git.yaml
+  android:
+    include: android.yaml
+  docker:
+    include: docker.yaml
+  network:
+    include: network.yaml
+  media:
+    include: media.yaml
+  files:
+    include: files.yaml
+  text:
+    include: text.yaml
+  tmux:
+    include: tmux.yaml
+  time:
+    include: time.yaml
+  system:
+    include: system.yaml
+  misc:
+    include: misc.yaml

@@ -1,0 +1,57 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: tmux utilities
+commands:
+  tmux-extend-column:
+    about: Extends the current tmux window by adding 2 new panes in a new column to
+      the right of the active pane. Focus remains in the original pane after the layout
+      is created.
+    path: ../scripts/source/tmux-extend-column
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            tmux-extend-column
+
+
+            Extends the current tmux window by adding 2 new panes in a new column
+            to the right of the active pane. Focus remains in the original pane after
+            the layout is created.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/tmux-extend-column.sh\" <<'JAN_EOF_tmux_extend_column_tmux_extend_column_sh_1c614280354d'\n\
+            #!/usr/bin/env bash\n# tmux-extend-column: Add 2 new panes as a new column\
+            \ to the current tmux window.\n# (c) 2025 Pat Beagan: MIT License\n\n\
+            set -euo pipefail\n\nusage() {\n    cat << EOF\nUsage: tmux-extend-column\
+            \ [OPTIONS]\n\nExtends the current tmux window with 2 new panes in a new\
+            \ column to the right.\n\nOptions:\n  -h, --help    Show this help and\
+            \ exit\n\nMust be run from inside an active tmux session.\nEOF\n}\n\n\
+            for arg in \"$@\"; do\n    case \"$arg\" in\n        -h|--help)\n    \
+            \        usage\n            exit 0\n            ;;\n    esac\ndone\n\n\
+            if [[ -z \"${TMUX:-}\" ]]; then\n    echo \"Error: Not running inside\
+            \ tmux. Run this script from within a tmux session.\" >&2\n    exit 1\n\
+            fi\n\n# Remember current pane so we can return focus to it after creating\
+            \ the column\ncurrent_pane=$(tmux display-message -p '#{pane_id}')\n\n\
+            # Create new column: split current pane horizontally (new pane to the\
+            \ right)\ntmux split-window -h\n# Split the new pane vertically so we\
+            \ have 2 panes in the new column\ntmux split-window -v\n\n# Return focus\
+            \ to the original pane\ntmux select-pane -t \"$current_pane\"\n\necho\
+            \ \"Added 2 new panes as a new column to the right.\"\nJAN_EOF_tmux_extend_column_tmux_extend_column_sh_1c614280354d\n\
+            chmod +x \"$tmpdir/tmux-extend-column.sh\" 2>/dev/null || true\ncd \"\
+            $tmpdir\"\nexec \"$tmpdir/tmux-extend-column.sh\" \"$@\"\n"
+          passthrough: true

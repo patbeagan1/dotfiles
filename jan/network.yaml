@@ -1,0 +1,714 @@
+# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
+# Categorized scripts with directory-inlined `run` and standard `help`.
+about: network utilities
+commands:
+  duck:
+    about: A script for automated tasks.
+    path: ../scripts/source/duck
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            duck
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_duck\" <<'JAN_EOF_duck__duck_6e6809bdc023'\n#compdef\
+            \ duck\n\n# Zsh completion for duck\n# Generated automatically - customize\
+            \ as needed\n\n_duck() {\n    local context state line\n    typeset -A\
+            \ opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_duck \"$@\"\
+            \nJAN_EOF_duck__duck_6e6809bdc023\nchmod +x \"$tmpdir/_duck\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/duck.sh\" <<'JAN_EOF_duck_duck_sh_97151c338d05'\n\
+            : << COMMENT\nThis can be set up with the following file \n\n\"\"\"\n\
+            % cat ducktest.json                                                  \
+            \                       24-07-11 - 10:17:10\n{ \"test\": 1, \"test2\"\
+            : 4 }\n{ \"test\": 3, \"test2\": 40 }\n{ \"test2\": 40 }\n\"\"\"\n\nand\
+            \ used with \n\n\"\"\"\nduck ducktest \"where test2 > 20\"\"\n\"\"\"\n\
+            COMMENT\n\nfunction main () {\n  local filename=\"$1\"\n  local query=\"\
+            $2\"\n\n  cat \"$filename\" | duckdb -c \"select * from read_json('/dev/stdin')\"\
+            \"$query\"\n}\n\nmain \"$@\"\nJAN_EOF_duck_duck_sh_97151c338d05\nchmod\
+            \ +x \"$tmpdir/duck.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"\
+            $tmpdir/duck.sh\" \"$@\"\n"
+          passthrough: true
+  duckduckgo:
+    about: A script for automated tasks.
+    path: ../scripts/source/duckduckgo
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            duckduckgo
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_duckduckgo\" <<'JAN_EOF_duckduckgo__duckduckgo_cacf4bf1561e'\n\
+            #compdef duckduckgo\n\n# Zsh completion for duckduckgo\n# Generated automatically\
+            \ - customize as needed\n\n_duckduckgo() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_duckduckgo\
+            \ \"$@\"\nJAN_EOF_duckduckgo__duckduckgo_cacf4bf1561e\nchmod +x \"$tmpdir/_duckduckgo\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/duckduckgo.sh\" <<'JAN_EOF_duckduckgo_duckduckgo_sh_184d1b7751f9'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\n\
+            IFS=$'\\n\\t'\n\nscriptname=\"$(basename \"$0\")\"\n\nhelp() {\n    error_code=$?\n\
+            \    echo \"\nUsage: $scriptname [-h|--help] <search_terms>\n\nPerforms\
+            \ a DuckDuckGo search with automatic site exclusions.\nOpens the search\
+            \ results in Safari (macOS) or Firefox (Linux).\n\nArguments:\n  search_terms\
+            \    Search query (multiple words supported)\n\nFeatures:\n  - Automatically\
+            \ excludes common low-quality sites\n  - Opens in default browser (Safari/Firefox)\n\
+            \  - URL-encodes search terms\n  - Cross-platform support\n\nExcluded\
+            \ sites:\n  - Quora, Yummly, Amazon, TripAdvisor\n  - Expedia, Facebook,\
+            \ Microsoft\n\nExamples:\n  $scriptname 'how to install python'\n  $scriptname\
+            \ 'best restaurants in san francisco'\n\"\n    if [[ ! $error_code -eq\
+            \ 0 ]]; then echo \"Err: $error_code\"; fi\n}\n\nq() {\n    local content='https://duckduckgo.com/'\n\
+            \    \n    content+=$(echo \"$@\" | sed 's/ /%20/g')\n    content+='%20'\n\
+            \n    # blocklist\n    content+='-site%3Aquora.com%20'\n    content+='-site%3Ayummly.com%20'\n\
+            \    content+='-site%3Aamazon.com%20'\n    content+='-site%3Atripadvisor.com%20'\n\
+            \    content+='-site%3Aexpedia.com%20'\n    content+='-site%3Afacebook.com%20'\n\
+            \    content+='-site%3Amicrosoft.com%20'\n\n\n    if is-test system os\
+            \ mac; then\n        open -a Safari \"$content\"\n    else\n        firefox\
+            \ \"$content\"\n    fi\n}\n\nq \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_duckduckgo_duckduckgo_sh_184d1b7751f9\n\
+            chmod +x \"$tmpdir/duckduckgo.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/duckduckgo.sh\" \"$@\"\n"
+          passthrough: true
+  ipqr:
+    about: A script for automated tasks.
+    path: ../scripts/source/ipqr
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            ipqr
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_ipqr\" <<'JAN_EOF_ipqr__ipqr_0c2dda3304cb'\n#compdef\
+            \ ipqr\n\n# Zsh completion for ipqr\n# Generated automatically - customize\
+            \ as needed\n\n_ipqr() {\n    local context state line\n    typeset -A\
+            \ opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_ipqr \"$@\"\
+            \nJAN_EOF_ipqr__ipqr_0c2dda3304cb\nchmod +x \"$tmpdir/_ipqr\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/ipqr.sh\" <<'JAN_EOF_ipqr_ipqr_sh_615b96b4ae0c'\n\
+            #!/bin/bash\n# (c) 2022 Pat Beagan: MIT License\n\nqrencode -l L -v 1\
+            \ -o /tmp/qr-out.png -r <(echo http://\"$(ipconfig getifaddr en0)\":8000)\
+            \ && open /tmp/qr-out.png\ntrackusage \"$0\"\nJAN_EOF_ipqr_ipqr_sh_615b96b4ae0c\n\
+            chmod +x \"$tmpdir/ipqr.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec\
+            \ \"$tmpdir/ipqr.sh\" \"$@\"\n"
+          passthrough: true
+  killport:
+    about: A script for automated tasks.
+    path: ../scripts/source/killport
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            killport
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_killport\" <<'JAN_EOF_killport__killport_c2d76621afd5'\n\
+            #compdef killport\n\n# Zsh completion for killport\n# Generated automatically\
+            \ - customize as needed\n\n_killport() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_killport \"\
+            $@\"\nJAN_EOF_killport__killport_c2d76621afd5\nchmod +x \"$tmpdir/_killport\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/killport.sh\" <<'JAN_EOF_killport_killport_sh_5a5a30ded38f'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nkillport () \n{ \n\
+            \    sudo kill $(sudo lsof -t -i:$1)\n}\n\nkillport \"$@\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_killport_killport_sh_5a5a30ded38f\nchmod +x \"$tmpdir/killport.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/killport.sh\" \"\
+            $@\"\n"
+          passthrough: true
+  myip_to_qr:
+    about: A script for automated tasks.
+    path: ../scripts/source/myip_to_qr
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            myip_to_qr
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_myip_to_qr\" <<'JAN_EOF_myip_to_qr__myip_to_qr_ad483e17e5b8'\n\
+            #compdef myip_to_qr\n\n# Zsh completion for myip_to_qr\n# Generated automatically\
+            \ - customize as needed\n\n_myip_to_qr() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_myip_to_qr\
+            \ \"$@\"\nJAN_EOF_myip_to_qr__myip_to_qr_ad483e17e5b8\nchmod +x \"$tmpdir/_myip_to_qr\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/myip_to_qr.sh\" <<'JAN_EOF_myip_to_qr_myip_to_qr_sh_6ea092d1a1cd'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nmyip_to_qr () \n{\
+            \ \n    qrencode -o /tmp/qrcode.png $(ifconfig | grep 'inet 19' | cut\
+            \ -d' ' -f 2 | sed 's/$/:8000/' | sed 's/^/https:\\/\\//') && open /tmp/qrcode.png\n\
+            }\n\nmyip_to_qr \"$@\"\ntrackusage \"$0\"\nJAN_EOF_myip_to_qr_myip_to_qr_sh_6ea092d1a1cd\n\
+            chmod +x \"$tmpdir/myip_to_qr.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/myip_to_qr.sh\" \"$@\"\n"
+          passthrough: true
+  open-ports:
+    about: A script for automated tasks.
+    path: ../scripts/source/open-ports
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            open-ports
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_open-ports\" <<'JAN_EOF_open_ports__open_ports_31af80964ac3'\n\
+            #compdef open-ports\n\n# Zsh completion for open-ports\n# Generated automatically\
+            \ - customize as needed\n\n_open-ports() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_open-ports\
+            \ \"$@\"\nJAN_EOF_open_ports__open_ports_31af80964ac3\nchmod +x \"$tmpdir/_open-ports\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/open-ports.sh\" <<'JAN_EOF_open_ports_open_ports_sh_cb960d922df4'\n\
+            #!/usr/bin/env bash\n# (c) 2022 Pat Beagan: MIT License\n\nopen-ports\
+            \ () {\n\tsudo lsof -i -n -P | grep LISTEN\n}\nopen-ports\ntrackusage\
+            \ \"$0\"\nJAN_EOF_open_ports_open_ports_sh_cb960d922df4\nchmod +x \"$tmpdir/open-ports.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/open-ports.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  report:
+    about: A script for automated tasks.
+    path: ../scripts/source/report
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            report
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_report\" <<'JAN_EOF_report__report_17ed255473a1'\n\
+            #compdef report\n\n# Zsh completion for report\n# Generated automatically\
+            \ - customize as needed\n\n_report() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_report \"$@\"\
+            \nJAN_EOF_report__report_17ed255473a1\nchmod +x \"$tmpdir/_report\" 2>/dev/null\
+            \ || true\ncat >\"$tmpdir/report.sh\" <<'JAN_EOF_report_report_sh_64d601aebb63'\n\
+            #!/bin/bash \n# (c) 2022 Pat Beagan: MIT License\n\nreport () \n{ \n \
+            \   loop \"clear; df; echo; w; echo; ps -e -o pcpu -o ruser -o args|sort\
+            \ -nr|grep -v %CPU|head -1; sleep 5\"\n}\n\nreport \"$@\"\ntrackusage\
+            \ \"$0\"\nJAN_EOF_report_report_sh_64d601aebb63\nchmod +x \"$tmpdir/report.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/report.sh\" \"$@\"\
+            \n"
+          passthrough: true
+  scan-lan:
+    about: A script for automated tasks.
+    path: ../scripts/source/scan-lan
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            scan-lan
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_scan-lan\" <<'JAN_EOF_scan_lan__scan_lan_479f7334cc44'\n\
+            #compdef scan-lan\n\n# Zsh completion for scan-lan\n# Generated automatically\
+            \ - customize as needed\n\n_scan-lan() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_scan-lan \"\
+            $@\"\nJAN_EOF_scan_lan__scan_lan_479f7334cc44\nchmod +x \"$tmpdir/_scan-lan\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/scan-lan.sh\" <<'JAN_EOF_scan_lan_scan_lan_sh_fc93a7b6b9a3'\n\
+            #!/usr/bin/env zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"\
+            $0\")\"\nhelp() {\n    error_code=$?\n    echo \"\nUsage: $scriptname\
+            \ [-h|--help]\n\nScans the local network (192.168.1.0/24) for active hosts\
+            \ using parallel ping.\nShows all responding hosts and displays your own\
+            \ IP address.\n\nFeatures:\n  - Parallel scanning with 128 concurrent\
+            \ processes\n  - Scans entire 192.168.1.0/24 subnet\n  - Shows only responding\
+            \ hosts\n  - Displays your own IP address at the end\n  - Fast scanning\
+            \ with 2-second timeout per host\n\nExamples:\n  $scriptname         \
+            \ # Scans local network and shows active hosts\n\"\n    exit $error_code\n\
+            }\n\nmain() {\n\n    emulate -L zsh\n    zmodload zsh/zutil || return\
+            \ 1\n\n    local help\n    zparseopts -D -F -K -- \\\n        {h,-help}=help\
+            \ ||\n        return 1\n\n    if (($#help)); then help; fi\n\nscan-lan\
+            \ () {\n\techo\n\tparallel \\\n\t\t-P 128 \\\n\t\t'ping -nqc 1 -W 2 192.168.1.{}\
+            \ \\\n\t\t| sed -z \"s/\\n//g\" \\\n\t\t| uniq \\\n\t\t| grep -v \"0 received\"\
+            \ \\\n\t\t| sed -e \"s/---/\\n/g\" \\\n\t\t| grep PING \\\n\t\t2> /dev/null\
+            \ \\\n\t\t' ::: {0..255} \\\n\t\t| cut -d' ' -f2 \\\n\t\t| sort\n\techo\n\
+            \techo \"I am `pretty_ip`\"\n}\n\n    scan-lan \"$@\" || help\n}\n\nmain\
+            \ \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_scan_lan_scan_lan_sh_fc93a7b6b9a3\n\
+            chmod +x \"$tmpdir/scan-lan.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\n\
+            exec \"$tmpdir/scan-lan.sh\" \"$@\"\n"
+          passthrough: true
+  scan-local-ports:
+    about: A script for automated tasks.
+    path: ../scripts/source/scan-local-ports
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            scan-local-ports
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_scan-local-ports\" <<'JAN_EOF_scan_local_ports__scan_local_ports_37662774ec97'\n\
+            #compdef scan-local-ports\n\n# Zsh completion for scan-local-ports\n#\
+            \ Generated automatically - customize as needed\n\n_scan-local-ports()\
+            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
+            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
+            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
+            \ \\\n        '*::arg:_files'\n}\n\n_scan-local-ports \"$@\"\nJAN_EOF_scan_local_ports__scan_local_ports_37662774ec97\n\
+            chmod +x \"$tmpdir/_scan-local-ports\" 2>/dev/null || true\ncat >\"$tmpdir/scan-local-ports.sh\"\
+            \ <<'JAN_EOF_scan_local_ports_scan_local_ports_sh_de92c4bcffb6'\n#!/usr/bin/env\
+            \ zsh\n\nset -euo pipefail\n\nscriptname=\"$(basename \"$0\")\"\nhelp()\
+            \ {\n    error_code=$?\n    echo \"\nUsage: $scriptname [-h|--help]\n\n\
+            Scans for all listening ports on the local system using lsof.\nShows which\
+            \ processes are listening on which ports with colorized output.\n\nFeatures:\n\
+            \  - Shows all listening TCP and UDP ports\n  - Displays process information\
+            \ for each port\n  - Colorized output for better readability\n  - Excludes\
+            \ common development directories from search\n\nRequires:\n  - sudo privileges\
+            \ to see all processes\n  - lsof command\n\nExamples:\n  $scriptname \
+            \         # Shows all listening ports\n\"\n    exit $error_code\n}\n\n\
+            main() {\n\n    emulate -L zsh\n    zmodload zsh/zutil || return 1\n\n\
+            \    local help\n    zparseopts -D -F -K -- \\\n        {h,-help}=help\
+            \ ||\n        return 1\n\n    if (($#help)); then help; fi\n\nscan-local-ports\
+            \ () {\n\tsudo lsof \\\n\t\t-i \\\n\t\t-P \\\n\t\t-n \\\n\t\t| grep --color=auto\
+            \ --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} LISTEN\n}\n\n    scan-local-ports\
+            \ \"$@\" || help\n}\n\nmain \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_scan_local_ports_scan_local_ports_sh_de92c4bcffb6\n\
+            chmod +x \"$tmpdir/scan-local-ports.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/scan-local-ports.sh\" \"$@\"\n"
+          passthrough: true
+  setupSshKeygen:
+    about: A script for automated tasks.
+    path: ../scripts/source/setupSshKeygen
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            setupSshKeygen
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_setupSshKeygen\" <<'JAN_EOF_setupSshKeygen__setupSshKeygen_cccdb350d94e'\n\
+            #compdef setupSshKeygen\n\n# Zsh completion for setupSshKeygen\n# Generated\
+            \ automatically - customize as needed\n\n_setupSshKeygen() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '*::arg:_files'\n}\n\n_setupSshKeygen \"$@\"\nJAN_EOF_setupSshKeygen__setupSshKeygen_cccdb350d94e\n\
+            chmod +x \"$tmpdir/_setupSshKeygen\" 2>/dev/null || true\ncat >\"$tmpdir/setupSshKeygen.sh\"\
+            \ <<'JAN_EOF_setupSshKeygen_setupSshKeygen_sh_52686048daa1'\n#!/bin/bash\
+            \ \n# (c) 2022 Pat Beagan: MIT License\n\nssh-keygen && printf \"\\neval\
+            \ \\`ssh-agent -s\\`\\nssh-add ~/.ssh/id_rsa\" >> ~/.bash_profile\ntrackusage\
+            \ \"$0\"\nJAN_EOF_setupSshKeygen_setupSshKeygen_sh_52686048daa1\nchmod\
+            \ +x \"$tmpdir/setupSshKeygen.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/setupSshKeygen.sh\" \"$@\"\n"
+          passthrough: true
+  url-to-file:
+    about: A script for automated tasks.
+    path: ../scripts/source/url-to-file
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            url-to-file
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_url-to-file\" <<'JAN_EOF_url_to_file__url_to_file_d87dc78ff138'\n\
+            #compdef url-to-file\n\n# Zsh completion for url-to-file\n# Generated\
+            \ automatically - customize as needed\n\n_url-to-file() {\n    local context\
+            \ state line\n    typeset -A opt_args\n    \n    _arguments -C \\\n  \
+            \      '(-h --help)'{-h,--help}'[Show help information]' \\\n        '(-v\
+            \ --version)'{-v,--version}'[Show version information]' \\\n        '*::arg:_files'\n\
+            }\n\n_url-to-file \"$@\"\nJAN_EOF_url_to_file__url_to_file_d87dc78ff138\n\
+            chmod +x \"$tmpdir/_url-to-file\" 2>/dev/null || true\ncat >\"$tmpdir/url-to-file.py\"\
+            \ <<'JAN_EOF_url_to_file_url_to_file_py_0bdda590a347'\n#!/usr/bin/env\
+            \ python3\n\nimport sys\nimport re\nimport os\n\ndef sanitize_filename(url:\
+            \ str) -> str:\n    # Remove the scheme (http, https) and replace non-filename\
+            \ characters with '__'\n    sanitized = re.sub(r'[^a-zA-Z0-9.-]', '__',\
+            \ url.replace('https://', '').replace('http://', ''))\n    return sanitized\
+            \ + \".html\"\n\ndef generate_meta_redirect(url: str):\n    meta_tag =\
+            \ f'<meta http-equiv=\"Refresh\" content=\"0; url=\\'{url}\\'\" />\\n'\n\
+            \    filename = sanitize_filename(url)\n    \n    with open(filename,\
+            \ 'w') as f:\n        f.write(meta_tag)\n    \n    print(f\"Meta redirect\
+            \ written to {filename}\")\n\nif __name__ == \"__main__\":\n    if len(sys.argv)\
+            \ != 2:\n        print(\"Usage: python3 script.py <URL>\")\n        sys.exit(1)\n\
+            \    \n    url = sys.argv[1]\n    generate_meta_redirect(url)\nJAN_EOF_url_to_file_url_to_file_py_0bdda590a347\n\
+            chmod +x \"$tmpdir/url-to-file.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/url-to-file.py\" \"$@\"\n"
+          passthrough: true
+  web-open:
+    about: A script for automated tasks.
+    path: ../scripts/source/web-open
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            web-open
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_web-open\" <<'JAN_EOF_web_open__web_open_e7838bfb422b'\n\
+            #compdef web-open\n\n# Zsh completion for web-open\n# Generated automatically\
+            \ - customize as needed\n\n_web-open() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_web-open \"\
+            $@\"\nJAN_EOF_web_open__web_open_e7838bfb422b\nchmod +x \"$tmpdir/_web-open\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/web-open.sh\" <<'JAN_EOF_web_open_web_open_sh_e5c49a4bfbd3'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\n\
+            IFS=$'\\n\\t'\n\nhelp() {\n    error_code=$?\n    echo \"\n    Opens a\
+            \ browser to the specified content.\n    \"\n    if [[ ! $error_code -eq\
+            \ 0 ]]; then echo \"Err: $error_code\"; fi\n}\n\nq() {\n    content=\"\
+            $(echo $* | sed \"s/\\n/%20/g\" | sed 's/ /%20/g')\" \n    echo \"$content\"\
+            \n\n    if is-test system os mac; then\n        open -a Safari \"$content\"\
+            \n    else\n        firefox \"$content\"\n    fi\n}\n\nq \"$@\" || help\n\
+            trackusage \"$0\"\nJAN_EOF_web_open_web_open_sh_e5c49a4bfbd3\nchmod +x\
+            \ \"$tmpdir/web-open.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"\
+            $tmpdir/web-open.sh\" \"$@\"\n"
+          passthrough: true
+  webringify:
+    about: A script for automated tasks.
+    path: ../scripts/source/webringify
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            webringify
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_webringify\" <<'JAN_EOF_webringify__webringify_5b751e4cff96'\n\
+            #compdef webringify\n\n# Zsh completion for webringify\n# Generated automatically\
+            \ - customize as needed\n\n_webringify() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_webringify\
+            \ \"$@\"\nJAN_EOF_webringify__webringify_5b751e4cff96\nchmod +x \"$tmpdir/_webringify\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/webringify.sh\" <<'JAN_EOF_webringify_webringify_sh_d9572370cf1d'\n\
+            #!/usr/bin/env zsh\n# (c) 2022 Pat Beagan: MIT License\n\nset -euo pipefail\n\
+            IFS=$'\\n\\t'\n\nscriptname=\"$(basename \"$0\")\"\n\nhelp() {\n    error_code=$?\n\
+            \    echo \"\nUsage: $scriptname [-h|--help]\n\nConverts text files in\
+            \ the current directory into a webring-style website.\nCreates HTML pages\
+            \ with navigation between files and a webring component.\n\nProcess:\n\
+            1. Finds all .txt files in current directory\n2. Creates HTML pages for\
+            \ each file with styling\n3. Adds webring navigation component\n4. Creates\
+            \ index.html with links to all pages\n5. Generates webring.js with navigation\
+            \ logic\n\nFeatures:\n  - Automatic HTML generation from text files\n\
+            \  - Webring navigation between pages\n  - Clean, readable styling\n \
+            \ - JavaScript-based navigation component\n\nExamples:\n  $scriptname\
+            \          # Converts all .txt files in current directory\n\"\n    exit\
+            \ $error_code\n}\n\nwebringify() {\n    mkdir -p webring\n\n    count=0\n\
+            \    for i in $(find . -d 1 -name \"*.txt\" | sort -n  ); do\n       \
+            \ echo '<html><body>' >> \"webring/$count.html\"\n        echo '<style>\n\
+            \        body {\n            background-color: #e5e5e5;\n        }\n \
+            \       pre { \n            background: #f5f5f5;\n            font: 14px/22px\
+            \ normal verdana, helvetica, sans-serif; \n            margin-top: 20px;\n\
+            \            margin-bottom: 20px;\n            padding: 20px;\n      \
+            \      border-radius: 10px;\n            overflow-x: auto;\n        }\n\
+            \        </style>' >> \"webring/$count.html\"\n        echo \"<webring-component\
+            \ current-site=\\\"$count\\\"></webring-component>\" >> \"webring/$count.html\"\
+            \n        echo '<pre>' >> \"webring/$count.html\"\n        cat \"$i\"\
+            \ >> \"webring/$count.html\"\n        echo '</pre>' >> \"webring/$count.html\"\
+            \n        echo \"<webring-component current-site=\\\"$count\\\"></webring-component>\"\
+            \ >> \"webring/$count.html\"\n        echo '<script src=\"./webring.js\"\
+            ></script>' >> \"webring/$count.html\"\n        echo '</body></html>'\
+            \ >> \"webring/$count.html\"\n        count=$((count + 1))\n        \n\
+            \        echo \"<html><body>\" >> \"webring/index.html\"\n        echo\
+            \ \"<a href=\\\"$count.html\\\">$count</a>\" >> \"webring/index.html\"\
+            \n        echo \"</body></html>\" >> \"webring/index.html\"\n    done\n\
+            \n    echo '\nconst template = document.createElement(\"template\");\n\
+            template.innerHTML = `\n<style>\n.webring {\n  border: 5px solid #222;\n\
+            \  border-top-color: #777;\n  border-left-color: #777;\n  text-align:\
+            \ center;\n  font: 100% system-ui, sans-serif;\n}\n</style>\n\n<div class=\"\
+            webring\">\n  <div id=\"webring-loading\">\n    Loading\n  </div>\n  <div\
+            \ id=\"webring-copy\"></div>\n</div>`;\n\nclass WebRing extends HTMLElement\
+            \ {\n    connectedCallback() {\n        this.attachShadow({ mode: \"open\"\
+            \ });\n        this.shadowRoot.appendChild(template.content.cloneNode(true));\n\
+            \n        const thisSite = parseInt(this.getAttribute(\"current-site\"\
+            ));\n\n        this.shadowRoot\n            .querySelector(\"#webring-loading\"\
+            )\n            .remove()\n\n        let prevSiteIndex = thisSite - 1;\n\
+            \        if (prevSiteIndex === -1) prevSiteIndex = 0;\n        let nextSiteIndex\
+            \ = thisSite + 1;\n\n        const cp = `<p>\n            <a href=\"/${prevSiteIndex}.html\"\
+            >[Prev]</a> |\n            <a href=\"/${nextSiteIndex}.html\">[Next]</a>\n\
+            \        </p>`;\n\n        this.shadowRoot\n            .querySelector(\"\
+            #webring-copy\")\n            .insertAdjacentHTML(\"afterbegin\", cp);\n\
+            \    }\n}\n\nwindow.customElements.define(\"webring-component\", WebRing);\n\
+            ' >> webring/webring.js\n}\n\nwebringify \"$@\" || help\ntrackusage \"\
+            $0\"\nJAN_EOF_webringify_webringify_sh_d9572370cf1d\nchmod +x \"$tmpdir/webringify.sh\"\
+            \ 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/webringify.sh\"\
+            \ \"$@\"\n"
+          passthrough: true
+  wgeti-polite:
+    about: A script for automated tasks.
+    path: ../scripts/source/wgeti-polite
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            wgeti-polite
+
+
+            A script for automated tasks.
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_wgeti-polite\" <<'JAN_EOF_wgeti_polite__wgeti_polite_be7c5595cfec'\n\
+            #compdef wgeti-polite\n\n# Zsh completion for wgeti-polite\n# Generated\
+            \ automatically - customize as needed\n\n\n_wgeti-polite() {\n    local\
+            \ context state line\n    typeset -A opt_args\n    \n    _arguments -C\
+            \ \\\n        '(-h --help)'{-h,--help}'[Show help information]' \\\n \
+            \       '(-v --version)'{-v,--version}'[Show version information]' \\\n\
+            \        '-r[Custom option]' \\        '*::arg:_files'\n}\n\n_wgeti-polite\
+            \ \"$@\"\nJAN_EOF_wgeti_polite__wgeti_polite_be7c5595cfec\nchmod +x \"\
+            $tmpdir/_wgeti-polite\" 2>/dev/null || true\ncat >\"$tmpdir/wgeti-polite.zsh\"\
+            \ <<'JAN_EOF_wgeti_polite_wgeti_polite_zsh_7807cd2bfb79'\n#!/usr/bin/env\
+            \ zsh\n\nset -euo pipefail\nIFS=$'\\n\\t'\n\nhelp() {\n\terror_code=$?\n\
+            \techo \"\n'wget -i' but with rate limiting.\nDownloads a list of URLs\
+            \ politely - limiting bandwidth per second and only sending 2 requests\
+            \ per second.\nTakes one argument - a filename for a file that contains\
+            \ a list of urls\n\"\n\tif [[ ! $error_code -eq 0 ]]; then echo \"Err:\
+            \ $error_code\"; fi\n}\n\nf() {\n\tif [ $# != 1 ]; then\n\t\treturn 1\n\
+            \tfi\n\twhile IFS=$'\\n' read -r line; do\n\t\tcmd=\"$(echo $line |\n\t\
+            \t\tsed 'p;s/\\//-/g' |\n\t\t\tsed 'N;s/\\n/ -O /' |\n\t\t\tsed 's/^/wget\
+            \ --limit-rate=100k /g')\" \n\t\teval \"$cmd\"\n\t\tsleep 0.5\n\tdone\
+            \ < \"$1\"\n}\n\nf \"$@\" || help\ntrackusage \"$0\"\nJAN_EOF_wgeti_polite_wgeti_polite_zsh_7807cd2bfb79\n\
+            chmod +x \"$tmpdir/wgeti-polite.zsh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/wgeti-polite.zsh\" \"$@\"\n"
+          passthrough: true

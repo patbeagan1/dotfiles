@@ -1,0 +1,33 @@
+{
+  "generator_version": "2",
+  "generated_at": "2026-06-10T14:01:51Z",
+  "script_count": 215,
+  "categories": [
+    "git.yaml",
+    "android.yaml",
+    "docker.yaml",
+    "network.yaml",
+    "media.yaml",
+    "files.yaml",
+    "text.yaml",
+    "tmux.yaml",
+    "time.yaml",
+    "system.yaml",
+    "misc.yaml"
+  ],
+  "git_sha": "ca4413bb7d00d92311ce92c1cdc6d9a30c92e8c7",
+  "files": {
+    "android.yaml": "ed3947126f44c16516e296eec0251573d2b440e6b07fb8108a770344305dcc86",
+    "docker.yaml": "1beb174f083e95213a680ef2d9c9cfcb2730634cc173b89c328776f3a8e4be67",
+    "files.yaml": "60450eccff1d1f334779fa4c09bc474ef0fc5704834a8c75305ced29453557fa",
+    "git.yaml": "58ff738d330acd1f361c0260c4eb7fae62070f9519d802b41fb3d71b249abe6e",
+    "media.yaml": "d37c9ef5c0b5274b445c00dc212cbaa35fa3da1ae8e464ae8b35180548836db4",
+    "misc.yaml": "5ef993eb3c123fb73187b4d5add4a83fa80724eb8176ab6d8e93894a765ecb32",
+    "network.yaml": "e96b1fd2654a0fa234207a0ef558013f542ff162dd4115802ffa2f06b5ca3b19",
+    "scripts.yaml": "003940f65db4ca94e3949e322f9a5e1de02ce932da432477dbea20dc67992abf",
+    "system.yaml": "3e0320da3095dc428e4f89c384fc6356c837da69e52c2b1612621fec99d136cb",
+    "text.yaml": "d1838ce21cea1b424fe8d050691030ad98583a6c83985af157c929958408aaaa",
+    "time.yaml": "e97c5628f43dcfd3e962216eafc2e1208749d8f9004569e0f992125003b2231c",
+    "tmux.yaml": "c2bb61815ff14739c0e92a5780f8a99ddac3c97caa75d427b845437b7313a30f"
+  }
+}
