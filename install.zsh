@@ -170,12 +170,7 @@ setup_completions() {
 
 setup_scripts() {
     print_info "🔧 Setting up scripts..."
-    if [[ -f "$LIBBEAGAN_SCRIPTS/install.sh" ]]; then
-        source "$LIBBEAGAN_SCRIPTS/install.sh"
-    else
-        echo "⚠️  Warning: Script installation file not found at $LIBBEAGAN_SCRIPTS/install.sh"
-        echo "   Scripts may not be properly configured."
-    fi
+    export PATH=$PATH:$LIBBEAGAN_HOME/bin:$LIBBEAGAN_HOME/bin_local
 }
 
 check_dependencies() {

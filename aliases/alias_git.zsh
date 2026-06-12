@@ -551,4 +551,89 @@ gfh() {
 
 
 
+# Stacked PR creator using GitHub CLI
+# Usage: gh-stack <base-commit-or-branch>
+gh-stack() {
+    if [ -z "$1" ]; then
+        echo "Error: Please provide a base commit or branch (e.g., gh-stack main or gh-stack HEAD~3)"
+        return 1
+    fi
+
+    local base_input="$1"
+    
+    # Ensure gh CLI is authenticated
+    if ! gh auth status &>/dev/null; then
+        echo "Error: gh CLI is not authenticated. Run 'gh auth login' first."
+        return 1
+    fi
+
+    # Get the current branch name to return to later
+    local original_branch=$(git branch --show-current)
+    if [ -z "$original_branch" ]; then
+        echo "Error: You are in a detached HEAD state. Please checkout a branch."
+        return 1
+    fi
+
+    # Get full SHA of the base commit
+    local base_sha=$(git rev-parse --short "$base_input" 2>/dev/null)
+    if [ -z "$base_sha" ]; then
+        echo "Error: Invalid base commit '$base_input'."
+        return 1
+    fi
+
+    # Fetch the list of commits from base to HEAD (oldest first)
+    # Excludes the base commit itself
+    local commits=($(git rev-list --reverse ${base_sha}..HEAD))
+
+    if [ ${#commits[@]} -eq 0 ]; then
+        echo "No commits found between $base_sha and HEAD."
+        return 0
+    fi
+
+    echo "Found ${#commits[@]} commits to stack. Starting process..."
+    echo "--------------------------------------------------"
+
+    # The very first PR will target the original base branch/commit you provided
+    local previous_branch="$base_input"
+
+    for sha in "${commits[@]}"; do
+        # Get commit message details for the PR title and body
+        local commit_subject=$(git log -1 --format="%s" "$sha")
+        local commit_body=$(git log -1 --format="%b" "$sha")
+        
+        # Create a unique, clean branch name for this specific commit
+        # Format: stack/<short-sha>-<slugified-subject>
+        local clean_subject=$(echo "$commit_subject" | tr -dc '[:alnum:]\n ' | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | cut -c1-30)
+        local short_sha=$(git rev-parse --short "$sha")
+        local new_branch="stack/${short_sha}-${clean_subject}"
+
+        echo "🚀 Processing commit $short_sha: \"$commit_subject\""
+
+        # 1. Create and switch to the new branch pointing exactly at this commit
+        git checkout -b "$new_branch" "$sha" &>/dev/null
+
+        # 2. Push the branch to origin
+        echo "  -> Pushing $new_branch to origin..."
+        git push -u origin "$new_branch" &>/dev/null
+
+        # 3. Create the PR targeting the previous branch in the stack
+        echo "  -> Creating PR targeting base: $previous_branch..."
+        
+        # If body is empty, just use the subject
+        if [ -z "$commit_body" ]; then
+            gh pr create --title "$commit_subject" --body "Part of a stacked PR chain." --base "$previous_branch" --head "$new_branch"
+        else
+            gh pr create --title "$commit_subject" --body "$commit_body" --base "$previous_branch" --head "$new_branch"
+        fi
+
+        echo "--------------------------------------------------"
+        
+        # Update the pointer so the NEXT commit targets THIS branch
+        previous_branch="$new_branch"
+    done
+
+    # Return to the user's original starting point
+    git checkout "$original_branch" &>/dev/null
+    echo "✅ Done! All stacked PRs created. Returned to branch '$original_branch'."
+}
 
