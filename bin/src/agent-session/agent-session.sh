@@ -248,6 +248,10 @@ attached_worktree_paths() {
         wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
         [[ -n "$wt" ]] && echo "$wt"
     done
+    # Best-effort listing: never let a non-zero pipeline status (e.g. the final
+    # window lacking @agent-worktree, or pipefail on a tmux hiccup) abort callers
+    # running under `set -e` when this is used in `$(...)` command substitution.
+    return 0
 }
 
 # --- Snapshot (persist agent-session windows for restore after crash) ---
@@ -378,17 +382,19 @@ cmd_list() {
         echo "No snapshot. File: $snap"
         return 0
     fi
-    # Build set of current window names and worktree paths from tmux
-    local -A window_names
-    local -A window_worktrees
+    # Build sets of current window names and worktree paths from tmux as
+    # newline-delimited strings (portable to bash 3.2, which lacks associative
+    # arrays).
+    local window_names=""
+    local window_worktrees=""
     if [[ -n "${TMUX:-}" ]]; then
         local idx name wt
         while IFS='|' read -r idx name; do
             [[ -z "$idx" ]] && continue
-            window_names["$name"]=1
+            window_names+="$name"$'\n'
             wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
             if [[ -n "$wt" ]]; then
-                window_worktrees["$wt"]=1
+                window_worktrees+="$wt"$'\n'
             fi
         done < <(tmux list-windows -F '#{window_index}|#{window_name}')
     fi
@@ -409,9 +415,9 @@ cmd_list() {
         [[ "$type" == dir ]] && loc="$start_dir"
         local status="orphan"
         if [[ -n "${TMUX:-}" ]]; then
-            if [[ -n "${window_names["$window_name"]:-}" ]]; then
+            if printf '%s' "$window_names" | grep -Fxq -- "$window_name"; then
                 status="attached"
-            elif [[ -n "$worktree_path" ]] && [[ -n "${window_worktrees["$worktree_path"]:-}" ]]; then
+            elif [[ -n "$worktree_path" ]] && printf '%s' "$window_worktrees" | grep -Fxq -- "$worktree_path"; then
                 status="attached"
             fi
         fi
@@ -554,11 +560,10 @@ cmd_system() {
         return 0
     fi
 
-    local -A attached_map
-    local p
-    while IFS= read -r p; do
-        [[ -n "$p" ]] && attached_map["$p"]=1
-    done < <(attached_worktree_paths)
+    # Collect attached worktree paths into a newline-delimited string (portable
+    # to bash 3.2, which lacks associative arrays).
+    local attached_paths
+    attached_paths=$(attached_worktree_paths)
 
     printf "%-50s %-30s %-12s %-10s %-8s\n" "PATH" "BRANCH" "BASE" "REPO" "STATUS"
     printf "%-50s %-30s %-12s %-10s %-8s\n" "----" "-----" "----" "----" "------"
@@ -573,7 +578,9 @@ cmd_system() {
         local repo_name
         repo_name=$(basename "$repo" 2>/dev/null) || repo_name="$repo"
         local status="orphan"
-        [[ -n "${attached_map["$path"]:-}" ]] && status="attached"
+        if printf '%s\n' "$attached_paths" | grep -Fxq -- "$path"; then
+            status="attached"
+        fi
         printf "%-50s %-30s %-12s %-10s %-8s\n" "$path" "$current_br" "${base_branch:-?}" "$repo_name" "$status"
     done < "$reg"
 }
@@ -670,11 +677,10 @@ cmd_prune() {
         return 0
     fi
 
-    local -A prune_attached_map
-    local p
-    while IFS= read -r p; do
-        [[ -n "$p" ]] && prune_attached_map["$p"]=1
-    done < <(attached_worktree_paths)
+    # Newline-delimited set of attached worktree paths (portable to bash 3.2,
+    # which lacks associative arrays).
+    local prune_attached_paths
+    prune_attached_paths=$(attached_worktree_paths)
 
     while IFS= read -r wt; do
         [[ -z "$wt" ]] && continue
@@ -695,7 +701,9 @@ cmd_prune() {
             state=$(gh pr view "$br" --json state -q .state 2>/dev/null || true)
         fi
         local wt_status="orphan"
-        [[ -n "${prune_attached_map["$wt"]:-}" ]] && wt_status="attached"
+        if printf '%s\n' "$prune_attached_paths" | grep -Fxq -- "$wt"; then
+            wt_status="attached"
+        fi
         if [[ "$state" == "MERGED" ]] || [[ "$state" == "CLOSED" ]]; then
             echo "Safe to remove: $wt (branch $br, PR $state, $wt_status)"
             if [[ "$force_remove" == true ]]; then
@@ -1055,12 +1063,19 @@ if [[ "$worktree" == true ]]; then
 
     base_dir=$(get_worktree_base "$worktree_base")/"$repo_name"
     mkdir -p "$base_dir"
+    # Slug the window name/path into the branch so it's recognizable at a glance
+    # (git-safe: lowercased, runs of non-alphanumerics collapsed to a single '-').
+    window_label="$window_name"
+    [[ -z "$window_label" && -n "$window_path" ]] && window_label=$(basename "$window_path")
+    window_slug=$(printf '%s' "$window_label" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+
     # Guaranteed-unique branch name ($$ avoids same-second collisions in create-batch).
-    unique_branch="agent-${repo_name}-$(date +%Y%m%d-%H%M%S)-$$"
+    branch_prefix="agent-${repo_name}${window_slug:+-${window_slug}}"
+    unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$"
     n=0
     while git -C "$source_repo" show-ref --verify --quiet "refs/heads/${unique_branch}"; do
         n=$((n + 1))
-        unique_branch="agent-${repo_name}-$(date +%Y%m%d-%H%M%S)-$$-$n"
+        unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$-$n"
     done
     worktree_path="${base_dir}/${unique_branch}"
 
