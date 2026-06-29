@@ -565,24 +565,53 @@ cmd_system() {
     local attached_paths
     attached_paths=$(attached_worktree_paths)
 
-    printf "%-50s %-30s %-12s %-10s %-8s\n" "PATH" "BRANCH" "BASE" "REPO" "STATUS"
-    printf "%-50s %-30s %-12s %-10s %-8s\n" "----" "-----" "----" "----" "------"
-    while IFS='|' read -r path branch repo created base_branch source_dir; do
-        [[ -z "$path" ]] && continue
-        if [[ ! -d "$path" ]]; then
-            printf "%-50s (stale - missing)\n" "$path"
-            continue
-        fi
-        local current_br
-        current_br=$(git -C "$path" branch --show-current 2>/dev/null) || current_br="?"
-        local repo_name
-        repo_name=$(basename "$repo" 2>/dev/null) || repo_name="$repo"
-        local status="orphan"
-        if printf '%s\n' "$attached_paths" | grep -Fxq -- "$path"; then
-            status="attached"
-        fi
-        printf "%-50s %-30s %-12s %-10s %-8s\n" "$path" "$current_br" "${base_branch:-?}" "$repo_name" "$status"
-    done < "$reg"
+    # Emit one row per worktree (resolving current branch and attached/orphan/
+    # stale status), then render as JSON via jq. Falls back to a plain table when
+    # jq isn't installed. Fields are joined with the unit-separator (0x1f) rather
+    # than a tab: tab is a whitespace IFS char, so `read` would collapse the
+    # empty branch/base fields of stale rows and shift every column.
+    local SEP=$'\037'
+    system_emit_rows() {
+        local path branch repo created base_branch source_dir
+        while IFS='|' read -r path branch repo created base_branch source_dir; do
+            [[ -z "$path" ]] && continue
+            local current_br repo_name status stale
+            repo_name=$(basename "$repo" 2>/dev/null) || repo_name="$repo"
+            if [[ ! -d "$path" ]]; then
+                current_br=""; status="stale"; stale="true"
+            else
+                current_br=$(git -C "$path" branch --show-current 2>/dev/null) || current_br=""
+                stale="false"; status="orphan"
+                if printf '%s\n' "$attached_paths" | grep -Fxq -- "$path"; then
+                    status="attached"
+                fi
+            fi
+            printf '%s\n' "${path}${SEP}${current_br}${SEP}${base_branch:-}${SEP}${repo_name}${SEP}${created:-}${SEP}${status}${SEP}${stale}"
+        done < "$reg"
+    }
+
+    if command -v jq &>/dev/null; then
+        system_emit_rows | jq -R -s '
+            split("\n") | map(select(length > 0)) | map(split("\u001f")) | map({
+                path:     .[0],
+                branch:  (if .[1] == "" then null else .[1] end),
+                base:    (if .[2] == "" then null else .[2] end),
+                repo:     .[3],
+                created: (if .[4] == "" then null else .[4] end),
+                status:   .[5],
+                stale:   (.[6] == "true")
+            })'
+    else
+        printf "%-50s %-30s %-12s %-10s %-8s\n" "PATH" "BRANCH" "BASE" "REPO" "STATUS"
+        printf "%-50s %-30s %-12s %-10s %-8s\n" "----" "-----" "----" "----" "------"
+        system_emit_rows | while IFS="$SEP" read -r path branch base repo created status stale; do
+            if [[ "$stale" == "true" ]]; then
+                printf "%-50s (stale - missing)\n" "$path"
+            else
+                printf "%-50s %-30s %-12s %-10s %-8s\n" "$path" "${branch:-?}" "${base:-?}" "$repo" "$status"
+            fi
+        done
+    fi
 }
 
 # --- Subcommand: prune ---
