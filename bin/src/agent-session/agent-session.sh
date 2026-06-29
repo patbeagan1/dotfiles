@@ -13,9 +13,10 @@ window_name=""
 window_path=""
 start_dir=""
 start_branch=""
+from_dir=""
 worktree=false
 agent="cursor"
-worktree_base="/tmp"
+worktree_base=""
 
 usage() {
     cat << EOF
@@ -26,6 +27,7 @@ Usage: agent-session [OPTIONS] [NAME] [PROMPT]
        agent-session system [--purge] [--worktree-base DIR]
        agent-session system remove PATH
        agent-session prune [OPTIONS] [PATH]
+       agent-session doctor [--fix]
        agent-session cleanup
        agent-session snapshot
        agent-session restore
@@ -41,13 +43,17 @@ Options (create session):
   -n, --name NAME  Set the tmux window name (default: first positional is NAME)
   -p, --path PATH  Set path for window (alternative to -n when passing path)
   --dir DIR        Starting directory for panes (enables aliases; no need to cd)
-  --branch BRANCH  Branch to use (with --worktree: create worktree on this base)
-  --worktree       Create a new worktree in $worktree_base with a unique branch
-                   based on the current repo; use it as cwd for panes
+  --from DIR       Source repo to branch the worktree from (default: --dir if it is a
+                   git repo, else the current repo)
+  --branch BRANCH  Branch to use (with --worktree: base branch for the new worktree)
+  --worktree       Create a new worktree under the durable base with a unique branch,
+                   freshly fetched + branched off origin/<branch>; use it as cwd for panes
   --agent AGENT    Agent to start: cursor (default) or claude
   --ticket ID      Ticket or issue ID/URL to associate with this window (for list/switch/prune)
   --prompt-file PATH  Read initial prompt from file (instead of positional args)
-  -w, --worktree-base DIR  Base directory for worktrees (default: $worktree_base)
+  -w, --worktree-base DIR  Base directory for worktrees
+                   (default: \${XDG_STATE_HOME:-\$HOME/.local/state}/agent-session/worktrees,
+                   override with \$AGENT_SESSION_WORKTREE_BASE)
 
 Subcommands:
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
@@ -61,6 +67,10 @@ Subcommands:
                    --force-remove: remove safe worktrees and unregister.
                    PATH: force-remove that worktree and unregister.
                    --find-by-title TITLE: find commit on develop by message.
+  doctor           Reconcile on-disk state with git (tmux-independent). Prunes stale git
+                   worktree metadata, removes registry/snapshot entries whose dirs are gone,
+                   and re-adds agent-* worktrees git knows about but the registry doesn't.
+                   Read-only by default; --fix applies removals.
   cleanup          Remove the worktree for the current window and close the window
                    (only if window was created with --worktree).
   list             List agent-session windows from snapshot with attached/orphan status.
@@ -72,10 +82,12 @@ Examples:
   agent-session my-feature "Implement login"
   agent-session --worktree --branch develop
   agent-session system
-  agent-session system remove /tmp/agent-incubator-20250101-120000
+  agent-session system remove ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000-1234
   agent-session prune --registered-only
   agent-session prune --force-remove
-  agent-session prune /tmp/agent-incubator-20250101-120000
+  agent-session prune ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000-1234
+  agent-session doctor
+  agent-session doctor --fix
   agent-session list
   agent-session cleanup
   agent-session snapshot
@@ -106,6 +118,18 @@ cmd_switch() {
 }
 
 # --- Worktree helpers ---
+# Resolve symlinks for an existing dir so comparisons are stable (e.g. macOS
+# /tmp -> /private/tmp). Portable: no realpath/coreutils dependency. Falls back
+# to the input for non-existent paths.
+canon_path() {
+    local p="$1"
+    if [[ -d "$p" ]]; then
+        (cd "$p" 2>/dev/null && pwd -P) || echo "$p"
+    else
+        echo "$p"
+    fi
+}
+
 get_repo_name() {
     local top
     top=$(git rev-parse --show-toplevel 2>/dev/null || true)
@@ -116,6 +140,21 @@ get_default_branch() {
     local br
     br=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||') || true
     [[ -n "$br" ]] && echo "$br" || echo "main"
+}
+
+# Durable base directory for new worktrees. Precedence:
+#   explicit -w/--worktree-base (passed in $1) > $AGENT_SESSION_WORKTREE_BASE >
+#   ${XDG_STATE_HOME:-$HOME/.local/state}/agent-session/worktrees
+# Deliberately NOT /tmp: macOS clears /tmp, which deletes worktrees out from under git.
+get_worktree_base() {
+    local explicit="${1:-}"
+    if [[ -n "$explicit" ]]; then
+        echo "$explicit"
+    elif [[ -n "${AGENT_SESSION_WORKTREE_BASE:-}" ]]; then
+        echo "$AGENT_SESSION_WORKTREE_BASE"
+    else
+        echo "${XDG_STATE_HOME:-$HOME/.local/state}/agent-session/worktrees"
+    fi
 }
 
 # List worktrees under a base dir that belong to the current repo
@@ -155,17 +194,19 @@ single_branch_in_worktree() {
 }
 
 # --- Registry (agent-session-managed worktrees) ---
-# Format: path|branch|repo_toplevel|created_iso (one line per worktree)
+# Format: path|branch|repo_toplevel|created_iso|base_branch|source_dir (one line per worktree)
+# Older 4-field lines (no base_branch/source_dir) are read fine: the trailing fields
+# come back empty from `IFS='|' read`.
 get_registry_file() {
     echo "${AGENT_SESSION_REGISTRY:-$HOME/.config/agent-session/worktrees}"
 }
 
 registry_add() {
-    local path="$1" branch="$2" repo="$3"
+    local path="$1" branch="$2" repo="$3" base_branch="${4:-}" source_dir="${5:-}"
     local reg
     reg=$(get_registry_file)
     mkdir -p "$(dirname "$reg")"
-    echo "${path}|${branch}|${repo}|$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$reg"
+    echo "${path}|${branch}|${repo}|$(date -u +%Y-%m-%dT%H:%M:%SZ)|${base_branch}|${source_dir}" >> "$reg"
 }
 
 registry_remove() {
@@ -468,6 +509,9 @@ cmd_system() {
         esac
     done
 
+    # Clear stale metadata first so listings reflect reality.
+    git worktree prune 2>/dev/null || true
+
     if [[ -n "$remove_path" ]]; then
         # Force-remove a worktree and unregister
         remove_path=$(realpath -m "$remove_path" 2>/dev/null || echo "$remove_path")
@@ -516,9 +560,9 @@ cmd_system() {
         [[ -n "$p" ]] && attached_map["$p"]=1
     done < <(attached_worktree_paths)
 
-    printf "%-50s %-35s %-10s %-8s\n" "PATH" "BRANCH" "REPO" "STATUS"
-    printf "%-50s %-35s %-10s %-8s\n" "----" "-----" "----" "------"
-    while IFS='|' read -r path branch repo created; do
+    printf "%-50s %-30s %-12s %-10s %-8s\n" "PATH" "BRANCH" "BASE" "REPO" "STATUS"
+    printf "%-50s %-30s %-12s %-10s %-8s\n" "----" "-----" "----" "----" "------"
+    while IFS='|' read -r path branch repo created base_branch source_dir; do
         [[ -z "$path" ]] && continue
         if [[ ! -d "$path" ]]; then
             printf "%-50s (stale - missing)\n" "$path"
@@ -530,7 +574,7 @@ cmd_system() {
         repo_name=$(basename "$repo" 2>/dev/null) || repo_name="$repo"
         local status="orphan"
         [[ -n "${attached_map["$path"]:-}" ]] && status="attached"
-        printf "%-50s %-35s %-10s %-8s\n" "$path" "$current_br" "$repo_name" "$status"
+        printf "%-50s %-30s %-12s %-10s %-8s\n" "$path" "$current_br" "${base_branch:-?}" "$repo_name" "$status"
     done < "$reg"
 }
 
@@ -607,17 +651,21 @@ cmd_prune() {
         exit 1
     fi
 
+    # Clear stale metadata so deleted worktree dirs don't linger or block branches.
+    git worktree prune 2>/dev/null || true
+
     local worktrees
     if [[ "$registered_only" == true ]]; then
         worktrees=$(registry_list_live | awk -v main="$main_repo" -F'|' '$3 == main {print $1}')
     else
+        # Empty base => all of this repo's worktrees (durable base + legacy /tmp).
         worktrees=$(list_worktrees_under "$worktree_base")
     fi
     if [[ -z "$worktrees" ]]; then
         if [[ "$registered_only" == true ]]; then
             echo "No registered worktrees found."
         else
-            echo "No worktrees found under $worktree_base for this repo."
+            echo "No worktrees found for this repo${worktree_base:+ under $worktree_base}."
         fi
         return 0
     fi
@@ -688,7 +736,99 @@ cmd_cleanup() {
     snapshot_remove_by_worktree "$wt"
     registry_remove "$wt"
     git worktree remove "$wt" --force 2>/dev/null || true
+    git worktree prune 2>/dev/null || true
     tmux kill-window
+}
+
+# --- Subcommand: doctor (reconcile on-disk state with git; tmux-independent) ---
+cmd_doctor() {
+    local apply=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --fix) apply=true; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    local reg
+    reg=$(get_registry_file)
+
+    # Collect every repo we know about: the current repo plus each registered
+    # source_dir/repo. Canonicalize so symlinked paths (/tmp vs /private/tmp) dedupe.
+    # Plain newline list + sort -u (portable; no associative arrays).
+    local repos_raw="" cur registered_canon=""
+    cur=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    [[ -n "$cur" ]] && repos_raw+="$(canon_path "$cur")"$'\n'
+    if [[ -f "$reg" ]]; then
+        local path branch repo created base_branch source_dir
+        while IFS='|' read -r path branch repo created base_branch source_dir; do
+            [[ -n "$path" ]] && registered_canon+="$(canon_path "$path")"$'\n'
+            [[ -n "$source_dir" ]] && [[ -d "$source_dir" ]] && repos_raw+="$(canon_path "$source_dir")"$'\n'
+            [[ -n "$repo" ]] && [[ -d "$repo" ]] && repos_raw+="$(canon_path "$repo")"$'\n'
+        done < "$reg"
+    fi
+    local repos
+    repos=$(printf '%s' "$repos_raw" | sort -u | grep -v '^$' || true)
+
+    # 1) Prune stale git worktree metadata so deleted dirs stop holding branches.
+    local r repo_count=0
+    while IFS= read -r r; do
+        [[ -z "$r" ]] && continue
+        git -C "$r" worktree prune 2>/dev/null || true
+        repo_count=$((repo_count + 1))
+    done <<< "$repos"
+    echo "Pruned stale worktree metadata in ${repo_count} repo(s)."
+
+    # 2) Registry/snapshot entries whose worktree dir is gone.
+    local missing=0 removed=0
+    if [[ -f "$reg" ]]; then
+        local lines=() line p
+        while IFS= read -r line; do lines+=("$line"); done < "$reg"
+        for line in "${lines[@]}"; do
+            [[ -z "$line" ]] && continue
+            p="${line%%|*}"
+            if [[ ! -d "$p" ]]; then
+                missing=$((missing + 1))
+                if [[ "$apply" == true ]]; then
+                    registry_remove "$p"
+                    snapshot_remove_by_worktree "$p"
+                    echo "  removed missing: $p"
+                    removed=$((removed + 1))
+                else
+                    echo "  MISSING (use --fix to remove): $p"
+                fi
+            fi
+        done
+    fi
+
+    # 3) agent-* worktrees git knows about but the registry doesn't -> re-track.
+    local readded=0 wt bn br
+    while IFS= read -r r; do
+        [[ -z "$r" ]] && continue
+        while IFS= read -r wt; do
+            [[ -z "$wt" ]] && continue
+            [[ ! -d "$wt" ]] && continue
+            bn=$(basename "$wt")
+            [[ "$bn" != agent-* ]] && continue
+            if ! printf '%s' "$registered_canon" | grep -Fxq "$(canon_path "$wt")"; then
+                br=$(git -C "$wt" branch --show-current 2>/dev/null || true)
+                if [[ "$apply" == true ]]; then
+                    registry_add "$wt" "$br" "$r" "" "$r"
+                    echo "  re-tracked: $wt (branch ${br:-?})"
+                    readded=$((readded + 1))
+                else
+                    echo "  UNTRACKED (use --fix to re-track): $wt (branch ${br:-?})"
+                    readded=$((readded + 1))
+                fi
+            fi
+        done < <(git -C "$r" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}')
+    done <<< "$repos"
+
+    if [[ "$apply" == true ]]; then
+        echo "Doctor: ${missing} missing removed, ${readded} re-tracked."
+    else
+        echo "Doctor (read-only): ${missing} missing, ${readded} untracked. Pass --fix to apply."
+    fi
 }
 
 # --- Parse subcommands first ---
@@ -708,6 +848,11 @@ for arg in "$@"; do
             ;;
         cleanup)
             subcommand=cleanup
+            shift
+            break
+            ;;
+        doctor|reconcile)
+            subcommand=doctor
             shift
             break
             ;;
@@ -763,6 +908,10 @@ if [[ "$subcommand" == cleanup ]]; then
     cmd_cleanup
     exit 0
 fi
+if [[ "$subcommand" == doctor ]]; then
+    cmd_doctor "$@"
+    exit 0
+fi
 if [[ "$subcommand" == system ]]; then
     cmd_system "$@"
     exit 0
@@ -803,6 +952,11 @@ while [[ $i -lt ${#remaining[@]} ]]; do
         --dir)
             ((i++)) || true
             start_dir="${remaining[$i]:-}"
+            ((i++)) || true
+            ;;
+        --from)
+            ((i++)) || true
+            from_dir="${remaining[$i]:-}"
             ((i++)) || true
             ;;
         --branch)
@@ -877,22 +1031,52 @@ fi
 session_cwd=""
 worktree_path=""
 if [[ "$worktree" == true ]]; then
-    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
-    if [[ -z "$main_repo" ]]; then
-        echo "Error: Not in a git repository. Cannot create worktree." >&2
+    # Resolve the source repo to branch from: --from, else --dir if it's a repo, else cwd.
+    source_repo=""
+    for cand in "$from_dir" "$start_dir" "."; do
+        [[ -z "$cand" ]] && continue
+        source_repo=$(git -C "$cand" rev-parse --show-toplevel 2>/dev/null || true)
+        [[ -n "$source_repo" ]] && break
+    done
+    if [[ -z "$source_repo" ]]; then
+        echo "Error: Not in a git repository (and --from/--dir is not one). Cannot create worktree." >&2
         exit 1
     fi
-    repo_name=$(get_repo_name)
-    default_br=$(get_default_branch)
+    main_repo="$source_repo"
+    repo_name=$(basename "$source_repo")
+    default_br=$(git -C "$source_repo" rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||') || true
+    [[ -z "$default_br" ]] && default_br="main"
     base_branch="${start_branch:-$default_br}"
-    unique_branch="agent-${repo_name}-$(date +%Y%m%d-%H%M%S)"
-    worktree_path="${worktree_base}/${unique_branch}"
-    git worktree add -b "$unique_branch" "$worktree_path" "origin/$base_branch" 2>/dev/null || \
-        git worktree add -b "$unique_branch" "$worktree_path" "$base_branch" 2>/dev/null || {
-        echo "Error: Failed to create worktree at $worktree_path (branch $unique_branch from $base_branch)." >&2
-        exit 1
-    }
-    registry_add "$worktree_path" "$unique_branch" "$main_repo"
+
+    # Clear stale worktree metadata so deleted dirs don't keep branches "checked out".
+    git -C "$source_repo" worktree prune 2>/dev/null || true
+    # Best-effort fresh base so we branch off the latest remote (offline-safe).
+    git -C "$source_repo" fetch origin "$base_branch" 2>/dev/null || true
+
+    base_dir=$(get_worktree_base "$worktree_base")/"$repo_name"
+    mkdir -p "$base_dir"
+    # Guaranteed-unique branch name ($$ avoids same-second collisions in create-batch).
+    unique_branch="agent-${repo_name}-$(date +%Y%m%d-%H%M%S)-$$"
+    n=0
+    while git -C "$source_repo" show-ref --verify --quiet "refs/heads/${unique_branch}"; do
+        n=$((n + 1))
+        unique_branch="agent-${repo_name}-$(date +%Y%m%d-%H%M%S)-$$-$n"
+    done
+    worktree_path="${base_dir}/${unique_branch}"
+
+    # Always branch a fresh branch (-b) so we never get blocked by a branch checked out
+    # elsewhere. Prefer origin/<base>, fall back to local <base>, then current HEAD.
+    add_err=""
+    if ! add_err=$(git -C "$source_repo" worktree add -b "$unique_branch" "$worktree_path" "origin/$base_branch" 2>&1); then
+        if ! add_err=$(git -C "$source_repo" worktree add -b "$unique_branch" "$worktree_path" "$base_branch" 2>&1); then
+            if ! add_err=$(git -C "$source_repo" worktree add -b "$unique_branch" "$worktree_path" 2>&1); then
+                echo "Error: Failed to create worktree at $worktree_path (branch $unique_branch from $base_branch):" >&2
+                echo "$add_err" >&2
+                exit 1
+            fi
+        fi
+    fi
+    registry_add "$worktree_path" "$unique_branch" "$main_repo" "$base_branch" "$source_repo"
     session_cwd="$worktree_path"
 fi
 
