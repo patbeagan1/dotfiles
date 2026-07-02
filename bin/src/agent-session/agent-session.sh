@@ -40,12 +40,10 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} prune [OPTIONS] [PATH]
        ${prog} doctor [--fix]
        ${prog} cleanup
-       ${prog} snapshot
-       ${prog} restore
 
 Creates a new tmux window with 2 vertical panes (agent in top pane) and switches
-to it. Worktrees created with --worktree are recorded in a registry. Window state
-is snapshotted on every add/remove so it can be restored after a crash.
+to it. Worktrees created with --worktree are recorded in a registry that is the
+source of truth; use 'pick'/'branches' to reopen windows and 'doctor' to reconcile.
 
 Running with no arguments (or an unrecognized command/parameter) prints this help;
 unrecognized input exits non-zero. Use 'new' to create a window.
@@ -110,15 +108,12 @@ Subcommands:
                    PATH: force-remove that worktree and unregister.
                    --find-by-title TITLE: find commit on develop by message.
   doctor           Reconcile on-disk state with git (tmux-independent). Prunes stale git
-                   worktree metadata, removes registry/snapshot entries whose dirs are gone,
+                   worktree metadata, removes registry entries whose dirs are gone,
                    and re-adds agent-* worktrees git knows about but the registry doesn't.
                    Read-only by default; --fix applies removals.
   cleanup          Remove the worktree for the current window and close the window
                    (only if window was created with --worktree).
-  list             List ${prog} windows from snapshot with attached/orphan status.
-  snapshot         Show current snapshot (all ${prog} windows to be restored).
-  restore          Recreate all ${prog} windows from the last snapshot.
-                   Run inside tmux after a crash to reinstate windows.
+  list             Alias for 'system' (registry worktree listing + attached/orphan/stale).
 
 Examples:
   ${prog} dev my-feature "Implement login"
@@ -133,14 +128,13 @@ Examples:
   ${prog} doctor --fix
   ${prog} list
   ${prog} cleanup
-  ${prog} restore
 
 EOF
 }
 
 # --- Persistent config (key=value lines) ---
 # Stores per-machine settings such as the harness command to launch (cursor-agent
-# on some machines, claude on others). Lives beside the registry/snapshot under
+# on some machines, claude on others). Lives beside the registry under
 # ~/.config/agent-session; override with $AGENT_SESSION_CONFIG.
 get_config_file() {
     echo "${AGENT_SESSION_CONFIG:-$HOME/.config/agent-session/config}"
@@ -529,7 +523,7 @@ open_or_switch_worktree() {
     "$self" new "${open_args[@]}"
 }
 
-# Remove a worktree and drop it from git metadata, the snapshot, and the registry.
+# Remove a worktree and drop it from git metadata and the registry.
 # Best-effort; derives the owning repo from the worktree so it works regardless of
 # the current directory (pick lists worktrees across repos).
 remove_worktree() {
@@ -544,7 +538,6 @@ remove_worktree() {
         git -C "$main" worktree remove "$p" --force 2>/dev/null || true
         git -C "$main" worktree prune 2>/dev/null || true
     fi
-    snapshot_remove_by_worktree "$p"
     registry_remove "$p"
 }
 
@@ -765,7 +758,7 @@ pick_build_branch_rows() {
         fi
     done < <(git -C "$main_repo" worktree list --porcelain 2>/dev/null || true)
 
-    # Snapshot local branches once (also used to subtract from the remote set).
+    # Capture local branches once (also used to subtract from the remote set).
     local local_branches
     local_branches=$(git -C "$main_repo" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null || true)
 
@@ -1098,173 +1091,11 @@ attached_worktree_paths() {
     return 0
 }
 
-# --- Snapshot (persist agent-session windows for restore after crash) ---
-# Format: type|worktree_path|window_name|start_dir|agent|prompt|ticket (one line per window)
-# type = worktree | dir. Backward compat: lines with 5 fields have empty prompt and ticket.
-get_snapshot_file() {
-    echo "${AGENT_SESSION_SNAPSHOT:-$HOME/.config/agent-session/snapshot}"
-}
-
-snapshot_add() {
-    local type="$1" worktree_path="$2" window_name="$3" start_dir="$4" agent="$5" prompt="$6" ticket="$7"
-    local snap
-    snap=$(get_snapshot_file)
-    mkdir -p "$(dirname "$snap")"
-    echo "${type}|${worktree_path}|${window_name}|${start_dir}|${agent}|${prompt}|${ticket}" >> "$snap"
-}
-
-snapshot_remove_by_worktree() {
-    local path="$1"
-    local snap
-    snap=$(get_snapshot_file)
-    [[ ! -f "$snap" ]] && return 0
-    local tmp
-    tmp=$(mktemp)
-    awk -v p="$path" -F'|' '$2 != p {print}' "$snap" > "$tmp" 2>/dev/null || true
-    mv "$tmp" "$snap"
-}
-
-# --- Subcommand: restore ---
-cmd_restore() {
-    if [[ -z "${TMUX:-}" ]]; then
-        echo "Error: Not running inside tmux. Start tmux first, then run: agent-session restore" >&2
-        exit 1
-    fi
-    local snap
-    snap=$(get_snapshot_file)
-    if [[ ! -f "$snap" ]] || ! [[ -s "$snap" ]]; then
-        echo "No snapshot found. Snapshot file: $snap" >&2
-        exit 0
-    fi
-    local count=0
-    local line
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
-        local type worktree_path window_name start_dir agent prompt ticket
-        type="${line%%|*}"; line="${line#*|}"
-        worktree_path="${line%%|*}"; line="${line#*|}"
-        window_name="${line%%|*}"; line="${line#*|}"
-        start_dir="${line%%|*}"; line="${line#*|}"
-        agent="${line%%|*}"; line="${line#*|}"
-        prompt="${line%%|*}"; line="${line#*|}"
-        ticket="$line"
-        [[ -z "$type" ]] && continue
-        if [[ "$type" == worktree ]]; then
-            if [[ ! -d "${worktree_path:-}" ]]; then
-                echo "Skipping missing worktree: $worktree_path" >&2
-                continue
-            fi
-        fi
-        local name="${window_name:-agent-$(date +%Y%m%d-%H%M%S)-$count}"
-        local cwd=""
-        [[ "$type" == worktree ]] && cwd="$worktree_path"
-        [[ "$type" == dir ]] && cwd="$start_dir"
-        tmux new-window -n "$name"
-        new_window=$(tmux display-message -p '#{window_index}')
-        if [[ -n "$cwd" ]]; then
-            tmux send-keys -t ":$new_window" "cd $(printf '%q' "$cwd")" Enter
-        fi
-        local restore_cmd
-        restore_cmd=$(resolve_agent_command "$agent")
-        tmux send-keys -t ":$new_window" "$restore_cmd" Enter
-        tmux split-window -t ":$new_window" -v
-        if [[ -n "$cwd" ]]; then
-            tmux send-keys -t ":$new_window.1" "cd $(printf '%q' "$cwd")" Enter
-        fi
-        if [[ "$type" == worktree ]]; then
-            tmux set-window-option -t ":$new_window" @agent-worktree "$worktree_path"
-        fi
-        if [[ -n "$ticket" ]]; then
-            tmux set-window-option -t ":$new_window" @agent-ticket "$ticket"
-        fi
-        if [[ -n "$prompt" ]]; then
-            tmux select-pane -t ":$new_window.0"
-            tmux send-keys -t ":$new_window.0" -- "$prompt"
-            tmux send-keys -t ":$new_window.0" C-Enter
-        fi
-        ((count++)) || true
-    done < "$snap"
-    echo "Restored $count agent-session window(s)."
-}
-
-# --- Subcommand: snapshot (show current snapshot) ---
-cmd_snapshot() {
-    local snap
-    snap=$(get_snapshot_file)
-    if [[ ! -f "$snap" ]] || ! [[ -s "$snap" ]]; then
-        echo "No snapshot. File: $snap"
-        return 0
-    fi
-    echo "Snapshot ($snap):"
-    printf "%-8s %-35s %-20s %-8s %-12s\n" "TYPE" "WORKTREE_OR_DIR" "WINDOW_NAME" "AGENT" "TICKET"
-    printf "%-8s %-35s %-20s %-8s %-12s\n" "----" "---------------" "----------" "-----" "------"
-    local line
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
-        local type worktree_path window_name start_dir agent prompt ticket
-        type="${line%%|*}"; line="${line#*|}"
-        worktree_path="${line%%|*}"; line="${line#*|}"
-        window_name="${line%%|*}"; line="${line#*|}"
-        start_dir="${line%%|*}"; line="${line#*|}"
-        agent="${line%%|*}"; line="${line#*|}"
-        prompt="${line%%|*}"; line="${line#*|}"
-        ticket="$line"
-        local loc="$worktree_path"
-        [[ "$type" == dir ]] && loc="$start_dir"
-        printf "%-8s %-35s %-20s %-8s %-12s\n" "$type" "${loc:0:35}" "${window_name:0:20}" "$agent" "${ticket:0:12}"
-    done < "$snap"
-}
-
-# --- Subcommand: list ---
-# Output: window name, worktree or dir, agent, ticket, attached|orphan
+# --- Subcommand: list (alias for system: registry-based worktree listing) ---
 cmd_list() {
-    local snap
-    snap=$(get_snapshot_file)
-    if [[ ! -f "$snap" ]] || ! [[ -s "$snap" ]]; then
-        echo "No snapshot. File: $snap"
-        return 0
-    fi
-    # Build sets of current window names and worktree paths from tmux as
-    # newline-delimited strings (portable to bash 3.2, which lacks associative
-    # arrays).
-    local window_names=""
-    local window_worktrees=""
-    if [[ -n "${TMUX:-}" ]]; then
-        local idx name wt
-        while IFS='|' read -r idx name; do
-            [[ -z "$idx" ]] && continue
-            window_names+="$name"$'\n'
-            wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
-            if [[ -n "$wt" ]]; then
-                window_worktrees+="$wt"$'\n'
-            fi
-        done < <(tmux list-windows -F '#{window_index}|#{window_name}')
-    fi
-    printf "%-20s %-38s %-8s %-12s %-8s\n" "WINDOW_NAME" "WORKTREE_OR_DIR" "AGENT" "TICKET" "STATUS"
-    printf "%-20s %-38s %-8s %-12s %-8s\n" "----------" "---------------" "-----" "------" "------"
-    local line
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
-        local type worktree_path window_name start_dir agent prompt ticket
-        type="${line%%|*}"; line="${line#*|}"
-        worktree_path="${line%%|*}"; line="${line#*|}"
-        window_name="${line%%|*}"; line="${line#*|}"
-        start_dir="${line%%|*}"; line="${line#*|}"
-        agent="${line%%|*}"; line="${line#*|}"
-        prompt="${line%%|*}"; line="${line#*|}"
-        ticket="$line"
-        local loc="$worktree_path"
-        [[ "$type" == dir ]] && loc="$start_dir"
-        local status="orphan"
-        if [[ -n "${TMUX:-}" ]]; then
-            if printf '%s' "$window_names" | grep -Fxq -- "$window_name"; then
-                status="attached"
-            elif [[ -n "$worktree_path" ]] && printf '%s' "$window_worktrees" | grep -Fxq -- "$worktree_path"; then
-                status="attached"
-            fi
-        fi
-        printf "%-20s %-38s %-8s %-12s %-8s\n" "${window_name:0:20}" "${loc:0:38}" "$agent" "${ticket:0:12}" "$status"
-    done < "$snap"
+    # `list` is a friendly alias for `system`: the registry is the source of truth
+    # for worktrees (with attached/orphan/stale status).
+    cmd_system "$@"
 }
 
 # --- Subcommand: create-batch ---
@@ -1374,7 +1205,6 @@ cmd_system() {
             exit 1
         fi
         git worktree remove "$remove_path" --force 2>/dev/null || true
-        snapshot_remove_by_worktree "$remove_path"
         registry_remove "$remove_path"
         echo "Removed worktree: $remove_path"
         return 0
@@ -1510,7 +1340,6 @@ cmd_prune() {
             exit 1
         fi
         git worktree remove "$force_remove_path" --force 2>/dev/null || true
-        snapshot_remove_by_worktree "$force_remove_path"
         registry_remove "$force_remove_path"
         echo "Removed worktree: $force_remove_path"
         return 0
@@ -1582,7 +1411,6 @@ cmd_prune() {
                     echo "  Warning: window still attached; skipping remove. Run cleanup in that window first." >&2
                 else
                     git worktree remove "$wt" --force 2>/dev/null || true
-                    snapshot_remove_by_worktree "$wt"
                     registry_remove "$wt"
                     echo "  Removed."
                 fi
@@ -1612,7 +1440,6 @@ cmd_cleanup() {
         tmux kill-window
         return 0
     fi
-    snapshot_remove_by_worktree "$wt"
     registry_remove "$wt"
     git worktree remove "$wt" --force 2>/dev/null || true
     git worktree prune 2>/dev/null || true
@@ -1658,7 +1485,7 @@ cmd_doctor() {
     done <<< "$repos"
     echo "Pruned stale worktree metadata in ${repo_count} repo(s)."
 
-    # 2) Registry/snapshot entries whose worktree dir is gone.
+    # 2) Registry entries whose worktree dir is gone.
     local missing=0 removed=0
     if [[ -f "$reg" ]]; then
         local lines=() line p
@@ -1670,7 +1497,6 @@ cmd_doctor() {
                 missing=$((missing + 1))
                 if [[ "$apply" == true ]]; then
                     registry_remove "$p"
-                    snapshot_remove_by_worktree "$p"
                     echo "  removed missing: $p"
                     removed=$((removed + 1))
                 else
@@ -1770,11 +1596,6 @@ for arg in "$@"; do
             shift
             break
             ;;
-        restore)
-            subcommand=restore
-            shift
-            break
-            ;;
         create-batch)
             subcommand=create_batch
             shift
@@ -1782,11 +1603,6 @@ for arg in "$@"; do
             ;;
         list)
             subcommand=list
-            shift
-            break
-            ;;
-        snapshot)
-            subcommand=snapshot
             shift
             break
             ;;
@@ -1843,14 +1659,6 @@ if [[ "$subcommand" == doctor ]]; then
 fi
 if [[ "$subcommand" == system ]]; then
     cmd_system "$@"
-    exit 0
-fi
-if [[ "$subcommand" == restore ]]; then
-    cmd_restore
-    exit 0
-fi
-if [[ "$subcommand" == snapshot ]]; then
-    cmd_snapshot
     exit 0
 fi
 
@@ -1982,7 +1790,7 @@ fi
 # or the per-machine configured default — prompting once if it isn't set yet).
 # After the tmux check so a not-in-tmux invocation fails fast without prompting.
 agent_cmd=$(resolve_agent_command "$agent") || exit 1
-# Record the resolved command so the snapshot/list/restore reflect exactly what ran.
+# Record the resolved command so status/messages reflect exactly what ran.
 agent="$agent_cmd"
 
 # --- Worktree creation ---
@@ -2090,13 +1898,6 @@ fi
 # Store ticket for list/switch
 if [[ -n "$ticket" ]]; then
     tmux set-window-option -t ":$new_window" @agent-ticket "$ticket"
-fi
-
-# Persist to snapshot (for restore after crash)
-if [[ -n "$worktree_path" ]]; then
-    snapshot_add "worktree" "$worktree_path" "$actual_window_name" "" "$agent" "$prompt" "${ticket:-}"
-else
-    snapshot_add "dir" "" "$actual_window_name" "${start_dir:-}" "$agent" "$prompt" "${ticket:-}"
 fi
 
 # Set cwd for new window so panes start there

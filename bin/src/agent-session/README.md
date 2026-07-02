@@ -1,19 +1,19 @@
 # gas (agent-session)
 
 > Formerly `agent-session` — renamed to **`gas`** because it's quicker to type. The
-> command is `gas`; on-disk state (registry, snapshot, worktree base, env vars, tmux
+> command is `gas`; on-disk state (registry, worktree base, env vars, tmux
 > options) still lives under `agent-session`/`AGENT_SESSION_*` for backward compatibility,
 > so existing worktrees keep working.
 
 ## Description
 
-Creates a new tmux window with 2 vertical panes for agent or multi-pane workflows. Supports durable worktrees (under `~/.local/state`, not `/tmp`), agent selection (cursor vs claude), switching windows/worktrees/branches via fzf, and pruning/cleanup of worktrees. Worktrees created with `--worktree` are recorded in a **registry** so you can list them, prune by PR status, or force-remove. **Snapshot/restore**: every time a window is added or removed, the set of gas windows is written to a snapshot file so you can run `gas restore` (inside tmux) after a crash to recreate them. **Doctor**: `gas doctor` reconciles the on-disk registry with git (tmux-independent) so a crash never leaves the state inconsistent. Assumes you are already in a tmux session.
+Creates a new tmux window with 2 vertical panes for agent or multi-pane workflows. Supports durable worktrees (under `~/.local/state`, not `/tmp`), agent selection (cursor vs claude), switching windows/worktrees/branches via fzf, and pruning/cleanup of worktrees. Worktrees created with `--worktree` are recorded in a **registry** — the single source of truth — so you can list them, jump to or reopen them with `gas pick`/`gas branches`, prune by PR status, or force-remove. **Doctor**: `gas doctor` reconciles the on-disk registry with git (tmux-independent) so a crash never leaves the state inconsistent. Assumes you are already in a tmux session.
 
 ### Resilience notes
 
 - **Worktrees are durable.** New worktrees live under `${XDG_STATE_HOME:-$HOME/.local/state}/agent-session/worktrees/<repo>/<branch>` (override with `$AGENT_SESSION_WORKTREE_BASE` or `-w`). They are **not** placed in `/tmp`, which macOS clears — that used to delete worktrees out from under git and leave branches "checked out" by ghost worktrees.
 - **Creating a worktree can't get blocked.** Each `--worktree` run does `git worktree prune`, fetches the base, and creates a *fresh, uniquely-named* branch off `origin/<branch>` (never checking out a shared branch), so a branch checked out in another worktree never blocks you.
-- **Disk is the source of truth.** The registry/snapshot survive tmux crashes; tmux window options are only a cache. Run `gas doctor` (then `restore`) to rebuild after a crash.
+- **Disk is the source of truth.** The registry survives tmux crashes; tmux window options are only a cache. After a crash, run `gas doctor` to reconcile with git, then `gas pick` to reopen the worktrees you want.
 
 ## Usage
 
@@ -66,13 +66,11 @@ gas new -d   # create in background, print switch command
 - **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
 - **status** `[--branch BRANCH] [--fetch] [PATH]` – Print the full state of a worktree/branch: local branch, working-tree status, ahead/behind, whether the branch still exists on the remote (or was deleted/merged), and the associated **PR** state via `gh` (number, state, title, url). Used as the picker preview; also handy standalone. `PATH` of `-` or omitted means the current repo. `--fetch` contacts `origin` for **live** remote/merged state (slower; `gas pick` passes it). Degrades gracefully when `gh` is missing/unauthenticated or there is no PR.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
-- **list** – List gas windows from the snapshot with **attached** (tmux window exists) or **orphan** (in snapshot but no matching window) status. Use this to see what you have running at a glance.
+- **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
 - **prune** – List worktrees and PR status (merged/closed = safe to remove), with attached/orphan. Use `--registered-only` to only consider worktrees in the registry. Use `--force-remove` to remove safe worktrees (skips attached windows; run cleanup in that window first). Pass a `PATH` to force-remove that worktree. Use `--find-by-title TITLE` to find a commit on develop by message.
-- **doctor** (or **reconcile**) – Reconcile on-disk state with git, independent of tmux. Prunes stale git worktree metadata in every known repo, reports registry/snapshot entries whose worktree dir is gone, and reports `agent-*` worktrees git knows about but the registry doesn't. Read-only by default; pass `--fix` to remove the missing entries and re-track the untracked ones. Run this after a tmux/laptop crash, before `restore`.
+- **doctor** (or **reconcile**) – Reconcile on-disk state with git, independent of tmux. Prunes stale git worktree metadata in every known repo, reports registry entries whose worktree dir is gone, and reports `agent-*` worktrees git knows about but the registry doesn't. Read-only by default; pass `--fix` to remove the missing entries and re-track the untracked ones. Run this after a tmux/laptop crash, then use `gas pick` to reopen worktrees.
 - **cleanup** – Remove the worktree for the current window (if it was created with `--worktree`) and close the window (similar to threeflow finish).
-- **snapshot** – Show the current snapshot (list of gas windows that would be restored). Updated automatically whenever a window is added or removed.
-- **restore** – Recreate all gas windows from the last snapshot and re-send the initial prompt to each agent so you can resume tasks after a crash.
 - **create-batch FILE** – Create one window per line from FILE. Line format: `name|prompt|ticket` (prompt and ticket optional; do not use `|` inside prompt). Options `-d`, `--worktree`, `--branch`, `--agent` apply to all windows.
 
 ```bash
@@ -96,11 +94,7 @@ gas prune --find-by-title "Add login"
 gas doctor
 gas doctor --fix
 gas cleanup
-gas snapshot
-gas restore
 ```
-
-Snapshot file: `$HOME/.config/agent-session/snapshot` (override with `AGENT_SESSION_SNAPSHOT`).
 
 ## Options (create session)
 
@@ -140,7 +134,7 @@ The pickers build their *lists* from local git state only (no network), so they 
 Press **Enter** to act on the highlighted item:
 
 - If a live tmux window is already attached to that worktree, it just switches to it.
-- Otherwise it opens a fresh gas window (2 panes + agent) rooted at that worktree — via `--open-worktree`, so the window is registered/snapshotted and works with `list`, `system`, and `cleanup` exactly like any other gas window.
+- Otherwise it opens a fresh gas window (2 panes + agent) rooted at that worktree — via `--open-worktree`, so the window is registered and works with `list`, `system`, and `cleanup` exactly like any other gas window.
 - For `branches`, choosing a branch with no worktree yet creates one for it first (a branch already checked out in the main repo opens a window there instead of forking a divergent branch).
 
 `gh` is optional — the preview degrades gracefully (prints a note) when it's missing, unauthenticated, or the branch has no PR.
@@ -154,7 +148,7 @@ Press **`ctrl-a`** on the highlighted row to open an actions menu (the terminal 
 - **Fetch / refresh remote** — `git fetch --prune origin`.
 - **Open PR in browser** — `gh pr view <branch> --web`.
 - **Copy path / branch name** — to the clipboard via `pbcopy` (macOS; prints the value as a fallback).
-- **Remove worktree** — `git worktree remove --force` + unregister + drop from the snapshot, after a confirmation. If a tmux window is attached, it offers to kill that window first.
+- **Remove worktree** — `git worktree remove --force` + unregister, after a confirmation. If a tmux window is attached, it offers to kill that window first.
 
 `Open / switch` leaves the picker; every other action runs, shows its output, and drops you **back in the (refreshed) list** so you can keep acting on items — e.g. remove several in a row. In `gas branches`, the worktree-only actions (remove, update-from-develop) appear only once the branch has a worktree. Destructive actions are guarded (they need an explicit `y`).
 
@@ -184,9 +178,9 @@ To run several agent tasks in parallel (multi-threaded workload):
 
 1. **Naming** – Use a consistent window name so you can find it with `gas switch`. For tickets, use the ticket id as name or pass `--ticket` (e.g. `gas new ticket-123 "Fix login" --ticket 123`).
 2. **Create in background** – Use `-d`/`--detach` to create a window without switching to it, then create more; print the switch command for later.
-3. **Switch** – Use `gas switch` (fzf over windows) or `gas pick` / `gas branches` (fzf over worktrees/branches with a live state + PR preview) to jump around; `gas list` shows all gas windows and their **attached** vs **orphan** status.
+3. **Switch** – Use `gas switch` (fzf over windows) or `gas pick` / `gas branches` (fzf over worktrees/branches with a live state + PR preview) to jump around; `gas list`/`gas system` show all worktrees and their **attached**/**orphan**/**stale** status.
 4. **Cap concurrency** – Running 3–5 agent windows at a time is usually enough; more can lead to context thrashing. Use `gas cleanup` in a window when the task is done, and `gas prune` to remove merged/closed worktrees.
-5. **Restore** – After a crash, run `gas doctor` to reconcile state with git (prune ghosts, drop missing, re-track strays), then `gas restore` inside tmux. Restore recreates each window and re-sends the stored initial prompt so you can resume each task.
+5. **Recover after a crash** – The registry is the source of truth. Run `gas doctor` to reconcile it with git (prune ghosts, drop missing, re-track strays), then `gas pick` to reopen the worktrees you want — each opens a fresh window via the normal flow. (Note: the original prompt is not automatically replayed.)
 6. **Batch create** – Put one line per task in a file (`name|prompt|ticket`), then run `gas create-batch FILE -d --worktree` to create all windows in the background.
 
 ## Layout
