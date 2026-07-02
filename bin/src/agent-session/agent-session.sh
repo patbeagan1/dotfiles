@@ -42,7 +42,7 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
        ${prog} prune [OPTIONS] [PATH]
-       ${prog} doctor [--fix]
+       ${prog} doctor [--fix | -i]
        ${prog} cleanup
 
 Creates a new tmux window with 2 vertical panes (agent in top pane) and switches
@@ -121,7 +121,8 @@ Subcommands:
   doctor           Reconcile on-disk state with git (tmux-independent). Prunes stale git
                    worktree metadata, removes registry entries whose dirs are gone,
                    and re-adds agent-* worktrees git knows about but the registry doesn't.
-                   Read-only by default; --fix applies removals.
+                   Read-only by default; --fix applies all removals/re-tracks;
+                   -i/--interactive prompts y/N for each item.
   cleanup          Remove the worktree for the current window and close the window
                    (only if window was created with --worktree).
   list             Alias for 'system' (registry worktree listing + attached/orphan/stale).
@@ -726,6 +727,48 @@ pause_for_key() {
     printf '\n' > /dev/tty 2>/dev/null || true
 }
 
+# Open a URL in the default browser (macOS 'open', Linux 'xdg-open'; else print it).
+open_url() {
+    local u="$1"
+    if command -v open &>/dev/null; then open "$u"
+    elif command -v xdg-open &>/dev/null; then xdg-open "$u"
+    else echo "$u"; fi
+}
+
+# Open the PR for BRANCH (checked out at PATH, if given) in the browser. Resolves
+# the PR's URL explicitly with `gh pr view --json url` — the same lookup the status
+# preview uses — then opens that exact URL, rather than `gh pr view --web` (which can
+# mis-resolve branch names that contain '/'). PATH empty => run gh in the cwd repo.
+open_pr_for_branch() {
+    local br="$1" wt="${2:-}"
+    if ! command -v gh &>/dev/null; then
+        echo "gh not installed."
+        return 0
+    fi
+    # Prefer the worktree's actually-checked-out branch (matches the preview).
+    if [[ -n "$wt" ]] && [[ -d "$wt" ]]; then
+        local cur
+        cur=$(git -C "$wt" branch --show-current 2>/dev/null || true)
+        [[ -n "$cur" ]] && br="$cur"
+    fi
+    if [[ -z "$br" ]]; then
+        echo "No branch to look up a PR for."
+        return 0
+    fi
+    local prurl
+    if [[ -n "$wt" ]] && [[ -d "$wt" ]]; then
+        prurl=$(cd "$wt" && gh pr view "$br" --json url --jq .url 2>/dev/null || true)
+    else
+        prurl=$(gh pr view "$br" --json url --jq .url 2>/dev/null || true)
+    fi
+    if [[ -n "$prurl" ]]; then
+        open_url "$prurl"
+        echo "Opened PR for '$br': $prurl"
+    else
+        echo "No PR found for '$br' (create one with: gh pr create)"
+    fi
+}
+
 # Switch to the live tmux window for a worktree path, or open a new one on it.
 open_or_switch_worktree() {
     # agent_sel empty => let the opened window resolve the configured default.
@@ -821,12 +864,7 @@ worktree_actions_menu() {
             pause_for_key
             ;;
         "Open PR"*)
-            if command -v gh &>/dev/null; then
-                ( cd "$path" && gh pr view "$branch" --web ) 2>/dev/null \
-                    || echo "No PR for '$branch' (create one with: gh pr create)"
-            else
-                echo "gh not installed."
-            fi
+            open_pr_for_branch "$branch" "$path"
             pause_for_key
             ;;
         "Copy path"*)
@@ -878,10 +916,13 @@ cmd_pick() {
             exit 0
         fi
         local out key sel
+        # `sleep 0.5;` debounces the preview: fzf kills the running preview command when
+        # you move to another row, so the (network) `status --fetch` only fires once you
+        # rest on a row for 0.5s — not on every keystroke while scrolling.
         out=$(printf '%s\n' "$rows" | fzf --no-multi --ansi \
             --delimiter=$'\t' --with-nth=2,3,4 --expect=ctrl-a \
             --header='enter: open/switch   ctrl-a: actions…    (repo | status | branch)' \
-            --preview="$self status --fetch {1}" \
+            --preview="sleep 0.5; $self status --fetch {1}" \
             --preview-window='right,60%,wrap' || true)
         [[ -z "$out" ]] && exit 0
         key=$(printf '%s\n' "$out" | sed -n '1p')
@@ -1071,12 +1112,8 @@ branch_actions_menu() {
             pause_for_key
             ;;
         "Open PR"*)
-            if command -v gh &>/dev/null; then
-                gh pr view "$branch" --web 2>/dev/null \
-                    || echo "No PR for '$branch' (create one with: gh pr create)"
-            else
-                echo "gh not installed."
-            fi
+            # $path is '-' for remote-only branches; the helper falls back to cwd.
+            open_pr_for_branch "$branch" "$path"
             pause_for_key
             ;;
         "Copy path"*)
@@ -1145,7 +1182,7 @@ cmd_pick_branch() {
         out=$(printf '%s' "$rows" | fzf --no-multi \
             --delimiter=$'\t' --with-nth=1,3 --expect=ctrl-a \
             --header='enter: open/switch   ctrl-a: actions…    (branch | state)' \
-            --preview="$self status --branch {1} {2}" \
+            --preview="sleep 0.5; $self status --branch {1} {2}" \
             --preview-window='right,60%,wrap' || true)
         [[ -z "$out" ]] && exit 0
         key=$(printf '%s\n' "$out" | sed -n '1p')
@@ -1676,10 +1713,11 @@ cmd_cleanup() {
 
 # --- Subcommand: doctor (reconcile on-disk state with git; tmux-independent) ---
 cmd_doctor() {
-    local apply=false
+    local apply=false interactive=false
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --fix) apply=true; shift ;;
+            -i|--interactive) interactive=true; shift ;;
             *) shift ;;
         esac
     done
@@ -1714,28 +1752,37 @@ cmd_doctor() {
     echo "Pruned stale worktree metadata in ${repo_count} repo(s)."
 
     # 2) Registry entries whose worktree dir is gone.
+    #    --fix removes all; -i/--interactive prompts per entry; default just reports.
     local missing=0 removed=0
     if [[ -f "$reg" ]]; then
         local lines=() line p
         while IFS= read -r line; do lines+=("$line"); done < "$reg"
-        for line in "${lines[@]}"; do
+        # Guard the expansion: "${lines[@]}" on an empty array is an unbound-variable
+        # error under `set -u` in bash 3.2 (empty registry file).
+        for line in ${lines[@]+"${lines[@]}"}; do
             [[ -z "$line" ]] && continue
             p="${line%%|*}"
             if [[ ! -d "$p" ]]; then
                 missing=$((missing + 1))
-                if [[ "$apply" == true ]]; then
+                if [[ "$interactive" == true ]]; then
+                    if confirm "MISSING registry entry: $p — remove?"; then
+                        registry_remove "$p"; echo "  removed."; removed=$((removed + 1))
+                    else
+                        echo "  kept."
+                    fi
+                elif [[ "$apply" == true ]]; then
                     registry_remove "$p"
                     echo "  removed missing: $p"
                     removed=$((removed + 1))
                 else
-                    echo "  MISSING (use --fix to remove): $p"
+                    echo "  MISSING (use --fix / -i to remove): $p"
                 fi
             fi
         done
     fi
 
     # 3) agent-* worktrees git knows about but the registry doesn't -> re-track.
-    local readded=0 wt bn br
+    local untracked=0 readded=0 wt bn br
     while IFS= read -r r; do
         [[ -z "$r" ]] && continue
         while IFS= read -r wt; do
@@ -1744,23 +1791,31 @@ cmd_doctor() {
             bn=$(basename "$wt")
             [[ "$bn" != agent-* ]] && continue
             if ! printf '%s' "$registered_canon" | grep -Fxq "$(canon_path "$wt")"; then
+                untracked=$((untracked + 1))
                 br=$(git -C "$wt" branch --show-current 2>/dev/null || true)
-                if [[ "$apply" == true ]]; then
+                if [[ "$interactive" == true ]]; then
+                    if confirm "UNTRACKED worktree: $wt (branch ${br:-?}) — re-track?"; then
+                        registry_add "$wt" "$br" "$r" "" "$r"; echo "  re-tracked."; readded=$((readded + 1))
+                    else
+                        echo "  skipped."
+                    fi
+                elif [[ "$apply" == true ]]; then
                     registry_add "$wt" "$br" "$r" "" "$r"
                     echo "  re-tracked: $wt (branch ${br:-?})"
                     readded=$((readded + 1))
                 else
-                    echo "  UNTRACKED (use --fix to re-track): $wt (branch ${br:-?})"
-                    readded=$((readded + 1))
+                    echo "  UNTRACKED (use --fix / -i to re-track): $wt (branch ${br:-?})"
                 fi
             fi
         done < <(git -C "$r" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}')
     done <<< "$repos"
 
-    if [[ "$apply" == true ]]; then
-        echo "Doctor: ${missing} missing removed, ${readded} re-tracked."
+    if [[ "$interactive" == true ]]; then
+        echo "Doctor (interactive): removed ${removed}/${missing} missing, re-tracked ${readded}/${untracked} untracked."
+    elif [[ "$apply" == true ]]; then
+        echo "Doctor: ${removed} missing removed, ${readded} re-tracked."
     else
-        echo "Doctor (read-only): ${missing} missing, ${readded} untracked. Pass --fix to apply."
+        echo "Doctor (read-only): ${missing} missing, ${untracked} untracked. Pass --fix (all) or -i (choose per item)."
     fi
 }
 

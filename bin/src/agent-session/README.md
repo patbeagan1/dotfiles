@@ -70,7 +70,7 @@ gas new -d   # create in background, print switch command
 - **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
 - **prune** – List worktrees and PR status (merged/closed = safe to remove), with attached/orphan. Use `--registered-only` to only consider worktrees in the registry. Use `--force-remove` to remove safe worktrees (skips attached windows; run cleanup in that window first). Pass a `PATH` to force-remove that worktree. Use `--find-by-title TITLE` to find a commit on develop by message.
-- **doctor** (or **reconcile**) – Reconcile on-disk state with git, independent of tmux. Prunes stale git worktree metadata in every known repo, reports registry entries whose worktree dir is gone, and reports `agent-*` worktrees git knows about but the registry doesn't. Read-only by default; pass `--fix` to remove the missing entries and re-track the untracked ones. Run this after a tmux/laptop crash, then use `gas pick` to reopen worktrees.
+- **doctor** (or **reconcile**) – Reconcile on-disk state with git, independent of tmux. Prunes stale git worktree metadata in every known repo, reports registry entries whose worktree dir is gone, and reports `agent-*` worktrees git knows about but the registry doesn't. Read-only by default; pass `--fix` to remove the missing entries and re-track the untracked ones, or **`-i`/`--interactive`** to decide each one with a y/N prompt. Run this after a tmux/laptop crash, then use `gas pick` to reopen worktrees.
 - **cleanup** – Remove the worktree for the current window (if it was created with `--worktree`) and close the window (similar to threeflow finish).
 - **create-batch FILE** – Create one window per line from FILE. Line format: `name|prompt|ticket` (prompt and ticket optional; do not use `|` inside prompt). Options `-d`, `--worktree`, `--branch`, `--agent` apply to all windows.
 
@@ -97,6 +97,7 @@ gas prune ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000
 gas prune --find-by-title "Add login"
 gas doctor
 gas doctor --fix
+gas doctor -i
 gas cleanup
 ```
 
@@ -150,7 +151,7 @@ Press **`ctrl-a`** on the highlighted row to open an actions menu (the terminal 
 - **Open / switch to window** — same as Enter (leaves the picker).
 - **Update from `develop`** — `git pull --no-edit origin develop` into the worktree (override the branch with `$AGENT_SESSION_DEV_BRANCH`); reports conflicts and leaves them for you to resolve.
 - **Fetch / refresh remote** — `git fetch --prune origin`.
-- **Open PR in browser** — `gh pr view <branch> --web`.
+- **Open PR in browser** — resolves the PR URL for the worktree's current branch (`gh pr view <branch> --json url`, the same lookup as the preview) and opens it in the browser.
 - **Copy path / branch name** — to the clipboard via `pbcopy` (macOS; prints the value as a fallback).
 - **Remove worktree** — `git worktree remove --force` + unregister, after a confirmation. If a tmux window is attached, it offers to kill that window first.
 
