@@ -88,8 +88,12 @@ Subcommands:
   pick             fzf picker over worktrees. Preview shows full state
                    (git status, ahead/behind, remote-deleted, merged, PR via gh).
                    Enter switches to the live window, or opens a new one for orphans.
+                   ctrl-a opens an actions menu for the highlighted row (open/switch,
+                   update from develop, fetch, open PR, copy path, remove worktree).
   branches         fzf picker over git branches (local + remote-only). Enter switches
                    to / opens a worktree for the chosen branch. Same rich preview.
+                   ctrl-a opens the same actions menu (worktree-only actions appear
+                   once the branch has a worktree).
   status           Print the full state of a worktree/branch (used as the picker
                    preview). Args: [--branch BRANCH] [--fetch] [PATH] (PATH '-' or
                    empty = cwd). --fetch contacts origin for live remote/merged state
@@ -462,25 +466,57 @@ cmd_status() {
     fi
 }
 
+# Echo the tmux window index whose @agent-worktree equals PATH (canon-compared),
+# else empty. Never errors (safe under set -e / outside tmux).
+attached_window_index() {
+    local path="$1" cpath idx wt
+    [[ -z "${TMUX:-}" ]] && return 0
+    cpath=$(canon_path "$path")
+    while IFS= read -r idx; do
+        [[ -z "$idx" ]] && continue
+        wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
+        [[ -z "$wt" ]] && continue
+        if [[ "$(canon_path "$wt")" == "$cpath" ]]; then
+            echo "$idx"
+            return 0
+        fi
+    done < <(tmux list-windows -F '#{window_index}' 2>/dev/null || true)
+    return 0
+}
+
+# Ask a y/N question on the controlling terminal. Returns 0 only on an explicit
+# yes; non-zero on no or when there is no terminal to prompt on. Default = No.
+confirm() {
+    local msg="$1" ans=""
+    printf '%s [y/N]: ' "$msg" > /dev/tty 2>/dev/null || return 1
+    IFS= read -r ans < /dev/tty 2>/dev/null || true
+    case "$ans" in
+        y|Y|yes|YES|Yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Wait for a single keypress so action output stays visible before the picker
+# redraws over it. No-op when there is no terminal.
+pause_for_key() {
+    printf '%s' "${1:-  — press any key to return to the picker —}" > /dev/tty 2>/dev/null || return 0
+    IFS= read -r -n1 -s _ < /dev/tty 2>/dev/null || true
+    printf '\n' > /dev/tty 2>/dev/null || true
+}
+
 # Switch to the live tmux window for a worktree path, or open a new one on it.
 open_or_switch_worktree() {
     # agent_sel empty => let the opened window resolve the configured default.
     local path="$1" name="${2:-}" agent_sel="${3:-}"
     [[ -z "$name" ]] && name=$(basename "$path")
-    if [[ -n "${TMUX:-}" ]]; then
-        local cpath idx wt
-        cpath=$(canon_path "$path")
-        while IFS= read -r idx; do
-            [[ -z "$idx" ]] && continue
-            wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
-            [[ -z "$wt" ]] && continue
-            if [[ "$(canon_path "$wt")" == "$cpath" ]]; then
-                tmux select-window -t ":$idx"
-                echo "Switched to window :$idx ($path)"
-                return 0
-            fi
-        done < <(tmux list-windows -F '#{window_index}')
-    else
+    local idx
+    idx=$(attached_window_index "$path")
+    if [[ -n "$idx" ]]; then
+        tmux select-window -t ":$idx"
+        echo "Switched to window :$idx ($path)"
+        return 0
+    fi
+    if [[ -z "${TMUX:-}" ]]; then
         echo "Error: Not running inside tmux. Start tmux to open a window." >&2
         return 1
     fi
@@ -493,17 +529,31 @@ open_or_switch_worktree() {
     "$self" new "${open_args[@]}"
 }
 
-# --- Subcommand: pick (fzf worktree picker with rich preview) ---
-cmd_pick() {
-    if ! command -v fzf &>/dev/null; then
-        echo "Error: fzf is required for 'agent-session pick'. Install fzf first." >&2
-        exit 1
+# Remove a worktree and drop it from git metadata, the snapshot, and the registry.
+# Best-effort; derives the owning repo from the worktree so it works regardless of
+# the current directory (pick lists worktrees across repos).
+remove_worktree() {
+    local p="$1" common main
+    common=$(git -C "$p" rev-parse --git-common-dir 2>/dev/null || true)
+    if [[ "$common" == */.git ]]; then
+        main=$(dirname "$common")
+    else
+        main=$(git -C "$p" rev-parse --show-toplevel 2>/dev/null || true)
     fi
-    local attached
+    if [[ -n "$main" ]]; then
+        git -C "$main" worktree remove "$p" --force 2>/dev/null || true
+        git -C "$main" worktree prune 2>/dev/null || true
+    fi
+    snapshot_remove_by_worktree "$p"
+    registry_remove "$p"
+}
+
+# Build the worktree picker rows: path<TAB>repo<TAB>status<TAB>branch (field 1 hidden
+# but feeds the preview {1} and selection). Grouped by status, then repo, then name.
+# Echoes nothing when there are no live worktrees.
+pick_build_worktree_rows() {
+    local attached path branch repo created status rows=""
     attached=$(attached_worktree_paths)
-    # Fields: path<TAB>repo<TAB>status<TAB>branch. Field 1 (path) stays hidden but
-    # feeds the preview ({1}) and the selection; visible columns are repo/status/branch.
-    local rows="" path branch repo created status
     while IFS='|' read -r path branch repo created; do
         [[ -z "$path" ]] && continue
         status="orphan"
@@ -512,24 +562,125 @@ cmd_pick() {
         fi
         rows+="${path}"$'\t'"$(basename "$repo")"$'\t'"${status}"$'\t'"${branch}"$'\n'
     done < <(registry_list_live)
-    if [[ -z "$rows" ]]; then
-        echo "No agent-session worktrees (registry empty or all stale)."
-        exit 0
+    [[ -z "$rows" ]] && return 0
+    printf '%s' "$rows" | sort -t$'\t' -k3,3 -k2,2 -k4,4
+}
+
+# ctrl-a actions menu for a worktree row. Returns 2 for a terminal action
+# (open/switch, which leaves the picker); 0 otherwise (caller loops back to the
+# refreshed list). All non-terminal actions are guarded and pause so output is seen.
+worktree_actions_menu() {
+    local path="$1" branch="$2"
+    local dev="${AGENT_SESSION_DEV_BRANCH:-develop}"
+    local choice
+    choice=$(printf '%s\n' \
+        "Open / switch to window" \
+        "Update from $dev (pull origin $dev)" \
+        "Fetch / refresh remote" \
+        "Open PR in browser" \
+        "Copy path to clipboard" \
+        "Remove worktree" \
+        | fzf --no-multi --prompt='action> ' \
+              --header="Actions: $(basename "$path")  [$branch]" || true)
+    [[ -z "$choice" ]] && return 0
+    case "$choice" in
+        "Open / switch"*)
+            open_or_switch_worktree "$path" "$branch"
+            return 2
+            ;;
+        "Update from"*)
+            echo "Pulling origin/$dev into '$branch' ..."
+            git -C "$path" pull --no-edit origin "$dev" || echo "Pull failed or has conflicts — resolve in $path"
+            pause_for_key
+            ;;
+        "Fetch"*)
+            echo "Fetching origin (prune) ..."
+            git -C "$path" fetch --prune origin 2>&1 || true
+            echo "Done."
+            pause_for_key
+            ;;
+        "Open PR"*)
+            if command -v gh &>/dev/null; then
+                ( cd "$path" && gh pr view "$branch" --web ) 2>/dev/null \
+                    || echo "No PR for '$branch' (create one with: gh pr create)"
+            else
+                echo "gh not installed."
+            fi
+            pause_for_key
+            ;;
+        "Copy path"*)
+            if command -v pbcopy &>/dev/null; then
+                printf '%s' "$path" | pbcopy && echo "Copied: $path"
+            else
+                echo "pbcopy unavailable. Path: $path"
+            fi
+            pause_for_key
+            ;;
+        "Remove worktree"*)
+            local idx
+            idx=$(attached_window_index "$path")
+            if [[ -n "$idx" ]]; then
+                if confirm "Window :$idx is attached. Kill it and remove worktree $path?"; then
+                    tmux kill-window -t ":$idx" 2>/dev/null || true
+                    remove_worktree "$path"
+                    echo "Killed window :$idx and removed: $path"
+                else
+                    echo "Cancelled (window still attached)."
+                fi
+            else
+                if confirm "Remove worktree $path?"; then
+                    remove_worktree "$path"
+                    echo "Removed: $path"
+                else
+                    echo "Cancelled."
+                fi
+            fi
+            pause_for_key
+            ;;
+    esac
+    return 0
+}
+
+# --- Subcommand: pick (fzf worktree picker with rich preview + actions menu) ---
+cmd_pick() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for 'agent-session pick'. Install fzf first." >&2
+        exit 1
     fi
-    # Group by status, then repo, then name (branch): fields 3, 2, 4.
-    rows=$(printf '%s' "$rows" | sort -t$'\t' -k3,3 -k2,2 -k4,4)
-    local self chosen
+    local self
     self=$(resolve_self)
-    chosen=$(printf '%s\n' "$rows" | fzf --no-multi --ansi \
-        --delimiter=$'\t' --with-nth=2,3,4 \
-        --header='Open/switch worktree  (repo | status | branch)' \
-        --preview="$self status --fetch {1}" \
-        --preview-window='right,60%,wrap' || true)
-    [[ -z "$chosen" ]] && exit 0
-    local sel_path sel_branch
-    sel_path=$(printf '%s' "$chosen" | cut -f1)
-    sel_branch=$(printf '%s' "$chosen" | cut -f4)
-    open_or_switch_worktree "$sel_path" "$sel_branch"
+    while true; do
+        local rows
+        rows=$(pick_build_worktree_rows)
+        if [[ -z "$rows" ]]; then
+            echo "No agent-session worktrees (registry empty or all stale)."
+            exit 0
+        fi
+        local out key sel
+        out=$(printf '%s\n' "$rows" | fzf --no-multi --ansi \
+            --delimiter=$'\t' --with-nth=2,3,4 --expect=ctrl-a \
+            --header='enter: open/switch   ctrl-a: actions…    (repo | status | branch)' \
+            --preview="$self status --fetch {1}" \
+            --preview-window='right,60%,wrap' || true)
+        [[ -z "$out" ]] && exit 0
+        key=$(printf '%s\n' "$out" | sed -n '1p')
+        sel=$(printf '%s\n' "$out" | sed -n '2p')
+        [[ -z "$sel" ]] && exit 0
+        local sel_path sel_branch
+        sel_path=$(printf '%s' "$sel" | cut -f1)
+        sel_branch=$(printf '%s' "$sel" | cut -f4)
+        if [[ "$key" == "ctrl-a" ]]; then
+            # Return 0 => loop (refresh list); return 2 => terminal action, done.
+            if worktree_actions_menu "$sel_path" "$sel_branch"; then
+                continue
+            else
+                exit 0
+            fi
+        else
+            open_or_switch_worktree "$sel_path" "$sel_branch"
+            exit 0
+        fi
+    done
 }
 
 # Create a worktree that checks out an EXISTING branch (local or remote-only).
@@ -599,19 +750,10 @@ open_or_switch_branch() {
     open_or_switch_worktree "$new_path" "$branch"
 }
 
-# --- Subcommand: branches (fzf branch picker with rich preview) ---
-cmd_pick_branch() {
-    if ! command -v fzf &>/dev/null; then
-        echo "Error: fzf is required for 'agent-session branches'. Install fzf first." >&2
-        exit 1
-    fi
-    local main_repo
-    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
-    if [[ -z "$main_repo" ]]; then
-        echo "Error: Not in a git repository." >&2
-        exit 1
-    fi
-
+# Build the branch picker rows: branch<TAB>path-or-'-'<TAB>state (local + remote-only).
+# Fast, local-only (no per-row network). Echoes nothing when there are no branches.
+pick_build_branch_rows() {
+    local main_repo="$1"
     # Map each checked-out branch to its worktree path (parse porcelain output).
     local wt_map="" line cur_path=""
     while IFS= read -r line; do
@@ -623,31 +765,24 @@ cmd_pick_branch() {
         fi
     done < <(git -C "$main_repo" worktree list --porcelain 2>/dev/null || true)
 
-    lookup_wt() {
-        local b="$1" bn wp
-        while IFS=$'\t' read -r bn wp; do
-            [[ "$bn" == "$b" ]] && { echo "$wp"; return 0; }
-        done < <(printf '%s' "$wt_map")
-        echo ""
-    }
-
-    # Snapshot local branches once (used for both the local rows and to subtract
-    # from the remote set). Avoids spawning `git show-ref` per remote branch — with
-    # thousands of remote branches that was seconds of subprocess overhead.
+    # Snapshot local branches once (also used to subtract from the remote set).
     local local_branches
     local_branches=$(git -C "$main_repo" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null || true)
 
-    local rows="" b wp hw
+    local rows="" b wp hw bn wpath
     while IFS= read -r b; do
         [[ -z "$b" ]] && continue
-        wp=$(lookup_wt "$b")
+        wp=""
+        while IFS=$'\t' read -r bn wpath; do
+            [[ "$bn" == "$b" ]] && { wp="$wpath"; break; }
+        done < <(printf '%s' "$wt_map")
         hw="-"
         [[ -n "$wp" ]] && hw="worktree"
         rows+="${b}"$'\t'"${wp:--}"$'\t'"${hw}"$'\n'
     done <<< "$local_branches"
 
     # Remote-only branches = origin/* minus HEAD minus any local branch of the same
-    # name. Computed in a single awk pass (no per-branch subprocess).
+    # name. Single awk pass (no per-branch subprocess).
     local remote_only
     remote_only=$(awk '
         NR==FNR { loc[$0]=1; next }
@@ -663,22 +798,152 @@ cmd_pick_branch() {
         rows+="${b}"$'\t'"-"$'\t'"remote-only"$'\n'
     done <<< "$remote_only"
 
-    if [[ -z "$rows" ]]; then
-        echo "No branches found."
-        exit 0
+    printf '%s' "$rows"
+}
+
+# ctrl-a actions menu for a branch row. Returns 2 for a terminal action
+# (open/switch), 0 otherwise. Worktree-only actions (remove, update-from-develop)
+# appear only when the branch already has a worktree.
+branch_actions_menu() {
+    local branch="$1" path="$2"
+    local dev="${AGENT_SESSION_DEV_BRANCH:-develop}"
+    local has_wt=false
+    [[ -n "$path" ]] && [[ "$path" != "-" ]] && [[ -d "$path" ]] && has_wt=true
+    local menu
+    if [[ "$has_wt" == true ]]; then
+        menu=$(printf '%s\n' \
+            "Open / switch to worktree" \
+            "Update from $dev (pull origin $dev)" \
+            "Fetch / refresh remote" \
+            "Open PR in browser" \
+            "Copy path to clipboard" \
+            "Remove worktree")
+    else
+        menu=$(printf '%s\n' \
+            "Open / switch to worktree" \
+            "Fetch / refresh remote" \
+            "Open PR in browser" \
+            "Copy branch name")
     fi
-    local self chosen
+    local choice
+    choice=$(printf '%s\n' "$menu" | fzf --no-multi --prompt='action> ' \
+        --header="Actions: $branch" || true)
+    [[ -z "$choice" ]] && return 0
+    case "$choice" in
+        "Open / switch"*)
+            open_or_switch_branch "$branch" "$path"
+            return 2
+            ;;
+        "Update from"*)
+            echo "Pulling origin/$dev into '$branch' ..."
+            git -C "$path" pull --no-edit origin "$dev" || echo "Pull failed or has conflicts — resolve in $path"
+            pause_for_key
+            ;;
+        "Fetch"*)
+            echo "Fetching origin (prune) ..."
+            if [[ "$has_wt" == true ]]; then
+                git -C "$path" fetch --prune origin 2>&1 || true
+            else
+                git fetch --prune origin 2>&1 || true
+            fi
+            echo "Done."
+            pause_for_key
+            ;;
+        "Open PR"*)
+            if command -v gh &>/dev/null; then
+                gh pr view "$branch" --web 2>/dev/null \
+                    || echo "No PR for '$branch' (create one with: gh pr create)"
+            else
+                echo "gh not installed."
+            fi
+            pause_for_key
+            ;;
+        "Copy path"*)
+            if command -v pbcopy &>/dev/null; then
+                printf '%s' "$path" | pbcopy && echo "Copied: $path"
+            else
+                echo "pbcopy unavailable. Path: $path"
+            fi
+            pause_for_key
+            ;;
+        "Copy branch name"*)
+            if command -v pbcopy &>/dev/null; then
+                printf '%s' "$branch" | pbcopy && echo "Copied: $branch"
+            else
+                echo "pbcopy unavailable. Branch: $branch"
+            fi
+            pause_for_key
+            ;;
+        "Remove worktree"*)
+            local idx
+            idx=$(attached_window_index "$path")
+            if [[ -n "$idx" ]]; then
+                if confirm "Window :$idx is attached. Kill it and remove worktree $path?"; then
+                    tmux kill-window -t ":$idx" 2>/dev/null || true
+                    remove_worktree "$path"
+                    echo "Killed window :$idx and removed: $path"
+                else
+                    echo "Cancelled (window still attached)."
+                fi
+            else
+                if confirm "Remove worktree $path?"; then
+                    remove_worktree "$path"
+                    echo "Removed: $path"
+                else
+                    echo "Cancelled."
+                fi
+            fi
+            pause_for_key
+            ;;
+    esac
+    return 0
+}
+
+# --- Subcommand: branches (fzf branch picker with rich preview + actions menu) ---
+cmd_pick_branch() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for 'agent-session branches'. Install fzf first." >&2
+        exit 1
+    fi
+    local main_repo
+    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -z "$main_repo" ]]; then
+        echo "Error: Not in a git repository." >&2
+        exit 1
+    fi
+    local self
     self=$(resolve_self)
-    chosen=$(printf '%s' "$rows" | fzf --no-multi \
-        --delimiter=$'\t' --with-nth=1,3 \
-        --header='Open/switch branch worktree  (branch | state)' \
-        --preview="$self status --branch {1} {2}" \
-        --preview-window='right,60%,wrap' || true)
-    [[ -z "$chosen" ]] && exit 0
-    local sel_branch sel_path
-    sel_branch=$(printf '%s' "$chosen" | cut -f1)
-    sel_path=$(printf '%s' "$chosen" | cut -f2)
-    open_or_switch_branch "$sel_branch" "$sel_path"
+    while true; do
+        local rows
+        rows=$(pick_build_branch_rows "$main_repo")
+        if [[ -z "$rows" ]]; then
+            echo "No branches found."
+            exit 0
+        fi
+        local out key sel
+        out=$(printf '%s' "$rows" | fzf --no-multi \
+            --delimiter=$'\t' --with-nth=1,3 --expect=ctrl-a \
+            --header='enter: open/switch   ctrl-a: actions…    (branch | state)' \
+            --preview="$self status --branch {1} {2}" \
+            --preview-window='right,60%,wrap' || true)
+        [[ -z "$out" ]] && exit 0
+        key=$(printf '%s\n' "$out" | sed -n '1p')
+        sel=$(printf '%s\n' "$out" | sed -n '2p')
+        [[ -z "$sel" ]] && exit 0
+        local sel_branch sel_path
+        sel_branch=$(printf '%s' "$sel" | cut -f1)
+        sel_path=$(printf '%s' "$sel" | cut -f2)
+        if [[ "$key" == "ctrl-a" ]]; then
+            if branch_actions_menu "$sel_branch" "$sel_path"; then
+                continue
+            else
+                exit 0
+            fi
+        else
+            open_or_switch_branch "$sel_branch" "$sel_path"
+            exit 0
+        fi
+    done
 }
 
 # --- Subcommand: dev (shortcut for the most common worktree case) ---

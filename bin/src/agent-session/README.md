@@ -62,8 +62,8 @@ gas new -d   # create in background, print switch command
 - **new** (or **create**) – Create a new tmux window (the create-session options above). This is the original default behavior.
 - **dev NAME [PROMPT]** – Shortcut for `new --worktree --branch develop -n NAME [PROMPT]` (see Quick start above).
 - **switch** – Use fzf to search tmux windows by ticket or title and switch to the selected one.
-- **pick** (or **worktrees**) – fzf picker over gas worktrees (from the registry). The `--preview` pane shows the full state of the highlighted worktree via the `status` command. Press Enter to switch to that worktree's live tmux window, or — if none is attached — open a fresh gas window rooted at it.
-- **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
+- **pick** (or **worktrees**) – fzf picker over gas worktrees (from the registry). The `--preview` pane shows the full state of the highlighted worktree via the `status` command. Press Enter to switch to that worktree's live tmux window, or — if none is attached — open a fresh gas window rooted at it. Press **`ctrl-a`** for an actions menu on the highlighted row (see [Actions menu](#actions-menu-ctrl-a)).
+- **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
 - **status** `[--branch BRANCH] [--fetch] [PATH]` – Print the full state of a worktree/branch: local branch, working-tree status, ahead/behind, whether the branch still exists on the remote (or was deleted/merged), and the associated **PR** state via `gh` (number, state, title, url). Used as the picker preview; also handy standalone. `PATH` of `-` or omitted means the current repo. `--fetch` contacts `origin` for **live** remote/merged state (slower; `gas pick` passes it). Degrades gracefully when `gh` is missing/unauthenticated or there is no PR.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
 - **list** – List gas windows from the snapshot with **attached** (tmux window exists) or **orphan** (in snapshot but no matching window) status. Use this to see what you have running at a glance.
@@ -144,6 +144,19 @@ Press **Enter** to act on the highlighted item:
 - For `branches`, choosing a branch with no worktree yet creates one for it first (a branch already checked out in the main repo opens a window there instead of forking a divergent branch).
 
 `gh` is optional — the preview degrades gracefully (prints a note) when it's missing, unauthenticated, or the branch has no PR.
+
+### Actions menu (`ctrl-a`)
+
+Press **`ctrl-a`** on the highlighted row to open an actions menu (the terminal equivalent of a "⋯" context menu) — a second fzf list of predefined actions on that worktree/branch:
+
+- **Open / switch to window** — same as Enter (leaves the picker).
+- **Update from `develop`** — `git pull --no-edit origin develop` into the worktree (override the branch with `$AGENT_SESSION_DEV_BRANCH`); reports conflicts and leaves them for you to resolve.
+- **Fetch / refresh remote** — `git fetch --prune origin`.
+- **Open PR in browser** — `gh pr view <branch> --web`.
+- **Copy path / branch name** — to the clipboard via `pbcopy` (macOS; prints the value as a fallback).
+- **Remove worktree** — `git worktree remove --force` + unregister + drop from the snapshot, after a confirmation. If a tmux window is attached, it offers to kill that window first.
+
+`Open / switch` leaves the picker; every other action runs, shows its output, and drops you **back in the (refreshed) list** so you can keep acting on items — e.g. remove several in a row. In `gas branches`, the worktree-only actions (remove, update-from-develop) appear only once the branch has a worktree. Destructive actions are guarded (they need an explicit `y`).
 
 ## Harness command
 
