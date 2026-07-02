@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# agent-session: Create a new window with 2 vertical panes (for agent workflows).
-# Supports worktrees, agent selection (cursor/claude), window switching via fzf,
-# and prune/cleanup of worktrees. (c) 2025 Pat Beagan: MIT License
+# gas (agent-session): Create a new window with 2 vertical panes (for agent workflows).
+# Supports worktrees, agent selection (cursor/claude), window/worktree/branch switching
+# via fzf, and prune/cleanup of worktrees. (c) 2025 Pat Beagan: MIT License
 
 set -euo pipefail
+
+# Name this command is invoked as (gas by default), used in help/usage text.
+prog="$(basename "$0")"
 
 detach=false
 prompt=""
@@ -15,28 +18,39 @@ start_dir=""
 start_branch=""
 from_dir=""
 worktree=false
-agent="cursor"
+# Empty => resolve from persistent config (prompting once if unset). An explicit
+# --agent value (cursor/claude alias or any literal command) overrides.
+agent=""
 worktree_base=""
+open_worktree=""
 
 usage() {
     cat << EOF
-Usage: agent-session [OPTIONS] [NAME] [PROMPT]
-       agent-session create-batch FILE [OPTIONS]
-       agent-session switch
-       agent-session list
-       agent-session system [--purge] [--worktree-base DIR]
-       agent-session system remove PATH
-       agent-session prune [OPTIONS] [PATH]
-       agent-session doctor [--fix]
-       agent-session cleanup
-       agent-session snapshot
-       agent-session restore
+Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
+       ${prog} dev NAME [PROMPT]        # shortcut: new --worktree --branch develop -n NAME
+       ${prog} create-batch FILE [OPTIONS]
+       ${prog} switch
+       ${prog} pick
+       ${prog} branches
+       ${prog} status [--branch BRANCH] [--fetch] [PATH]
+       ${prog} config [harness-command [VALUE]]
+       ${prog} list
+       ${prog} system [--purge] [--worktree-base DIR]
+       ${prog} system remove PATH
+       ${prog} prune [OPTIONS] [PATH]
+       ${prog} doctor [--fix]
+       ${prog} cleanup
+       ${prog} snapshot
+       ${prog} restore
 
 Creates a new tmux window with 2 vertical panes (agent in top pane) and switches
 to it. Worktrees created with --worktree are recorded in a registry. Window state
 is snapshotted on every add/remove so it can be restored after a crash.
 
-Options (create session):
+Running with no arguments (or an unrecognized command/parameter) prints this help;
+unrecognized input exits non-zero. Use 'new' to create a window.
+
+Options (create session, i.e. '${prog} new [OPTIONS] [NAME] [PROMPT]'):
   -h, --help       Show this help and exit
   -d, --detach     Create the window in the background and print the command to
                    switch to it later (do not change the current window)
@@ -48,18 +62,42 @@ Options (create session):
   --branch BRANCH  Branch to use (with --worktree: base branch for the new worktree)
   --worktree       Create a new worktree under the durable base with a unique branch,
                    freshly fetched + branched off origin/<branch>; use it as cwd for panes
-  --agent AGENT    Agent to start: cursor (default) or claude
+  --agent AGENT    Agent/harness to start: 'cursor' (=> cursor-agent), 'claude', or any
+                   literal command. If omitted, uses the per-machine configured harness
+                   command (\$AGENT_SESSION_HARNESS_COMMAND, else '${prog} config', else
+                   you're prompted once and the answer is saved).
   --ticket ID      Ticket or issue ID/URL to associate with this window (for list/switch/prune)
   --prompt-file PATH  Read initial prompt from file (instead of positional args)
+  --open-worktree PATH  Open a window on an EXISTING worktree path (does not create
+                   a new worktree); used internally by 'pick' and 'branches'
   -w, --worktree-base DIR  Base directory for worktrees
                    (default: \${XDG_STATE_HOME:-\$HOME/.local/state}/agent-session/worktrees,
                    override with \$AGENT_SESSION_WORKTREE_BASE)
 
 Subcommands:
+  new (create)     Create a new tmux window (the create-session options above).
+                   [OPTIONS] [NAME] [PROMPT] — this is the original default behavior.
+  dev NAME [PROMPT]  Shortcut for the most common case: create a worktree off the
+                   'develop' branch named NAME (equivalent to
+                   '${prog} new --worktree --branch develop -n NAME [PROMPT]'). Extra
+                   flags after NAME are forwarded (e.g. --agent claude). Override the
+                   base branch with \$AGENT_SESSION_DEV_BRANCH.
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
                      Supports -d, --worktree, --branch, --agent (apply to all).
   switch           Use fzf to search tmux windows by ticket or title and switch
-  system           List worktrees created by agent-session (location and branch).
+  pick             fzf picker over worktrees. Preview shows full state
+                   (git status, ahead/behind, remote-deleted, merged, PR via gh).
+                   Enter switches to the live window, or opens a new one for orphans.
+  branches         fzf picker over git branches (local + remote-only). Enter switches
+                   to / opens a worktree for the chosen branch. Same rich preview.
+  status           Print the full state of a worktree/branch (used as the picker
+                   preview). Args: [--branch BRANCH] [--fetch] [PATH] (PATH '-' or
+                   empty = cwd). --fetch contacts origin for live remote/merged state
+                   (slower); 'pick' passes it so its preview reflects the real remote.
+  config           Show or set persistent per-machine config. 'config' lists it;
+                   'config harness-command' shows the harness command; 'config
+                   harness-command CMD' sets it (e.g. cursor-agent or claude).
+  system           List worktrees created by ${prog} (location and branch).
                    --purge: remove stale registry entries.
                    remove PATH: force-remove worktree and unregister.
   prune            List worktrees and PR status (merged/closed = safe to remove).
@@ -73,27 +111,131 @@ Subcommands:
                    Read-only by default; --fix applies removals.
   cleanup          Remove the worktree for the current window and close the window
                    (only if window was created with --worktree).
-  list             List agent-session windows from snapshot with attached/orphan status.
-  snapshot         Show current snapshot (all agent-session windows to be restored).
-  restore          Recreate all agent-session windows from the last snapshot.
+  list             List ${prog} windows from snapshot with attached/orphan status.
+  snapshot         Show current snapshot (all ${prog} windows to be restored).
+  restore          Recreate all ${prog} windows from the last snapshot.
                    Run inside tmux after a crash to reinstate windows.
 
 Examples:
-  agent-session my-feature "Implement login"
-  agent-session --worktree --branch develop
-  agent-session system
-  agent-session system remove ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000-1234
-  agent-session prune --registered-only
-  agent-session prune --force-remove
-  agent-session prune ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000-1234
-  agent-session doctor
-  agent-session doctor --fix
-  agent-session list
-  agent-session cleanup
-  agent-session snapshot
-  agent-session restore
+  ${prog} dev my-feature "Implement login"
+  ${prog} new my-feature "Implement login"
+  ${prog} new --worktree --branch develop
+  ${prog} pick
+  ${prog} branches
+  ${prog} status ~/.local/state/agent-session/worktrees/repo/agent-repo-...
+  ${prog} system
+  ${prog} prune --registered-only
+  ${prog} prune --force-remove
+  ${prog} doctor --fix
+  ${prog} list
+  ${prog} cleanup
+  ${prog} restore
 
 EOF
+}
+
+# --- Persistent config (key=value lines) ---
+# Stores per-machine settings such as the harness command to launch (cursor-agent
+# on some machines, claude on others). Lives beside the registry/snapshot under
+# ~/.config/agent-session; override with $AGENT_SESSION_CONFIG.
+get_config_file() {
+    echo "${AGENT_SESSION_CONFIG:-$HOME/.config/agent-session/config}"
+}
+
+config_get() {
+    local key="$1" file
+    file=$(get_config_file)
+    [[ -f "$file" ]] || return 0
+    # Last assignment wins; tolerate no-match under set -euo pipefail.
+    grep -E "^${key}=" "$file" 2>/dev/null | tail -1 | cut -d= -f2- || true
+}
+
+config_set() {
+    local key="$1" value="$2" file tmp
+    file=$(get_config_file)
+    mkdir -p "$(dirname "$file")"
+    # Write the temp beside the target (same filesystem => atomic mv, no mktemp/
+    # TMPDIR dependency).
+    tmp="${file}.tmp.$$"
+    if [[ -f "$file" ]]; then
+        grep -vE "^${key}=" "$file" > "$tmp" 2>/dev/null || true
+    fi
+    echo "${key}=${value}" >> "$tmp"
+    mv "$tmp" "$file"
+}
+
+# Config key + env override for the harness command (the program launched in the
+# agent pane).
+HARNESS_KEY="harness_command"
+
+# Prompt (on the controlling terminal) for the harness command and echo it. Errors
+# to stderr and returns non-zero when there is no usable terminal to prompt on
+# (writing the prompt to /dev/tty is the probe — covers detached/cron/pipe cases).
+prompt_harness_command() {
+    if ! printf 'Agent/harness command to launch on this machine [cursor-agent]: ' > /dev/tty 2>/dev/null; then
+        echo "Error: harness command is not configured and there is no terminal to prompt on." >&2
+        echo "Set it once with: ${prog} config harness-command <cmd>   (e.g. cursor-agent or claude)" >&2
+        return 1
+    fi
+    local ans=""
+    IFS= read -r ans < /dev/tty || true
+    [[ -z "$ans" ]] && ans="cursor-agent"
+    printf '%s' "$ans"
+}
+
+# Resolve the configured default harness command: env > config > prompt (persisted).
+get_or_prompt_harness_command() {
+    local cmd="${AGENT_SESSION_HARNESS_COMMAND:-}"
+    [[ -z "$cmd" ]] && cmd=$(config_get "$HARNESS_KEY")
+    if [[ -z "$cmd" ]]; then
+        cmd=$(prompt_harness_command) || return 1
+        [[ -n "$cmd" ]] && config_set "$HARNESS_KEY" "$cmd"
+    fi
+    printf '%s' "$cmd"
+}
+
+# Map an agent label to the command to launch. 'cursor'/'claude' are built-in
+# aliases; any other non-empty value is treated as a literal command; empty
+# consults the persistent config (prompting + saving on first use).
+resolve_agent_command() {
+    local label="$1"
+    case "$label" in
+        cursor) echo "cursor-agent" ;;
+        claude) echo "claude" ;;
+        "")      get_or_prompt_harness_command ;;
+        *)       echo "$label" ;;
+    esac
+}
+
+# --- Subcommand: config ---
+cmd_config() {
+    local key="${1:-}" value="${2:-}"
+    case "$key" in
+        ""|list|show)
+            local file
+            file=$(get_config_file)
+            echo "Config file: $file"
+            if [[ -f "$file" ]] && [[ -s "$file" ]]; then
+                cat "$file"
+            else
+                echo "(empty)"
+            fi
+            ;;
+        harness-command|harness_command)
+            if [[ -n "$value" ]]; then
+                config_set "$HARNESS_KEY" "$value"
+                echo "Set ${HARNESS_KEY} = $value"
+            else
+                local cur
+                cur=$(config_get "$HARNESS_KEY")
+                echo "${HARNESS_KEY} = ${cur:-<unset>}"
+            fi
+            ;;
+        *)
+            echo "Usage: ${prog} config [harness-command [VALUE]]" >&2
+            exit 1
+            ;;
+    esac
 }
 
 # --- Subcommand: switch (fzf by ticket or title) ---
@@ -115,6 +257,443 @@ cmd_switch() {
         idx=$(echo "$chosen" | awk '{print $1}')
         tmux select-window -t ":$idx"
     fi
+}
+
+# Absolute path to the command that invoked us, so fzf --preview (run in a fresh
+# shell) and recursive re-invocations can reference it reliably regardless of the
+# name it is installed under (gas, agent-session.sh, a custom symlink, ...).
+resolve_self() {
+    local s="$0"
+    case "$s" in
+        /*) ;;                                              # already absolute
+        */*) s="$(cd "$(dirname "$s")" 2>/dev/null && pwd -P)/$(basename "$s")" ;;
+        *) s="$(command -v "$s" 2>/dev/null || echo "$s")" ;;  # bare name on PATH
+    esac
+    echo "$s"
+}
+
+# --- Subcommand: status (rich per-worktree/branch state; also fzf --preview) ---
+# Usage: gas status [--branch BRANCH] [--fetch] [PATH]
+# --fetch contacts origin for live remote-existence/merged state (else local refs).
+# PATH '-' or empty => operate on the current repo (cwd). Safe as an fzf preview:
+# every optional git/gh call is guarded so it never aborts under `set -e`.
+cmd_status() {
+    local branch_opt="" path="" do_fetch=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --branch) branch_opt="${2:-}"; shift 2 ;;
+            --fetch) do_fetch=true; shift ;;
+            *)
+                if [[ -z "$path" ]] && [[ "$1" != "-" ]]; then
+                    path="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    # git/gh run against PATH when given, else the current dir.
+    local gitc=(git)
+    local in_place=true
+    if [[ -n "$path" ]]; then
+        if [[ ! -d "$path" ]]; then
+            echo "Worktree path missing/stale: $path"
+            return 0
+        fi
+        gitc=(git -C "$path")
+        in_place=false
+    fi
+
+    local cur_branch branch worktree_mode detached_sha=""
+    cur_branch=$("${gitc[@]}" branch --show-current 2>/dev/null || true)
+    if [[ -n "$branch_opt" ]]; then
+        branch="$branch_opt"
+    else
+        branch="$cur_branch"
+    fi
+    # Worktree mode = we are describing what is actually checked out here.
+    if [[ -z "$branch_opt" ]] || [[ "$branch_opt" == "$cur_branch" ]]; then
+        worktree_mode=true
+    else
+        worktree_mode=false
+    fi
+    if [[ -z "$branch" ]]; then
+        detached_sha=$("${gitc[@]}" rev-parse --short HEAD 2>/dev/null || true)
+    fi
+
+    # Repo name: for a linked worktree, --show-toplevel is the worktree dir, so
+    # derive from --git-common-dir (which points at <mainrepo>/.git) when it's a
+    # linked worktree; else fall back to the toplevel basename.
+    local repo_name default_br common toplevel
+    common=$("${gitc[@]}" rev-parse --git-common-dir 2>/dev/null || true)
+    toplevel=$("${gitc[@]}" rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ "$common" == */.git ]]; then
+        repo_name=$(basename "$(dirname "$common")")
+    elif [[ -n "$toplevel" ]]; then
+        repo_name=$(basename "$toplevel")
+    else
+        repo_name="?"
+    fi
+    if [[ "$in_place" == true ]]; then
+        default_br=$(get_default_branch)
+    else
+        default_br=$(cd "$path" && get_default_branch)
+    fi
+
+    local tmux_state="n/a"
+    if [[ -n "${TMUX:-}" ]] && [[ -n "$path" ]]; then
+        local cpath ap
+        cpath=$(canon_path "$path")
+        tmux_state="orphan"
+        while IFS= read -r ap; do
+            [[ -z "$ap" ]] && continue
+            if [[ "$(canon_path "$ap")" == "$cpath" ]]; then tmux_state="attached"; break; fi
+        done < <(attached_worktree_paths)
+    fi
+
+    echo "Worktree: ${path:-<current repo>}"
+    echo "  repo:    $repo_name"
+    echo "  tmux:    $tmux_state"
+    if [[ -n "$branch" ]]; then
+        echo "  branch:  $branch$([[ "$worktree_mode" == false ]] && echo "  (not checked out here)")"
+    else
+        echo "  branch:  (detached HEAD at ${detached_sha:-?})"
+    fi
+    echo
+
+    if [[ "$worktree_mode" == true ]]; then
+        local st
+        st=$("${gitc[@]}" status -s 2>/dev/null || true)
+        if [[ -z "$st" ]]; then
+            echo "Working tree: clean"
+        else
+            local nch
+            nch=$(printf '%s\n' "$st" | grep -c . || true)
+            echo "Working tree: ${nch} change(s)"
+            printf '%s\n' "$st" | head -20 | sed 's/^/  /'
+        fi
+        local ab
+        ab=$("${gitc[@]}" rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null || true)
+        if [[ -n "$ab" ]]; then
+            local behind ahead
+            behind=$(printf '%s' "$ab" | awk '{print $1}')
+            ahead=$(printf '%s' "$ab" | awk '{print $2}')
+            echo "Upstream: behind ${behind:-0}, ahead ${ahead:-0}"
+        else
+            echo "Upstream: none"
+        fi
+    else
+        echo "Working tree: n/a (branch not checked out here)"
+        echo "Upstream: n/a (branch not checked out here)"
+    fi
+    echo
+
+    if [[ -n "$branch" ]]; then
+        if [[ "$do_fetch" == true ]]; then
+            # --fetch: contact origin so existence + merged reflect what is ACTUALLY
+            # on the remote right now (not just the last local fetch). Fetch updates
+            # the branch + default tips; ls-remote is the definitive existence check.
+            "${gitc[@]}" fetch --quiet origin "$branch" "$default_br" 2>/dev/null || true
+            local remote_live
+            remote_live=$("${gitc[@]}" ls-remote --heads origin "$branch" 2>/dev/null || true)
+            if [[ -n "$remote_live" ]]; then
+                echo "Remote branch: exists on origin"
+            else
+                echo "Remote branch: not on origin (deleted/merged or never pushed)"
+            fi
+        else
+            # Default: use the local remote-tracking ref (instant, no network). This
+            # reflects the last fetch; pass --fetch (as 'gas pick' does) for live state.
+            if "${gitc[@]}" rev-parse --verify --quiet "refs/remotes/origin/$branch" >/dev/null 2>&1; then
+                echo "Remote branch: exists on origin (as of last fetch)"
+            else
+                echo "Remote branch: not on origin (deleted/merged or never pushed; 'git fetch --prune' to refresh)"
+            fi
+        fi
+
+        # Ref to test for merged-ness: HEAD in worktree mode, else the branch ref.
+        local merge_ref="HEAD"
+        if [[ "$worktree_mode" == false ]]; then
+            if "${gitc[@]}" rev-parse --verify --quiet "refs/heads/$branch" >/dev/null 2>&1; then
+                merge_ref="$branch"
+            elif "${gitc[@]}" rev-parse --verify --quiet "refs/remotes/origin/$branch" >/dev/null 2>&1; then
+                merge_ref="origin/$branch"
+            else
+                merge_ref="$branch"
+            fi
+        fi
+        local base_ref="origin/$default_br"
+        if ! "${gitc[@]}" rev-parse --verify --quiet "$base_ref" >/dev/null 2>&1; then
+            base_ref="$default_br"
+        fi
+        if "${gitc[@]}" merge-base --is-ancestor "$merge_ref" "$base_ref" 2>/dev/null; then
+            echo "Merged: yes (into $base_ref)"
+        else
+            echo "Merged: no (relative to $base_ref)"
+        fi
+    else
+        echo "Remote branch: n/a (detached HEAD)"
+        echo "Merged: n/a (detached HEAD)"
+    fi
+    echo
+
+    if ! command -v gh &>/dev/null; then
+        echo "PR: gh not installed — PR status unavailable"
+        return 0
+    fi
+    if [[ -z "$branch" ]]; then
+        echo "PR: n/a (detached HEAD)"
+        return 0
+    fi
+    local pr_json
+    if [[ -n "$path" ]]; then
+        pr_json=$(cd "$path" && gh pr view "$branch" --json state,number,title,url,mergedAt 2>/dev/null || true)
+    else
+        pr_json=$(gh pr view "$branch" --json state,number,title,url,mergedAt 2>/dev/null || true)
+    fi
+    if [[ -z "$pr_json" ]]; then
+        echo "PR: none found for branch '$branch'"
+        return 0
+    fi
+    if command -v jq &>/dev/null; then
+        printf '%s' "$pr_json" | jq -r '"PR: #\(.number) \(.state)" + (if .mergedAt then " (merged \(.mergedAt))" else "" end) + "\n  \(.title)\n  \(.url)"' 2>/dev/null || echo "PR: $pr_json"
+    else
+        echo "PR: $pr_json"
+    fi
+}
+
+# Switch to the live tmux window for a worktree path, or open a new one on it.
+open_or_switch_worktree() {
+    # agent_sel empty => let the opened window resolve the configured default.
+    local path="$1" name="${2:-}" agent_sel="${3:-}"
+    [[ -z "$name" ]] && name=$(basename "$path")
+    if [[ -n "${TMUX:-}" ]]; then
+        local cpath idx wt
+        cpath=$(canon_path "$path")
+        while IFS= read -r idx; do
+            [[ -z "$idx" ]] && continue
+            wt=$(tmux show-window-option -t ":$idx" -v @agent-worktree 2>/dev/null || true)
+            [[ -z "$wt" ]] && continue
+            if [[ "$(canon_path "$wt")" == "$cpath" ]]; then
+                tmux select-window -t ":$idx"
+                echo "Switched to window :$idx ($path)"
+                return 0
+            fi
+        done < <(tmux list-windows -F '#{window_index}')
+    else
+        echo "Error: Not running inside tmux. Start tmux to open a window." >&2
+        return 1
+    fi
+    # No live window: open one on the existing worktree. Only pass --agent when a
+    # specific one was requested; otherwise the new window resolves the default.
+    local self
+    self=$(resolve_self)
+    local open_args=(--open-worktree "$path" -n "$name")
+    [[ -n "$agent_sel" ]] && open_args+=(--agent "$agent_sel")
+    "$self" new "${open_args[@]}"
+}
+
+# --- Subcommand: pick (fzf worktree picker with rich preview) ---
+cmd_pick() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for 'agent-session pick'. Install fzf first." >&2
+        exit 1
+    fi
+    local attached
+    attached=$(attached_worktree_paths)
+    # Fields: path<TAB>repo<TAB>status<TAB>branch. Field 1 (path) stays hidden but
+    # feeds the preview ({1}) and the selection; visible columns are repo/status/branch.
+    local rows="" path branch repo created status
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        status="orphan"
+        if printf '%s\n' "$attached" | grep -Fxq -- "$path"; then
+            status="attached"
+        fi
+        rows+="${path}"$'\t'"$(basename "$repo")"$'\t'"${status}"$'\t'"${branch}"$'\n'
+    done < <(registry_list_live)
+    if [[ -z "$rows" ]]; then
+        echo "No agent-session worktrees (registry empty or all stale)."
+        exit 0
+    fi
+    # Group by status, then repo, then name (branch): fields 3, 2, 4.
+    rows=$(printf '%s' "$rows" | sort -t$'\t' -k3,3 -k2,2 -k4,4)
+    local self chosen
+    self=$(resolve_self)
+    chosen=$(printf '%s\n' "$rows" | fzf --no-multi --ansi \
+        --delimiter=$'\t' --with-nth=2,3,4 \
+        --header='Open/switch worktree  (repo | status | branch)' \
+        --preview="$self status --fetch {1}" \
+        --preview-window='right,60%,wrap' || true)
+    [[ -z "$chosen" ]] && exit 0
+    local sel_path sel_branch
+    sel_path=$(printf '%s' "$chosen" | cut -f1)
+    sel_branch=$(printf '%s' "$chosen" | cut -f4)
+    open_or_switch_worktree "$sel_path" "$sel_branch"
+}
+
+# Create a worktree that checks out an EXISTING branch (local or remote-only).
+# Echoes the created path on success; empty on failure.
+create_worktree_for_branch() {
+    local branch="$1"
+    local main_repo
+    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    [[ -z "$main_repo" ]] && { echo ""; return 1; }
+    local repo_name base_dir
+    repo_name=$(basename "$main_repo")
+    base_dir=$(get_worktree_base "$worktree_base")/"$repo_name"
+    mkdir -p "$base_dir"
+    git -C "$main_repo" worktree prune 2>/dev/null || true
+
+    local slug
+    slug=$(printf '%s' "$branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+    local wt_path="${base_dir}/branch-${slug}"
+    local n=0
+    while [[ -e "$wt_path" ]]; do
+        n=$((n + 1)); wt_path="${base_dir}/branch-${slug}-$n"
+    done
+
+    local add_err=""
+    if git -C "$main_repo" show-ref --verify --quiet "refs/heads/$branch"; then
+        if ! add_err=$(git -C "$main_repo" worktree add "$wt_path" "$branch" 2>&1); then
+            echo "Error: git worktree add failed for '$branch': $add_err" >&2
+            echo ""; return 1
+        fi
+    else
+        if ! add_err=$(git -C "$main_repo" worktree add -b "$branch" "$wt_path" "origin/$branch" 2>&1); then
+            echo "Error: git worktree add failed for 'origin/$branch': $add_err" >&2
+            echo ""; return 1
+        fi
+    fi
+    registry_add "$wt_path" "$branch" "$main_repo" "$branch" "$main_repo"
+    echo "$wt_path"
+}
+
+open_or_switch_branch() {
+    local branch="$1" existing_path="${2:-}"
+    if [[ -n "$existing_path" ]] && [[ "$existing_path" != "-" ]] && [[ -d "$existing_path" ]]; then
+        open_or_switch_worktree "$existing_path" "$branch"
+        return $?
+    fi
+    # A branch checked out in the MAIN repo working copy can't also be added as a
+    # worktree; open a window rooted there instead of creating a divergent branch.
+    local main_repo main_current
+    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$main_repo" ]]; then
+        main_current=$(git -C "$main_repo" branch --show-current 2>/dev/null || true)
+        if [[ -n "$main_current" ]] && [[ "$main_current" == "$branch" ]]; then
+            echo "Branch '$branch' is checked out in the main repo ($main_repo)." >&2
+            echo "Opening a window rooted there instead of creating a worktree." >&2
+            local self
+            self=$(resolve_self)
+            "$self" new --dir "$main_repo" -n "$branch"
+            return $?
+        fi
+    fi
+    local new_path
+    new_path=$(create_worktree_for_branch "$branch")
+    if [[ -z "$new_path" ]]; then
+        echo "Failed to create worktree for branch '$branch'." >&2
+        return 1
+    fi
+    open_or_switch_worktree "$new_path" "$branch"
+}
+
+# --- Subcommand: branches (fzf branch picker with rich preview) ---
+cmd_pick_branch() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for 'agent-session branches'. Install fzf first." >&2
+        exit 1
+    fi
+    local main_repo
+    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -z "$main_repo" ]]; then
+        echo "Error: Not in a git repository." >&2
+        exit 1
+    fi
+
+    # Map each checked-out branch to its worktree path (parse porcelain output).
+    local wt_map="" line cur_path=""
+    while IFS= read -r line; do
+        if [[ "$line" == worktree\ * ]]; then
+            cur_path="${line#worktree }"
+        elif [[ "$line" == branch\ * ]]; then
+            local ref="${line#branch }"
+            wt_map+="${ref#refs/heads/}"$'\t'"${cur_path}"$'\n'
+        fi
+    done < <(git -C "$main_repo" worktree list --porcelain 2>/dev/null || true)
+
+    lookup_wt() {
+        local b="$1" bn wp
+        while IFS=$'\t' read -r bn wp; do
+            [[ "$bn" == "$b" ]] && { echo "$wp"; return 0; }
+        done < <(printf '%s' "$wt_map")
+        echo ""
+    }
+
+    # Snapshot local branches once (used for both the local rows and to subtract
+    # from the remote set). Avoids spawning `git show-ref` per remote branch — with
+    # thousands of remote branches that was seconds of subprocess overhead.
+    local local_branches
+    local_branches=$(git -C "$main_repo" for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null || true)
+
+    local rows="" b wp hw
+    while IFS= read -r b; do
+        [[ -z "$b" ]] && continue
+        wp=$(lookup_wt "$b")
+        hw="-"
+        [[ -n "$wp" ]] && hw="worktree"
+        rows+="${b}"$'\t'"${wp:--}"$'\t'"${hw}"$'\n'
+    done <<< "$local_branches"
+
+    # Remote-only branches = origin/* minus HEAD minus any local branch of the same
+    # name. Computed in a single awk pass (no per-branch subprocess).
+    local remote_only
+    remote_only=$(awk '
+        NR==FNR { loc[$0]=1; next }
+        /^origin\// {
+            b=$0; sub(/^origin\//, "", b)
+            if (b == "HEAD") next
+            if (!(b in loc)) print b
+        }
+    ' <(printf '%s\n' "$local_branches") \
+      <(git -C "$main_repo" for-each-ref --format='%(refname:short)' refs/remotes/origin 2>/dev/null || true) 2>/dev/null || true)
+    while IFS= read -r b; do
+        [[ -z "$b" ]] && continue
+        rows+="${b}"$'\t'"-"$'\t'"remote-only"$'\n'
+    done <<< "$remote_only"
+
+    if [[ -z "$rows" ]]; then
+        echo "No branches found."
+        exit 0
+    fi
+    local self chosen
+    self=$(resolve_self)
+    chosen=$(printf '%s' "$rows" | fzf --no-multi \
+        --delimiter=$'\t' --with-nth=1,3 \
+        --header='Open/switch branch worktree  (branch | state)' \
+        --preview="$self status --branch {1} {2}" \
+        --preview-window='right,60%,wrap' || true)
+    [[ -z "$chosen" ]] && exit 0
+    local sel_branch sel_path
+    sel_branch=$(printf '%s' "$chosen" | cut -f1)
+    sel_path=$(printf '%s' "$chosen" | cut -f2)
+    open_or_switch_branch "$sel_branch" "$sel_path"
+}
+
+# --- Subcommand: dev (shortcut for the most common worktree case) ---
+# `gas dev NAME [PROMPT/flags...]` == `gas --worktree --branch develop -n NAME ...`
+# Base branch defaults to 'develop'; override with $AGENT_SESSION_DEV_BRANCH.
+cmd_dev() {
+    if [[ $# -lt 1 ]] || [[ -z "${1:-}" ]]; then
+        echo "Usage: ${prog} dev NAME [PROMPT...]  (worktree off '${AGENT_SESSION_DEV_BRANCH:-develop}' named NAME)" >&2
+        exit 1
+    fi
+    local name="$1"; shift
+    local dev_branch="${AGENT_SESSION_DEV_BRANCH:-develop}"
+    local self
+    self=$(resolve_self)
+    exec "$self" new --worktree --branch "$dev_branch" -n "$name" "$@"
 }
 
 # --- Worktree helpers ---
@@ -320,11 +899,9 @@ cmd_restore() {
         if [[ -n "$cwd" ]]; then
             tmux send-keys -t ":$new_window" "cd $(printf '%q' "$cwd")" Enter
         fi
-        case "$agent" in
-            cursor) tmux send-keys -t ":$new_window" 'cursor-agent' Enter ;;
-            claude) tmux send-keys -t ":$new_window" 'claude' Enter ;;
-            *) tmux send-keys -t ":$new_window" 'cursor-agent' Enter ;;
-        esac
+        local restore_cmd
+        restore_cmd=$(resolve_agent_command "$agent")
+        tmux send-keys -t ":$new_window" "$restore_cmd" Enter
         tmux split-window -t ":$new_window" -v
         if [[ -n "$cwd" ]]; then
             tmux send-keys -t ":$new_window.1" "cd $(printf '%q' "$cwd")" Enter
@@ -373,7 +950,7 @@ cmd_snapshot() {
     done < "$snap"
 }
 
-# --- Subcommand: list (status) ---
+# --- Subcommand: list ---
 # Output: window name, worktree or dir, agent, ticket, attached|orphan
 cmd_list() {
     local snap
@@ -465,13 +1042,13 @@ cmd_create_batch() {
         echo "Error: Not running inside tmux. Run create-batch from within a tmux session." >&2
         exit 1
     fi
-    local script_dir
-    script_dir=$(dirname "$0")
     local agent_script
-    if [[ -x "$script_dir/agent-session.sh" ]]; then
-        agent_script="$script_dir/agent-session.sh"
-    else
-        agent_script="$0"
+    agent_script=$(resolve_self)
+    # Resolve (and, if needed, prompt for + persist) the harness command once up
+    # front so the per-line child invocations don't each try to prompt — important
+    # since batch windows may be created detached.
+    if [[ -z "$batch_agent_val" ]]; then
+        batch_agent_val=$(get_or_prompt_harness_command) || exit 1
     fi
     local count=0
     local line name prompt ticket
@@ -490,7 +1067,7 @@ cmd_create_batch() {
         [[ -n "$ticket" ]] && opts+=(--ticket "$ticket")
         opts+=(--)
         [[ -n "$prompt" ]] && opts+=("$prompt")
-        "$agent_script" "${opts[@]}"
+        "$agent_script" new "${opts[@]}"
         ((count++)) || true
     done < "$batch_file"
     echo "Created $count window(s) from $batch_file."
@@ -873,8 +1450,38 @@ subcommand=""
 remaining=()
 for arg in "$@"; do
     case "$arg" in
+        new|create)
+            subcommand=new
+            shift
+            break
+            ;;
         switch)
             subcommand=switch
+            shift
+            break
+            ;;
+        config)
+            subcommand=config
+            shift
+            break
+            ;;
+        dev)
+            subcommand=dev
+            shift
+            break
+            ;;
+        status)
+            subcommand=status
+            shift
+            break
+            ;;
+        pick|worktrees)
+            subcommand=pick
+            shift
+            break
+            ;;
+        pick-branch|branches)
+            subcommand=pick_branch
             shift
             break
             ;;
@@ -908,7 +1515,7 @@ for arg in "$@"; do
             shift
             break
             ;;
-        list|status)
+        list)
             subcommand=list
             shift
             break
@@ -937,6 +1544,26 @@ if [[ "$subcommand" == switch ]]; then
     cmd_switch
     exit 0
 fi
+if [[ "$subcommand" == config ]]; then
+    cmd_config "$@"
+    exit 0
+fi
+if [[ "$subcommand" == dev ]]; then
+    cmd_dev "$@"
+    exit 0
+fi
+if [[ "$subcommand" == status ]]; then
+    cmd_status "$@"
+    exit 0
+fi
+if [[ "$subcommand" == pick ]]; then
+    cmd_pick "$@"
+    exit 0
+fi
+if [[ "$subcommand" == pick_branch ]]; then
+    cmd_pick_branch "$@"
+    exit 0
+fi
 if [[ "$subcommand" == prune ]]; then
     cmd_prune "$@"  # subcommand already shifted off in loop
     exit 0
@@ -960,6 +1587,32 @@ fi
 if [[ "$subcommand" == snapshot ]]; then
     cmd_snapshot
     exit 0
+fi
+
+# No recognized subcommand. The create-a-window behavior now lives behind the
+# 'new' (alias 'create') subcommand; a bare invocation or unrecognized input no
+# longer silently creates a window.
+if [[ "$subcommand" == new ]]; then
+    # Args after the 'new' token become the create-session parser's input.
+    remaining=("$@")
+else
+    # Bare `gas` with no args: show help and exit cleanly.
+    if [[ ${#remaining[@]} -eq 0 ]]; then
+        usage
+        exit 0
+    fi
+    # -h/--help among the leftover args shows help and exits cleanly.
+    for a in "${remaining[@]}"; do
+        case "$a" in
+            -h|--help) usage; exit 0 ;;
+        esac
+    done
+    # Anything else is unrecognized: warn, show help, exit non-zero.
+    echo "Error: unrecognized command or parameters: ${remaining[*]}" >&2
+    echo "Did you mean '${prog} new ${remaining[*]}'? Run '${prog} --help' for usage." >&2
+    echo >&2
+    usage >&2
+    exit 1
 fi
 
 # --- Parse create-session options ---
@@ -1007,7 +1660,7 @@ while [[ $i -lt ${#remaining[@]} ]]; do
             ;;
         --agent)
             ((i++)) || true
-            agent="${remaining[$i]:-cursor}"
+            agent="${remaining[$i]:-}"
             ((i++)) || true
             ;;
         --ticket)
@@ -1018,6 +1671,11 @@ while [[ $i -lt ${#remaining[@]} ]]; do
         --prompt-file)
             ((i++)) || true
             prompt_file="${remaining[$i]:-}"
+            ((i++)) || true
+            ;;
+        --open-worktree)
+            ((i++)) || true
+            open_worktree="${remaining[$i]:-}"
             ((i++)) || true
             ;;
         -w|--worktree-base)
@@ -1050,23 +1708,36 @@ if [[ -n "$prompt_file" ]]; then
     prompt=$(cat "$prompt_file")
 fi
 
-# Validate agent
-case "$agent" in
-    cursor|claude) ;;
-    *)
-        echo "Error: --agent must be 'cursor' or 'claude'." >&2
-        exit 1
-        ;;
-esac
-
 if [[ -z "${TMUX:-}" ]]; then
     echo "Error: Not running inside tmux. Run this script from within a tmux session." >&2
     exit 1
 fi
 
+# Resolve the harness command to launch (cursor/claude aliases, a literal command,
+# or the per-machine configured default — prompting once if it isn't set yet).
+# After the tmux check so a not-in-tmux invocation fails fast without prompting.
+agent_cmd=$(resolve_agent_command "$agent") || exit 1
+# Record the resolved command so the snapshot/list/restore reflect exactly what ran.
+agent="$agent_cmd"
+
 # --- Worktree creation ---
 session_cwd=""
 worktree_path=""
+if [[ -n "$open_worktree" ]] && [[ "$worktree" == true ]]; then
+    echo "Error: --open-worktree and --worktree are mutually exclusive." >&2
+    exit 1
+fi
+# Open a window on an EXISTING worktree (does not create a new one). Reuses the
+# window-creation tail below by pre-seeding worktree_path/session_cwd.
+if [[ -n "$open_worktree" ]]; then
+    if [[ ! -d "$open_worktree" ]]; then
+        echo "Error: --open-worktree: path does not exist: $open_worktree" >&2
+        exit 1
+    fi
+    worktree_path="$open_worktree"
+    session_cwd="$open_worktree"
+    [[ -z "$window_name" ]] && [[ -z "$window_path" ]] && window_name=$(basename "$open_worktree")
+fi
 if [[ "$worktree" == true ]]; then
     # Resolve the source repo to branch from: --from, else --dir if it's a repo, else cwd.
     source_repo=""
@@ -1169,10 +1840,7 @@ if [[ -n "$session_cwd" ]]; then
 fi
 
 # Start agent in the sole pane
-case "$agent" in
-    cursor) tmux send-keys -t ":$new_window" 'cursor-agent' Enter ;;
-    claude) tmux send-keys -t ":$new_window" 'claude' Enter ;;
-esac
+tmux send-keys -t ":$new_window" "$agent_cmd" Enter
 
 if [[ -n "$prompt" ]]; then
     tmux send-keys -t ":$new_window" -- "$prompt"
