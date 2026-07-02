@@ -61,6 +61,7 @@ gas new -d   # create in background, print switch command
 
 - **new** (or **create**) – Create a new tmux window (the create-session options above). This is the original default behavior.
 - **dev NAME [PROMPT]** – Shortcut for `new --worktree --branch develop -n NAME [PROMPT]` (see Quick start above).
+- **jira [KEY]** – fzf-pick a Jira ticket from your open sprints (or pass a `KEY` to skip the picker) and open a worktree window for it: a fresh branch `<prefix>/<KEY>/<slug>` (unique — a repeat on the same ticket gets a `-part-N` suffix) off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), tagged `--ticket KEY`, with the agent seeded with the ticket. **`jira list`** prints your open-sprint issues. Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (Atlassian CLI); set the instance/prefix with `gas config jira-subdomain` and `gas config jira-branch-prefix`. (Absorbs the old `jirasprintmine`/`jirabranch` zsh functions, which now just call these.)
 - **switch** – Use fzf to search tmux windows by ticket or title and switch to the selected one.
 - **pick** (or **worktrees**) – fzf picker over gas worktrees (from the registry). The `--preview` pane shows the full state of the highlighted worktree via the `status` command. Press Enter to switch to that worktree's live tmux window, or — if none is attached — open a fresh gas window rooted at it. Press **`ctrl-a`** for an actions menu on the highlighted row (see [Actions menu](#actions-menu-ctrl-a)).
 - **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
@@ -75,6 +76,9 @@ gas new -d   # create in background, print switch command
 
 ```bash
 gas dev my-feature "Implement login"
+gas jira
+gas jira list
+gas jira PROJ-123
 gas switch
 gas pick
 gas branches
@@ -172,6 +176,23 @@ gas config                              # show the whole config file
 
 `--agent` still overrides per-invocation: `cursor` → `cursor-agent`, `claude` → `claude`, or any literal command (e.g. `gas new my-feature --agent aider`). Config file: `$HOME/.config/agent-session/config` (override with `$AGENT_SESSION_CONFIG`).
 
+## Jira (`gas jira`)
+
+`gas jira` turns a Jira sprint ticket into an isolated worktree + agent window in one step (it absorbs the old `jirasprintmine`/`jirabranch` zsh functions):
+
+- `gas jira` — fzf-pick one of your open-sprint issues (query: `assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done`). `gas jira KEY` skips the picker.
+- It creates a worktree on a fresh branch **`<prefix>/<KEY>/<slug>`** off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), always **unique** — if the ticket already has a branch, the new one gets a `-part-2` (`-part-3`, …) suffix. The window is tagged `--ticket KEY` and the agent is seeded with the ticket summary + description.
+- `gas jira list` prints your open-sprint issues (read-only).
+
+Config (prompted once, persisted; editable via `gas config`):
+
+```bash
+gas config jira-subdomain alltrails        # <this>.atlassian.net
+gas config jira-branch-prefix pbeagan      # branch prefix; default derived from your gh username
+```
+
+Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (run `acli auth` once). The subdomain also falls back to the legacy `~/.jira_instance_subdomain` file. Env overrides: `$AGENT_SESSION_JIRA_SUBDOMAIN`, `$AGENT_SESSION_JIRA_BRANCH_PREFIX`.
+
 ## Multi-window workflow
 
 To run several agent tasks in parallel (multi-threaded workload):
@@ -200,8 +221,9 @@ Adds a new window with 2 panes stacked vertically (agent in top pane):
 
 - Bash
 - An active tmux session
-- For **switch**, **pick**, **branches**: fzf
+- For **switch**, **pick**, **branches**, **jira**: fzf
 - For **prune**/**status** (PR status): gh CLI (optional; preview degrades gracefully without it)
+- For **jira**: `acli` (Atlassian CLI) + jq
 - For **worktree**: git worktree support
 
 ## Author

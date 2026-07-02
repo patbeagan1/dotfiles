@@ -311,167 +311,17 @@ gh-prs-awaiting-my-review() {
     '
 }
 
+# These Jira helpers now live in `gas` (single implementation), which turns a
+# sprint ticket into an isolated worktree + agent window instead of an in-place
+# checkout. These remain as thin wrappers for muscle memory and the gtools menu.
 jirasprintmine() {
-  # File to cache the Jira instance subdomain
-  local jira_subdomain_file="$HOME/.jira_instance_subdomain"
-  local JIRA_INSTANCE_SUBDOMAIN=""
-
-  # Try to read the Jira instance subdomain from file, or prompt if not found
-  if [[ -f "$jira_subdomain_file" ]]; then
-    JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
-  fi
-  if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-    read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
-    if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-      echo "Jira instance subdomain is required."
-      return 1
-    fi
-    echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
-  fi
-
-  # Query Jira for current user's issues in open sprints, output as JSON
-  local json
-  # Recommended JQL to better understand current work left in the sprint:
-  # - Exclude issues that are already Done/Closed/Resolved (adjust status names as needed for your Jira instance)
-  # - Optionally, group by status or order by priority/updated
-  # - Show only issues in the current active sprint assigned to you and not completed
-  json=$(acli jira workitem search --jql='assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done ORDER BY priority DESC, updated DESC' --json 2>/dev/null)
-  if [[ -z "$json" || "$json" == "[]" ]]; then
-    echo "No Jira issues assigned to you in open sprints."
-    return 0
-  fi
-
-  # Pretty print the issues with useful info
-  echo "###########################################################"
-  echo "#   Jira Issues Assigned to You in Open Sprints"
-  echo "###########################################################"
-  echo ""
-  echo "$json" | JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" jq -r '
-    .[] |
-    # Compose key, summary, status, and URL using the correct fields path
-    "\u001b[1;34m\(.key)\u001b[0m: \u001b[1;37m\(.fields.summary)\u001b[0m\n" +
-    "Status: \u001b[36m\(.fields.status.name)\u001b[0m | " +
-    "Type: \u001b[35m\(.fields.issuetype.name)\u001b[0m | " +
-    "Priority: \u001b[33m\(.fields.priority.name // "N/A")\u001b[0m\n" +
-    "Assignee: \u001b[32m\(.fields.assignee.displayName // "Unassigned")\u001b[0m\n" +
-    "URL: \u001b[4;36mhttps://" + (env.JIRA_INSTANCE_SUBDOMAIN) + ".atlassian.net/browse/" + .key + "\u001b[0m\n" +
-    "-----------------------------------------------------------"
-  '
+  # List your open-sprint issues.
+  gas jira list
 }
 
 jirabranch() {
-  # Check if we're in a git repository
-  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    echo "Error: Not in a Git repository."
-    return 1
-  fi
-
-  # Check for fzf dependency
-  if ! command -v fzf &>/dev/null; then
-    echo "Error: This function requires 'fzf' to be installed." >&2
-    return 1
-  fi
-
-  # File to cache the Jira instance subdomain
-  local jira_subdomain_file="$HOME/.jira_instance_subdomain"
-  local JIRA_INSTANCE_SUBDOMAIN=""
-
-  # Try to read the Jira instance subdomain from file, or prompt if not found
-  if [[ -f "$jira_subdomain_file" ]]; then
-    JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
-  fi
-  if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-    read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
-    if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-      echo "Jira instance subdomain is required."
-      return 1
-    fi
-    echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
-  fi
-
-  # Query Jira for current user's issues in open sprints, output as JSON
-  local json
-  json=$(acli jira workitem search --jql='assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done ORDER BY priority DESC, updated DESC' --json 2>/dev/null)
-  if [[ -z "$json" || "$json" == "[]" ]]; then
-    echo "No Jira issues assigned to you in open sprints."
-    return 0
-  fi
-
-  # Format issues for fzf display with ticket key as delimiter for parsing
-  local selected
-  selected=$(echo "$json" | JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" jq -r '
-    .[] |
-    # Output format: TICKET_KEY\tFORMATTED_DISPLAY
-    # Using tab as delimiter so we can extract the key reliably after fzf selection
-    .key + "\t" +
-    "\u001b[1;34m\(.key)\u001b[0m: \u001b[1;37m\(.fields.summary)\u001b[0m | " +
-    "Status: \u001b[36m\(.fields.status.name)\u001b[0m | " +
-    "Type: \u001b[35m\(.fields.issuetype.name)\u001b[0m | " +
-    "Priority: \u001b[33m\(.fields.priority.name // "N/A")\u001b[0m"
-  ' | fzf --height=80% --border --ansi --prompt="Select a Jira ticket: " --delimiter=$'\t' --with-nth=2)
-
-  if [[ -z "$selected" ]]; then
-    echo "No ticket selected."
-    return 0
-  fi
-
-  # Extract the ticket key (first field before tab)
-  local ticket_key
-  ticket_key=$(echo "$selected" | cut -d$'\t' -f1)
-
-  if [[ -z "$ticket_key" ]]; then
-    echo "Error: Could not extract ticket key from selection."
-    return 1
-  fi
-
-  # Get the ticket details from JSON to extract the summary
-  local ticket_summary
-  ticket_summary=$(echo "$json" | jq -r --arg key "$ticket_key" '.[] | select(.key == $key) | .fields.summary')
-
-  if [[ -z "$ticket_summary" ]]; then
-    echo "Error: Could not find ticket summary for $ticket_key."
-    return 1
-  fi
-
-  # Sanitize summary: create a branch-safe name
-  local sanitized_summary
-  sanitized_summary=$(
-    echo "$ticket_summary" \
-      | tr '[:upper:]' '[:lower:]' \
-      | sed 's/[][ (){}\\\/:;'"'"'\"<>|*?~!@#$%^&=+,.\`]/_/g' \
-      | sed 's/[^a-z0-9_]/_/g' \
-      | sed 's/_\+/_/g' \
-      | sed 's/^_*\|_*$//g'
-  )
-
-  # Create branch name: pbeagan/TICKET_ID/description_in_snake_case
-  local branch_name="pbeagan/${ticket_key}/${sanitized_summary}"
-
-  # Create and checkout the branch
-  echo "Creating branch: $branch_name"
-  git co -b "$branch_name"
-
-  # Prepare the prompt for cursor-agent using the ticket summary and details from acli
-  local ticket_details
-  ticket_details="$(acli jira workitem view "$ticket_key" -f summary,description)"
-
-  # If ticket_details is empty, set a fallback message
-  if [[ -z "$ticket_details" ]]; then
-    ticket_details="Summary: $ticket_summary"$'\n'"Description: No description provided."
-  fi
-
-  # Compose the prompt for cursor-agent using a here-string to safely handle any characters
-  # Replace all single quotes in the description (or ticket_details) with double quotes
-  local ticket_details_cleaned
-  ticket_details_cleaned="${ticket_details//\'/\"}"
-
-  # Prepare the content to pass, newline separated
-  local cursor_input
-  cursor_input="${ticket_key}
-${ticket_details_cleaned}"
-
-  # Print the command so it appears on the command line surrounded by single quotes at the root
-  print -z "cursor-agent -- '$cursor_input'"
+  # Pick a sprint ticket -> worktree window seeded with the ticket. Runs inside tmux.
+  gas jira
 }
 
 # fzf launcher for gh (GitHub CLI) commands.

@@ -23,17 +23,21 @@ worktree=false
 agent=""
 worktree_base=""
 open_worktree=""
+# Explicit new-branch name for --worktree (else an auto agent-<repo>-<slug> name).
+branch_name=""
 
 usage() {
     cat << EOF
 Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} dev NAME [PROMPT]        # shortcut: new --worktree --branch develop -n NAME
+       ${prog} jira [KEY]               # pick a Jira ticket -> worktree window
+       ${prog} jira list                # list your open-sprint issues
        ${prog} create-batch FILE [OPTIONS]
        ${prog} switch
        ${prog} pick
        ${prog} branches
        ${prog} status [--branch BRANCH] [--fetch] [PATH]
-       ${prog} config [harness-command [VALUE]]
+       ${prog} config [harness-command|jira-subdomain|jira-branch-prefix [VALUE]]
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
@@ -58,6 +62,8 @@ Options (create session, i.e. '${prog} new [OPTIONS] [NAME] [PROMPT]'):
   --from DIR       Source repo to branch the worktree from (default: --dir if it is a
                    git repo, else the current repo)
   --branch BRANCH  Branch to use (with --worktree: base branch for the new worktree)
+  --branch-name NAME  With --worktree: use NAME as the new branch (may contain '/')
+                   instead of the auto agent-<repo>-<slug> name (used by 'jira')
   --worktree       Create a new worktree under the durable base with a unique branch,
                    freshly fetched + branched off origin/<branch>; use it as cwd for panes
   --agent AGENT    Agent/harness to start: 'cursor' (=> cursor-agent), 'claude', or any
@@ -80,6 +86,11 @@ Subcommands:
                    '${prog} new --worktree --branch develop -n NAME [PROMPT]'). Extra
                    flags after NAME are forwarded (e.g. --agent claude). Override the
                    base branch with \$AGENT_SESSION_DEV_BRANCH.
+  jira [KEY]       fzf-pick a Jira ticket (or pass KEY) from your open sprints and open a
+                   worktree window on a fresh branch <prefix>/<KEY>/<slug> (unique; a repeat
+                   ticket gets a -part-N suffix), off \$AGENT_SESSION_DEV_BRANCH (develop),
+                   tagged --ticket and seeded with the ticket. 'jira list' prints the issues.
+                   Requires 'acli'. Config: 'config jira-subdomain', 'config jira-branch-prefix'.
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
                      Supports -d, --worktree, --branch, --agent (apply to all).
   switch           Use fzf to search tmux windows by ticket or title and switch
@@ -96,9 +107,9 @@ Subcommands:
                    preview). Args: [--branch BRANCH] [--fetch] [PATH] (PATH '-' or
                    empty = cwd). --fetch contacts origin for live remote/merged state
                    (slower); 'pick' passes it so its preview reflects the real remote.
-  config           Show or set persistent per-machine config. 'config' lists it;
-                   'config harness-command' shows the harness command; 'config
-                   harness-command CMD' sets it (e.g. cursor-agent or claude).
+  config           Show or set persistent per-machine config. 'config' lists it; keys:
+                   harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
+                   'config KEY' shows a value; 'config KEY VALUE' sets it.
   system           List worktrees created by ${prog} (location and branch).
                    --purge: remove stale registry entries.
                    remove PATH: force-remove worktree and unregister.
@@ -117,6 +128,8 @@ Subcommands:
 
 Examples:
   ${prog} dev my-feature "Implement login"
+  ${prog} jira            # pick a sprint ticket -> worktree window
+  ${prog} jira list       # list your open-sprint issues
   ${prog} new my-feature "Implement login"
   ${prog} new --worktree --branch develop
   ${prog} pick
@@ -229,11 +242,226 @@ cmd_config() {
                 echo "${HARNESS_KEY} = ${cur:-<unset>}"
             fi
             ;;
+        jira-subdomain|jira_subdomain)
+            if [[ -n "$value" ]]; then
+                config_set "$JIRA_SUBDOMAIN_KEY" "$value"
+                echo "Set ${JIRA_SUBDOMAIN_KEY} = $value"
+            else
+                local cur
+                cur=$(config_get "$JIRA_SUBDOMAIN_KEY")
+                echo "${JIRA_SUBDOMAIN_KEY} = ${cur:-<unset>}"
+            fi
+            ;;
+        jira-branch-prefix|jira_branch_prefix)
+            if [[ -n "$value" ]]; then
+                config_set "$JIRA_PREFIX_KEY" "$value"
+                echo "Set ${JIRA_PREFIX_KEY} = $value"
+            else
+                local cur
+                cur=$(config_get "$JIRA_PREFIX_KEY")
+                echo "${JIRA_PREFIX_KEY} = ${cur:-<unset>}"
+            fi
+            ;;
         *)
-            echo "Usage: ${prog} config [harness-command [VALUE]]" >&2
+            echo "Usage: ${prog} config [harness-command|jira-subdomain|jira-branch-prefix [VALUE]]" >&2
             exit 1
             ;;
     esac
+}
+
+# --- Jira integration (acli-backed; absorbs jirasprintmine/jirabranch) ---
+JIRA_SUBDOMAIN_KEY="jira_subdomain"
+JIRA_PREFIX_KEY="jira_branch_prefix"
+# The JQL both the listing and the picker use: my not-done issues in open sprints.
+JIRA_JQL='assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done ORDER BY priority DESC, updated DESC'
+
+jira_require_acli() {
+    if ! command -v acli &>/dev/null; then
+        echo "Error: 'acli' (Atlassian CLI) is required for '${prog} jira'. Install it (e.g. brew install acli) and run 'acli auth'." >&2
+        return 1
+    fi
+}
+
+# Resolve the Jira subdomain: env > gas config > legacy ~/.jira_instance_subdomain >
+# prompt (persisted to gas config). Echoes the subdomain; non-zero if unresolved.
+get_jira_subdomain() {
+    local sd="${AGENT_SESSION_JIRA_SUBDOMAIN:-}"
+    [[ -z "$sd" ]] && sd=$(config_get "$JIRA_SUBDOMAIN_KEY")
+    [[ -z "$sd" ]] && [[ -f "$HOME/.jira_instance_subdomain" ]] && sd=$(cat "$HOME/.jira_instance_subdomain" 2>/dev/null || true)
+    if [[ -z "$sd" ]]; then
+        if ! printf 'Jira instance subdomain (the part before .atlassian.net): ' > /dev/tty 2>/dev/null; then
+            echo "Error: jira_subdomain is not set and there is no terminal to prompt on." >&2
+            echo "Set it once with: ${prog} config jira-subdomain <name>" >&2
+            return 1
+        fi
+        IFS= read -r sd < /dev/tty || true
+        [[ -z "$sd" ]] && { echo "Jira subdomain is required." >&2; return 1; }
+    fi
+    [[ "$(config_get "$JIRA_SUBDOMAIN_KEY")" != "$sd" ]] && config_set "$JIRA_SUBDOMAIN_KEY" "$sd"
+    printf '%s' "$sd"
+}
+
+# Branch prefix for Jira worktrees: env > config > prompt (default from gh username).
+get_jira_branch_prefix() {
+    local p="${AGENT_SESSION_JIRA_BRANCH_PREFIX:-}"
+    [[ -z "$p" ]] && p=$(config_get "$JIRA_PREFIX_KEY")
+    if [[ -z "$p" ]]; then
+        local default=""
+        [[ -f "$HOME/.gh_prs_author" ]] && default=$(cat "$HOME/.gh_prs_author" 2>/dev/null || true)
+        if ! printf 'Branch prefix for Jira worktrees [%s]: ' "${default:-yourname}" > /dev/tty 2>/dev/null; then
+            echo "Error: jira_branch_prefix is not set and there is no terminal to prompt on." >&2
+            echo "Set it once with: ${prog} config jira-branch-prefix <name>" >&2
+            return 1
+        fi
+        IFS= read -r p < /dev/tty || true
+        [[ -z "$p" ]] && p="$default"
+        [[ -z "$p" ]] && { echo "Branch prefix is required." >&2; return 1; }
+        config_set "$JIRA_PREFIX_KEY" "$p"
+    fi
+    printf '%s' "$p"
+}
+
+# Fetch my open-sprint issues as JSON (empty/[] handled by callers).
+jira_fetch_sprint_json() {
+    acli jira workitem search --jql="$JIRA_JQL" --json 2>/dev/null || true
+}
+
+# Ticket summary -> git-safe slug (lowercase, non-alphanumeric runs -> '-').
+jira_branch_slug() {
+    printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
+}
+
+# fzf-pick a ticket from the JSON; echoes the selected KEY (empty if cancelled).
+jira_pick_ticket() {
+    local json="$1" sel
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required to pick a Jira ticket." >&2
+        return 1
+    fi
+    sel=$(printf '%s' "$json" | jq -r '
+        .[] |
+        .key + "\t" +
+        "[1;34m\(.key)[0m: [1;37m\(.fields.summary)[0m | " +
+        "Status: [36m\(.fields.status.name)[0m | " +
+        "Type: [35m\(.fields.issuetype.name)[0m | " +
+        "Priority: [33m\(.fields.priority.name // "N/A")[0m"
+    ' 2>/dev/null | fzf --ansi --no-multi --delimiter=$'\t' --with-nth=2 --prompt="Jira ticket> " || true)
+    [[ -z "$sel" ]] && return 0
+    printf '%s' "$sel" | cut -d$'\t' -f1
+}
+
+# Full ticket details (summary + description) for seeding the agent prompt.
+jira_ticket_details() {
+    acli jira workitem view "$1" -f summary,description 2>/dev/null || true
+}
+
+# Does the ticket already have a branch (local head or cached remote), by prefix?
+jira_ticket_has_branch() {
+    local prefix="$1" key="$2" hits
+    hits=$(git for-each-ref --format='%(refname)' \
+        "refs/heads/${prefix}/${key}" "refs/remotes/origin/${prefix}/${key}" 2>/dev/null || true)
+    [[ -n "$hits" ]]
+}
+
+# Exact branch existence (local or cached remote).
+jira_ref_exists() {
+    git show-ref --verify --quiet "refs/heads/$1" 2>/dev/null && return 0
+    git show-ref --verify --quiet "refs/remotes/origin/$1" 2>/dev/null && return 0
+    return 1
+}
+
+# Build a UNIQUE ticket branch: <prefix>/<KEY>/<slug>, suffixed -part-N (N>=2) when
+# the ticket already has any branch. Echoes the branch name.
+jira_unique_branch() {
+    local key="$1" slug="$2" prefix base cand n
+    prefix=$(get_jira_branch_prefix) || return 1
+    base="${prefix}/${key}/${slug}"
+    if jira_ticket_has_branch "$prefix" "$key"; then
+        n=2; cand="${base}-part-${n}"
+        while jira_ref_exists "$cand"; do n=$((n + 1)); cand="${base}-part-${n}"; done
+        printf '%s' "$cand"
+    else
+        printf '%s' "$base"
+    fi
+}
+
+# --- Subcommand: jira ---
+# `jira list` prints my open-sprint issues; `jira [KEY]` picks (or uses KEY) and
+# opens a worktree window on a fresh ticket-named branch, seeded with the ticket.
+cmd_jira() {
+    jira_require_acli || return 1
+    local sub="${1:-}"
+
+    if [[ "$sub" == "list" || "$sub" == "mine" || "$sub" == "sprint" ]]; then
+        local sd json
+        sd=$(get_jira_subdomain) || return 1
+        json=$(jira_fetch_sprint_json)
+        if [[ -z "$json" || "$json" == "[]" ]]; then
+            echo "No Jira issues assigned to you in open sprints."
+            return 0
+        fi
+        echo "###########################################################"
+        echo "#   Jira Issues Assigned to You in Open Sprints"
+        echo "###########################################################"
+        echo ""
+        printf '%s' "$json" | JIRA_INSTANCE_SUBDOMAIN="$sd" jq -r '
+            .[] |
+            "[1;34m\(.key)[0m: [1;37m\(.fields.summary)[0m\n" +
+            "Status: [36m\(.fields.status.name)[0m | " +
+            "Type: [35m\(.fields.issuetype.name)[0m | " +
+            "Priority: [33m\(.fields.priority.name // "N/A")[0m\n" +
+            "Assignee: [32m\(.fields.assignee.displayName // "Unassigned")[0m\n" +
+            "URL: [4;36mhttps://" + (env.JIRA_INSTANCE_SUBDOMAIN) + ".atlassian.net/browse/" + .key + "[0m\n" +
+            "-----------------------------------------------------------"
+        ' 2>/dev/null || echo "(failed to format issues)"
+        return 0
+    fi
+
+    # Default: pick (or use KEY arg) -> worktree window seeded with the ticket.
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        echo "Error: Not in a git repository." >&2
+        return 1
+    fi
+    local json key summary slug bn base details tmp prompt_line self
+    json=$(jira_fetch_sprint_json)
+    if [[ -z "$json" || "$json" == "[]" ]]; then
+        echo "No Jira issues assigned to you in open sprints."
+        return 0
+    fi
+    if [[ -n "$sub" ]]; then
+        key="$sub"
+    else
+        key=$(jira_pick_ticket "$json") || return 1
+    fi
+    if [[ -z "$key" ]]; then
+        echo "No ticket selected."
+        return 0
+    fi
+    summary=$(printf '%s' "$json" | jq -r --arg k "$key" '.[] | select(.key == $k) | .fields.summary' 2>/dev/null)
+    [[ -z "$summary" ]] && summary=$(jira_ticket_details "$key" | head -1)
+    if [[ -z "$summary" ]]; then
+        echo "Error: could not resolve a summary for $key." >&2
+        return 1
+    fi
+    slug=$(jira_branch_slug "$summary")
+    bn=$(jira_unique_branch "$key" "$slug") || return 1
+    base="${AGENT_SESSION_DEV_BRANCH:-develop}"
+
+    # Seed prompt: flattened to a single line (send-keys types it, then C-Enter —
+    # embedded newlines would submit prematurely).
+    details=$(jira_ticket_details "$key")
+    prompt_line=$(printf '%s: %s. %s' "$key" "$summary" "$details" | tr '\n\r\t' '   ' | tr -s ' ')
+    tmp="${TMPDIR:-/tmp}/gas-jira-${key}.$$"
+    printf '%s\n' "$prompt_line" > "$tmp" 2>/dev/null || tmp=""
+
+    self=$(resolve_self)
+    echo "Jira $key → worktree branch: $bn  (base: $base)"
+    if [[ -n "$tmp" ]]; then
+        "$self" new --worktree --branch "$base" --branch-name "$bn" -n "$key" --ticket "$key" --prompt-file "$tmp"
+        rm -f "$tmp" 2>/dev/null || true
+    else
+        "$self" new --worktree --branch "$base" --branch-name "$bn" -n "$key" --ticket "$key" -- "$prompt_line"
+    fi
 }
 
 # --- Subcommand: switch (fzf by ticket or title) ---
@@ -1556,6 +1784,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        jira)
+            subcommand=jira
+            shift
+            break
+            ;;
         dev)
             subcommand=dev
             shift
@@ -1623,6 +1856,10 @@ if [[ "$subcommand" == list ]]; then
 fi
 if [[ "$subcommand" == switch ]]; then
     cmd_switch
+    exit 0
+fi
+if [[ "$subcommand" == jira ]]; then
+    cmd_jira "$@"
     exit 0
 fi
 if [[ "$subcommand" == config ]]; then
@@ -1725,6 +1962,11 @@ while [[ $i -lt ${#remaining[@]} ]]; do
         --branch)
             ((i++)) || true
             start_branch="${remaining[$i]:-}"
+            ((i++)) || true
+            ;;
+        --branch-name)
+            ((i++)) || true
+            branch_name="${remaining[$i]:-}"
             ((i++)) || true
             ;;
         --worktree)
@@ -1836,21 +2078,33 @@ if [[ "$worktree" == true ]]; then
 
     base_dir=$(get_worktree_base "$worktree_base")/"$repo_name"
     mkdir -p "$base_dir"
-    # Slug the window name/path into the branch so it's recognizable at a glance
-    # (git-safe: lowercased, runs of non-alphanumerics collapsed to a single '-').
-    window_label="$window_name"
-    [[ -z "$window_label" && -n "$window_path" ]] && window_label=$(basename "$window_path")
-    window_slug=$(printf '%s' "$window_label" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+    if [[ -n "$branch_name" ]]; then
+        # Explicit branch name (may contain '/'), used verbatim as the git branch;
+        # callers are responsible for uniqueness. Derive a filesystem-safe dir leaf.
+        unique_branch="$branch_name"
+        wt_leaf=$(printf '%s' "$branch_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+        worktree_path="${base_dir}/${wt_leaf}"
+        n=0
+        while [[ -e "$worktree_path" ]]; do
+            n=$((n + 1)); worktree_path="${base_dir}/${wt_leaf}-$n"
+        done
+    else
+        # Slug the window name/path into the branch so it's recognizable at a glance
+        # (git-safe: lowercased, runs of non-alphanumerics collapsed to a single '-').
+        window_label="$window_name"
+        [[ -z "$window_label" && -n "$window_path" ]] && window_label=$(basename "$window_path")
+        window_slug=$(printf '%s' "$window_label" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
 
-    # Guaranteed-unique branch name ($$ avoids same-second collisions in create-batch).
-    branch_prefix="agent-${repo_name}${window_slug:+-${window_slug}}"
-    unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$"
-    n=0
-    while git -C "$source_repo" show-ref --verify --quiet "refs/heads/${unique_branch}"; do
-        n=$((n + 1))
-        unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$-$n"
-    done
-    worktree_path="${base_dir}/${unique_branch}"
+        # Guaranteed-unique branch name ($$ avoids same-second collisions in create-batch).
+        branch_prefix="agent-${repo_name}${window_slug:+-${window_slug}}"
+        unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$"
+        n=0
+        while git -C "$source_repo" show-ref --verify --quiet "refs/heads/${unique_branch}"; do
+            n=$((n + 1))
+            unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$-$n"
+        done
+        worktree_path="${base_dir}/${unique_branch}"
+    fi
 
     # Always branch a fresh branch (-b) so we never get blocked by a branch checked out
     # elsewhere. Prefer origin/<base>, fall back to local <base>, then current HEAD.
