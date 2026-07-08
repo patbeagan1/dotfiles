@@ -25,6 +25,8 @@ worktree_base=""
 open_worktree=""
 # Explicit new-branch name for --worktree (else an auto agent-<repo>-<slug> name).
 branch_name=""
+# Force Claude's interactive `--resume` picker instead of the default continue/new.
+claude_resume=false
 
 usage() {
     cat << EOF
@@ -32,12 +34,14 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} dev NAME [PROMPT]        # shortcut: new --worktree --branch develop -n NAME
        ${prog} jira [KEY]               # pick a Jira ticket -> worktree window
        ${prog} jira list                # list your open-sprint issues
+       ${prog} jira create              # create a ticket interactively (via acli)
        ${prog} create-batch FILE [OPTIONS]
        ${prog} switch
        ${prog} pick
        ${prog} branches
        ${prog} status [--branch BRANCH] [--fetch] [PATH]
-       ${prog} config [harness-command|jira-subdomain|jira-branch-prefix [VALUE]]
+       ${prog} sessions [PATH]          # list Claude sessions for a worktree
+       ${prog} config [harness-command|jira-subdomain|jira-branch-prefix|jira-project [VALUE]]
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
@@ -74,6 +78,8 @@ Options (create session, i.e. '${prog} new [OPTIONS] [NAME] [PROMPT]'):
   --prompt-file PATH  Read initial prompt from file (instead of positional args)
   --open-worktree PATH  Open a window on an EXISTING worktree path (does not create
                    a new worktree); used internally by 'pick' and 'branches'
+  --claude-resume  With a claude harness: open Claude's interactive --resume picker
+                   instead of continuing/starting a session (used by the actions menu)
   -w, --worktree-base DIR  Base directory for worktrees
                    (default: \${XDG_STATE_HOME:-\$HOME/.local/state}/agent-session/worktrees,
                    override with \$AGENT_SESSION_WORKTREE_BASE)
@@ -90,7 +96,10 @@ Subcommands:
                    worktree window on a fresh branch <prefix>/<KEY>/<slug> (unique; a repeat
                    ticket gets a -part-N suffix), off \$AGENT_SESSION_DEV_BRANCH (develop),
                    tagged --ticket and seeded with the ticket. 'jira list' prints the issues.
-                   Requires 'acli'. Config: 'config jira-subdomain', 'config jira-branch-prefix'.
+                   'jira create' creates a ticket interactively (project, type, summary,
+                   component [chosen from the project's existing ones], description,
+                   assignee, labels) then forwards to acli and offers a worktree. Config:
+                   'config jira-subdomain|jira-branch-prefix|jira-project'.
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
                      Supports -d, --worktree, --branch, --agent (apply to all).
   switch           Use fzf to search tmux windows by ticket or title and switch
@@ -107,6 +116,9 @@ Subcommands:
                    preview). Args: [--branch BRANCH] [--fetch] [PATH] (PATH '-' or
                    empty = cwd). --fetch contacts origin for live remote/merged state
                    (slower); 'pick' passes it so its preview reflects the real remote.
+                   Also shows the worktree's Claude session count + last-active.
+  sessions [PATH]  List the Claude sessions recorded for a worktree (default: cwd):
+                   session ids + last-active, and how to resume. Claude-specific.
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -131,11 +143,13 @@ Examples:
   ${prog} dev my-feature "Implement login"
   ${prog} jira            # pick a sprint ticket -> worktree window
   ${prog} jira list       # list your open-sprint issues
+  ${prog} jira create     # create a ticket interactively (via acli)
   ${prog} new my-feature "Implement login"
   ${prog} new --worktree --branch develop
   ${prog} pick
   ${prog} branches
   ${prog} status ~/.local/state/agent-session/worktrees/repo/agent-repo-...
+  ${prog} sessions        # Claude sessions for the current worktree
   ${prog} system
   ${prog} prune --registered-only
   ${prog} prune --force-remove
@@ -219,6 +233,86 @@ resolve_agent_command() {
     esac
 }
 
+# --- Claude Code session integration (only when the harness is `claude`) ---
+# Claude persists each conversation per project directory under
+# ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/<slug>, where <slug> is the cwd's
+# canonical path with every non-alphanumeric char replaced by '-'. We only ever
+# read the transcript *files* (count + mtime, stable); never their contents (the
+# JSONL format is internal to Claude Code and may change between releases).
+
+# Echo the Claude project dir for a worktree/dir path (may not exist).
+claude_project_dir() {
+    local p slug
+    p=$(canon_path "$1")
+    slug=$(printf '%s' "$p" | sed 's/[^a-zA-Z0-9]/-/g')
+    echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/${slug}"
+}
+
+# Echo the worktree's session transcript files, newest first; empty if none.
+claude_session_files() {
+    local d
+    d=$(claude_project_dir "$1")
+    [[ -d "$d" ]] || return 0
+    ls -t "$d"/*.jsonl 2>/dev/null || true
+}
+
+# Human "3m ago" style age from an epoch-seconds delta.
+rel_age() {
+    local s="$1"
+    if [[ "$s" -lt 60 ]]; then echo "${s}s ago"
+    elif [[ "$s" -lt 3600 ]]; then echo "$((s / 60))m ago"
+    elif [[ "$s" -lt 86400 ]]; then echo "$((s / 3600))h ago"
+    else echo "$((s / 86400))d ago"; fi
+}
+
+# Echo "N (last active <rel>)" for a worktree's Claude sessions, or empty if none.
+claude_sessions_summary() {
+    local files n newest now mt
+    files=$(claude_session_files "$1")
+    [[ -z "$files" ]] && return 0
+    n=$(printf '%s\n' "$files" | grep -c . || echo 0)
+    newest=$(printf '%s\n' "$files" | head -1)
+    mt=$(stat -f %m "$newest" 2>/dev/null || echo "")
+    now=$(date +%s)
+    if [[ -n "$mt" ]]; then
+        echo "${n} (last active $(rel_age $((now - mt))))"
+    else
+        echo "${n}"
+    fi
+}
+
+# True when the harness command's first word is `claude`.
+is_claude_harness() {
+    [[ "${1%% *}" == claude ]]
+}
+
+# True when the configured default harness is claude (env/config only; no prompt).
+default_harness_is_claude() {
+    local h="${AGENT_SESSION_HARNESS_COMMAND:-}"
+    [[ -z "$h" ]] && h=$(config_get "$HARNESS_KEY")
+    is_claude_harness "$h"
+}
+
+# Build the command to type in the pane. For claude, tie into session persistence:
+# force the resume picker when requested, else continue the worktree's most recent
+# session, else start a fresh named one. Non-claude harnesses pass through unchanged.
+claude_launch_command() {
+    local cmd="$1" cwd="$2" name="$3"
+    if ! is_claude_harness "$cmd"; then
+        printf '%s' "$cmd"
+        return 0
+    fi
+    if [[ "${claude_resume:-false}" == true ]]; then
+        printf '%s --resume' "$cmd"
+    elif [[ -n "$cwd" ]] && [[ -n "$(claude_session_files "$cwd")" ]]; then
+        printf '%s --continue' "$cmd"
+    elif [[ -n "$name" ]]; then
+        printf '%s -n %q' "$cmd" "$name"
+    else
+        printf '%s' "$cmd"
+    fi
+}
+
 # --- Subcommand: config ---
 cmd_config() {
     local key="${1:-}" value="${2:-}"
@@ -263,8 +357,18 @@ cmd_config() {
                 echo "${JIRA_PREFIX_KEY} = ${cur:-<unset>}"
             fi
             ;;
+        jira-project|jira_project)
+            if [[ -n "$value" ]]; then
+                config_set "$JIRA_PROJECT_KEY" "$value"
+                echo "Set ${JIRA_PROJECT_KEY} = $value"
+            else
+                local cur
+                cur=$(config_get "$JIRA_PROJECT_KEY")
+                echo "${JIRA_PROJECT_KEY} = ${cur:-<unset>}"
+            fi
+            ;;
         *)
-            echo "Usage: ${prog} config [harness-command|jira-subdomain|jira-branch-prefix [VALUE]]" >&2
+            echo "Usage: ${prog} config [harness-command|jira-subdomain|jira-branch-prefix|jira-project [VALUE]]" >&2
             exit 1
             ;;
     esac
@@ -273,6 +377,7 @@ cmd_config() {
 # --- Jira integration (acli-backed; absorbs jirasprintmine/jirabranch) ---
 JIRA_SUBDOMAIN_KEY="jira_subdomain"
 JIRA_PREFIX_KEY="jira_branch_prefix"
+JIRA_PROJECT_KEY="jira_project"
 # The JQL both the listing and the picker use: my not-done issues in open sprints.
 JIRA_JQL='assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done ORDER BY priority DESC, updated DESC'
 
@@ -325,6 +430,32 @@ get_jira_branch_prefix() {
 # Fetch my open-sprint issues as JSON (empty/[] handled by callers).
 jira_fetch_sprint_json() {
     acli jira workitem search --jql="$JIRA_JQL" --json 2>/dev/null || true
+}
+
+# Prompt on the controlling terminal with an optional default; echo the reply (or
+# the default on empty). Returns non-zero when there is no terminal.
+jira_prompt() {
+    local msg="$1" def="${2:-}" reply="" shown="$1"
+    [[ -n "$def" ]] && shown="$msg [$def]"
+    printf '%s: ' "$shown" > /dev/tty 2>/dev/null || return 1
+    IFS= read -r reply < /dev/tty || true
+    [[ -z "$reply" ]] && reply="$def"
+    printf '%s' "$reply"
+}
+
+# Default project key for new tickets: env > config > prompt (persisted).
+get_jira_project() {
+    local p="${AGENT_SESSION_JIRA_PROJECT:-}"
+    [[ -z "$p" ]] && p=$(config_get "$JIRA_PROJECT_KEY")
+    if [[ -z "$p" ]]; then
+        p=$(jira_prompt "Jira project key (e.g. TEAM)") || {
+            echo "Error: no terminal to prompt; set it with '${prog} config jira-project KEY'." >&2
+            return 1
+        }
+        [[ -z "$p" ]] && { echo "Project key is required." >&2; return 1; }
+        config_set "$JIRA_PROJECT_KEY" "$p"
+    fi
+    printf '%s' "$p"
 }
 
 # Ticket summary -> git-safe slug (lowercase, non-alphanumeric runs -> '-').
@@ -386,12 +517,142 @@ jira_unique_branch() {
     fi
 }
 
+# Echo a project's existing component names, one per line (empty if none/offline).
+jira_project_components() {
+    acli jira project view --key "$1" --json 2>/dev/null \
+        | jq -r '(.components // .values // [])[]?.name // empty' 2>/dev/null || true
+}
+
+# Interactively create a Jira ticket via `acli jira workitem create` (reliable flag
+# form). A chosen component is applied as a best-effort follow-up `edit` (acli has no
+# component flag), which never fails the creation. Prints key + URL and offers a worktree.
+jira_create() {
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for '${prog} jira create'." >&2
+        return 1
+    fi
+    if ! printf '' > /dev/tty 2>/dev/null; then
+        echo "Error: '${prog} jira create' is interactive and needs a terminal." >&2
+        return 1
+    fi
+    local project type summary description component assignee labels desc_file=""
+    project=$(get_jira_project) || return 1
+
+    # Type: fzf-pick a common type (free-text also accepted), else prompt.
+    if command -v fzf &>/dev/null; then
+        type=$(printf '%s\n' Task Story Bug Epic Spike \
+            | fzf --prompt="Type> " --print-query --height=40% --header="Work item type (type to add your own)" 2>/dev/null \
+            | tail -1)
+    fi
+    [[ -z "${type:-}" ]] && type=$(jira_prompt "Type" "Task")
+    [[ -z "$type" ]] && type="Task"
+
+    summary=$(jira_prompt "Summary") || return 1
+    if [[ -z "$summary" ]]; then
+        echo "Summary is required — aborting." >&2
+        return 1
+    fi
+
+    # Component (optional): choose from the project's existing components (fzf), or
+    # type your own, or skip. Falls back to a plain prompt when fzf/components absent.
+    local comps
+    comps=$(jira_project_components "$project")
+    if [[ -n "$comps" ]] && command -v fzf &>/dev/null; then
+        component=$( { printf '(none)\n'; printf '%s\n' "$comps"; } \
+            | fzf --prompt="Component> " --print-query --height=40% \
+                  --header="Component (Enter=skip; type to filter or add a new one)" 2>/dev/null \
+            | tail -1)
+        [[ "$component" == "(none)" ]] && component=""
+    else
+        component=$(jira_prompt "Component (optional)" "")
+    fi
+
+    # Description: blank to skip, plain text inline, or 'e' to open $EDITOR (passed to
+    # acli as --description-file so acli builds the ADF).
+    printf 'Description (Enter to skip, text for one line, or "e" to open %s): ' "${EDITOR:-vi}" > /dev/tty 2>/dev/null || true
+    IFS= read -r description < /dev/tty || true
+    if [[ "$description" == "e" ]]; then
+        desc_file="${TMPDIR:-/tmp}/gas-jira-desc.$$"
+        : > "$desc_file"
+        "${EDITOR:-vi}" "$desc_file" < /dev/tty > /dev/tty 2>&1 || true
+        description=""
+    fi
+
+    assignee=$(jira_prompt "Assignee (email / @me / blank)" "@me")
+    labels=$(jira_prompt "Labels (comma-separated, optional)" "")
+
+    # Create with acli's flags (reliable). The component is applied afterward (below),
+    # since acli has no --component flag.
+    local args=(jira workitem create --json -p "$project" -t "$type" -s "$summary")
+    [[ -n "$desc_file" ]] && args+=(--description-file "$desc_file")
+    [[ -z "$desc_file" && -n "$description" ]] && args+=(-d "$description")
+    [[ -n "$assignee" ]] && args+=(-a "$assignee")
+    [[ -n "$labels" ]] && args+=(-l "$labels")
+
+    echo
+    echo "About to create in $project:"
+    echo "  Type:      $type"
+    echo "  Summary:   $summary"
+    [[ -n "$component" ]] && echo "  Component: $component  (set after create)"
+    [[ -n "$desc_file" ]] && echo "  Desc:      (from editor)"
+    [[ -z "$desc_file" && -n "$description" ]] && echo "  Desc:      $description"
+    [[ -n "$assignee" ]] && echo "  Assignee:  $assignee"
+    [[ -n "$labels" ]] && echo "  Labels:    $labels"
+    if ! confirm "Create this Jira ticket?"; then
+        echo "Cancelled."
+        [[ -n "$desc_file" ]] && rm -f "$desc_file" 2>/dev/null || true
+        return 0
+    fi
+
+    local out key
+    out=$(acli "${args[@]}" 2>&1) || true
+    [[ -n "$desc_file" ]] && rm -f "$desc_file" 2>/dev/null || true
+    key=$(printf '%s' "$out" | jq -r '.key // .issueKey // empty' 2>/dev/null || true)
+    [[ -z "$key" ]] && key=$(printf '%s' "$out" | grep -oE '[A-Z][A-Z0-9]+-[0-9]+' | head -1 || true)
+    if [[ -z "$key" ]]; then
+        echo "Ticket creation failed or key not found. acli output:" >&2
+        printf '%s\n' "$out" >&2
+        return 1
+    fi
+
+    # Best-effort: set the component via a follow-up edit (non-fatal). Kept simple so
+    # a failure here never loses the just-created ticket.
+    if [[ -n "$component" ]]; then
+        local ctmp cout
+        ctmp="${TMPDIR:-/tmp}/gas-jira-comp.$$.json"
+        jq -n --arg c "$component" '{additionalAttributes: {components: [{name: $c}]}}' > "$ctmp"
+        if cout=$(acli jira workitem edit -k "$key" --from-json "$ctmp" 2>&1); then
+            echo "Set component: $component"
+            rm -f "$ctmp" 2>/dev/null || true
+        else
+            echo "Warning: created $key but could not set component '$component':" >&2
+            printf '  %s\n' "$cout" >&2
+            echo "  Payload kept: $ctmp — adjust and retry: acli jira workitem edit -k $key --from-json $ctmp" >&2
+        fi
+    fi
+
+    local sd=""
+    sd=$(config_get "$JIRA_SUBDOMAIN_KEY"); [[ -z "$sd" ]] && sd="${AGENT_SESSION_JIRA_SUBDOMAIN:-}"
+    echo "Created $key"
+    [[ -n "$sd" ]] && echo "  https://${sd}.atlassian.net/browse/${key}"
+
+    if confirm "Open a worktree window for $key now?"; then
+        cmd_jira "$key"
+    fi
+}
+
 # --- Subcommand: jira ---
-# `jira list` prints my open-sprint issues; `jira [KEY]` picks (or uses KEY) and
-# opens a worktree window on a fresh ticket-named branch, seeded with the ticket.
+# `jira list` prints my open-sprint issues; `jira create` creates one interactively;
+# `jira [KEY]` picks (or uses KEY) and opens a worktree window on a fresh
+# ticket-named branch, seeded with the ticket.
 cmd_jira() {
     jira_require_acli || return 1
     local sub="${1:-}"
+
+    if [[ "$sub" == "create" || "$sub" == "new" ]]; then
+        jira_create
+        return $?
+    fi
 
     if [[ "$sub" == "list" || "$sub" == "mine" || "$sub" == "sprint" ]]; then
         local sd json
@@ -664,6 +925,14 @@ cmd_status() {
     fi
     echo
 
+    # Claude sessions for this worktree (file count + last-active; contents unread).
+    if [[ -n "$path" ]] && [[ -d "$path" ]]; then
+        local csess
+        csess=$(claude_sessions_summary "$path")
+        echo "Claude sessions: ${csess:-none}"
+        echo
+    fi
+
     if ! command -v gh &>/dev/null; then
         echo "PR: gh not installed — PR status unavailable"
         return 0
@@ -689,6 +958,37 @@ cmd_status() {
     fi
 }
 
+# --- Subcommand: sessions (list a worktree's Claude sessions) ---
+cmd_sessions() {
+    local path="${1:-}"
+    [[ -z "$path" || "$path" == "-" ]] && path=$(pwd)
+    if [[ ! -d "$path" ]]; then
+        echo "Error: not a directory: $path" >&2
+        exit 1
+    fi
+    local pdir files
+    pdir=$(claude_project_dir "$path")
+    files=$(claude_session_files "$path")
+    echo "Claude sessions for: $path"
+    echo "Project dir: $pdir"
+    if [[ -z "$files" ]]; then
+        echo "  (none yet)"
+        return 0
+    fi
+    local now f id mt age
+    now=$(date +%s)
+    printf '%s\n' "$files" | while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        id=$(basename "$f" .jsonl)
+        mt=$(stat -f %m "$f" 2>/dev/null || echo "")
+        if [[ -n "$mt" ]]; then age=$(rel_age $((now - mt))); else age="?"; fi
+        printf '  %s  (last active %s)\n' "$id" "$age"
+    done
+    echo
+    echo "Resume latest:  (cd $(printf '%q' "$path") && claude --continue)"
+    echo "Pick a session: (cd $(printf '%q' "$path") && claude --resume)"
+}
+
 # Echo the tmux window index whose @agent-worktree equals PATH (canon-compared),
 # else empty. Never errors (safe under set -e / outside tmux).
 attached_window_index() {
@@ -704,6 +1004,21 @@ attached_window_index() {
             return 0
         fi
     done < <(tmux list-windows -F '#{window_index}' 2>/dev/null || true)
+    return 0
+}
+
+# Wait (briefly, best-effort) until a pane is running a non-shell command — i.e. the
+# agent has actually started — so send-keys (e.g. the initial prompt) isn't typed into
+# a not-yet-ready process. Times out after ~4s.
+wait_for_agent_pane() {
+    local pane="$1" i cmd
+    for i in $(seq 1 20); do
+        cmd=$(tmux display-message -p -t "$pane" '#{pane_current_command}' 2>/dev/null || true)
+        case "$cmd" in
+            ""|sh|-sh|bash|-bash|zsh|-zsh|fish|-fish|dash|login) sleep 0.2 ;;
+            *) return 0 ;;
+        esac
+    done
     return 0
 }
 
@@ -836,20 +1151,30 @@ pick_build_worktree_rows() {
 worktree_actions_menu() {
     local path="$1" branch="$2"
     local dev="${AGENT_SESSION_DEV_BRANCH:-develop}"
-    local choice
-    choice=$(printf '%s\n' \
+    local menu choice
+    menu=$(printf '%s\n' \
         "Open / switch to window" \
         "Update from $dev (pull origin $dev)" \
         "Fetch / refresh remote" \
         "Open PR in browser" \
         "Copy path to clipboard" \
-        "Remove worktree" \
-        | fzf --no-multi --prompt='action> ' \
-              --header="Actions: $(basename "$path")  [$branch]" || true)
+        "Remove worktree")
+    # Claude-only: resume a specific past session (Enter/open already --continues).
+    if default_harness_is_claude; then
+        menu="$menu"$'\n'"Resume claude session (picker)"
+    fi
+    choice=$(printf '%s\n' "$menu" | fzf --no-multi --prompt='action> ' \
+        --header="Actions: $(basename "$path")  [$branch]" || true)
     [[ -z "$choice" ]] && return 0
     case "$choice" in
         "Open / switch"*)
             open_or_switch_worktree "$path" "$branch"
+            return 2
+            ;;
+        "Resume claude session"*)
+            local self
+            self=$(resolve_self)
+            "$self" new --open-worktree "$path" -n "$(basename "$path")" --agent claude --claude-resume
             return 2
             ;;
         "Update from"*)
@@ -949,9 +1274,13 @@ cmd_pick() {
 # Echoes the created path on success; empty on failure.
 create_worktree_for_branch() {
     local branch="$1"
-    local main_repo
+    local main_repo common
     main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
     [[ -z "$main_repo" ]] && { echo ""; return 1; }
+    # If run from inside a linked worktree, resolve to the owning repo so the new
+    # worktree's dir/registry isn't nested under the worktree's long name.
+    common=$(git -C "$main_repo" rev-parse --git-common-dir 2>/dev/null || true)
+    [[ "$common" == */.git ]] && main_repo=$(cd "$(dirname "$common")" 2>/dev/null && pwd -P || echo "$main_repo")
     local repo_name base_dir
     repo_name=$(basename "$main_repo")
     base_dir=$(get_worktree_base "$worktree_base")/"$repo_name"
@@ -1313,11 +1642,12 @@ registry_add() {
 
 registry_remove() {
     local path="$1"
-    local reg
+    local reg tmp
     reg=$(get_registry_file)
     [[ ! -f "$reg" ]] && return 0
-    local tmp
-    tmp=$(mktemp)
+    # Temp beside the target (same filesystem => atomic mv; no mktemp/TMPDIR dependency,
+    # which can fail and, under set -e, derail callers like cleanup).
+    tmp="${reg}.tmp.$$"
     grep -v "^${path}|" "$reg" > "$tmp" 2>/dev/null || true
     mv "$tmp" "$reg"
 }
@@ -1480,7 +1810,8 @@ cmd_system() {
         reg=$(get_registry_file)
         [[ ! -f "$reg" ]] && return 0
         local tmp
-        tmp=$(mktemp)
+        tmp="${reg}.tmp.$$"
+        : > "$tmp"
         while IFS= read -r line; do
             path=$(echo "$line" | cut -d'|' -f1)
             [[ -d "$path" ]] && echo "$line" >> "$tmp"
@@ -1692,23 +2023,20 @@ cmd_cleanup() {
         echo "Error: Not running inside tmux." >&2
         exit 1
     fi
-    local wt
+    local win wt
+    win=$(tmux display-message -p '#{window_index}')
     wt=$(tmux show-window-option -v @agent-worktree 2>/dev/null || true)
     if [[ -z "$wt" ]] || [[ ! -d "$wt" ]]; then
         echo "Current window has no associated worktree (or path missing). Closing window only." >&2
-        tmux kill-window
+        tmux kill-window -t ":$win"
         return 0
     fi
-    local main_repo
-    main_repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
-    if [[ -z "$main_repo" ]]; then
-        tmux kill-window
-        return 0
-    fi
-    registry_remove "$wt"
-    git worktree remove "$wt" --force 2>/dev/null || true
-    git worktree prune 2>/dev/null || true
-    tmux kill-window
+    # remove_worktree derives the owning repo and runs every git op with `git -C
+    # <main-repo>`, so it never depends on (or gets wedged by) the current directory —
+    # which is inside the worktree being deleted. Then close this window.
+    echo "Removing worktree: $wt"
+    remove_worktree "$wt"
+    tmux kill-window -t ":$win"
 }
 
 # --- Subcommand: doctor (reconcile on-disk state with git; tmux-independent) ---
@@ -1854,6 +2182,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        sessions)
+            subcommand=sessions
+            shift
+            break
+            ;;
         pick|worktrees)
             subcommand=pick
             shift
@@ -1923,6 +2256,10 @@ if [[ "$subcommand" == config ]]; then
 fi
 if [[ "$subcommand" == dev ]]; then
     cmd_dev "$@"
+    exit 0
+fi
+if [[ "$subcommand" == sessions ]]; then
+    cmd_sessions "$@"
     exit 0
 fi
 if [[ "$subcommand" == status ]]; then
@@ -2024,6 +2361,10 @@ while [[ $i -lt ${#remaining[@]} ]]; do
             branch_name="${remaining[$i]:-}"
             ((i++)) || true
             ;;
+        --claude-resume)
+            claude_resume=true
+            ((i++)) || true
+            ;;
         --worktree)
             worktree=true
             ((i++)) || true
@@ -2120,6 +2461,14 @@ if [[ "$worktree" == true ]]; then
         echo "Error: Not in a git repository (and --from/--dir is not one). Cannot create worktree." >&2
         exit 1
     fi
+    # If source_repo is itself a linked worktree (e.g. running `gas dev` from inside
+    # another gas worktree), --show-toplevel returns the worktree dir, whose basename
+    # is a long `agent-…` name. Resolve to the OWNING repo via --git-common-dir so the
+    # new branch/dir aren't built from (and compounded onto) that worktree's name.
+    src_common=$(git -C "$source_repo" rev-parse --git-common-dir 2>/dev/null || true)
+    if [[ "$src_common" == */.git ]]; then
+        source_repo=$(cd "$(dirname "$src_common")" 2>/dev/null && pwd -P) || source_repo="$source_repo"
+    fi
     main_repo="$source_repo"
     repo_name=$(basename "$source_repo")
     default_br=$(git -C "$source_repo" rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||') || true
@@ -2186,19 +2535,35 @@ if [[ "$detach" == true ]]; then
     current_window=$(tmux display-message -p '#{window_index}')
 fi
 
-# Create new window (tmux switches to it); ensure unique name
+# Create new window (tmux switches to it); ensure unique name. Start it in the
+# worktree/dir via -c so BOTH panes inherit it (no racy `cd` send-keys, and works
+# regardless of the user's base-index / pane-base-index settings).
 if [[ -n "$window_name" ]]; then
     actual_window_name="$window_name"
-    tmux new-window -n "$window_name"
 elif [[ -n "$window_path" ]]; then
     actual_window_name=$(basename "$window_path")
-    tmux new-window -n "$actual_window_name"
 else
     actual_window_name="agent-$(date +%Y%m%d-%H%M%S)"
-    tmux new-window -n "$actual_window_name"
+fi
+
+# Resolve the agent launch command up front. For claude, tie into session
+# persistence: a reopened worktree resumes (--continue), a fresh one starts named.
+launch_cmd=$(claude_launch_command "$agent_cmd" "$session_cwd" "$actual_window_name")
+# Run the agent AS the pane's command (via the shell), dropping back to a login
+# shell in the worktree when it exits. Passing it as argv — rather than typing it
+# with send-keys — avoids the shell-startup race that dropped the first character(s)
+# of the command (e.g. "laude --resume").
+win_cmd="$launch_cmd; exec \"\${SHELL:-/bin/sh}\""
+
+if [[ -n "$session_cwd" ]]; then
+    tmux new-window -c "$session_cwd" -n "$actual_window_name" "$win_cmd"
+else
+    tmux new-window -n "$actual_window_name" "$win_cmd"
 fi
 
 new_window=$(tmux display-message -p '#{window_index}')
+# Target panes by their tmux id (index-agnostic), not .0/.1.
+agent_pane=$(tmux display-message -t ":$new_window" -p '#{pane_id}')
 
 # Store worktree path for cleanup
 if [[ -n "$worktree_path" ]]; then
@@ -2209,28 +2574,20 @@ if [[ -n "$ticket" ]]; then
     tmux set-window-option -t ":$new_window" @agent-ticket "$ticket"
 fi
 
-# Set cwd for new window so panes start there
+# Split vertically for the helper shell; the new pane starts in the same worktree.
 if [[ -n "$session_cwd" ]]; then
-    tmux send-keys -t ":$new_window" "cd $(printf '%q' "$session_cwd")" Enter
+    tmux split-window -t "$agent_pane" -v -c "$session_cwd"
+else
+    tmux split-window -t "$agent_pane" -v
 fi
 
-# Start agent in the sole pane
-tmux send-keys -t ":$new_window" "$agent_cmd" Enter
-
+# Send the initial prompt into the agent pane, once the agent has actually started
+# (so its input isn't raced) — the agent runs as the pane command above.
 if [[ -n "$prompt" ]]; then
-    tmux send-keys -t ":$new_window" -- "$prompt"
-fi
-
-# Split vertically
-tmux split-window -t ":$new_window" -v
-
-if [[ -n "$session_cwd" ]]; then
-    tmux send-keys -t ":$new_window.1" "cd $(printf '%q' "$session_cwd")" Enter
-fi
-
-if [[ -n "$prompt" ]]; then
-    tmux select-pane -t ":$new_window.0"
-    tmux send-keys -t ":$new_window.0" C-Enter
+    wait_for_agent_pane "$agent_pane"
+    tmux select-pane -t "$agent_pane"
+    tmux send-keys -t "$agent_pane" -- "$prompt"
+    tmux send-keys -t "$agent_pane" C-Enter
 fi
 
 if [[ "$detach" == true ]]; then

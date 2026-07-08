@@ -1,1 +1,5 @@
 name: gas
+roadmap:
+  - allow for tasks to be triggered based on a cron.txt file, which contains the 
+  - allow for jira tickets to be created directly via gas
+  - there is a bug in the way branches and directories are named. We have an example: ~/.local/state/agent-session/worktrees/agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750/agent-agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750-mark-telemetry-logger-undeprecated-20260708-095107-41064^agent-agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750-mark-telemetry-logger-undeprecated-20260708-095107-4106

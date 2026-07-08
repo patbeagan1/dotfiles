@@ -61,11 +61,12 @@ gas new -d   # create in background, print switch command
 
 - **new** (or **create**) – Create a new tmux window (the create-session options above). This is the original default behavior.
 - **dev NAME [PROMPT]** – Shortcut for `new --worktree --branch develop -n NAME [PROMPT]` (see Quick start above).
-- **jira [KEY]** – fzf-pick a Jira ticket from your open sprints (or pass a `KEY` to skip the picker) and open a worktree window for it: a fresh branch `<prefix>/<KEY>/<slug>` (unique — a repeat on the same ticket gets a `-part-N` suffix) off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), tagged `--ticket KEY`, with the agent seeded with the ticket. **`jira list`** prints your open-sprint issues. Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (Atlassian CLI); set the instance/prefix with `gas config jira-subdomain` and `gas config jira-branch-prefix`. (Absorbs the old `jirasprintmine`/`jirabranch` zsh functions, which now just call these.)
+- **jira [KEY]** – fzf-pick a Jira ticket from your open sprints (or pass a `KEY` to skip the picker) and open a worktree window for it: a fresh branch `<prefix>/<KEY>/<slug>` (unique — a repeat on the same ticket gets a `-part-N` suffix) off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), tagged `--ticket KEY`, with the agent seeded with the ticket. **`jira list`** prints your open-sprint issues; **`jira create`** creates a ticket interactively and forwards to `acli` (see [Jira](#jira-gas-jira)). Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (Atlassian CLI); set the instance/prefix/project with `gas config jira-subdomain`, `jira-branch-prefix`, and `jira-project`. (Absorbs the old `jirasprintmine`/`jirabranch` zsh functions, which now just call these.)
 - **switch** – Use fzf to search tmux windows by ticket or title and switch to the selected one.
 - **pick** (or **worktrees**) – fzf picker over gas worktrees (from the registry). The `--preview` pane shows the full state of the highlighted worktree via the `status` command. Press Enter to switch to that worktree's live tmux window, or — if none is attached — open a fresh gas window rooted at it. Press **`ctrl-a`** for an actions menu on the highlighted row (see [Actions menu](#actions-menu-ctrl-a)).
 - **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
-- **status** `[--branch BRANCH] [--fetch] [PATH]` – Print the full state of a worktree/branch: local branch, working-tree status, ahead/behind, whether the branch still exists on the remote (or was deleted/merged), and the associated **PR** state via `gh` (number, state, title, url). Used as the picker preview; also handy standalone. `PATH` of `-` or omitted means the current repo. `--fetch` contacts `origin` for **live** remote/merged state (slower; `gas pick` passes it). Degrades gracefully when `gh` is missing/unauthenticated or there is no PR.
+- **status** `[--branch BRANCH] [--fetch] [PATH]` – Print the full state of a worktree/branch: local branch, working-tree status, ahead/behind, whether the branch still exists on the remote (or was deleted/merged), the associated **PR** state via `gh` (number, state, title, url), and the worktree's **Claude session** count + last-active. Used as the picker preview; also handy standalone. `PATH` of `-` or omitted means the current repo. `--fetch` contacts `origin` for **live** remote/merged state (slower; `gas pick` passes it). Degrades gracefully when `gh` is missing/unauthenticated or there is no PR.
+- **sessions** `[PATH]` – List the Claude Code sessions recorded for a worktree (default: cwd): session ids + last-active, and how to resume. See [Claude sessions](#claude-sessions). Claude-specific.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
 - **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
@@ -78,12 +79,14 @@ gas new -d   # create in background, print switch command
 gas dev my-feature "Implement login"
 gas jira
 gas jira list
+gas jira create
 gas jira PROJ-123
 gas switch
 gas pick
 gas branches
 gas status ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-120000-1234
 gas status --branch my-feature
+gas sessions
 gas config harness-command claude
 gas list
 gas create-batch tasks.txt -d --worktree --branch develop
@@ -184,15 +187,28 @@ gas config                              # show the whole config file
 - `gas jira` — fzf-pick one of your open-sprint issues (query: `assignee = currentUser() AND sprint in openSprints() AND statusCategory != Done`). `gas jira KEY` skips the picker.
 - It creates a worktree on a fresh branch **`<prefix>/<KEY>/<slug>`** off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), always **unique** — if the ticket already has a branch, the new one gets a `-part-2` (`-part-3`, …) suffix. The window is tagged `--ticket KEY` and the agent is seeded with the ticket summary + description.
 - `gas jira list` prints your open-sprint issues (read-only).
+- `gas jira create` (alias `new`) **creates** a ticket interactively — it prompts for project (default from config), type (fzf-pick Task/Story/Bug/Epic/Spike or type your own), summary, **component** (fzf-pick from the project's existing components, or type a new one, or skip), description (inline or `e` to open `$EDITOR`), assignee (default `@me`), and labels. Core fields go through `acli jira workitem create`'s flags; the component is applied as a **best-effort follow-up** `acli jira workitem edit` (acli has no component flag), which never fails the creation — if it can't set the component you still get the ticket plus a warning and the payload to retry. It then prints the new key + URL and offers to open a worktree for it right away.
 
 Config (prompted once, persisted; editable via `gas config`):
 
 ```bash
 gas config jira-subdomain alltrails        # <this>.atlassian.net
 gas config jira-branch-prefix pbeagan      # branch prefix; default derived from your gh username
+gas config jira-project TEAM               # default project key for `gas jira create`
 ```
 
-Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (run `acli auth` once). The subdomain also falls back to the legacy `~/.jira_instance_subdomain` file. Env overrides: `$AGENT_SESSION_JIRA_SUBDOMAIN`, `$AGENT_SESSION_JIRA_BRANCH_PREFIX`.
+Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (run `acli auth` once). The subdomain also falls back to the legacy `~/.jira_instance_subdomain` file. Env overrides: `$AGENT_SESSION_JIRA_SUBDOMAIN`, `$AGENT_SESSION_JIRA_BRANCH_PREFIX`, `$AGENT_SESSION_JIRA_PROJECT`.
+
+## Claude sessions
+
+When the harness is **Claude Code**, `gas` treats a worktree's conversation as first-class. Claude stores each conversation per project directory (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/<slug>/`, one JSONL per session), and a gas worktree maps 1:1 to such a directory. `gas` only reads the transcript *files* (count + last-modified — stable); it never parses their contents (that format is internal to Claude Code).
+
+- **Resume on reopen** — opening a worktree from `gas pick`/`branches` (or any reopen) launches `claude --continue`, resuming that worktree's most recent conversation instead of a blank one. A brand-new worktree launches `claude -n <window/branch/ticket>`, so the session is named and shows up in `/resume`.
+- **Session info in the picker** — `gas status` (and thus the `pick`/`branches` preview) shows `Claude sessions: N (last active …)` for the worktree.
+- **`gas sessions [PATH]`** — lists a worktree's sessions (ids + last-active) and prints the resume commands.
+- **Actions menu** — when the default harness is claude, the `pick` `ctrl-a` menu gains **"Resume claude session (picker)"**, which opens Claude's interactive `--resume` picker for that worktree (to pick an older session; plain Enter already `--continue`s the latest).
+
+This is entirely Claude-specific; other harnesses (cursor-agent, aider, …) are launched unchanged. Move storage with `$CLAUDE_CONFIG_DIR` and it's honored here too.
 
 ## Multi-window workflow
 
