@@ -1,3 +1,4 @@
+
 ##Monorepo
 # mdo: Run monorepo commands for the current project directory
 # Usage: mdo <script_name> [args...]
@@ -106,10 +107,13 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 #===========================
 # Notes
-alias n=note
-alias note='cat >> "$(echo ~/note-$(date +"%b%e::%T")).txt" << EOF'
-alias hnote='cd ~; note; cd -'
-alias nscript='cat <<EOF | tee node$(date +%s).js | node'
+# alias n=note
+# alias note='cat >> "$(echo ~/note-$(date +"%b%e::%T")).txt" << EOF'
+# alias hnote='cd ~; note; cd -'
+# alias nscript='cat <<EOF | tee node$(date +%s).js | node'
+alias note='gas note --new'
+alias note-list='gas note'
+
 
 alias mnt='mount | grep -E ^/dev | column -t'
 alias jam='java -jar '

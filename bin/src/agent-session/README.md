@@ -70,7 +70,8 @@ gas new -d   # create in background, print switch command
 - **sessions** `[PATH]` – List the Claude Code sessions recorded for a worktree (default: cwd): session ids + last-active, and how to resume. See [Claude sessions](#claude-sessions). Claude-specific.
 - **edit** – fzf-pick one of this project's **skills / rules / subagents** and open it in your editor (`$VISUAL`/`$EDITOR`, else `nvim`→`vim`→`vi`→`nano`), with a content preview. Which files are shown follows the harness: **Claude** → `.claude/skills/<name>/SKILL.md`, `.claude/agents/*.md`, and `CLAUDE.md`/`CLAUDE.local.md` (project **and** `~/.claude/…` global); **Cursor** → `.cursor/rules/*.mdc` and `.cursorrules` (Cursor has no file-based skills or subagents — those are Claude-only); any other harness shows both. Project files are resolved from the git root, so it works from any subdirectory.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
-- **install** – Install and track global CLI tools across package managers (see [Installing tools](#installing-tools)). `install [brew|cargo|pip|apt] PKG` (or `--brew` etc.) uses that manager; `install PKG` (no manager) tries **brew → cargo → pip → apt** and keeps the first that succeeds; `install curl URL NAME [--bin PATH] [--uninstall CMD]` runs `curl -fsSL URL | bash`. `install list` lists tracked tools, `install outdated` checks for newer versions, and bare **`install`** opens an fzf menu to **update / check / remove** each tool (forwarding to the right manager).
+- **install** – Install and track global CLI tools across package managers (see [Installing tools](#installing-tools)). The only positional is the package name; everything else is a flag: `install PKG` tries **brew → cargo → pip → apt** and keeps the first that succeeds, `install PKG --brew` (or `--cargo`/`--pip`/`--apt`) forces one, `install --curl URL NAME [--bin PATH] [--uninstall CMD]` runs `curl -fsSL URL | bash`. `install --discover` imports tools you already have, `install --list` lists tracked tools, `install --outdated` checks for newer versions, and bare **`install`** opens an fzf menu to **update / check / remove** each tool (forwarding to the right manager).
+- **note** – Manage plain-text note files with the same fzf pattern (see [Notes](#notes)). `note --new TITLE` creates a note and opens it in your editor; `note --edit`/`--cat`/`--delete [NAME]` act on a note (fzf-pick when `NAME` is omitted); `note --list` lists them; and bare **`note`** opens an fzf menu to **edit / cat / delete** each.
 - **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
 - **prune** – List worktrees and PR status (merged/closed = safe to remove), with attached/orphan. Use `--registered-only` to only consider worktrees in the registry. Use `--force-remove` to remove safe worktrees (skips attached windows; run cleanup in that window first). Pass a `PATH` to force-remove that worktree. Use `--find-by-title TITLE` to find a commit on develop by message.
@@ -99,6 +100,9 @@ gas install --curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup
 gas install --discover              # import what you already have installed
 gas install                         # fzf menu: update / check / remove tracked tools
 gas install --outdated              # which tracked tools have updates
+gas note --new "deploy checklist"   # create a note and open it in $EDITOR
+gas note --cat deploy-checklist     # print a note by name
+gas note                            # fzf menu: edit / cat / delete notes
 gas config harness-command claude
 gas list
 gas create-batch tasks.txt -d --worktree --branch develop
@@ -263,6 +267,22 @@ gas install              # fzf menu -> Update / Check latest version / Remove / 
 | latest | `brew info --json` | crates.io API | `pip index versions` | `apt-cache policy` | n/a |
 
 Because a `curl | bash` install has no owning manager, gas records the URL: **update** re-runs it (most scripts install latest), and **remove** uses the `--uninstall CMD` or `--bin PATH` you gave at install time (otherwise it just untracks and reminds you to delete the binary yourself).
+
+## Notes
+
+`gas note` is a tiny note manager built on the same flag-or-fzf pattern as `install`. Notes are plain markdown files in `$AGENT_SESSION_NOTES` (default `~/.config/agent-session/notes`), so they're easy to grep, sync, or edit by hand.
+
+```bash
+gas note --new "release steps"   # slugified to release-steps.md, seeded with "# release steps", opened in $EDITOR
+gas note --edit release-steps    # edit by name (with or without the .md)
+gas note --cat release-steps     # print it
+gas note --delete release-steps  # delete (asks to confirm)
+gas note --list                  # list notes (filename + first-line title)
+gas note                         # fzf menu -> pick a note, then Edit / Cat / Delete
+gas note release-steps           # shorthand: no flag + a name == --edit
+```
+
+The name argument is optional for `--edit`/`--cat`/`--delete`; leave it off and gas opens an fzf picker (with a content preview) so you can choose interactively. The editor is resolved the same way as `gas edit` — `$VISUAL`, then `$EDITOR`, then `nvim`→`vim`→`vi`→`nano`.
 
 ## Multi-window workflow
 

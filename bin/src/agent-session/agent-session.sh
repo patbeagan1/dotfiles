@@ -48,6 +48,7 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} install --curl URL NAME [--bin P] [--uninstall CMD]  # install via curl|bash
        ${prog} install --discover [--MGR] [-n]   # import already-installed tools into tracking
        ${prog} install [--list|--outdated]   # list tracked tools / check updates (bare = fzf menu)
+       ${prog} note --new TITLE          # create a note; --edit/--cat/--delete [NAME], --list (bare = fzf menu)
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
@@ -144,6 +145,11 @@ Subcommands:
                    preview). '--list' lists tracked tools; '--outdated' checks latest
                    versions; bare 'install' opens an fzf menu to update/remove/check
                    each. Registry: \$AGENT_SESSION_INSTALLS.
+  note             Manage plain-text note files. 'note --new TITLE' creates one and
+                   opens it in \$EDITOR; '--edit/--cat/--delete [NAME]' act on a note
+                   (fzf-pick when NAME is omitted); '--list' lists them; bare 'note'
+                   opens an fzf menu to edit/cat/delete each. Notes live in
+                   \$AGENT_SESSION_NOTES (default ~/.config/agent-session/notes).
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -1046,6 +1052,17 @@ agent_config_rows() {
 # --- Subcommand: edit (fzf-pick a skill/rule/subagent and open it in $EDITOR) ---
 # Ecosystem follows the configured harness: claude surfaces skills + subagents +
 # CLAUDE.md; cursor surfaces .cursor/rules/*.mdc + .cursorrules; anything else shows both.
+# Echo the editor to use: $VISUAL, then $EDITOR, then the first common editor found.
+# Returns non-zero (empty) if nothing is available.
+resolve_editor() {
+    local editor="${VISUAL:-${EDITOR:-}}" e
+    if [[ -z "$editor" ]]; then
+        for e in nvim vim vi nano; do command -v "$e" &>/dev/null && { editor="$e"; break; }; done
+    fi
+    [[ -z "$editor" ]] && return 1
+    printf '%s' "$editor"
+}
+
 cmd_edit() {
     if ! command -v fzf &>/dev/null; then
         echo "Error: fzf is required for '${prog} edit'." >&2
@@ -1070,15 +1087,7 @@ cmd_edit() {
         return 0
     fi
     # Resolve the editor: $VISUAL/$EDITOR, else the first available common terminal editor.
-    editor="${VISUAL:-${EDITOR:-}}"
-    if [[ -z "$editor" ]]; then
-        local e
-        for e in nvim vim vi nano; do command -v "$e" &>/dev/null && { editor="$e"; break; }; done
-    fi
-    if [[ -z "$editor" ]]; then
-        echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2
-        return 1
-    fi
+    editor=$(resolve_editor) || { echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2; return 1; }
     sel=$(printf '%s' "$rows" | fzf --ansi --no-multi --delimiter=$'\t' --with-nth=2 \
         --prompt="edit ($eco)> " \
         --header="Open a skill / rule / subagent in $editor" \
@@ -1087,6 +1096,195 @@ cmd_edit() {
     path=$(printf '%s' "$sel" | cut -f1)
     [[ -z "$path" ]] && return 0
     "$editor" "$path"
+}
+
+# =====================================================================================
+# gas note: simple per-user note files, managed like `gas install` — via flags or an
+# fzf menu. Notes are plain markdown files under $AGENT_SESSION_NOTES
+# (default ~/.config/agent-session/notes).
+# =====================================================================================
+get_notes_dir() {
+    echo "${AGENT_SESSION_NOTES:-$HOME/.config/agent-session/notes}"
+}
+
+# slugify a title into a filesystem-friendly base name (lowercase, dashes)
+note_slug() {
+    printf '%s' "$1" | tr '[:upper:]' '[:lower:]' \
+        | sed -e 's/[^a-z0-9]\{1,\}/-/g' -e 's/^-*//' -e 's/-*$//'
+}
+
+# echo note file paths, newest first (existing dir only)
+notes_list() {
+    local d f; d=$(get_notes_dir)
+    [[ -d "$d" ]] || return 0
+    ls -t "$d" 2>/dev/null | while IFS= read -r f; do
+        [[ -n "$f" && -f "$d/$f" ]] && printf '%s\n' "$d/$f"
+    done
+}
+
+# resolve a note NAME (with/without .md, or its slug) to a path; non-zero if not found
+note_resolve() {
+    local d name slug; d=$(get_notes_dir); name="${1:-}"
+    [[ -z "$name" ]] && return 1
+    [[ -f "$d/$name" ]]     && { printf '%s' "$d/$name"; return 0; }
+    [[ -f "$d/$name.md" ]]  && { printf '%s' "$d/$name.md"; return 0; }
+    slug=$(note_slug "$name")
+    [[ -n "$slug" && -f "$d/$slug.md" ]] && { printf '%s' "$d/$slug.md"; return 0; }
+    return 1
+}
+
+# fzf-pick an existing note; echo its path (non-zero if none / cancelled)
+note_pick() {
+    local rows sel
+    rows=$(notes_list)
+    if [[ -z "$rows" ]]; then echo "No notes yet. Create one with '${prog} note --new TITLE'." >&2; return 1; fi
+    if ! command -v fzf &>/dev/null; then echo "Error: fzf required to pick a note (or pass its NAME)." >&2; return 1; fi
+    sel=$(printf '%s\n' "$rows" | fzf --ansi --no-multi --delimiter=/ --with-nth=-1 \
+        --prompt="${1:-note}> " --header="${2:-Select a note}" \
+        --preview='cat {} 2>/dev/null | head -200' --preview-window='right,60%,wrap' || true)
+    [[ -z "$sel" ]] && return 1
+    printf '%s' "$sel"
+}
+
+# resolve a target note from an optional NAME, else fzf-pick; echo path
+note_target() {
+    local name="${1:-}" path
+    if [[ -n "$name" ]]; then
+        path=$(note_resolve "$name") || { echo "No note matching '$name'. Try '${prog} note --list'." >&2; return 1; }
+    else
+        path=$(note_pick) || return 1
+    fi
+    printf '%s' "$path"
+}
+
+note_new() {
+    local title="$1" d slug path editor
+    if [[ -z "$title" ]]; then echo "Usage: ${prog} note --new <title>" >&2; return 1; fi
+    d=$(get_notes_dir); mkdir -p "$d"
+    slug=$(note_slug "$title"); [[ -z "$slug" ]] && slug="note"
+    path="$d/$slug.md"
+    if [[ -e "$path" ]]; then
+        echo "Note already exists: $path (opening it)."
+    else
+        printf '# %s\n\n' "$title" > "$path"
+        echo "Created $path"
+    fi
+    editor=$(resolve_editor) || { echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2; return 0; }
+    "$editor" "$path"
+}
+
+note_edit() {
+    local path editor
+    path=$(note_target "${1:-}") || return 1
+    editor=$(resolve_editor) || { echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2; return 1; }
+    "$editor" "$path"
+}
+
+note_cat() {
+    local path; path=$(note_target "${1:-}") || return 1
+    cat "$path"
+}
+
+note_delete() {
+    local path; path=$(note_target "${1:-}") || return 1
+    if confirm "Delete note '$(basename "$path")'?"; then
+        rm -f "$path" && echo "Deleted $path" || echo "Could not delete $path"
+    else
+        echo "Cancelled."
+    fi
+}
+
+note_list_pretty() {
+    local rows p first; rows=$(notes_list)
+    if [[ -z "$rows" ]]; then echo "No notes yet. Create one with '${prog} note --new TITLE'."; return 0; fi
+    while IFS= read -r p; do
+        [[ -z "$p" ]] && continue
+        first=$(head -1 "$p" 2>/dev/null | sed 's/^#\{1,\} *//')
+        printf '  %-32s %s\n' "$(basename "$p")" "${first:0:50}"
+    done <<< "$rows"
+}
+
+# ctrl-a-style actions menu for a single note; returns 0 so the caller reloops
+note_actions_menu() {
+    local path="$1" choice editor
+    choice=$(printf '%s\n' "Edit" "Cat" "Delete" \
+        | fzf --no-multi --prompt='action> ' --header="Actions: $(basename "$path")" || true)
+    [[ -z "$choice" ]] && return 0
+    case "$choice" in
+        Edit)   editor=$(resolve_editor) || { echo "No editor found. Set \$EDITOR."; pause_for_key; return 0; }
+                "$editor" "$path" ;;
+        Cat)    cat "$path"; pause_for_key ;;
+        Delete) if confirm "Delete '$(basename "$path")'?"; then
+                    rm -f "$path" && echo "Deleted." || echo "Delete failed."
+                else echo "Cancelled."; fi
+                pause_for_key ;;
+    esac
+    return 0
+}
+
+# fzf menu over all notes; Enter opens the per-note actions menu
+note_menu() {
+    if ! command -v fzf &>/dev/null; then echo "Error: fzf is required for the '${prog} note' menu (or use flags)." >&2; return 1; fi
+    while true; do
+        local rows sel; rows=$(notes_list)
+        if [[ -z "$rows" ]]; then
+            echo "No notes yet. Create one with '${prog} note --new TITLE'."
+            return 0
+        fi
+        sel=$(printf '%s\n' "$rows" | fzf --ansi --no-multi --delimiter=/ --with-nth=-1 \
+            --header='enter: actions (edit / cat / delete)' \
+            --preview='cat {} 2>/dev/null | head -200' --preview-window='right,60%,wrap' || true)
+        [[ -z "$sel" ]] && return 0
+        note_actions_menu "$sel"
+    done
+}
+
+note_usage() {
+    cat >&2 <<EOF
+Usage:
+  ${prog} note --new <title>       create a note file and open it in \$EDITOR
+  ${prog} note --edit [NAME]       edit a note (fzf-pick if NAME omitted)
+  ${prog} note --cat [NAME]        print a note (fzf-pick if NAME omitted)
+  ${prog} note --delete [NAME]     delete a note (fzf-pick if NAME omitted)
+  ${prog} note --list              list notes
+  ${prog} note                     fzf menu -> edit / cat / delete
+Notes live in \$AGENT_SESSION_NOTES (default ~/.config/agent-session/notes).
+EOF
+}
+
+# --- Subcommand: note (flag-driven; the only positional is a note name / title) ---
+cmd_note() {
+    local mode=""
+    local pos=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --new|--create)  mode="new"; shift ;;
+            --edit)          mode="edit"; shift ;;
+            --cat|--show)    mode="cat"; shift ;;
+            --delete|--rm)   mode="delete"; shift ;;
+            --list|--ls)     mode="list"; shift ;;
+            --menu)          mode="menu"; shift ;;
+            -h|--help)       note_usage; return 0 ;;
+            --)              shift; while [[ $# -gt 0 ]]; do pos+=("$1"); shift; done ;;
+            -*)              echo "Error: unknown flag '$1'." >&2; note_usage; return 1 ;;
+            *)               pos+=("$1"); shift ;;
+        esac
+    done
+
+    local name="" title=""
+    if [[ ${#pos[@]} -gt 0 ]]; then name="${pos[0]}"; title="${pos[*]}"; fi
+
+    case "$mode" in
+        new)     note_new "$title" ;;
+        edit)    note_edit "$name" ;;
+        cat)     note_cat "$name" ;;
+        delete)  note_delete "$name" ;;
+        list)    note_list_pretty ;;
+        menu|"")
+            # bare 'note' -> menu; 'note NAME' with no flag -> edit that note.
+            if [[ -n "$name" ]]; then note_edit "$name"; else note_menu; fi
+            ;;
+    esac
 }
 
 # =====================================================================================
@@ -2726,6 +2924,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        note)
+            subcommand=note
+            shift
+            break
+            ;;
         jira)
             subcommand=jira
             shift
@@ -2821,6 +3024,10 @@ if [[ "$subcommand" == jira ]]; then
 fi
 if [[ "$subcommand" == install ]]; then
     cmd_install "$@"
+    exit 0
+fi
+if [[ "$subcommand" == note ]]; then
+    cmd_note "$@"
     exit 0
 fi
 if [[ "$subcommand" == config ]]; then
