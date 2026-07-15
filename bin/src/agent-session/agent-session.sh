@@ -48,7 +48,9 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} install --curl URL NAME [--bin P] [--uninstall CMD]  # install via curl|bash
        ${prog} install --discover [--MGR] [-n]   # import already-installed tools into tracking
        ${prog} install [--list|--outdated]   # list tracked tools / check updates (bare = fzf menu)
-       ${prog} note --new TITLE          # create a note; --edit/--cat/--delete [NAME], --list (bare = fzf menu)
+       ${prog} note --new TITLE [--body -|TEXT]   # create a note (stdin/--body = non-interactive)
+       ${prog} note --append NAME [--body -|TEXT]  # append to a note (auto-creates)
+       ${prog} note [--edit|--cat|--path|--delete] [NAME] | --search TERM | --list [--json]
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
@@ -145,11 +147,17 @@ Subcommands:
                    preview). '--list' lists tracked tools; '--outdated' checks latest
                    versions; bare 'install' opens an fzf menu to update/remove/check
                    each. Registry: \$AGENT_SESSION_INSTALLS.
-  note             Manage plain-text note files. 'note --new TITLE' creates one and
-                   opens it in \$EDITOR; '--edit/--cat/--delete [NAME]' act on a note
-                   (fzf-pick when NAME is omitted); '--list' lists them; bare 'note'
-                   opens an fzf menu to edit/cat/delete each. Notes live in
-                   \$AGENT_SESSION_NOTES (default ~/.config/agent-session/notes).
+  note             Manage plain-text note files (interactively or non-interactively, for
+                   agents). 'note --new TITLE' opens \$EDITOR, or writes directly when a
+                   body is given via '--body TEXT' / '--body -' / piped stdin (add
+                   --no-edit). 'note --append NAME' appends stdin/--body (auto-creating the
+                   note) — the agent scratchpad. '--edit/--cat/--path/--delete [NAME]' act on
+                   a note (fzf-pick when NAME omitted and a terminal is present; --delete
+                   --yes skips the prompt). '--search TERM' greps all notes (name:line:match);
+                   '--list [--json]' lists them (JSON includes bytes/lines). '--project|-p'
+                   scopes to the current repo (shared across its worktrees); bare 'note'
+                   opens an fzf menu. Notes live in \$AGENT_SESSION_NOTES
+                   (default ~/.config/agent-session/notes).
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -1104,7 +1112,35 @@ cmd_edit() {
 # (default ~/.config/agent-session/notes).
 # =====================================================================================
 get_notes_dir() {
-    echo "${AGENT_SESSION_NOTES:-$HOME/.config/agent-session/notes}"
+    # cmd_note sets _note_dir_override when --project is used; otherwise global.
+    echo "${_note_dir_override:-${AGENT_SESSION_NOTES:-$HOME/.config/agent-session/notes}}"
+}
+
+# echo the per-project notes dir (<global>/proj/<repo-slug>); non-zero if not in a repo.
+# Uses --git-common-dir so a linked worktree resolves to its MAIN repo (shared notes).
+note_project_dir() {
+    local common root slug base
+    common=$(git rev-parse --git-common-dir 2>/dev/null) || return 1
+    [[ -z "$common" ]] && return 1
+    case "$common" in /*) ;; *) common="$(pwd)/$common" ;; esac   # make absolute
+    root=$(cd "$(dirname "$common")" 2>/dev/null && pwd -P) || return 1
+    slug=$(note_slug "$(basename "$root")"); [[ -z "$slug" ]] && slug="repo"
+    base="${AGENT_SESSION_NOTES:-$HOME/.config/agent-session/notes}"
+    printf '%s/proj/%s' "$base" "$slug"
+}
+
+# true when there is a terminal to prompt on / drive fzf (same probe style as confirm)
+have_tty() { { true >/dev/tty; } 2>/dev/null; }
+
+# Echo the note body per the --body/stdin rules. $1=body_set(1/empty) $2=body value.
+#   --body given: value ('-' means read stdin); else if stdin is piped, read stdin; else none.
+read_note_body() {
+    local body_set="${1:-}" body_val="${2:-}"
+    if [[ -n "$body_set" ]]; then
+        if [[ "$body_val" == "-" ]]; then cat; else printf '%s' "$body_val"; fi
+    elif [[ ! -t 0 ]]; then
+        cat
+    fi
 }
 
 # slugify a title into a filesystem-friendly base name (lowercase, dashes)
@@ -1152,25 +1188,95 @@ note_target() {
     if [[ -n "$name" ]]; then
         path=$(note_resolve "$name") || { echo "No note matching '$name'. Try '${prog} note --list'." >&2; return 1; }
     else
+        if ! have_tty; then
+            echo "Error: no NAME given and no terminal for the picker. Pass a NAME, or use '${prog} note --search TERM' / '${prog} note --list'." >&2
+            return 1
+        fi
         path=$(note_pick) || return 1
     fi
     printf '%s' "$path"
 }
 
+# note_new TITLE [body_set] [body_val] [no_edit] [quiet]
+# Body comes from --body (body_val, '-'=stdin) or piped stdin; editor only opens when
+# interactive AND no body was supplied (preserves the human default). Never clobbers.
 note_new() {
-    local title="$1" d slug path editor
+    local title="$1" body_set="${2:-}" body_val="${3:-}" no_edit="${4:-}" quiet="${5:-}"
+    local d slug path editor body have_body=""
     if [[ -z "$title" ]]; then echo "Usage: ${prog} note --new <title>" >&2; return 1; fi
     d=$(get_notes_dir); mkdir -p "$d"
     slug=$(note_slug "$title"); [[ -z "$slug" ]] && slug="note"
     path="$d/$slug.md"
+
+    body=$(read_note_body "$body_set" "$body_val")
+    [[ -n "$body_set" || ! -t 0 ]] && have_body=1
+
     if [[ -e "$path" ]]; then
-        echo "Note already exists: $path (opening it)."
+        if [[ -n "$have_body" ]]; then
+            echo "Error: note already exists: $path. Use '${prog} note --append $slug' to add to it." >&2
+            return 1
+        fi
+        [[ -z "$quiet" ]] && echo "Note already exists: $path (opening it)."
     else
-        printf '# %s\n\n' "$title" > "$path"
-        echo "Created $path"
+        if [[ -n "$body" ]]; then printf '# %s\n\n%s\n' "$title" "$body" > "$path"
+        else printf '# %s\n\n' "$title" > "$path"; fi
+        [[ -z "$quiet" ]] && echo "Created $path"
+    fi
+
+    # Non-interactive (body supplied, --no-edit, or no terminal) => don't open an editor.
+    if [[ -n "$have_body" || -n "$no_edit" ]] || ! have_tty; then
+        [[ -n "$quiet" ]] && printf '%s\n' "$path"
+        return 0
     fi
     editor=$(resolve_editor) || { echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2; return 0; }
     "$editor" "$path"
+}
+
+# note_append NAME [body_set] [body_val] [quiet] — append stdin/--body; auto-create if missing.
+note_append() {
+    local name="$1" body_set="${2:-}" body_val="${3:-}" quiet="${4:-}"
+    local d path body
+    if [[ -z "$name" ]]; then echo "Usage: ${prog} note --append <name>  (body via --body or stdin)" >&2; return 1; fi
+    if [[ -z "$body_set" && -t 0 ]]; then
+        echo "Error: nothing to append. Pass --body TEXT or pipe content on stdin." >&2; return 1
+    fi
+    body=$(read_note_body "$body_set" "$body_val")
+    path=$(note_resolve "$name" || true)
+    if [[ -z "$path" ]]; then                 # auto-create
+        d=$(get_notes_dir); mkdir -p "$d"
+        local slug; slug=$(note_slug "$name"); [[ -z "$slug" ]] && slug="note"
+        path="$d/$slug.md"
+        printf '# %s\n\n' "$name" > "$path"
+    fi
+    # ensure a newline boundary, then append body + trailing newline
+    [[ -s "$path" && -n "$(tail -c1 "$path" 2>/dev/null)" ]] && printf '\n' >> "$path"
+    printf '%s\n' "$body" >> "$path"
+    [[ -z "$quiet" ]] && echo "Appended to $path"
+    [[ -n "$quiet" ]] && printf '%s\n' "$path"
+    return 0
+}
+
+# note_search TERM — grep all notes; print '<note>:<line>:<match>' (basename), token-frugal.
+note_search() {
+    local term="$1" rows p base hit found=""
+    if [[ -z "$term" ]]; then echo "Usage: ${prog} note --search <term>" >&2; return 1; fi
+    rows=$(notes_list)
+    [[ -z "$rows" ]] && return 1
+    while IFS= read -r p; do
+        [[ -z "$p" ]] && continue
+        base=$(basename "$p")
+        hit=$(grep -niIF -- "$term" "$p" 2>/dev/null || true)
+        [[ -z "$hit" ]] && continue
+        found=1
+        printf '%s\n' "$hit" | while IFS= read -r line; do printf '%s:%s\n' "$base" "$line"; done
+    done <<< "$rows"
+    [[ -n "$found" ]]
+}
+
+# note_path [NAME] — print just the resolved absolute path (agent then reads with offsets).
+note_path() {
+    local path; path=$(note_target "${1:-}") || return 1
+    printf '%s\n' "$path"
 }
 
 note_edit() {
@@ -1185,23 +1291,51 @@ note_cat() {
     cat "$path"
 }
 
+# note_delete [NAME] [assume_yes] — --yes/-y bypasses the confirm (for agents).
 note_delete() {
     local path; path=$(note_target "${1:-}") || return 1
-    if confirm "Delete note '$(basename "$path")'?"; then
+    if [[ -n "${2:-}" ]] || confirm "Delete note '$(basename "$path")'?"; then
         rm -f "$path" && echo "Deleted $path" || echo "Could not delete $path"
     else
         echo "Cancelled."
     fi
 }
 
-note_list_pretty() {
-    local rows p first; rows=$(notes_list)
-    if [[ -z "$rows" ]]; then echo "No notes yet. Create one with '${prog} note --new TITLE'."; return 0; fi
+# emit one SEP-delimited row per note: name<US>path<US>title<US>bytes<US>lines
+note_emit_rows() {
+    local SEP=$'\037' rows p title bytes lines
+    rows=$(notes_list)
+    [[ -z "$rows" ]] && return 0
     while IFS= read -r p; do
         [[ -z "$p" ]] && continue
-        first=$(head -1 "$p" 2>/dev/null | sed 's/^#\{1,\} *//')
-        printf '  %-32s %s\n' "$(basename "$p")" "${first:0:50}"
+        title=$(head -1 "$p" 2>/dev/null | sed 's/^#\{1,\} *//')
+        bytes=$(wc -c < "$p" 2>/dev/null | tr -d ' '); [[ -z "$bytes" ]] && bytes=0
+        lines=$(wc -l < "$p" 2>/dev/null | tr -d ' '); [[ -z "$lines" ]] && lines=0
+        printf '%s%s%s%s%s%s%s%s%s\n' "$(basename "$p")" "$SEP" "$p" "$SEP" "$title" "$SEP" "$bytes" "$SEP" "$lines"
     done <<< "$rows"
+}
+
+# note_list_pretty [json] — table by default; compact JSON array when $1 is set (like cmd_system)
+note_list_pretty() {
+    local want_json="${1:-}" rows
+    rows=$(notes_list)
+    if [[ -z "$rows" ]]; then
+        [[ -n "$want_json" ]] && { echo "[]"; return 0; }
+        echo "No notes yet. Create one with '${prog} note --new TITLE'."; return 0
+    fi
+    if [[ -n "$want_json" ]] && command -v jq &>/dev/null; then
+        note_emit_rows | jq -R -s '
+            split("\n") | map(select(length > 0)) | map(split("\u001f")) | map({
+                name: .[0], path: .[1], title: .[2],
+                bytes: (.[3] | tonumber? // 0), lines: (.[4] | tonumber? // 0) })'
+        return 0
+    fi
+    # table fallback (also used when jq is absent even if --json was asked)
+    local name path title bytes lines
+    note_emit_rows | while IFS=$'\037' read -r name path title bytes lines; do
+        [[ -z "$name" ]] && continue
+        printf '  %-32s %6sB  %s\n' "$name" "$bytes" "${title:0:50}"
+    done
 }
 
 # ctrl-a-style actions menu for a single note; returns 0 so the caller reloops
@@ -1242,28 +1376,43 @@ note_menu() {
 note_usage() {
     cat >&2 <<EOF
 Usage:
-  ${prog} note --new <title>       create a note file and open it in \$EDITOR
-  ${prog} note --edit [NAME]       edit a note (fzf-pick if NAME omitted)
-  ${prog} note --cat [NAME]        print a note (fzf-pick if NAME omitted)
-  ${prog} note --delete [NAME]     delete a note (fzf-pick if NAME omitted)
-  ${prog} note --list              list notes
-  ${prog} note                     fzf menu -> edit / cat / delete
+  ${prog} note --new <title> [--body TEXT|-] [--no-edit]   create a note (opens \$EDITOR if
+                                                            interactive and no body given)
+  ${prog} note --append <name> [--body TEXT|-]             append --body/stdin (auto-creates)
+  ${prog} note --edit [NAME]                               edit a note (fzf-pick if omitted)
+  ${prog} note --cat [NAME]                                print a note
+  ${prog} note --path [NAME]                               print just the note's file path
+  ${prog} note --search <term>                             grep all notes -> name:line:match
+  ${prog} note --delete [NAME] [--yes]                     delete (--yes skips the prompt)
+  ${prog} note --list [--json]                             list notes (JSON incl. bytes/lines)
+  ${prog} note                                             fzf menu -> edit / cat / delete
+Flags: --project|-p scope to the current repo · --global · --quiet|-q · --body - reads stdin.
 Notes live in \$AGENT_SESSION_NOTES (default ~/.config/agent-session/notes).
 EOF
 }
 
-# --- Subcommand: note (flag-driven; the only positional is a note name / title) ---
+# --- Subcommand: note (flag-driven; positional is a note name / title / search term) ---
 cmd_note() {
-    local mode=""
+    local mode="" body_set="" body_val="" want_json="" no_edit="" assume_yes="" quiet="" project=""
     local pos=()
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --new|--create)  mode="new"; shift ;;
+            --append|--add)  mode="append"; shift ;;
             --edit)          mode="edit"; shift ;;
             --cat|--show)    mode="cat"; shift ;;
+            --path)          mode="path"; shift ;;
+            --search|--grep) mode="search"; shift ;;
             --delete|--rm)   mode="delete"; shift ;;
             --list|--ls)     mode="list"; shift ;;
             --menu)          mode="menu"; shift ;;
+            --body)          body_set=1; body_val="${2:-}"; shift 2 ;;
+            --json)          want_json=1; shift ;;
+            --no-edit)       no_edit=1; shift ;;
+            --yes|-y)        assume_yes=1; shift ;;
+            --quiet|-q)      quiet=1; shift ;;
+            --project|-p)    project=1; shift ;;
+            --global)        project=""; shift ;;
             -h|--help)       note_usage; return 0 ;;
             --)              shift; while [[ $# -gt 0 ]]; do pos+=("$1"); shift; done ;;
             -*)              echo "Error: unknown flag '$1'." >&2; note_usage; return 1 ;;
@@ -1271,15 +1420,24 @@ cmd_note() {
         esac
     done
 
-    local name="" title=""
-    if [[ ${#pos[@]} -gt 0 ]]; then name="${pos[0]}"; title="${pos[*]}"; fi
+    # --project: point every note helper at the per-repo dir via the override var.
+    if [[ -n "$project" ]]; then
+        _note_dir_override=$(note_project_dir) || {
+            echo "Error: --project requires being inside a git repository." >&2; return 1; }
+    fi
+
+    local name="" title="" term=""
+    if [[ ${#pos[@]} -gt 0 ]]; then name="${pos[0]}"; title="${pos[*]}"; term="${pos[*]}"; fi
 
     case "$mode" in
-        new)     note_new "$title" ;;
+        new)     note_new "$title" "$body_set" "$body_val" "$no_edit" "$quiet" ;;
+        append)  note_append "$name" "$body_set" "$body_val" "$quiet" ;;
         edit)    note_edit "$name" ;;
         cat)     note_cat "$name" ;;
-        delete)  note_delete "$name" ;;
-        list)    note_list_pretty ;;
+        path)    note_path "$name" ;;
+        search)  note_search "$term" ;;
+        delete)  note_delete "$name" "$assume_yes" ;;
+        list)    note_list_pretty "$want_json" ;;
         menu|"")
             # bare 'note' -> menu; 'note NAME' with no flag -> edit that note.
             if [[ -n "$name" ]]; then note_edit "$name"; else note_menu; fi

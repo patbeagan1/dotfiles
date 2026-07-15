@@ -71,7 +71,7 @@ gas new -d   # create in background, print switch command
 - **edit** – fzf-pick one of this project's **skills / rules / subagents** and open it in your editor (`$VISUAL`/`$EDITOR`, else `nvim`→`vim`→`vi`→`nano`), with a content preview. Which files are shown follows the harness: **Claude** → `.claude/skills/<name>/SKILL.md`, `.claude/agents/*.md`, and `CLAUDE.md`/`CLAUDE.local.md` (project **and** `~/.claude/…` global); **Cursor** → `.cursor/rules/*.mdc` and `.cursorrules` (Cursor has no file-based skills or subagents — those are Claude-only); any other harness shows both. Project files are resolved from the git root, so it works from any subdirectory.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
 - **install** – Install and track global CLI tools across package managers (see [Installing tools](#installing-tools)). The only positional is the package name; everything else is a flag: `install PKG` tries **brew → cargo → pip → apt** and keeps the first that succeeds, `install PKG --brew` (or `--cargo`/`--pip`/`--apt`) forces one, `install --curl URL NAME [--bin PATH] [--uninstall CMD]` runs `curl -fsSL URL | bash`. `install --discover` imports tools you already have, `install --list` lists tracked tools, `install --outdated` checks for newer versions, and bare **`install`** opens an fzf menu to **update / check / remove** each tool (forwarding to the right manager).
-- **note** – Manage plain-text note files with the same fzf pattern (see [Notes](#notes)). `note --new TITLE` creates a note and opens it in your editor; `note --edit`/`--cat`/`--delete [NAME]` act on a note (fzf-pick when `NAME` is omitted); `note --list` lists them; and bare **`note`** opens an fzf menu to **edit / cat / delete** each.
+- **note** – Manage plain-text note files, interactively **or non-interactively for agents** (see [Notes](#notes)). `note --new TITLE` opens your editor, or writes straight to disk when a body is supplied (`--body TEXT`, `--body -`, or piped stdin) plus `--no-edit`; `note --append NAME` appends stdin/`--body` and **auto-creates** the note (an agent scratchpad). `--edit`/`--cat`/`--path`/`--delete [NAME]` act on a note (fzf-pick when `NAME` is omitted and a terminal is present; `--delete --yes` skips the confirm), `--search TERM` greps all notes (returns `name:line:match`), `--list [--json]` lists them (JSON includes `bytes`/`lines`), and `--project`/`-p` scopes to the current repo. Bare **`note`** opens an fzf menu.
 - **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
 - **prune** – List worktrees and PR status (merged/closed = safe to remove), with attached/orphan. Use `--registered-only` to only consider worktrees in the registry. Use `--force-remove` to remove safe worktrees (skips attached windows; run cleanup in that window first). Pass a `PATH` to force-remove that worktree. Use `--find-by-title TITLE` to find a commit on develop by message.
@@ -272,17 +272,54 @@ Because a `curl | bash` install has no owning manager, gas records the URL: **up
 
 `gas note` is a tiny note manager built on the same flag-or-fzf pattern as `install`. Notes are plain markdown files in `$AGENT_SESSION_NOTES` (default `~/.config/agent-session/notes`), so they're easy to grep, sync, or edit by hand.
 
+### Interactive (human) use
+
 ```bash
 gas note --new "release steps"   # slugified to release-steps.md, seeded with "# release steps", opened in $EDITOR
 gas note --edit release-steps    # edit by name (with or without the .md)
 gas note --cat release-steps     # print it
 gas note --delete release-steps  # delete (asks to confirm)
-gas note --list                  # list notes (filename + first-line title)
+gas note --list                  # list notes (filename + size + first-line title)
 gas note                         # fzf menu -> pick a note, then Edit / Cat / Delete
 gas note release-steps           # shorthand: no flag + a name == --edit
 ```
 
-The name argument is optional for `--edit`/`--cat`/`--delete`; leave it off and gas opens an fzf picker (with a content preview) so you can choose interactively. The editor is resolved the same way as `gas edit` — `$VISUAL`, then `$EDITOR`, then `nvim`→`vim`→`vi`→`nano`.
+The name argument is optional for `--edit`/`--cat`/`--path`/`--delete`; leave it off (at a terminal) and gas opens an fzf picker with a content preview. The editor is resolved the same way as `gas edit` — `$VISUAL`, then `$EDITOR`, then `nvim`→`vim`→`vi`→`nano`.
+
+### Non-interactive use (agents)
+
+Everything works without a terminal, which makes notes a durable scratchpad for an agent driving `gas` in a tmux pane:
+
+```bash
+# create with a body (no editor); --no-edit is implied once a body is present
+echo "1. bump version\n2. tag\n3. push" | gas note --new "release steps"
+gas note --new plan --body "investigate flaky test" --no-edit
+
+# append findings across steps — auto-creates the note the first time
+grep -c TODO src/*.py | gas note --append findings --quiet
+gas note --append findings --body "auth module looks done"
+
+# read cheaply: search returns only matching lines, --path lets you read with your own tool
+gas note --search "flaky"        # -> findings:3:the flaky test is in test_auth.py
+p=$(gas note --path findings)    # just the path; then read it with offsets/limits
+gas note --list --json           # [{"name","path","title","bytes","lines"}, ...]
+
+# delete without a prompt
+gas note --delete findings --yes
+```
+
+Non-interactive behavior is automatic: `--new`/`--append` read piped stdin (or `--body -`), the editor is skipped whenever a body is supplied or there's no terminal, and if you omit `NAME` where a picker would be needed but there's no tty, gas prints a clear "pass a NAME / use `--search`" error instead of failing on fzf. `--quiet` trims output to just the file path.
+
+### Project-scoped notes
+
+Add `--project` (or `-p`) to scope notes to the current repository instead of the global dir — stored under `$AGENT_SESSION_NOTES/proj/<repo-slug>/`:
+
+```bash
+gas note --project --append findings --body "repo-specific note"
+gas note -p --list
+```
+
+Scoping is resolved via `git rev-parse --git-common-dir`, so a **linked worktree and its main repo share the same project notes** — an agent's findings in one worktree are visible from another worktree of the same repo. `--global` forces the shared dir. Outside a git repo, `--project` errors.
 
 ## Multi-window workflow
 
