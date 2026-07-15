@@ -1,5 +1,14 @@
 name: gas
 roadmap:
-  - allow for tasks to be triggered based on a cron.txt file, which contains the 
-  - allow for jira tickets to be created directly via gas
+  # --- fleet: the human-orchestrator cockpit (the human runs many independent Claude
+  #     instances; gas aggregates + coordinates them) ---
+  - "DONE: fleet status via Claude Code hooks (gas hooks / hook-report) - authoritative, not guessed"
+  - "DONE: gas board (+ --line for tmux status-right), gas next, gas answer"
+  - "DONE: collision awareness - gas conflicts / board --conflicts (files changed by >1 agent)"
+  - "DONE: integration staging - gas integrate: cross-branch conflict preview + suggested landing order"
+  - gas cost - aggregate token usage per worktree/day from Claude JSONL (standalone, optional)
+  - gas assign - persistent task backlog with a concurrency cap that auto-spawns the next as agents finish
+  # --- existing ---
+  - allow for tasks to be triggered based on a cron.txt file, which contains the
+  - "DONE: allow for jira tickets to be created directly via gas (gas jira create)"
   - there is a bug in the way branches and directories are named. We have an example: ~/.local/state/agent-session/worktrees/agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750/agent-agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750-mark-telemetry-logger-undeprecated-20260708-095107-41064^agent-agent-agent-alltrails_android_2-inject-telemetry-into-sync-20260702-112722-15850-fix-sync-20260707-145415-38750-mark-telemetry-logger-undeprecated-20260708-095107-4106

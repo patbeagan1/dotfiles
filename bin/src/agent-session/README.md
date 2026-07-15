@@ -64,6 +64,12 @@ gas new -d   # create in background, print switch command
 - **fork [--deep] [--branch BR] REPO [NAME] [PROMPT]** – Like `dev`, but instead of creating a worktree of the current repo it **clones a different repo** (`REPO` = a git URL or path) and opens a 2-pane agent window rooted in the clone. Clones are **shallow (`--depth 1`) by default**; pass **`--deep`** for full history, and `--branch BR` to clone a specific branch. `NAME` defaults to the repo name; the clone is registered so it shows in `pick`/`system` and is removed by `cleanup` like any other session. Clones live under `$AGENT_SESSION_CLONE_BASE` (default: `…/agent-session/clones`, beside the worktree base).
 - **jira [KEY]** – fzf-pick a Jira ticket from your open sprints (or pass a `KEY` to skip the picker) and open a worktree window for it: a fresh branch `<prefix>/<KEY>/<slug>` (unique — a repeat on the same ticket gets a `-part-N` suffix) off `$AGENT_SESSION_DEV_BRANCH` (default `develop`), tagged `--ticket KEY`, with the agent seeded with the ticket. **`jira list`** prints your open-sprint issues; **`jira create`** creates a ticket interactively and forwards to `acli` (see [Jira](#jira-gas-jira)). Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (Atlassian CLI); set the instance/prefix/project with `gas config jira-subdomain`, `jira-branch-prefix`, and `jira-project`. (Absorbs the old `jirasprintmine`/`jirabranch` zsh functions, which now just call these.)
 - **switch** – Use fzf to search tmux windows by ticket or title and switch to the selected one.
+- **board** – The **fleet triage console** (see [Fleet orchestration](#fleet-orchestration)): an interactive fzf list of agents *sorted by who needs you*, each row showing status + the **pending question**, with a preview of the live pane + git state. Enter jumps; **`ctrl-a`** opens actions (answer / review diff / open PR / mark reviewed / kill); **`ctrl-r`** quick-replies. Non-interactive variants for status bars/scripts: `--plain`, `--line` (`⚙/⏳/✓`), `--watch [SECS]`, `--conflicts`.
+- **next** – **Cycle** to the next agent waiting on you (skips the current window, so tapping it repeatedly walks your blocked agents) and print its question. Ideal as a tmux key-binding.
+- **answer** `[--to NAME] [MSG]` – Reply into an agent's pane **without** switching. With no `MSG` it shows the agent's question and **prompts** you for the reply; targets the `next` waiting agent or `--to NAME`.
+- **conflicts** – Scan all agents and report **files changed by more than one of them** (vs each worktree's base), so overlapping work surfaces before it collides. Also `board --conflicts`.
+- **integrate** `[--repo PATH]` – Preview how the parallel agents' branches will merge: candidate branches + status per repo, **cross-branch conflict preview** via `git merge-tree`, and a suggested landing order. Read-only — never merges.
+- **hooks** `[--install|--uninstall|--status] [--user]` – Install the Claude Code hooks that report each agent's real status to the fleet. See [Fleet orchestration](#fleet-orchestration).
 - **pick** (or **worktrees**) – fzf picker over gas worktrees (from the registry). The `--preview` pane shows the full state of the highlighted worktree via the `status` command. Press Enter to switch to that worktree's live tmux window, or — if none is attached — open a fresh gas window rooted at it. Press **`ctrl-a`** for an actions menu on the highlighted row (see [Actions menu](#actions-menu-ctrl-a)).
 - **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
 - **status** `[--branch BRANCH] [--fetch] [PATH]` – Print the full state of a worktree/branch: local branch, working-tree status, ahead/behind, whether the branch still exists on the remote (or was deleted/merged), the associated **PR** state via `gh` (number, state, title, url), and the worktree's **Claude session** count + last-active. Used as the picker preview; also handy standalone. `PATH` of `-` or omitted means the current repo. `--fetch` contacts `origin` for **live** remote/merged state (slower; `gas pick` passes it). Degrades gracefully when `gh` is missing/unauthenticated or there is no PR.
@@ -214,6 +220,61 @@ gas config jira-project TEAM               # default project key for `gas jira c
 ```
 
 Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (run `acli auth` once). The subdomain also falls back to the legacy `~/.jira_instance_subdomain` file. Env overrides: `$AGENT_SESSION_JIRA_SUBDOMAIN`, `$AGENT_SESSION_JIRA_BRANCH_PREFIX`, `$AGENT_SESSION_JIRA_PROJECT`.
+
+## Fleet orchestration
+
+You are the orchestrator; the Claude agents are your subagents, each running as an **independent instance** in its own worktree + tmux window + context window. Claude Code is great at *one* conversation, but nothing aggregates the *many* independent instances you're running at once — that cross-instance view is what the fleet commands add.
+
+The design principle: **don't guess what the harness already knows — bridge it.** Instead of scraping panes to infer whether an agent is working or blocked, gas installs Claude Code **hooks** so each agent reports its *authoritative* status (and the exact question it's blocked on) to a small per-worktree state file. gas then aggregates those across every instance.
+
+### Setup: install the hooks
+
+```bash
+gas hooks --install      # writes to this repo's .claude/settings.json (merges + backs up)
+gas hooks --install --user   # or globally, in ~/.claude/settings.json
+gas hooks --status       # show whether hooks are installed + the fleet state dir
+gas hooks --uninstall    # remove them (restores from a .bak)
+```
+
+This registers four hooks (requires `jq`, and never clobbers your other settings): `Notification → waiting` (also captures the question), `Stop → idle/done`, and `UserPromptSubmit`/`SessionStart → working`. Each just runs `gas hook-report <status>`, which appends `ts|status|session|message` to `$AGENT_SESSION_FLEET/<cwd-slug>` (default `~/.local/state/agent-session/fleet/`). If the harness isn't Claude, gas falls back to the pane's running command — coarser, but no fabricated detail.
+
+### Conduct the fleet
+
+tmux's own `leader w` already lets you *switch* windows with a live preview. The fleet commands do the thing tmux can't: they know each agent's **semantic state** — who is *waiting on you*, *the exact question they asked*, and whether you've *reviewed* their output — and let you act on it.
+
+```bash
+gas board                # INTERACTIVE triage console (fzf), agents sorted by who needs you
+gas board --line         # "⚙3 ⏳2 ✓1" — drop into tmux status-right for ambient awareness
+gas board --watch 3      # auto-refreshing table (pin it in its own window)
+gas board --plain        # a plain table (for scripts / no-tty)
+
+gas next                 # cycle to the next agent waiting on you (skips the current window)
+gas answer --to fix-sync "use Postgres"   # reply straight into that agent's pane
+gas answer                                # prompt to answer the current 'next' waiting agent
+```
+
+In the interactive `board`, rows are ordered **waiting → done → working**, each showing the pending question, and the preview pane fuses the agent's **live pane content** with its status + git state. From there:
+
+- **Enter** — jump to that agent's window.
+- **`ctrl-a`** — actions: **Answer** (type a reply sent into the pane), **Review diff**, **Open PR**, **Mark reviewed** (clears it from your attention queue — a state tmux has no concept of), **Kill window**.
+- **`ctrl-r`** — quick reply without opening the menu.
+
+This is the throughput win: instead of touring six panes to find who's blocked, you triage from one list — see the question, answer it, mark it reviewed, move on. Bind `gas next` to a tmux key to walk blocked agents one tap at a time, and add the summary to your status bar with `set -g status-right '#(gas board --line)'`.
+
+### Catch collisions early, integrate deliberately
+
+Running many agents on one repo, two of them will eventually edit the same file. These two commands surface that **before** it turns into a merge headache:
+
+```bash
+gas conflicts            # files changed by >1 agent (vs each worktree's base)
+gas board --conflicts    # the board, with the collision report appended
+
+gas integrate            # per repo: candidate branches + status, cross-branch conflict
+                         # preview (git merge-tree), and a suggested landing order
+gas integrate --repo ~/src/app   # scope to one repo
+```
+
+`gas conflicts` intersects each agent's changed-file set, so you see e.g. `src/sync.kt → fix-sync, refactor` at a glance. `gas integrate` goes further and dry-runs the merges: it reports which branch pairs collide and on which files, then suggests landing the clean branches first and resolving the entangled ones last. Both are **read-only** — they never touch your branches or working trees.
 
 ## Claude sessions
 

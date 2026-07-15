@@ -38,6 +38,12 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} jira create              # create a ticket interactively (via acli)
        ${prog} create-batch FILE [OPTIONS]
        ${prog} switch
+       ${prog} board [--plain|--line|--watch [SECS]] [--conflicts]   # interactive fleet triage console
+       ${prog} next                     # cycle to the next agent waiting on you (+ its question)
+       ${prog} answer [--to NAME] [MSG] # reply into an agent's pane (prompts if MSG omitted)
+       ${prog} conflicts                # files changed by more than one agent (collision scan)
+       ${prog} integrate [--repo PATH]  # preview cross-branch conflicts before merging
+       ${prog} hooks [--install|--uninstall|--status] [--user]   # bridge Claude status to the fleet
        ${prog} pick
        ${prog} branches
        ${prog} status [--branch BRANCH] [--fetch] [PATH]
@@ -117,6 +123,30 @@ Subcommands:
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
                      Supports -d, --worktree, --branch, --agent (apply to all).
   switch           Use fzf to search tmux windows by ticket or title and switch
+  board            Interactive fleet triage console (fzf): agents sorted by who needs you,
+                   each row showing status + the pending QUESTION; the preview shows the
+                   live pane + git state. Enter jumps; ctrl-a = actions (answer / review
+                   diff / open PR / mark reviewed / kill); ctrl-r = quick reply. Status is
+                   sourced from Claude Code hooks (see 'hooks'). Non-interactive variants:
+                   '--plain' (table), '--line' (⚙/⏳/✓ for a tmux status-right), '--watch
+                   [SECS]', '--conflicts'.
+  next             Cycle to the next agent waiting on you (skips the current window, so
+                   repeated calls walk your blocked agents) and print its question. Good as
+                   a tmux key-binding.
+  answer [--to N] [MSG]  Reply into an agent's pane without switching. With no MSG it shows
+                   the agent's question and prompts you for the reply. Targets the next
+                   waiting agent, or --to NAME.
+  conflicts        Scan all agents and report files changed by more than one of them (vs
+                   each worktree's base) — catch overlapping work before it collides. Also
+                   available as 'board --conflicts'.
+  integrate [--repo P]  Preview how the parallel agents' branches will merge: lists each
+                   repo's candidate branches + status, previews cross-branch conflicts
+                   (via 'git merge-tree'), and suggests a landing order (clean branches
+                   first). Read-only — it never merges.
+  hooks            Install/remove the Claude Code hooks that report each agent's real
+                   status to the fleet ('--install'/'--uninstall'/'--status'; '--user' for
+                   the global scope, else this repo's .claude/settings.json). Requires jq;
+                   merges into existing settings and backs them up.
   pick             fzf picker over worktrees. Preview shows full state
                    (git status, ahead/behind, remote-deleted, merged, PR via gh).
                    Enter switches to the live window, or opens a new one for orphans.
@@ -3057,6 +3087,627 @@ cmd_doctor() {
     fi
 }
 
+# =====================================================================================
+# Fleet orchestration: aggregate the many INDEPENDENT Claude instances the human runs
+# (one per worktree/window) into a single cockpit. Status is sourced authoritatively
+# from Claude Code hooks (gas hook-report), NOT guessed — the harness already knows its
+# own state; gas just aggregates it across instances. Non-claude harnesses fall back to
+# the coarse #{pane_current_command} signal.
+#
+# Fleet state: one file per worktree at $AGENT_SESSION_FLEET/<cwd-slug>, lines of
+#   iso_ts|status|session|message   (status = working|waiting|idle)
+# The newest line is the current state; `message` carries the question when waiting.
+# =====================================================================================
+get_fleet_dir() {
+    echo "${AGENT_SESSION_FLEET:-${XDG_STATE_HOME:-$HOME/.local/state}/agent-session/fleet}"
+}
+
+# canonical-path slug (matches claude_project_dir's slug scheme, 291-294)
+path_slug() { printf '%s' "$(canon_path "$1")" | sed 's/[^a-zA-Z0-9]/-/g'; }
+fleet_file() { echo "$(get_fleet_dir)/$(path_slug "$1")"; }
+
+# fleet_write CWD STATUS SESSION MESSAGE  (append; keep the file bounded)
+fleet_write() {
+    local f n msg; f=$(fleet_file "$1"); mkdir -p "$(dirname "$f")"
+    msg=$(printf '%s' "${4:-}" | tr '\n\r' '  ')          # keep one line per event
+    printf '%s|%s|%s|%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$2" "${3:-}" "$msg" >> "$f"
+    n=$(wc -l < "$f" 2>/dev/null | tr -d ' ' || echo 0)
+    if [[ "${n:-0}" -gt 400 ]]; then tail -n 200 "$f" > "$f.tmp.$$" 2>/dev/null && mv "$f.tmp.$$" "$f" || true; fi
+}
+
+# agent_status PATH -> working|waiting|idle|unknown
+agent_status() {
+    local f last st idx pane cmd
+    f=$(fleet_file "$1")
+    if [[ -f "$f" ]]; then
+        last=$(tail -n 1 "$f" 2>/dev/null || true)
+        st=$(printf '%s' "$last" | cut -d'|' -f2)
+        [[ -n "$st" ]] && { printf '%s' "$st"; return 0; }
+    fi
+    # fallback (non-claude / no hooks): is a non-shell process live in the pane?
+    idx=$(attached_window_index "$1")
+    if [[ -n "$idx" && -n "${TMUX:-}" ]]; then
+        pane=$(tmux list-panes -t ":$idx" -F '#{pane_id}' 2>/dev/null | head -1 || true)
+        if [[ -n "$pane" ]]; then
+            cmd=$(tmux display-message -p -t "$pane" '#{pane_current_command}' 2>/dev/null || true)
+            case "$cmd" in
+                ""|sh|-sh|bash|-bash|zsh|-zsh|fish|-fish|dash|login) printf 'idle' ;;
+                *) printf 'working' ;;
+            esac
+            return 0
+        fi
+    fi
+    printf 'unknown'
+}
+
+# agent_question PATH -> the message from the newest fleet line (the pending question)
+agent_question() {
+    local f last; f=$(fleet_file "$1"); [[ -f "$f" ]] || return 0
+    last=$(tail -n 1 "$f" 2>/dev/null || true)
+    printf '%s' "$last" | cut -d'|' -f4-
+}
+
+# fleet_last_active PATH -> "3m ago" from the state file mtime, or "-"
+fleet_last_active() {
+    local f mt now; f=$(fleet_file "$1"); [[ -f "$f" ]] || { printf '-'; return 0; }
+    mt=$(stat -f %m "$f" 2>/dev/null || echo "")
+    [[ -z "$mt" ]] && { printf '-'; return 0; }
+    now=$(date +%s); rel_age $((now - mt))
+}
+
+# the task/ticket for a worktree, from its live window option (best-effort)
+fleet_task_for() {
+    local idx t; idx=$(attached_window_index "$1"); [[ -z "$idx" ]] && { printf '-'; return 0; }
+    t=$(tmux show-window-option -t ":$idx" -v @agent-ticket 2>/dev/null || true)
+    [[ -n "$t" ]] && printf '%s' "$t" || printf '-'
+}
+
+status_glyph() {
+    case "$1" in
+        waiting)   printf '%s' '⏳ waiting' ;;
+        working)   printf '%s' '⚙ working' ;;
+        idle|done) printf '%s' '✓ done' ;;
+        reviewed)  printf '%s' '✔ reviewed' ;;
+        *) printf '%s' '· —' ;;
+    esac
+}
+# attention rank for sorting the board (lower = more urgent)
+status_rank() {
+    case "$1" in waiting) echo 0 ;; idle|done) echo 1 ;; working) echo 2 ;; reviewed) echo 3 ;; *) echo 4 ;; esac
+}
+
+# registry path whose basename == NAME (first match); non-zero if none
+fleet_path_for_name() {
+    local name="$1" path branch repo created rows
+    rows=$(registry_list_live)
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        [[ "$(basename "$path")" == "$name" ]] && { printf '%s' "$path"; return 0; }
+    done <<< "$rows"
+    return 1
+}
+
+# path of the highest-priority agent needing you: a waiting one, else a done/idle one
+fleet_next_waiting() {
+    local path branch repo created rows st best_wait="" best_done=""
+    rows=$(registry_list_live); [[ -z "$rows" ]] && return 1
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        st=$(agent_status "$path")
+        case "$st" in
+            waiting)   [[ -z "$best_wait" ]] && best_wait="$path" ;;
+            idle|done) [[ -z "$best_done" ]] && best_done="$path" ;;
+        esac
+    done <<< "$rows"
+    [[ -n "$best_wait" ]] && { printf '%s' "$best_wait"; return 0; }
+    [[ -n "$best_done" ]] && { printf '%s' "$best_done"; return 0; }
+    return 1
+}
+
+# Ordered attention list (paths): waiting first, then done/idle; excludes working/reviewed.
+fleet_attention_list() {
+    local rows path branch repo created st waits="" dones=""
+    rows=$(registry_list_live); [[ -z "$rows" ]] && return 0
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        st=$(agent_status "$path")
+        case "$st" in
+            waiting)   waits="${waits}${path}"$'\n' ;;
+            idle|done) dones="${dones}${path}"$'\n' ;;
+        esac
+    done <<< "$rows"
+    printf '%s%s' "$waits" "$dones"
+}
+
+# registry branch for a worktree path
+fleet_branch_for() {
+    local p="$1" path branch repo created rows
+    rows=$(registry_list_live)
+    while IFS='|' read -r path branch repo created; do
+        [[ "$path" == "$p" ]] && { printf '%s' "$branch"; return 0; }
+    done <<< "$rows"
+}
+
+# the agent (top) pane id for a worktree, or empty
+agent_pane_for() {
+    local idx; idx=$(attached_window_index "$1"); [[ -z "$idx" || -z "${TMUX:-}" ]] && return 0
+    tmux list-panes -t ":$idx" -F '#{pane_id}' 2>/dev/null | head -1 || true
+}
+
+# Send a reply into an agent's pane and submit it (C-Enter). $1=path $2=message
+send_to_agent() {
+    [[ -z "${TMUX:-}" ]] && { echo "Error: not inside tmux." >&2; return 1; }
+    local idx pane; idx=$(attached_window_index "$1")
+    [[ -z "$idx" ]] && { echo "Error: no live window for $(basename "$1")." >&2; return 1; }
+    pane=$(tmux list-panes -t ":$idx" -F '#{pane_id}' 2>/dev/null | head -1 || true)
+    [[ -z "$pane" ]] && { echo "Error: no pane in window :$idx." >&2; return 1; }
+    tmux send-keys -t "$pane" -- "$2"
+    tmux send-keys -t "$pane" C-Enter
+}
+
+# Read one line from the controlling terminal; non-zero if there is none. $1=prompt
+prompt_line() {
+    local ans; printf '%s' "$1" > /dev/tty 2>/dev/null || return 1
+    IFS= read -r ans < /dev/tty 2>/dev/null || return 1
+    printf '%s' "$ans"
+}
+
+# --- gas hook-report: called by the installed Claude Code hooks (or manually/tests) ---
+cmd_hook_report() {
+    local status="${1:-working}"; [[ $# -gt 0 ]] && shift
+    local msg="" cwd="" session="" input=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --message) msg="${2:-}"; shift 2 ;;
+            --cwd)     cwd="${2:-}"; shift 2 ;;
+            --session) session="${2:-}"; shift 2 ;;
+            *) shift ;;
+        esac
+    done
+    # Hooks pass a JSON payload on stdin; harvest cwd/session/message when not overridden.
+    if [[ -z "$cwd$session$msg" && ! -t 0 ]]; then input=$(cat 2>/dev/null || true); fi
+    if [[ -n "$input" ]] && command -v jq &>/dev/null; then
+        [[ -z "$cwd" ]]     && cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null || true)
+        [[ -z "$session" ]] && session=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null || true)
+        [[ -z "$msg" ]]     && msg=$(printf '%s' "$input" | jq -r '.message // empty' 2>/dev/null || true)
+    fi
+    [[ -z "$cwd" ]] && cwd="$PWD"
+    case "$status" in waiting|working|idle|reviewed) ;; *) status="working" ;; esac
+    fleet_write "$cwd" "$status" "$session" "$msg"
+}
+
+# --- gas hooks --install|--uninstall|--status [--user|--project] ---
+hooks_settings_file() {
+    if [[ "${1:-project}" == user ]]; then
+        echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+    else
+        local root; root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+        echo "$root/.claude/settings.json"
+    fi
+}
+
+cmd_hooks() {
+    local action="status" scope="project"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --install)   action=install; shift ;;
+            --uninstall) action=uninstall; shift ;;
+            --status)    action=status; shift ;;
+            --user)      scope=user; shift ;;
+            --project)   scope=project; shift ;;
+            -h|--help)   echo "Usage: ${prog} hooks [--install|--uninstall|--status] [--user|--project]"; return 0 ;;
+            *) echo "Error: unknown arg '$1'." >&2; return 1 ;;
+        esac
+    done
+    local file gas tmp cur
+    file=$(hooks_settings_file "$scope")
+    gas=$(resolve_self)
+
+    if [[ "$action" == status ]]; then
+        echo "Fleet hooks: scope=$scope  file=$file"
+        if [[ -f "$file" ]] && grep -q 'hook-report' "$file" 2>/dev/null; then
+            echo "  installed (events: $(command -v jq >/dev/null 2>&1 && jq -r '(.hooks//{})|to_entries[]|select([.value[]?.hooks[]?.command//""|test("hook-report")]|any)|.key' "$file" 2>/dev/null | tr '\n' ' ' || echo '?'))"
+        else
+            echo "  not installed. Run '${prog} hooks --install' from inside the repo."
+        fi
+        echo "  fleet state dir: $(get_fleet_dir)"
+        return 0
+    fi
+
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required to safely edit $file." >&2; return 1
+    fi
+
+    if [[ "$action" == install ]]; then
+        mkdir -p "$(dirname "$file")"
+        [[ -f "$file" ]] && cp "$file" "$file.bak"
+        cur=$(cat "$file" 2>/dev/null || true); [[ -z "$cur" ]] && cur='{}'
+        if ! printf '%s' "$cur" | jq . >/dev/null 2>&1; then
+            echo "Error: $file is not valid JSON (backed up at $file.bak). Aborting." >&2; return 1
+        fi
+        tmp="$file.tmp.$$"
+        printf '%s' "$cur" | jq --arg gas "$gas" '
+            def upsert($ev; $tok):
+              .hooks[$ev] = (((.hooks[$ev] // [])
+                 | map(select((.hooks[0].command // "") | test("hook-report") | not)))
+                 + [{hooks: [{type: "command", command: ($gas + " hook-report " + $tok)}]}]);
+            upsert("Notification"; "waiting")
+            | upsert("Stop"; "idle")
+            | upsert("UserPromptSubmit"; "working")
+            | upsert("SessionStart"; "working")
+        ' > "$tmp" && mv "$tmp" "$file"
+        echo "Installed gas fleet hooks into $file"
+        echo "  (Notification->waiting, Stop->idle, UserPromptSubmit/SessionStart->working)"
+        return 0
+    fi
+
+    if [[ "$action" == uninstall ]]; then
+        [[ -f "$file" ]] || { echo "No settings file at $file."; return 0; }
+        cp "$file" "$file.bak"
+        tmp="$file.tmp.$$"
+        jq '
+            if .hooks then
+              .hooks |= (with_entries(.value |= map(select((.hooks[0].command // "") | test("hook-report") | not)))
+                         | with_entries(select(.value | length > 0)))
+            else . end
+            | if (.hooks // {}) == {} then del(.hooks) else . end
+        ' "$file" > "$tmp" && mv "$tmp" "$file"
+        echo "Removed gas fleet hooks from $file (backup: $file.bak)"
+        return 0
+    fi
+}
+
+# --- gas board [--line] [--watch [SECS]] : the fleet cockpit ---
+# Non-interactive table (used for --plain, --watch, no-tty, and agents/scripts).
+board_render() {
+    local rows path branch repo created st name la task w=0 q=0 d=0 r=0 u=0
+    rows=$(registry_list_live)
+    if [[ -z "$rows" ]]; then echo "No tracked agents. Create one with '${prog} new --worktree …'."; return 0; fi
+    printf '%-14s %-22s %-26s %-10s %s\n' "STATUS" "AGENT" "BRANCH" "ACTIVE" "TASK/QUESTION"
+    printf '%-14s %-22s %-26s %-10s %s\n' "------" "-----" "------" "------" "-------------"
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        st=$(agent_status "$path"); name=$(basename "$path")
+        la=$(fleet_last_active "$path")
+        if [[ "$st" == waiting ]]; then task=$(agent_question "$path"); else task=$(fleet_task_for "$path"); fi
+        case "$st" in waiting) q=$((q+1)) ;; working) w=$((w+1)) ;; idle|done) d=$((d+1)) ;; reviewed) r=$((r+1)) ;; *) u=$((u+1)) ;; esac
+        printf '%-14s %-22s %-26s %-10s %s\n' "$(status_glyph "$st")" "${name:0:22}" "${branch:0:26}" "$la" "${task:0:50}"
+    done <<< "$rows"
+    printf '\n  ⚙ %d working   ⏳ %d waiting   ✓ %d done' "$w" "$q" "$d"
+    [[ "$r" -gt 0 ]] && printf '   ✔ %d reviewed' "$r"
+    [[ "$u" -gt 0 ]] && printf '   · %d unknown' "$u"
+    printf '\n'
+}
+
+board_line() {
+    local rows path branch repo created st w=0 q=0 d=0
+    rows=$(registry_list_live)
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        st=$(agent_status "$path")
+        case "$st" in waiting) q=$((q+1)) ;; working) w=$((w+1)) ;; idle|done) d=$((d+1)) ;; esac
+    done <<< "$rows"
+    printf '⚙%d ⏳%d ✓%d' "$w" "$q" "$d"
+}
+
+# Rows for the interactive board: "rank<TAB>path<TAB>preformatted-display", urgent first.
+board_build_rows() {
+    local rows path branch repo created st name la q rank disp
+    rows=$(registry_list_live); [[ -z "$rows" ]] && return 0
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        st=$(agent_status "$path"); name=$(basename "$path")
+        la=$(fleet_last_active "$path"); rank=$(status_rank "$st")
+        q=""; [[ "$st" == waiting ]] && q=$(agent_question "$path")
+        disp=$(printf '%-12s %-20s %-18s %-9s %s' "$(status_glyph "$st")" "${name:0:20}" "${branch:0:18}" "$la" "${q:0:60}")
+        printf '%s\t%s\t%s\n' "$rank" "$path" "$disp"
+    done <<< "$rows"
+}
+
+# fzf --preview target: rich per-agent view (semantic status + question + LIVE pane + git).
+cmd_board_preview() {
+    local path="${1:-}" st q pane
+    [[ -z "$path" ]] && return 0
+    st=$(agent_status "$path")
+    printf '%s   [%s]\n' "$(basename "$path")" "$(status_glyph "$st")"
+    printf 'branch: %s    active: %s\n' "$(fleet_branch_for "$path")" "$(fleet_last_active "$path")"
+    q=$(agent_question "$path"); [[ "$st" == waiting && -n "$q" ]] && printf '\n❓ %s\n' "$q"
+    pane=$(agent_pane_for "$path")
+    if [[ -n "$pane" ]]; then
+        printf '\n─── live pane ───\n'
+        tmux capture-pane -p -t "$pane" 2>/dev/null | tail -n 24 || true
+    fi
+    printf '\n─── git ───\n'
+    git -C "$path" status -sb 2>/dev/null | head -n 12 || true
+}
+
+# ctrl-a actions on the highlighted agent. Returns 2 when it opened/switched a window.
+board_actions_menu() {
+    local path="$1" name br choice q reply base idx
+    name=$(basename "$path"); br=$(fleet_branch_for "$path")
+    choice=$(printf '%s\n' \
+        "Answer (send a reply)" "Jump to window" "Review diff" "Open PR" "Mark reviewed" "Kill window" \
+        | fzf --no-multi --prompt='action> ' --header="Agent: $name [$br]" || true)
+    [[ -z "$choice" ]] && return 0
+    case "$choice" in
+        Answer*)
+            q=$(agent_question "$path"); [[ -n "$q" ]] && printf '❓ %s\n' "$q" > /dev/tty 2>/dev/null || true
+            reply=$(prompt_line "reply to $name> ") || { echo "No terminal to type a reply."; pause_for_key; return 0; }
+            [[ -n "$reply" ]] && { send_to_agent "$path" "$reply" && echo "Sent to $name."; }
+            pause_for_key ;;
+        "Jump to window") open_or_switch_worktree "$path"; return 2 ;;
+        "Review diff")
+            base=$(worktree_base_branch "$path")
+            git -C "$path" diff "$base"...HEAD 2>/dev/null || git -C "$path" diff 2>/dev/null || true
+            pause_for_key ;;
+        "Open PR") open_pr_for_branch "$br" "$path"; pause_for_key ;;
+        "Mark reviewed") fleet_write "$path" reviewed "" ""; echo "Marked $name reviewed."; pause_for_key ;;
+        "Kill window")
+            idx=$(attached_window_index "$path")
+            if [[ -n "$idx" ]] && confirm "Kill window :$idx ($name)?"; then
+                tmux kill-window -t ":$idx" 2>/dev/null || true; echo "Killed :$idx."
+            else echo "Cancelled."; fi
+            pause_for_key ;;
+    esac
+    return 0
+}
+
+# Interactive triage console: attention-sorted, shows the pending question + live pane,
+# and lets you answer/review/jump without leaving it. This is what tmux's window
+# chooser can't do — it navigates layout; this conducts agents by their real state.
+board_interactive() {
+    local self out key sel path rc
+    self=$(resolve_self)
+    while true; do
+        local rows; rows=$(board_build_rows | sort -n -k1)
+        if [[ -z "$rows" ]]; then echo "No tracked agents. Create one with '${prog} new --worktree …'."; return 0; fi
+        out=$(printf '%s\n' "$rows" | fzf --ansi --no-multi --delimiter=$'\t' --with-nth=3 \
+            --header='enter: jump    ctrl-a: actions    ctrl-r: reply' \
+            --expect=ctrl-a,ctrl-r \
+            --preview="'$self' board-preview {2}" --preview-window='right,55%,wrap' || true)
+        [[ -z "$out" ]] && return 0
+        key=$(printf '%s\n' "$out" | head -1)
+        sel=$(printf '%s\n' "$out" | sed -n '2p')
+        [[ -z "$sel" ]] && return 0
+        path=$(printf '%s' "$sel" | cut -f2)
+        [[ -z "$path" ]] && return 0
+        case "$key" in
+            ctrl-a) rc=0; board_actions_menu "$path" || rc=$?; [[ "$rc" -eq 2 ]] && return 0 ;;
+            ctrl-r)
+                local q reply; q=$(agent_question "$path")
+                [[ -n "$q" ]] && echo "❓ $q"
+                reply=$(prompt_line "reply to $(basename "$path")> ") || true
+                [[ -n "$reply" ]] && send_to_agent "$path" "$reply" && echo "Sent."
+                pause_for_key ;;
+            *) open_or_switch_worktree "$path"; return 0 ;;
+        esac
+    done
+}
+
+cmd_board() {
+    local mode="" secs="" show_conf=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --line)      mode=line; shift ;;
+            --plain)     mode=plain; shift ;;
+            --watch)     mode=watch; [[ "${2:-}" =~ ^[0-9]+$ ]] && { secs="$2"; shift; }; shift ;;
+            --conflicts) show_conf=1; shift ;;
+            -h|--help)   echo "Usage: ${prog} board [--plain|--line|--watch [SECS]] [--conflicts]"; return 0 ;;
+            *) shift ;;
+        esac
+    done
+    # Default: interactive triage when we have a terminal + fzf; otherwise a plain table.
+    if [[ -z "$mode" ]]; then
+        if have_tty && command -v fzf &>/dev/null; then mode=interactive; else mode=plain; fi
+    fi
+    case "$mode" in
+        line)        board_line; echo ;;
+        watch)       local n="${secs:-3}"; while true; do clear 2>/dev/null || true; date; echo; board_render; [[ -n "$show_conf" ]] && { echo; conflicts_report; }; sleep "$n"; done ;;
+        interactive) board_interactive ;;
+        *)           board_render; [[ -n "$show_conf" ]] && { echo; conflicts_report; } ;;
+    esac
+}
+
+# --- gas next : cycle to the next agent needing you (skips the current window) ---
+cmd_next() {
+    local list curwt path first="" chosen="" pastcur="" st q idx
+    list=$(fleet_attention_list)
+    [[ -z "$list" ]] && { echo "No agents need your attention right now."; return 0; }
+    [[ -n "${TMUX:-}" ]] && curwt=$(canon_path "$(tmux show-window-option -v @agent-worktree 2>/dev/null || true)")
+    while IFS= read -r path; do
+        [[ -z "$path" ]] && continue
+        [[ -z "$first" ]] && first="$path"
+        if [[ -n "$pastcur" ]]; then chosen="$path"; break; fi
+        [[ -n "$curwt" && "$(canon_path "$path")" == "$curwt" ]] && pastcur=1
+    done <<< "$list"
+    [[ -z "$chosen" ]] && chosen="$first"
+    st=$(agent_status "$chosen")
+    echo "→ $(basename "$chosen")   [$(status_glyph "$st")]"
+    if [[ "$st" == waiting ]]; then
+        q=$(agent_question "$chosen"); [[ -n "$q" ]] && echo "  asks: $q"
+        echo "  reply:  ${prog} answer   (or ${prog} answer --to $(basename "$chosen") \"…\")"
+    fi
+    idx=$(attached_window_index "$chosen")
+    if [[ -n "$idx" && -n "${TMUX:-}" ]]; then
+        tmux select-window -t ":$idx" 2>/dev/null || true
+        echo "  (switched to :$idx)"
+    fi
+}
+
+# --- gas answer [--to NAME] [MESSAGE] : reply into an agent's pane; prompts if no MSG ---
+cmd_answer() {
+    local to="" pos=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --to) to="${2:-}"; shift 2 ;;
+            -h|--help) echo "Usage: ${prog} answer [--to NAME] [message]   (prompts if message omitted)"; return 0 ;;
+            *) pos+=("$1"); shift ;;
+        esac
+    done
+    local msg=""; [[ ${#pos[@]} -gt 0 ]] && msg="${pos[*]}"
+    local path
+    if [[ -n "$to" ]]; then
+        path=$(fleet_path_for_name "$to") || { echo "No agent named '$to'. Try '${prog} board'." >&2; return 1; }
+    else
+        path=$(fleet_next_waiting) || { echo "No waiting agent to answer." >&2; return 1; }
+    fi
+    if [[ -z "$msg" ]]; then
+        local q; q=$(agent_question "$path")
+        echo "Answering $(basename "$path")."
+        [[ -n "$q" ]] && echo "  asks: $q"
+        msg=$(prompt_line "reply> ") || { echo "Error: no message given and no terminal to prompt on." >&2; return 1; }
+        [[ -z "$msg" ]] && { echo "Nothing sent."; return 0; }
+    fi
+    send_to_agent "$path" "$msg" && echo "Answered $(basename "$path"): $msg"
+}
+
+# =====================================================================================
+# Collision awareness + integration staging: the orchestrator runs many branches in
+# parallel; these surface which agents' work overlaps BEFORE it becomes a merge mess.
+# =====================================================================================
+
+# The base branch a worktree diverged from: registry field 5, else the repo default.
+worktree_base_branch() {
+    local p="$1" reg rp rb rr rc rbase rsrc base=""
+    reg=$(get_registry_file)
+    if [[ -f "$reg" ]]; then
+        while IFS='|' read -r rp rb rr rc rbase rsrc; do
+            [[ "$rp" == "$p" ]] && { base="$rbase"; break; }
+        done < "$reg"
+    fi
+    [[ -z "$base" ]] && base=$(git -C "$p" rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)
+    [[ -z "$base" ]] && base=main
+    printf '%s' "$base"
+}
+
+# Files a worktree changed vs its base merge-base (committed AND uncommitted), one per line.
+changed_files() {
+    local p="$1" base mb
+    base=$(worktree_base_branch "$p")
+    mb=$(git -C "$p" merge-base HEAD "$base" 2>/dev/null || true)
+    [[ -z "$mb" ]] && mb=$(git -C "$p" rev-parse "$base" 2>/dev/null || true)
+    [[ -z "$mb" ]] && return 0
+    git -C "$p" diff --name-only "$mb" 2>/dev/null || true
+}
+
+# Report files touched by more than one agent (the collision set).
+conflicts_report() {
+    local rows path branch repo created name f tmp agents overlaps
+    rows=$(registry_list_live)
+    if [[ -z "$rows" ]]; then echo "No tracked agents."; return 0; fi
+    tmp="${TMPDIR:-/tmp}/gas-conflicts.$$"; : > "$tmp"
+    while IFS='|' read -r path branch repo created; do
+        [[ -z "$path" ]] && continue
+        name=$(basename "$path")
+        while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            printf '%s\t%s\n' "$f" "$name" >> "$tmp"
+        done <<< "$(changed_files "$path")"
+    done <<< "$rows"
+    overlaps=$(cut -f1 "$tmp" 2>/dev/null | sort | uniq -d || true)
+    if [[ -z "$overlaps" ]]; then echo "No file collisions across agents."; rm -f "$tmp"; return 0; fi
+    echo "⚠ Files changed by more than one agent:"
+    while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        agents=$(awk -F'\t' -v file="$f" '$1==file{print $2}' "$tmp" | sort -u | paste -sd, - )
+        printf '  %-44s %s\n' "$f" "$agents"
+    done <<< "$overlaps"
+    rm -f "$tmp"
+}
+
+cmd_conflicts() { conflicts_report; }
+
+# Echo the conflicting files (space-separated) if merging A into B collides; return 1 on
+# conflict, 0 clean, 2 if it couldn't be determined. Guards the set -e `x=$(cmd)` gotcha.
+merge_conflict_files() {
+    local repo="$1" a="$2" b="$3" out rc=0 mb
+    out=$(git -C "$repo" merge-tree --write-tree --name-only "$a" "$b" 2>/dev/null) || rc=$?
+    if [[ "$rc" -eq 0 ]]; then return 0; fi
+    if [[ "$rc" -eq 1 ]]; then
+        # output: <tree-oid>, then conflicted file names, a blank line, then info messages.
+        # Keep only the file-name section (line 2 up to the first blank line).
+        printf '%s' "$out" | awk 'NR==1{next} /^$/{exit} {print}' | tr '\n' ' '
+        return 1
+    fi
+    # old git (no --write-tree): 3-arg form, detect conflict markers (can't list files)
+    mb=$(git -C "$repo" merge-base "$a" "$b" 2>/dev/null || true)
+    [[ -z "$mb" ]] && return 2
+    if git -C "$repo" merge-tree "$mb" "$a" "$b" 2>/dev/null | grep -q '^<<<<<<<'; then
+        printf '(conflicts)'; return 1
+    fi
+    return 0
+}
+
+# gas integrate [--repo PATH] : preview cross-branch conflicts among parallel agents.
+cmd_integrate() {
+    local only_repo=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo) only_repo=$(canon_path "${2:-}"); shift 2 ;;
+            -h|--help) echo "Usage: ${prog} integrate [--repo PATH]"; return 0 ;;
+            *) shift ;;
+        esac
+    done
+    local rows repos r
+    rows=$(registry_list_live)
+    if [[ -z "$rows" ]]; then echo "No tracked agents to integrate."; return 0; fi
+    repos=$(printf '%s\n' "$rows" | awk -F'|' 'NF{print $3}' | sort -u | grep . || true)
+    [[ -z "$repos" ]] && { echo "No repositories found in the registry."; return 0; }
+
+    while IFS= read -r r; do
+        [[ -z "$r" ]] && continue
+        [[ -n "$only_repo" && "$(canon_path "$r")" != "$only_repo" ]] && continue
+
+        # candidate branches (name / branch / path / status) for this repo
+        local names=() brs=() paths=() sts=() path branch repo created st base
+        while IFS='|' read -r path branch repo created; do
+            [[ -z "$path" ]] && continue
+            [[ "$repo" != "$r" ]] && continue
+            [[ -z "$branch" ]] && continue
+            names+=("$(basename "$path")"); brs+=("$branch"); paths+=("$path")
+            sts+=("$(agent_status "$path")")
+        done <<< "$rows"
+
+        [[ ${#brs[@]} -eq 0 ]] && continue
+        base=$(git -C "$r" rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||' || true)
+        [[ -z "$base" || "$base" == HEAD ]] && base=$(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+        [[ -z "$base" ]] && base=main
+        echo "== $(basename "$r")  (base: $base) =="
+        local i j
+        for i in "${!brs[@]}"; do
+            printf '  %-22s %-26s %s\n' "${names[$i]}" "${brs[$i]}" "$(status_glyph "${sts[$i]}")"
+        done
+
+        if [[ ${#brs[@]} -lt 2 ]]; then echo "  (only one branch — nothing to stage)"; echo; continue; fi
+
+        echo "  cross-branch conflict preview:"
+        local conflicted=() files mrc anyconf=""
+        for i in "${!brs[@]}"; do conflicted[$i]=0; done
+        for i in "${!brs[@]}"; do
+            for j in "${!brs[@]}"; do
+                [[ "$j" -le "$i" ]] && continue
+                mrc=0; files=$(merge_conflict_files "$r" "${brs[$i]}" "${brs[$j]}") || mrc=$?
+                if [[ "$mrc" -eq 1 ]]; then
+                    printf '    %s  ✗  %s   CONFLICT: %s\n' "${brs[$i]}" "${brs[$j]}" "${files:-?}"
+                    conflicted[$i]=1; conflicted[$j]=1; anyconf=1
+                elif [[ "$mrc" -eq 2 ]]; then
+                    printf '    %s  ?  %s   (unrelated histories / cannot determine)\n' "${brs[$i]}" "${brs[$j]}"
+                fi
+            done
+        done
+        [[ -z "$anyconf" ]] && echo "    all pairs merge cleanly ✓"
+
+        # suggested landing order: clean branches first, then the entangled ones
+        local clean="" dirty=""
+        for i in "${!brs[@]}"; do
+            if [[ "${conflicted[$i]}" -eq 0 ]]; then clean="$clean ${brs[$i]}"; else dirty="$dirty ${brs[$i]}"; fi
+        done
+        printf '  suggested order: land clean first ->%s' "${clean:- (none)}"
+        [[ -n "$dirty" ]] && printf '   then resolve ->%s' "$dirty"
+        printf '\n\n'
+    done <<< "$repos"
+}
+
 # --- Parse subcommands first ---
 subcommand=""
 remaining=()
@@ -3157,6 +3808,46 @@ for arg in "$@"; do
             shift
             break
             ;;
+        board)
+            subcommand=board
+            shift
+            break
+            ;;
+        board-preview)
+            subcommand=board_preview
+            shift
+            break
+            ;;
+        next)
+            subcommand=next
+            shift
+            break
+            ;;
+        answer)
+            subcommand=answer
+            shift
+            break
+            ;;
+        hooks)
+            subcommand=hooks
+            shift
+            break
+            ;;
+        hook-report)
+            subcommand=hook_report
+            shift
+            break
+            ;;
+        conflicts)
+            subcommand=conflicts
+            shift
+            break
+            ;;
+        integrate)
+            subcommand=integrate
+            shift
+            break
+            ;;
         *)
             remaining+=("$arg")
             shift
@@ -3234,6 +3925,38 @@ if [[ "$subcommand" == doctor ]]; then
 fi
 if [[ "$subcommand" == system ]]; then
     cmd_system "$@"
+    exit 0
+fi
+if [[ "$subcommand" == board ]]; then
+    cmd_board "$@"
+    exit 0
+fi
+if [[ "$subcommand" == board_preview ]]; then
+    cmd_board_preview "$@"
+    exit 0
+fi
+if [[ "$subcommand" == next ]]; then
+    cmd_next "$@"
+    exit 0
+fi
+if [[ "$subcommand" == answer ]]; then
+    cmd_answer "$@"
+    exit 0
+fi
+if [[ "$subcommand" == hooks ]]; then
+    cmd_hooks "$@"
+    exit 0
+fi
+if [[ "$subcommand" == hook_report ]]; then
+    cmd_hook_report "$@"
+    exit 0
+fi
+if [[ "$subcommand" == conflicts ]]; then
+    cmd_conflicts "$@"
+    exit 0
+fi
+if [[ "$subcommand" == integrate ]]; then
+    cmd_integrate "$@"
     exit 0
 fi
 
