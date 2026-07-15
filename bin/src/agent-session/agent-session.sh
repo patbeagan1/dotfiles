@@ -32,6 +32,7 @@ usage() {
     cat << EOF
 Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} dev NAME [PROMPT]        # shortcut: new --worktree --branch develop -n NAME
+       ${prog} fork [--deep] [--branch BR] REPO [NAME] [PROMPT]   # clone a repo + open a window
        ${prog} jira [KEY]               # pick a Jira ticket -> worktree window
        ${prog} jira list                # list your open-sprint issues
        ${prog} jira create              # create a ticket interactively (via acli)
@@ -41,6 +42,7 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} branches
        ${prog} status [--branch BRANCH] [--fetch] [PATH]
        ${prog} sessions [PATH]          # list Claude sessions for a worktree
+       ${prog} edit                     # fzf-edit this project's skills/rules/subagents
        ${prog} config [harness-command|jira-subdomain|jira-branch-prefix|jira-project [VALUE]]
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
@@ -92,6 +94,11 @@ Subcommands:
                    '${prog} new --worktree --branch develop -n NAME [PROMPT]'). Extra
                    flags after NAME are forwarded (e.g. --agent claude). Override the
                    base branch with \$AGENT_SESSION_DEV_BRANCH.
+  fork REPO [NAME] [PROMPT]  Like 'dev', but clones a DIFFERENT repo (REPO: URL or path)
+                   into the clone base and opens a window on it instead of a worktree.
+                   Shallow clone by default; --deep for full history. --branch BR clones
+                   that branch. NAME defaults to the repo name. Clone base:
+                   \$AGENT_SESSION_CLONE_BASE (else beside the worktree base).
   jira [KEY]       fzf-pick a Jira ticket (or pass KEY) from your open sprints and open a
                    worktree window on a fresh branch <prefix>/<KEY>/<slug> (unique; a repeat
                    ticket gets a -part-N suffix), off \$AGENT_SESSION_DEV_BRANCH (develop),
@@ -119,6 +126,11 @@ Subcommands:
                    Also shows the worktree's Claude session count + last-active.
   sessions [PATH]  List the Claude sessions recorded for a worktree (default: cwd):
                    session ids + last-active, and how to resume. Claude-specific.
+  edit             fzf-pick one of this project's skills / rules / subagents and open it in
+                   \$EDITOR (else nvim/vim/vi). Ecosystem follows the harness: claude =>
+                   .claude/skills/*/SKILL.md, .claude/agents/*.md, CLAUDE.md (project +
+                   global); cursor => .cursor/rules/*.mdc, .cursorrules (Cursor has no
+                   file-based skills/subagents); other => both.
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -141,6 +153,8 @@ Subcommands:
 
 Examples:
   ${prog} dev my-feature "Implement login"
+  ${prog} fork https://github.com/org/repo.git experiment
+  ${prog} fork --deep git@github.com:org/repo.git
   ${prog} jira            # pick a sprint ticket -> worktree window
   ${prog} jira list       # list your open-sprint issues
   ${prog} jira create     # create a ticket interactively (via acli)
@@ -150,6 +164,7 @@ Examples:
   ${prog} branches
   ${prog} status ~/.local/state/agent-session/worktrees/repo/agent-repo-...
   ${prog} sessions        # Claude sessions for the current worktree
+  ${prog} edit            # edit this project's skills/rules/subagents
   ${prog} system
   ${prog} prune --registered-only
   ${prog} prune --force-remove
@@ -989,6 +1004,73 @@ cmd_sessions() {
     echo "Pick a session: (cd $(printf '%q' "$path") && claude --resume)"
 }
 
+# Emit "PATH<TAB>LABEL" rows for the editable agent-config files of a project, for the
+# given ecosystem: claude (skills/subagents/CLAUDE.md), cursor (.cursor/rules/*.mdc +
+# .cursorrules — Cursor has no file-based skills/subagents), or both. Only existing
+# files are listed; globs are guarded (bash has no nullglob by default).
+agent_config_rows() {
+    local eco="$1" proj="$2" f d
+    if [[ "$eco" == claude || "$eco" == both ]]; then
+        [[ -f "$proj/CLAUDE.md" ]]        && printf '%s\trule · project · CLAUDE.md\n' "$proj/CLAUDE.md"
+        [[ -f "$proj/CLAUDE.local.md" ]]  && printf '%s\trule · project · CLAUDE.local.md\n' "$proj/CLAUDE.local.md"
+        [[ -f "$HOME/.claude/CLAUDE.md" ]] && printf '%s\trule · global · CLAUDE.md\n' "$HOME/.claude/CLAUDE.md"
+        for d in "$proj"/.claude/skills/*/SKILL.md;  do [[ -f "$d" ]] && printf '%s\tskill · project · %s\n' "$d" "$(basename "$(dirname "$d")")"; done
+        for d in "$HOME"/.claude/skills/*/SKILL.md;   do [[ -f "$d" ]] && printf '%s\tskill · global · %s\n' "$d" "$(basename "$(dirname "$d")")"; done
+        for f in "$proj"/.claude/agents/*.md;         do [[ -f "$f" ]] && printf '%s\tsubagent · project · %s\n' "$f" "$(basename "$f" .md)"; done
+        for f in "$HOME"/.claude/agents/*.md;         do [[ -f "$f" ]] && printf '%s\tsubagent · global · %s\n' "$f" "$(basename "$f" .md)"; done
+    fi
+    if [[ "$eco" == cursor || "$eco" == both ]]; then
+        for f in "$proj"/.cursor/rules/*.mdc;         do [[ -f "$f" ]] && printf '%s\trule · project · %s\n' "$f" "$(basename "$f")"; done
+        [[ -f "$proj/.cursorrules" ]] && printf '%s\trule · project · .cursorrules\n' "$proj/.cursorrules"
+    fi
+}
+
+# --- Subcommand: edit (fzf-pick a skill/rule/subagent and open it in $EDITOR) ---
+# Ecosystem follows the configured harness: claude surfaces skills + subagents +
+# CLAUDE.md; cursor surfaces .cursor/rules/*.mdc + .cursorrules; anything else shows both.
+cmd_edit() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for '${prog} edit'." >&2
+        return 1
+    fi
+    local proj eco h rows editor sel path
+    proj=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+    if default_harness_is_claude; then
+        eco=claude
+    else
+        h="${AGENT_SESSION_HARNESS_COMMAND:-}"; [[ -z "$h" ]] && h=$(config_get "$HARNESS_KEY")
+        case "${h%% *}" in
+            cursor|cursor-agent) eco=cursor ;;
+            *) eco=both ;;
+        esac
+    fi
+    rows=$(agent_config_rows "$eco" "$proj")
+    if [[ -z "$rows" ]]; then
+        echo "No editable agent config found for $proj ($eco)."
+        echo "Claude: .claude/skills/<name>/SKILL.md, .claude/agents/*.md, CLAUDE.md" >&2
+        echo "Cursor: .cursor/rules/*.mdc, .cursorrules" >&2
+        return 0
+    fi
+    # Resolve the editor: $VISUAL/$EDITOR, else the first available common terminal editor.
+    editor="${VISUAL:-${EDITOR:-}}"
+    if [[ -z "$editor" ]]; then
+        local e
+        for e in nvim vim vi nano; do command -v "$e" &>/dev/null && { editor="$e"; break; }; done
+    fi
+    if [[ -z "$editor" ]]; then
+        echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2
+        return 1
+    fi
+    sel=$(printf '%s' "$rows" | fzf --ansi --no-multi --delimiter=$'\t' --with-nth=2 \
+        --prompt="edit ($eco)> " \
+        --header="Open a skill / rule / subagent in $editor" \
+        --preview='cat {1} 2>/dev/null | head -200' --preview-window='right,60%,wrap' || true)
+    [[ -z "$sel" ]] && return 0
+    path=$(printf '%s' "$sel" | cut -f1)
+    [[ -z "$path" ]] && return 0
+    "$editor" "$path"
+}
+
 # Echo the tmux window index whose @agent-worktree equals PATH (canon-compared),
 # else empty. Never errors (safe under set -e / outside tmux).
 attached_window_index() {
@@ -1557,6 +1639,81 @@ cmd_dev() {
     local self
     self=$(resolve_self)
     exec "$self" new --worktree --branch "$dev_branch" -n "$name" "$@"
+}
+
+# Base dir for `fork` clones (independent repos, not worktrees); beside the worktree
+# base. Override with $AGENT_SESSION_CLONE_BASE.
+get_clone_base() {
+    echo "${AGENT_SESSION_CLONE_BASE:-$(dirname "$(get_worktree_base "")")/clones}"
+}
+
+# --- Subcommand: fork (clone a DIFFERENT repo, then open a gas window like `dev`) ---
+# `gas fork [--deep] [--branch BR] REPO [NAME] [PROMPT...]`
+# Clones REPO (shallow by default; --deep = full history) into the durable clone base,
+# registers it, and opens a 2-pane agent window rooted in the clone — the same window
+# experience as `dev`, but on a fresh clone instead of a worktree.
+cmd_fork() {
+    local deep=false clone_branch="" repo="" name=""
+    local fwd=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --deep) deep=true; shift ;;
+            --branch) clone_branch="${2:-}"; shift 2 ;;
+            --agent) fwd+=(--agent "${2:-}"); shift 2 ;;
+            --ticket) fwd+=(--ticket "${2:-}"); shift 2 ;;
+            --prompt-file) fwd+=(--prompt-file "${2:-}"); shift 2 ;;
+            -d|--detach) fwd+=(-d); shift ;;
+            *)
+                if [[ -z "$repo" ]]; then repo="$1"
+                elif [[ -z "$name" ]]; then name="$1"
+                else fwd+=("$1"); fi
+                shift ;;
+        esac
+    done
+    if [[ -z "$repo" ]]; then
+        echo "Usage: ${prog} fork [--deep] [--branch BR] REPO [NAME] [PROMPT...]" >&2
+        return 1
+    fi
+    if [[ -z "${TMUX:-}" ]]; then
+        echo "Error: Not running inside tmux. Run this from within a tmux session." >&2
+        return 1
+    fi
+
+    # Derive a clone name + a unique destination dir under the clone base.
+    local clone_bn slug base dest n
+    clone_bn=$(basename "$repo"); clone_bn="${clone_bn%.git}"
+    [[ -z "$name" ]] && name="$clone_bn"
+    slug=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+    [[ -z "$slug" ]] && slug="fork"
+    base=$(get_clone_base)/"$clone_bn"
+    mkdir -p "$base"
+    dest="${base}/${slug}-$(date +%Y%m%d-%H%M%S)-$$"
+    n=0
+    while [[ -e "$dest" ]]; do n=$((n + 1)); dest="${base}/${slug}-$(date +%Y%m%d-%H%M%S)-$$-$n"; done
+
+    # Clone (shallow by default; --deep = full).
+    local clone_args=(clone)
+    [[ "$deep" != true ]] && clone_args+=(--depth 1)
+    [[ -n "$clone_branch" ]] && clone_args+=(--branch "$clone_branch")
+    clone_args+=("$repo" "$dest")
+    echo "Cloning $repo -> $dest ($([[ "$deep" == true ]] && echo full || echo shallow)) ..."
+    if ! git "${clone_args[@]}"; then
+        echo "Error: git clone failed for '$repo'." >&2
+        rm -rf "$dest" 2>/dev/null || true
+        return 1
+    fi
+
+    # Register so it appears in pick/list and can be cleaned up. It's a standalone
+    # clone, so repo == its own path; source_dir records where it was cloned from.
+    local br
+    br=$(git -C "$dest" branch --show-current 2>/dev/null || true)
+    registry_add "$dest" "$br" "$dest" "$br" "$repo"
+
+    # Open the agent window rooted in the clone (reuses the create tail: 2 panes,
+    # agent, prompt, claude session), forwarding any --agent/--ticket/prompt/etc.
+    local self
+    self=$(resolve_self)
+    "$self" new --open-worktree "$dest" -n "$name" ${fwd[@]+"${fwd[@]}"}
 }
 
 # --- Worktree helpers ---
@@ -2188,6 +2345,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        fork)
+            subcommand=fork
+            shift
+            break
+            ;;
         status)
             subcommand=status
             shift
@@ -2195,6 +2357,11 @@ for arg in "$@"; do
             ;;
         sessions)
             subcommand=sessions
+            shift
+            break
+            ;;
+        edit)
+            subcommand=edit
             shift
             break
             ;;
@@ -2265,8 +2432,16 @@ if [[ "$subcommand" == config ]]; then
     cmd_config "$@"
     exit 0
 fi
+if [[ "$subcommand" == fork ]]; then
+    cmd_fork "$@"
+    exit 0
+fi
 if [[ "$subcommand" == dev ]]; then
     cmd_dev "$@"
+    exit 0
+fi
+if [[ "$subcommand" == edit ]]; then
+    cmd_edit "$@"
     exit 0
 fi
 if [[ "$subcommand" == sessions ]]; then
