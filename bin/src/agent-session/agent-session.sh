@@ -1121,8 +1121,19 @@ remove_worktree() {
         main=$(git -C "$p" rev-parse --show-toplevel 2>/dev/null || true)
     fi
     if [[ -n "$main" ]]; then
-        git -C "$main" worktree remove "$p" --force 2>/dev/null || true
-        git -C "$main" worktree prune 2>/dev/null || true
+        # Deleting a worktree is a recursive rm of the whole checkout (tens of
+        # thousands of files → many seconds). Instead, move it into the OS temp dir
+        # (an instant same-volume rename) and let macOS reap it over time. `git
+        # worktree prune` then drops the now-missing worktree's admin entry.
+        local trash
+        trash="${TMPDIR:-/tmp}/gas-removed-$(basename "$p").$$"
+        if mv "$p" "$trash" 2>/dev/null; then
+            git -C "$main" worktree prune 2>/dev/null || true
+        else
+            # mv failed (e.g. truly cross-device) — fall back to a synchronous remove.
+            git -C "$main" worktree remove "$p" --force 2>/dev/null || true
+            git -C "$main" worktree prune 2>/dev/null || true
+        fi
     fi
     registry_remove "$p"
 }
@@ -2034,7 +2045,7 @@ cmd_cleanup() {
     # remove_worktree derives the owning repo and runs every git op with `git -C
     # <main-repo>`, so it never depends on (or gets wedged by) the current directory —
     # which is inside the worktree being deleted. Then close this window.
-    echo "Removing worktree: $wt"
+    echo "Removing worktree (moved to temp; macOS reclaims it): $wt"
     remove_worktree "$wt"
     tmux kill-window -t ":$win"
 }
