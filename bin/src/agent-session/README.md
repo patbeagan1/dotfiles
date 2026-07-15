@@ -96,6 +96,7 @@ gas edit                # fzf-pick a skill/rule/subagent, open it in $EDITOR
 gas install ripgrep                 # auto: brew -> cargo -> pip -> apt
 gas install bat --cargo             # force a manager (flag)
 gas install --curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup
+gas install --discover              # import what you already have installed
 gas install                         # fzf menu: update / check / remove tracked tools
 gas install --outdated              # which tracked tools have updates
 gas config harness-command claude
@@ -236,6 +237,16 @@ gas install --curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup   # cur
 ```
 
 Supported managers: **brew, cargo, pip (`pip3 install --user`), apt (`sudo apt-get`), and curl-pipe-bash.** With no manager flag, gas walks the priority list **brew → cargo → pip → apt** (skipping any that aren't installed) and keeps the first that succeeds.
+
+**Discovery** (retroactive tracking). The first time you use `gas install`, you probably already have tools installed the old way. `--discover` queries each available manager for its explicitly-installed packages and adds any that aren't tracked yet — so you start with a full list instead of an empty one:
+
+```bash
+gas install --discover          # import from every available manager (brew, cargo, pip, apt)
+gas install --discover --brew   # scope to one manager
+gas install --discover -n       # dry run: show what would be imported, change nothing
+```
+
+It only looks at **top-level** installs — `brew leaves`, `cargo install --list`, `pip list --user`, `apt-mark showmanual` — not pulled-in dependencies, and a tool present under two managers is imported once. curl installs can't be discovered (there's no manager to ask).
 
 **Managing** (forwards to the owning manager):
 

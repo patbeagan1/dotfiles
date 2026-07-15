@@ -46,6 +46,7 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} config [harness-command|jira-subdomain|jira-branch-prefix|jira-project [VALUE]]
        ${prog} install PKG [--brew|--cargo|--pip|--apt]   # install+track a tool (no flag = auto)
        ${prog} install --curl URL NAME [--bin P] [--uninstall CMD]  # install via curl|bash
+       ${prog} install --discover [--MGR] [-n]   # import already-installed tools into tracking
        ${prog} install [--list|--outdated]   # list tracked tools / check updates (bare = fzf menu)
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
@@ -138,10 +139,11 @@ Subcommands:
                    positional is the package name; everything else is a flag.
                    'install PKG' tries brew->cargo->pip->apt (first that works);
                    add --brew/--cargo/--pip/--apt to force one. 'install --curl URL
-                   NAME [--bin PATH] [--uninstall CMD]' runs curl|bash. '--list' lists
-                   tracked tools; '--outdated' checks latest versions; bare 'install'
-                   opens an fzf menu to update/remove/check each. Registry:
-                   \$AGENT_SESSION_INSTALLS.
+                   NAME [--bin PATH] [--uninstall CMD]' runs curl|bash. '--discover'
+                   imports tools you already installed via each manager (add -n to
+                   preview). '--list' lists tracked tools; '--outdated' checks latest
+                   versions; bare 'install' opens an fzf menu to update/remove/check
+                   each. Registry: \$AGENT_SESSION_INSTALLS.
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -1169,6 +1171,17 @@ pkg_latest_version() {  # echo the latest available version (on-demand; may hit 
         *)     echo "" ;;
     esac
 }
+# List the names of packages this manager reports as explicitly/top-level installed
+# (not pulled-in dependencies), one per line. curl has no such notion (empty).
+pkg_discover() {
+    case "$1" in
+        brew)  brew leaves 2>/dev/null ;;                                   # top-level formulae only
+        cargo) cargo install --list 2>/dev/null | awk '/^[^[:space:]]/{print $1}' ;;  # crate names
+        pip)   pip3 list --user --format=freeze 2>/dev/null | sed 's/==.*//' ;;       # user-site pkgs
+        apt)   apt-mark showmanual 2>/dev/null ;;                           # manually-installed
+        *)     : ;;
+    esac
+}
 
 # --- install: `gas install <pkg> [--MGR]` | `--curl URL NAME` | `--list` | `--outdated` ---
 install_usage() {
@@ -1178,6 +1191,9 @@ Usage:
                                                        (no manager flag = auto: brew -> cargo -> pip -> apt)
   ${prog} install --curl <URL> <NAME> [--bin PATH] [--uninstall CMD]
                                                        install via curl | bash and track it
+  ${prog} install --discover [--brew|--cargo|--pip|--apt] [-n]
+                                                       import already-installed tools into tracking
+                                                       (all available managers if none named; -n = dry run)
   ${prog} install --list                               list tracked tools
   ${prog} install --outdated                           check tracked tools for updates
   ${prog} install                                      fzf menu to update / check / remove
@@ -1219,6 +1235,54 @@ install_outdated() {
             printf '  %-24s %-7s %s -> %s  ** OUTDATED **\n' "$name" "$mgr" "${cur:-?}" "$latest"
         fi
     done <<< "$rows"
+}
+
+# --- discover: retroactively track tools already installed via each manager ---
+# $1 = optional single manager (else all available); $2 = 1 for dry-run (preview only)
+install_discover() {
+    local want="${1:-}" dry="${2:-}"
+    local managers m
+    if [[ -n "$want" ]]; then
+        if [[ "$want" == curl ]]; then
+            echo "Error: curl installs can't be discovered (no manager to query)." >&2; return 1
+        fi
+        managers="$want"
+    else
+        managers="brew cargo pip apt"
+    fi
+    local tracked; tracked=$(installs_list | cut -d'|' -f1)
+    local total=0 added=0 skipped=0 name ver names
+    for m in $managers; do
+        if ! pkg_available "$m"; then
+            [[ -n "$want" ]] && echo "  ($m is not installed)"
+            continue
+        fi
+        names=$(pkg_discover "$m" || true)
+        [[ -z "$names" ]] && continue
+        echo "== $m =="
+        while IFS= read -r name; do
+            [[ -z "$name" ]] && continue
+            total=$((total + 1))
+            if printf '%s\n' "$tracked" | grep -qxF "$name"; then
+                skipped=$((skipped + 1)); continue
+            fi
+            ver=$(pkg_installed_version "$m" "$name" 2>/dev/null || true)
+            if [[ -n "$dry" ]]; then
+                printf '  ? %-28s %s\n' "$name" "${ver:+($ver)}"
+            else
+                installs_add "$name" "$m" "$ver" "$name" "" ""
+                printf '  + %-28s %s\n' "$name" "${ver:+($ver)}"
+            fi
+            added=$((added + 1))
+            tracked="$tracked
+$name"   # so a tool present in two managers is only imported once
+        done <<< "$names"
+    done
+    if [[ -n "$dry" ]]; then
+        echo "Found $total (${added} not yet tracked, ${skipped} already tracked). Dry run — nothing imported."
+    else
+        echo "Found $total, imported $added new, skipped $skipped already-tracked."
+    fi
 }
 
 # --- ctrl-a-style actions menu for a tracked install; returns 0 (caller reloops) ---
@@ -1297,7 +1361,7 @@ install_menu() {
 
 # --- Subcommand: install (flag-driven; the only positionals are package names) ---
 cmd_install() {
-    local mgr="" bin="" uninstall="" mode=""
+    local mgr="" bin="" uninstall="" mode="" dry=""
     local pos=()
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -1305,7 +1369,9 @@ cmd_install() {
             --curl)              mgr="curl"; shift ;;
             --list|--ls)         mode="list"; shift ;;
             --outdated|--check)  mode="outdated"; shift ;;
+            --discover|--import) mode="discover"; shift ;;
             --menu|--manage)     mode="menu"; shift ;;
+            --dry-run|-n)        dry=1; shift ;;
             --bin)               bin="${2:-}"; shift 2 ;;
             --uninstall)         uninstall="${2:-}"; shift 2 ;;
             -h|--help)           install_usage; return 0 ;;
@@ -1324,6 +1390,7 @@ cmd_install() {
         case "$mode" in
             list)     install_list ;;
             outdated) install_outdated ;;
+            discover) install_discover "$mgr" "$dry" ;;   # optional manager flag scopes it
             menu)     install_menu ;;
         esac
         return $?
