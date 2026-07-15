@@ -44,6 +44,9 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} sessions [PATH]          # list Claude sessions for a worktree
        ${prog} edit                     # fzf-edit this project's skills/rules/subagents
        ${prog} config [harness-command|jira-subdomain|jira-branch-prefix|jira-project [VALUE]]
+       ${prog} install PKG [--brew|--cargo|--pip|--apt]   # install+track a tool (no flag = auto)
+       ${prog} install --curl URL NAME [--bin P] [--uninstall CMD]  # install via curl|bash
+       ${prog} install [--list|--outdated]   # list tracked tools / check updates (bare = fzf menu)
        ${prog} list
        ${prog} system [--purge] [--worktree-base DIR]
        ${prog} system remove PATH
@@ -131,6 +134,14 @@ Subcommands:
                    .claude/skills/*/SKILL.md, .claude/agents/*.md, CLAUDE.md (project +
                    global); cursor => .cursor/rules/*.mdc, .cursorrules (Cursor has no
                    file-based skills/subagents); other => both.
+  install          Install + track a global CLI tool and manage it later. The only
+                   positional is the package name; everything else is a flag.
+                   'install PKG' tries brew->cargo->pip->apt (first that works);
+                   add --brew/--cargo/--pip/--apt to force one. 'install --curl URL
+                   NAME [--bin PATH] [--uninstall CMD]' runs curl|bash. '--list' lists
+                   tracked tools; '--outdated' checks latest versions; bare 'install'
+                   opens an fzf menu to update/remove/check each. Registry:
+                   \$AGENT_SESSION_INSTALLS.
   config           Show or set persistent per-machine config. 'config' lists it; keys:
                    harness-command (cursor-agent/claude), jira-subdomain, jira-branch-prefix.
                    'config KEY' shows a value; 'config KEY VALUE' sets it.
@@ -165,6 +176,11 @@ Examples:
   ${prog} status ~/.local/state/agent-session/worktrees/repo/agent-repo-...
   ${prog} sessions        # Claude sessions for the current worktree
   ${prog} edit            # edit this project's skills/rules/subagents
+  ${prog} install ripgrep            # auto: brew->cargo->pip->apt
+  ${prog} install cargo bat          # force a specific manager
+  ${prog} install curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup
+  ${prog} install                    # fzf menu to update/remove tracked tools
+  ${prog} install outdated           # check which tracked tools are outdated
   ${prog} system
   ${prog} prune --registered-only
   ${prog} prune --force-remove
@@ -1069,6 +1085,309 @@ cmd_edit() {
     path=$(printf '%s' "$sel" | cut -f1)
     [[ -z "$path" ]] && return 0
     "$editor" "$path"
+}
+
+# =====================================================================================
+# gas install: track globally-installed CLI tools across package managers.
+# Registry line: name|manager|version|installed_iso|source|bin|uninstall
+#   manager  = brew|cargo|pip|apt|curl
+#   source   = package name (managers) or the URL (curl)
+#   bin      = optional binary path (curl removes), uninstall = optional remove cmd (curl)
+# =====================================================================================
+get_installs_file() {
+    echo "${AGENT_SESSION_INSTALLS:-$HOME/.config/agent-session/installs}"
+}
+
+installs_remove() {
+    local f tmp
+    f=$(get_installs_file); [[ -f "$f" ]] || return 0
+    tmp="${f}.tmp.$$"
+    grep -v "^${1}|" "$f" > "$tmp" 2>/dev/null || true
+    mv "$tmp" "$f"
+}
+
+# installs_add name manager version source [bin] [uninstall]  (replaces any same-name row)
+installs_add() {
+    local f
+    f=$(get_installs_file); mkdir -p "$(dirname "$f")"
+    installs_remove "$1"
+    printf '%s|%s|%s|%s|%s|%s|%s\n' \
+        "$1" "$2" "$3" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$4" "${5:-}" "${6:-}" >> "$f"
+}
+
+installs_list() {  # echo raw registry lines (existing file only)
+    local f; f=$(get_installs_file)
+    [[ -f "$f" ]] && cat "$f" || true
+}
+
+# --- Per-manager command table (bash 3.2: case, no assoc arrays) ---
+pkg_bin() { case "$1" in brew) echo brew ;; cargo) echo cargo ;; pip) echo pip3 ;; apt) echo apt-get ;; curl) echo curl ;; esac; }
+pkg_available() { command -v "$(pkg_bin "$1")" &>/dev/null; }
+
+pkg_install() {  # $1=manager $2=pkg  (curl handled in install_do)
+    case "$1" in
+        brew)  brew install "$2" ;;
+        cargo) cargo install "$2" ;;
+        pip)   pip3 install --user "$2" ;;
+        apt)   sudo apt-get install -y "$2" ;;
+        *)     return 1 ;;
+    esac
+}
+pkg_update() {  # $1=manager $2=name
+    case "$1" in
+        brew)  brew upgrade "$2" ;;
+        cargo) cargo install --force "$2" ;;
+        pip)   pip3 install --user --upgrade "$2" ;;
+        apt)   sudo apt-get install --only-upgrade -y "$2" ;;
+        *)     return 1 ;;
+    esac
+}
+pkg_remove() {  # $1=manager $2=name
+    case "$1" in
+        brew)  brew uninstall "$2" ;;
+        cargo) cargo uninstall "$2" ;;
+        pip)   pip3 uninstall -y "$2" ;;
+        apt)   sudo apt-get remove -y "$2" ;;
+        *)     return 1 ;;
+    esac
+}
+pkg_installed_version() {  # echo the currently-installed version, or empty
+    case "$1" in
+        brew)  brew list --versions "$2" 2>/dev/null | awk '{print $2; exit}' ;;
+        cargo) cargo install --list 2>/dev/null | awk -v n="$2" '$1==n{gsub(/[v:]/,"",$2); print $2; exit}' ;;
+        pip)   pip3 show "$2" 2>/dev/null | awk -F': ' '/^Version/{print $2; exit}' ;;
+        apt)   dpkg-query -W -f='${Version}' "$2" 2>/dev/null ;;
+        *)     echo "" ;;
+    esac
+}
+pkg_latest_version() {  # echo the latest available version (on-demand; may hit network)
+    case "$1" in
+        brew)  brew info --json=v2 --formula "$2" 2>/dev/null | jq -r '.formulae[0].versions.stable // empty' 2>/dev/null ;;
+        pip)   pip3 index versions "$2" 2>/dev/null | awk -F': ' '/LATEST/{print $2; exit}' ;;
+        cargo) curl -fsSL "https://crates.io/api/v1/crates/$2" 2>/dev/null | jq -r '.crate.max_stable_version // empty' 2>/dev/null ;;
+        apt)   apt-cache policy "$2" 2>/dev/null | awk '/Candidate:/{print $2; exit}' ;;
+        *)     echo "" ;;
+    esac
+}
+
+# --- install: `gas install <pkg> [--MGR]` | `--curl URL NAME` | `--list` | `--outdated` ---
+install_usage() {
+    cat >&2 <<EOF
+Usage:
+  ${prog} install <pkg> [--brew|--cargo|--pip|--apt]   install & track a tool
+                                                       (no manager flag = auto: brew -> cargo -> pip -> apt)
+  ${prog} install --curl <URL> <NAME> [--bin PATH] [--uninstall CMD]
+                                                       install via curl | bash and track it
+  ${prog} install --list                               list tracked tools
+  ${prog} install --outdated                           check tracked tools for updates
+  ${prog} install                                      fzf menu to update / check / remove
+EOF
+}
+
+# --- list (fast; from the registry) ---
+install_list() {
+    local rows
+    rows=$(installs_list)
+    if [[ -z "$rows" ]]; then echo "No tracked installs. Add one with '${prog} install <pkg>'."; return 0; fi
+    printf "%-24s %-7s %-16s %s\n" "NAME" "MANAGER" "VERSION" "SOURCE"
+    printf "%-24s %-7s %-16s %s\n" "----" "-------" "-------" "------"
+    local name mgr ver iso src rest
+    while IFS='|' read -r name mgr ver iso src rest; do
+        [[ -z "$name" ]] && continue
+        printf "%-24s %-7s %-16s %s\n" "${name:0:24}" "$mgr" "${ver:0:16}" "${src:0:40}"
+    done <<< "$rows"
+}
+
+# --- outdated (on-demand latest-version check per manager) ---
+install_outdated() {
+    local rows; rows=$(installs_list)
+    if [[ -z "$rows" ]]; then echo "No tracked installs."; return 0; fi
+    echo "Checking latest versions (this may hit the network)..."
+    local name mgr ver iso src rest cur latest
+    while IFS='|' read -r name mgr ver iso src rest; do
+        [[ -z "$name" ]] && continue
+        if [[ "$mgr" == curl ]]; then
+            printf '  %-24s %-7s n/a (curl — re-run to update)\n' "$name" "$mgr"; continue
+        fi
+        cur=$(pkg_installed_version "$mgr" "$name" || true); [[ -z "$cur" ]] && cur="$ver"
+        latest=$(pkg_latest_version "$mgr" "$name" || true)
+        if [[ -z "$latest" ]]; then
+            printf '  %-24s %-7s %s (latest unknown)\n' "$name" "$mgr" "${cur:-?}"
+        elif [[ "$latest" == "$cur" ]]; then
+            printf '  %-24s %-7s %s (up to date)\n' "$name" "$mgr" "${cur:-?}"
+        else
+            printf '  %-24s %-7s %s -> %s  ** OUTDATED **\n' "$name" "$mgr" "${cur:-?}" "$latest"
+        fi
+    done <<< "$rows"
+}
+
+# --- ctrl-a-style actions menu for a tracked install; returns 0 (caller reloops) ---
+install_actions_menu() {
+    local name="$1" mgr="$2" src="$3" bin="$4" uninstall="$5"
+    local choice
+    choice=$(printf '%s\n' \
+        "Update" "Check latest version" "Remove" "Copy source" \
+        | fzf --no-multi --prompt='action> ' --header="Actions: $name [$mgr]" || true)
+    [[ -z "$choice" ]] && return 0
+    case "$choice" in
+        "Update"*)
+            echo "Updating $name ($mgr) ..."
+            if [[ "$mgr" == curl ]]; then
+                curl -fsSL "$src" | bash || echo "Re-run failed."
+            else
+                pkg_update "$mgr" "$name" || echo "Update failed."
+                installs_add "$name" "$mgr" "$(pkg_installed_version "$mgr" "$name")" "$src" "$bin" "$uninstall"
+            fi
+            pause_for_key
+            ;;
+        "Check latest"*)
+            if [[ "$mgr" == curl ]]; then
+                echo "$name: curl install — version is n/a (re-run the script to update)."
+            else
+                local cur latest; cur=$(pkg_installed_version "$mgr" "$name" || true); latest=$(pkg_latest_version "$mgr" "$name" || true)
+                echo "$name ($mgr): installed ${cur:-?}, latest ${latest:-unknown}"
+                [[ -n "$latest" && -n "$cur" && "$latest" != "$cur" ]] && echo "  ** update available **"
+            fi
+            pause_for_key
+            ;;
+        "Remove"*)
+            if confirm "Remove '$name' ($mgr)?"; then
+                if [[ "$mgr" == curl ]]; then
+                    if [[ -n "$uninstall" ]]; then bash -c "$uninstall" || echo "uninstall cmd failed."
+                    elif [[ -n "$bin" ]]; then rm -f "$bin" && echo "Removed $bin" || echo "Could not remove $bin"
+                    else echo "curl install has no --uninstall/--bin recorded; removing from tracking only (delete the binary manually)."; fi
+                else
+                    pkg_remove "$mgr" "$name" || echo "Remove failed (unregistering anyway)."
+                fi
+                installs_remove "$name"
+                echo "Removed $name from tracking."
+            else
+                echo "Cancelled."
+            fi
+            pause_for_key
+            ;;
+        "Copy source"*)
+            if command -v pbcopy &>/dev/null; then printf '%s' "$src" | pbcopy && echo "Copied: $src"
+            else echo "Source: $src"; fi
+            pause_for_key
+            ;;
+    esac
+    return 0
+}
+
+# --- menu (fzf list of tracked installs + actions) ---
+install_menu() {
+    if ! command -v fzf &>/dev/null; then echo "Error: fzf is required for '${prog} install' (the menu)." >&2; return 1; fi
+    while true; do
+        local rows; rows=$(installs_list)
+        if [[ -z "$rows" ]]; then
+            echo "No tracked installs. Add one with '${prog} install <pkg>'."
+            return 0
+        fi
+        local sel
+        sel=$(printf '%s' "$rows" | fzf --no-multi --delimiter='|' --with-nth=1,2,3 \
+            --header='enter: actions (update / check / remove)   ·   name | manager | version' \
+            --preview='echo "source: {5}"; echo "installed: {3}"' --preview-window='down,3,wrap' || true)
+        [[ -z "$sel" ]] && return 0
+        local name mgr ver iso src bin uninstall
+        IFS='|' read -r name mgr ver iso src bin uninstall <<< "$sel"
+        install_actions_menu "$name" "$mgr" "$src" "$bin" "$uninstall"
+    done
+}
+
+# --- Subcommand: install (flag-driven; the only positionals are package names) ---
+cmd_install() {
+    local mgr="" bin="" uninstall="" mode=""
+    local pos=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --brew|--cargo|--pip|--apt) mgr="${1#--}"; shift ;;
+            --curl)              mgr="curl"; shift ;;
+            --list|--ls)         mode="list"; shift ;;
+            --outdated|--check)  mode="outdated"; shift ;;
+            --menu|--manage)     mode="menu"; shift ;;
+            --bin)               bin="${2:-}"; shift 2 ;;
+            --uninstall)         uninstall="${2:-}"; shift 2 ;;
+            -h|--help)           install_usage; return 0 ;;
+            --)                  shift; while [[ $# -gt 0 ]]; do pos+=("$1"); shift; done ;;
+            -*)                  echo "Error: unknown flag '$1'." >&2; install_usage; return 1 ;;
+            *)                   pos+=("$1"); shift ;;
+        esac
+    done
+
+    # Management modes take no package argument.
+    if [[ -n "$mode" ]]; then
+        if [[ ${#pos[@]} -gt 0 ]]; then
+            echo "Error: '--$mode' takes no package argument (got: ${pos[*]})." >&2
+            install_usage; return 1
+        fi
+        case "$mode" in
+            list)     install_list ;;
+            outdated) install_outdated ;;
+            menu)     install_menu ;;
+        esac
+        return $?
+    fi
+
+    # curl-pipe-bash install.
+    if [[ "$mgr" == curl ]]; then
+        local url="${pos[0]:-}" name="${pos[1]:-}"
+        if [[ -z "$url" || -z "$name" ]]; then
+            echo "Usage: ${prog} install --curl <URL> <NAME> [--bin PATH] [--uninstall CMD]" >&2
+            return 1
+        fi
+        echo "Installing '$name' via: curl -fsSL $url | bash"
+        if curl -fsSL "$url" | bash; then
+            installs_add "$name" curl "n/a" "$url" "$bin" "$uninstall"
+            echo "Installed $name (curl). Tracked; 'update' re-runs the script."
+        else
+            echo "Error: curl-pipe-bash install failed for '$name'." >&2
+            return 1
+        fi
+        return 0
+    fi
+
+    local pkg="${pos[0]:-}"
+    if [[ -z "$pkg" ]]; then
+        # Bare 'gas install' -> management menu; a lone manager flag is a mistake.
+        if [[ -n "$mgr" ]]; then
+            echo "Error: --$mgr needs a package name, e.g. '${prog} install ripgrep --$mgr'." >&2
+            return 1
+        fi
+        install_menu; return $?
+    fi
+    if [[ ${#pos[@]} -gt 1 ]]; then
+        echo "Error: install one package at a time (got: ${pos[*]})." >&2
+        install_usage; return 1
+    fi
+
+    if [[ -n "$mgr" ]]; then
+        if ! pkg_available "$mgr"; then echo "Error: '$mgr' is not installed." >&2; return 1; fi
+        echo "Installing '$pkg' via $mgr ..."
+        if pkg_install "$mgr" "$pkg"; then
+            installs_add "$pkg" "$mgr" "$(pkg_installed_version "$mgr" "$pkg")" "$pkg" "" ""
+            echo "Installed $pkg ($mgr)."
+        else
+            echo "Error: $mgr failed to install '$pkg'." >&2
+            return 1
+        fi
+        return 0
+    fi
+
+    # No manager flag: try the priority list, first available that succeeds wins.
+    local m
+    for m in brew cargo pip apt; do
+        pkg_available "$m" || continue
+        echo "Trying $m install '$pkg' ..."
+        if pkg_install "$m" "$pkg"; then
+            installs_add "$pkg" "$m" "$(pkg_installed_version "$m" "$pkg")" "$pkg" "" ""
+            echo "Installed $pkg ($m)."
+            return 0
+        fi
+        echo "  $m couldn't install '$pkg'; trying next source ..."
+    done
+    echo "Error: no source (brew/cargo/pip/apt) could install '$pkg'." >&2
+    return 1
 }
 
 # Echo the tmux window index whose @agent-worktree equals PATH (canon-compared),
@@ -2335,6 +2654,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        install)
+            subcommand=install
+            shift
+            break
+            ;;
         jira)
             subcommand=jira
             shift
@@ -2426,6 +2750,10 @@ if [[ "$subcommand" == switch ]]; then
 fi
 if [[ "$subcommand" == jira ]]; then
     cmd_jira "$@"
+    exit 0
+fi
+if [[ "$subcommand" == install ]]; then
+    cmd_install "$@"
     exit 0
 fi
 if [[ "$subcommand" == config ]]; then

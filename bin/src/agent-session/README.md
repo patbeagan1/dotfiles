@@ -70,6 +70,7 @@ gas new -d   # create in background, print switch command
 - **sessions** `[PATH]` – List the Claude Code sessions recorded for a worktree (default: cwd): session ids + last-active, and how to resume. See [Claude sessions](#claude-sessions). Claude-specific.
 - **edit** – fzf-pick one of this project's **skills / rules / subagents** and open it in your editor (`$VISUAL`/`$EDITOR`, else `nvim`→`vim`→`vi`→`nano`), with a content preview. Which files are shown follows the harness: **Claude** → `.claude/skills/<name>/SKILL.md`, `.claude/agents/*.md`, and `CLAUDE.md`/`CLAUDE.local.md` (project **and** `~/.claude/…` global); **Cursor** → `.cursor/rules/*.mdc` and `.cursorrules` (Cursor has no file-based skills or subagents — those are Claude-only); any other harness shows both. Project files are resolved from the git root, so it works from any subdirectory.
 - **config** `[harness-command [VALUE]]` – Show or set persistent per-machine config (see [Harness command](#harness-command) below). `config` lists the file; `config harness-command` prints the current harness command; `config harness-command CMD` sets it.
+- **install** – Install and track global CLI tools across package managers (see [Installing tools](#installing-tools)). `install [brew|cargo|pip|apt] PKG` (or `--brew` etc.) uses that manager; `install PKG` (no manager) tries **brew → cargo → pip → apt** and keeps the first that succeeds; `install curl URL NAME [--bin PATH] [--uninstall CMD]` runs `curl -fsSL URL | bash`. `install list` lists tracked tools, `install outdated` checks for newer versions, and bare **`install`** opens an fzf menu to **update / check / remove** each tool (forwarding to the right manager).
 - **list** – Alias for **system**: the registry-based worktree listing (locations, branches, and **attached**/**orphan**/**stale** status).
 - **system** – List worktrees created by gas (locations, branches, and **attached** vs **orphan**). Registry path: `$HOME/.config/agent-session/worktrees` (override with `AGENT_SESSION_REGISTRY`). Use `--purge` to remove stale registry entries. Use `system remove PATH` to force-remove a worktree and unregister it.
 - **prune** – List worktrees and PR status (merged/closed = safe to remove), with attached/orphan. Use `--registered-only` to only consider worktrees in the registry. Use `--force-remove` to remove safe worktrees (skips attached windows; run cleanup in that window first). Pass a `PATH` to force-remove that worktree. Use `--find-by-title TITLE` to find a commit on develop by message.
@@ -92,6 +93,11 @@ gas status ~/.local/state/agent-session/worktrees/repo/agent-repo-20250101-12000
 gas status --branch my-feature
 gas sessions
 gas edit                # fzf-pick a skill/rule/subagent, open it in $EDITOR
+gas install ripgrep                 # auto: brew -> cargo -> pip -> apt
+gas install bat --cargo             # force a manager (flag)
+gas install --curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup
+gas install                         # fzf menu: update / check / remove tracked tools
+gas install --outdated              # which tracked tools have updates
 gas config harness-command claude
 gas list
 gas create-batch tasks.txt -d --worktree --branch develop
@@ -214,6 +220,38 @@ When the harness is **Claude Code**, `gas` treats a worktree's conversation as f
 - **Actions menu** — when the default harness is claude, the `pick` `ctrl-a` menu gains **"Resume claude session (picker)"**, which opens Claude's interactive `--resume` picker for that worktree (to pick an older session; plain Enter already `--continue`s the latest).
 
 This is entirely Claude-specific; other harnesses (cursor-agent, aider, …) are launched unchanged. Move storage with `$CLAUDE_CONFIG_DIR` and it's honored here too.
+
+## Installing tools
+
+`gas install` is a thin cross-manager layer for the global CLI tools you install, so you can later see what you have, check for updates, and update/remove them in one place. It **tracks** each install in a registry (`$AGENT_SESSION_INSTALLS`, default `~/.config/agent-session/installs`), one line per tool: `name|manager|version|installed_at|source|bin|uninstall`.
+
+**Installing:**
+
+The **only positional argument is the package name** — the manager, curl mode, and list/outdated modes are all flags, so nothing is ambiguous (`gas install list` installs a package called `list`; `gas install --list` lists tracked tools).
+
+```bash
+gas install ripgrep                    # no flag -> try brew, then cargo, then pip, then apt
+gas install eza --cargo                # force a manager with a flag
+gas install --curl https://sh.rustup.rs rustup --bin ~/.cargo/bin/rustup   # curl | bash
+```
+
+Supported managers: **brew, cargo, pip (`pip3 install --user`), apt (`sudo apt-get`), and curl-pipe-bash.** With no manager flag, gas walks the priority list **brew → cargo → pip → apt** (skipping any that aren't installed) and keeps the first that succeeds.
+
+**Managing** (forwards to the owning manager):
+
+```bash
+gas install --list       # fast list from the registry (name, manager, version, source)
+gas install --outdated   # check latest versions on demand (brew/pip/apt; cargo via crates.io; curl = n/a)
+gas install              # fzf menu -> Update / Check latest version / Remove / Copy source
+```
+
+| Action | brew | cargo | pip | apt | curl-pipe-bash |
+| --- | --- | --- | --- | --- | --- |
+| update | `brew upgrade` | `cargo install --force` | `pip3 install --user -U` | `apt-get install --only-upgrade` | re-run `curl \| bash` |
+| remove | `brew uninstall` | `cargo uninstall` | `pip3 uninstall -y` | `apt-get remove` | `--uninstall CMD`, else `rm --bin`, else untrack + warn |
+| latest | `brew info --json` | crates.io API | `pip index versions` | `apt-cache policy` | n/a |
+
+Because a `curl | bash` install has no owning manager, gas records the URL: **update** re-runs it (most scripts install latest), and **remove** uses the `--uninstall CMD` or `--bin PATH` you gave at install time (otherwise it just untracks and reminds you to delete the binary yourself).
 
 ## Multi-window workflow
 
