@@ -38,13 +38,13 @@ Usage: ${prog} new [OPTIONS] [NAME] [PROMPT]   (create a window; alias: create)
        ${prog} jira create              # create a ticket interactively (via acli)
        ${prog} create-batch FILE [OPTIONS]
        ${prog} switch
-       ${prog} board [--plain|--line|--watch [SECS]] [--conflicts]   # interactive fleet triage console
+       ${prog} board [--plain|--line|--watch [SECS]] [--conflicts]   # picker (agent lens); ctrl-t: git lens
        ${prog} next                     # cycle to the next agent waiting on you (+ its question)
        ${prog} answer [--to NAME] [MSG] # reply into an agent's pane (prompts if MSG omitted)
        ${prog} conflicts                # files changed by more than one agent (collision scan)
        ${prog} integrate [--repo PATH]  # preview cross-branch conflicts before merging
        ${prog} hooks [--install|--uninstall|--status] [--user]   # bridge Claude status to the fleet
-       ${prog} pick
+       ${prog} pick                     # picker (git lens); ctrl-t: agent lens
        ${prog} branches
        ${prog} status [--branch BRANCH] [--fetch] [PATH]
        ${prog} sessions [PATH]          # list Claude sessions for a worktree
@@ -123,13 +123,12 @@ Subcommands:
   create-batch FILE  Create one window per line from FILE (format: name|prompt|ticket).
                      Supports -d, --worktree, --branch, --agent (apply to all).
   switch           Use fzf to search tmux windows by ticket or title and switch
-  board            Interactive fleet triage console (fzf): agents sorted by who needs you,
-                   each row showing status + the pending QUESTION; the preview shows the
-                   live pane + git state. Enter jumps; ctrl-a = actions (answer / review
-                   diff / open PR / mark reviewed / kill); ctrl-r = quick reply. Status is
-                   sourced from Claude Code hooks (see 'hooks'). Non-interactive variants:
-                   '--plain' (table), '--line' (⚙/⏳/✓ for a tmux status-right), '--watch
-                   [SECS]', '--conflicts'.
+  board            Opens the one picker in the AGENT lens: agents sorted by who needs you,
+                   rows showing status + the pending QUESTION, preview = live pane + git.
+                   Enter opens; ctrl-a = actions; ctrl-t toggles to the git lens ('pick').
+                   Status comes from Claude Code hooks (see 'hooks'). Non-interactive
+                   dashboard variants: '--plain' (table), '--line' (⚙/⏳/✓ for a tmux
+                   status-right), '--watch [SECS]', '--conflicts'.
   next             Cycle to the next agent waiting on you (skips the current window, so
                    repeated calls walk your blocked agents) and print its question. Good as
                    a tmux key-binding.
@@ -147,11 +146,12 @@ Subcommands:
                    status to the fleet ('--install'/'--uninstall'/'--status'; '--user' for
                    the global scope, else this repo's .claude/settings.json). Requires jq;
                    merges into existing settings and backs them up.
-  pick             fzf picker over worktrees. Preview shows full state
-                   (git status, ahead/behind, remote-deleted, merged, PR via gh).
-                   Enter switches to the live window, or opens a new one for orphans.
-                   ctrl-a opens an actions menu for the highlighted row (open/switch,
-                   update from develop, fetch, open PR, copy path, remove worktree).
+  pick             Opens the one picker in the GIT lens: worktrees sorted attached→orphan,
+                   preview = full state (git status, ahead/behind, remote-deleted, merged,
+                   PR via gh). Enter switches to the live window (or opens one for orphans);
+                   ctrl-a = the unified actions menu (answer, review diff, update from dev,
+                   fetch, open PR, copy path, remove worktree, kill window, mark reviewed,
+                   resume-claude); ctrl-t toggles to the agent lens ('board').
   branches         fzf picker over git branches (local + remote-only). Enter switches
                    to / opens a worktree for the chosen branch. Same rich preview.
                    ctrl-a opens the same actions menu (worktree-only actions appear
@@ -2010,36 +2010,54 @@ pick_build_worktree_rows() {
     printf '%s' "$rows" | sort -t$'\t' -k3,3 -k2,2 -k4,4
 }
 
-# ctrl-a actions menu for a worktree row. Returns 2 for a terminal action
-# (open/switch, which leaves the picker); 0 otherwise (caller loops back to the
-# refreshed list). All non-terminal actions are guarded and pause so output is seen.
-worktree_actions_menu() {
+# Unified ctrl-a actions menu for a worktree/agent row (used by both picker lenses).
+# Groups conduct + navigate + manage + window actions. Returns 2 for a terminal action
+# (opens/switches a window, leaving the picker); 0 otherwise (caller loops the list).
+fleet_actions_menu() {
     local path="$1" branch="$2"
     local dev="${AGENT_SESSION_DEV_BRANCH:-develop}"
-    local menu choice
+    local name; name=$(basename "$path")
+    local menu choice q reply base idx self
     menu=$(printf '%s\n' \
+        "Answer (send a reply)" \
+        "Review diff" \
+        "Mark reviewed" \
         "Open / switch to window" \
         "Update from $dev (pull origin $dev)" \
         "Fetch / refresh remote" \
         "Open PR in browser" \
         "Copy path to clipboard" \
-        "Remove worktree")
+        "Remove worktree" \
+        "Kill window (keep worktree)")
     # Claude-only: resume a specific past session (Enter/open already --continues).
     if default_harness_is_claude; then
         menu="$menu"$'\n'"Resume claude session (picker)"
     fi
     choice=$(printf '%s\n' "$menu" | fzf --no-multi --prompt='action> ' \
-        --header="Actions: $(basename "$path")  [$branch]" || true)
+        --header="Actions: $name  [$branch]" || true)
     [[ -z "$choice" ]] && return 0
     case "$choice" in
+        "Answer"*)
+            q=$(agent_question "$path"); [[ -n "$q" ]] && printf '❓ %s\n' "$q" > /dev/tty 2>/dev/null || true
+            reply=$(prompt_line "reply to $name> ") || { echo "No terminal to type a reply."; pause_for_key; return 0; }
+            [[ -n "$reply" ]] && { send_to_agent "$path" "$reply" && echo "Sent to $name."; }
+            pause_for_key
+            ;;
+        "Review diff"*)
+            base=$(worktree_base_branch "$path")
+            git -C "$path" diff "$base"...HEAD 2>/dev/null || git -C "$path" diff 2>/dev/null || true
+            pause_for_key
+            ;;
+        "Mark reviewed"*)
+            fleet_write "$path" reviewed "" ""; echo "Marked $name reviewed."; pause_for_key
+            ;;
         "Open / switch"*)
             open_or_switch_worktree "$path" "$branch"
             return 2
             ;;
         "Resume claude session"*)
-            local self
             self=$(resolve_self)
-            "$self" new --open-worktree "$path" -n "$(basename "$path")" --agent claude --claude-resume
+            "$self" new --open-worktree "$path" -n "$name" --agent claude --claude-resume
             return 2
             ;;
         "Update from"*)
@@ -2066,7 +2084,6 @@ worktree_actions_menu() {
             pause_for_key
             ;;
         "Remove worktree"*)
-            local idx
             idx=$(attached_window_index "$path")
             if [[ -n "$idx" ]]; then
                 if confirm "Window :$idx is attached. Kill it and remove worktree $path?"; then
@@ -2086,54 +2103,76 @@ worktree_actions_menu() {
             fi
             pause_for_key
             ;;
+        "Kill window"*)
+            idx=$(attached_window_index "$path")
+            if [[ -n "$idx" ]] && confirm "Kill window :$idx ($name)? (worktree kept)"; then
+                tmux kill-window -t ":$idx" 2>/dev/null || true; echo "Killed :$idx."
+            else
+                echo "Cancelled."
+            fi
+            pause_for_key
+            ;;
     esac
     return 0
 }
 
-# --- Subcommand: pick (fzf worktree picker with rich preview + actions menu) ---
-cmd_pick() {
+# --- The one interactive picker, in two lenses ------------------------------------
+# git   lens: worktree/git management (sort attached→orphan→repo→branch; status preview)
+# agent lens: agent conducting       (sort by attention; question column; live-pane preview)
+# ctrl-t toggles the lens in place; ctrl-a opens the unified actions menu; Enter opens.
+fleet_picker() {
     if ! command -v fzf &>/dev/null; then
-        echo "Error: fzf is required for 'agent-session pick'. Install fzf first." >&2
-        exit 1
+        echo "Error: fzf is required for the picker. Install fzf first." >&2
+        return 1
     fi
-    local self
+    local lens="${1:-git}" self
     self=$(resolve_self)
     while true; do
-        local rows
-        rows=$(pick_build_worktree_rows)
+        local rows with_nth path_field preview header
+        if [[ "$lens" == agent ]]; then
+            rows=$(board_build_rows | sort -n -k1)
+            with_nth=3; path_field=2
+            preview="'$self' board-preview {2}"
+            header='enter: open   ctrl-a: actions   ctrl-t: → git lens    (agent: who needs you)'
+        else
+            rows=$(pick_build_worktree_rows)
+            with_nth='2,3,4'; path_field=1
+            # `sleep 0.5;` debounces the networked status preview while scrolling.
+            preview="sleep 0.5; '$self' status --fetch {1}"
+            header='enter: open   ctrl-a: actions   ctrl-t: → agent lens    (repo | status | branch)'
+        fi
         if [[ -z "$rows" ]]; then
             echo "No agent-session worktrees (registry empty or all stale)."
-            exit 0
+            return 0
         fi
-        local out key sel
-        # `sleep 0.5;` debounces the preview: fzf kills the running preview command when
-        # you move to another row, so the (network) `status --fetch` only fires once you
-        # rest on a row for 0.5s — not on every keystroke while scrolling.
+        local out key sel sel_path sel_branch
         out=$(printf '%s\n' "$rows" | fzf --no-multi --ansi \
-            --delimiter=$'\t' --with-nth=2,3,4 --expect=ctrl-a \
-            --header='enter: open/switch   ctrl-a: actions…    (repo | status | branch)' \
-            --preview="sleep 0.5; $self status --fetch {1}" \
-            --preview-window='right,60%,wrap' || true)
-        [[ -z "$out" ]] && exit 0
+            --delimiter=$'\t' --with-nth="$with_nth" --expect=ctrl-a,ctrl-t \
+            --header="$header" \
+            --preview="$preview" --preview-window='right,60%,wrap' || true)
+        [[ -z "$out" ]] && return 0
         key=$(printf '%s\n' "$out" | sed -n '1p')
         sel=$(printf '%s\n' "$out" | sed -n '2p')
-        [[ -z "$sel" ]] && exit 0
-        local sel_path sel_branch
-        sel_path=$(printf '%s' "$sel" | cut -f1)
-        sel_branch=$(printf '%s' "$sel" | cut -f4)
+        if [[ "$key" == "ctrl-t" ]]; then
+            [[ "$lens" == agent ]] && lens=git || lens=agent
+            continue
+        fi
+        [[ -z "$sel" ]] && return 0
+        sel_path=$(printf '%s' "$sel" | cut -f"$path_field")
+        [[ -z "$sel_path" ]] && return 0
+        if [[ "$lens" == agent ]]; then sel_branch=$(fleet_branch_for "$sel_path"); else sel_branch=$(printf '%s' "$sel" | cut -f4); fi
         if [[ "$key" == "ctrl-a" ]]; then
-            # Return 0 => loop (refresh list); return 2 => terminal action, done.
-            if worktree_actions_menu "$sel_path" "$sel_branch"; then
-                continue
-            else
-                exit 0
-            fi
+            # return 0 => loop (refresh list); return 2 => terminal action, done.
+            fleet_actions_menu "$sel_path" "$sel_branch" && continue || return 0
         else
             open_or_switch_worktree "$sel_path" "$sel_branch"
-            exit 0
+            return 0
         fi
     done
 }
+
+# --- Subcommand: pick (the picker in the git/worktree lens) ---
+cmd_pick() { fleet_picker git; }
 
 # Create a worktree that checks out an EXISTING branch (local or remote-only).
 # Echoes the created path on success; empty on failure.
@@ -3421,69 +3460,6 @@ cmd_board_preview() {
     git -C "$path" status -sb 2>/dev/null | head -n 12 || true
 }
 
-# ctrl-a actions on the highlighted agent. Returns 2 when it opened/switched a window.
-board_actions_menu() {
-    local path="$1" name br choice q reply base idx
-    name=$(basename "$path"); br=$(fleet_branch_for "$path")
-    choice=$(printf '%s\n' \
-        "Answer (send a reply)" "Jump to window" "Review diff" "Open PR" "Mark reviewed" "Kill window" \
-        | fzf --no-multi --prompt='action> ' --header="Agent: $name [$br]" || true)
-    [[ -z "$choice" ]] && return 0
-    case "$choice" in
-        Answer*)
-            q=$(agent_question "$path"); [[ -n "$q" ]] && printf '❓ %s\n' "$q" > /dev/tty 2>/dev/null || true
-            reply=$(prompt_line "reply to $name> ") || { echo "No terminal to type a reply."; pause_for_key; return 0; }
-            [[ -n "$reply" ]] && { send_to_agent "$path" "$reply" && echo "Sent to $name."; }
-            pause_for_key ;;
-        "Jump to window") open_or_switch_worktree "$path"; return 2 ;;
-        "Review diff")
-            base=$(worktree_base_branch "$path")
-            git -C "$path" diff "$base"...HEAD 2>/dev/null || git -C "$path" diff 2>/dev/null || true
-            pause_for_key ;;
-        "Open PR") open_pr_for_branch "$br" "$path"; pause_for_key ;;
-        "Mark reviewed") fleet_write "$path" reviewed "" ""; echo "Marked $name reviewed."; pause_for_key ;;
-        "Kill window")
-            idx=$(attached_window_index "$path")
-            if [[ -n "$idx" ]] && confirm "Kill window :$idx ($name)?"; then
-                tmux kill-window -t ":$idx" 2>/dev/null || true; echo "Killed :$idx."
-            else echo "Cancelled."; fi
-            pause_for_key ;;
-    esac
-    return 0
-}
-
-# Interactive triage console: attention-sorted, shows the pending question + live pane,
-# and lets you answer/review/jump without leaving it. This is what tmux's window
-# chooser can't do — it navigates layout; this conducts agents by their real state.
-board_interactive() {
-    local self out key sel path rc
-    self=$(resolve_self)
-    while true; do
-        local rows; rows=$(board_build_rows | sort -n -k1)
-        if [[ -z "$rows" ]]; then echo "No tracked agents. Create one with '${prog} new --worktree …'."; return 0; fi
-        out=$(printf '%s\n' "$rows" | fzf --ansi --no-multi --delimiter=$'\t' --with-nth=3 \
-            --header='enter: jump    ctrl-a: actions    ctrl-r: reply' \
-            --expect=ctrl-a,ctrl-r \
-            --preview="'$self' board-preview {2}" --preview-window='right,55%,wrap' || true)
-        [[ -z "$out" ]] && return 0
-        key=$(printf '%s\n' "$out" | head -1)
-        sel=$(printf '%s\n' "$out" | sed -n '2p')
-        [[ -z "$sel" ]] && return 0
-        path=$(printf '%s' "$sel" | cut -f2)
-        [[ -z "$path" ]] && return 0
-        case "$key" in
-            ctrl-a) rc=0; board_actions_menu "$path" || rc=$?; [[ "$rc" -eq 2 ]] && return 0 ;;
-            ctrl-r)
-                local q reply; q=$(agent_question "$path")
-                [[ -n "$q" ]] && echo "❓ $q"
-                reply=$(prompt_line "reply to $(basename "$path")> ") || true
-                [[ -n "$reply" ]] && send_to_agent "$path" "$reply" && echo "Sent."
-                pause_for_key ;;
-            *) open_or_switch_worktree "$path"; return 0 ;;
-        esac
-    done
-}
-
 cmd_board() {
     local mode="" secs="" show_conf=""
     while [[ $# -gt 0 ]]; do
@@ -3496,14 +3472,15 @@ cmd_board() {
             *) shift ;;
         esac
     done
-    # Default: interactive triage when we have a terminal + fzf; otherwise a plain table.
+    # Default: the interactive picker (agent lens) when we have a terminal + fzf;
+    # otherwise the non-interactive dashboard table (also for scripts/status bars).
     if [[ -z "$mode" ]]; then
         if have_tty && command -v fzf &>/dev/null; then mode=interactive; else mode=plain; fi
     fi
     case "$mode" in
         line)        board_line; echo ;;
         watch)       local n="${secs:-3}"; while true; do clear 2>/dev/null || true; date; echo; board_render; [[ -n "$show_conf" ]] && { echo; conflicts_report; }; sleep "$n"; done ;;
-        interactive) board_interactive ;;
+        interactive) fleet_picker agent ;;
         *)           board_render; [[ -n "$show_conf" ]] && { echo; conflicts_report; } ;;
     esac
 }
