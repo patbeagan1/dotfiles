@@ -17,6 +17,11 @@ window_path=""
 start_dir=""
 start_branch=""
 from_dir=""
+# --repo: name (or path) of the source repo to branch from, resolved against the
+# repos seen in past sessions. repo_pick=true means "--repo" was given with no
+# value => open the interactive picker.
+repo_arg=""
+repo_pick=false
 worktree=false
 # Empty => resolve from persistent config (prompting once if unset). An explicit
 # --agent value (cursor/claude alias or any literal command) overrides.
@@ -80,6 +85,11 @@ Options (create session, i.e. '${prog} new [OPTIONS] [NAME] [PROMPT]'):
   --dir DIR        Starting directory for panes (enables aliases; no need to cd)
   --from DIR       Source repo to branch the worktree from (default: --dir if it is a
                    git repo, else the current repo)
+  --repo NAME      Source repo BY NAME, matched against repos used in past sessions
+                   (also accepts a path). Bare '--repo' (no value) opens an fzf
+                   picker of known repos. When you are not in a git repo and pass
+                   neither --repo nor --from, the picker opens automatically.
+                   Mutually exclusive with --from.
   --branch BRANCH  Branch to use (with --worktree: base branch for the new worktree)
   --branch-name NAME  With --worktree: use NAME as the new branch (may contain '/')
                    instead of the auto agent-<repo>-<slug> name (used by 'jira')
@@ -2651,6 +2661,84 @@ registry_contains_path() {
     grep -q "^${path}|" "$reg"
 }
 
+# --- Repo selection (for --repo NAME / picker on session create) -----------------
+# Distinct source repos seen in past sessions, most-recent-first. If currently in a
+# git repo, that repo is listed first. Emits "name<TAB>path" rows; only paths that
+# still exist and are git repos are included.
+known_repos() {
+    local reg cur
+    reg=$(get_registry_file)
+    cur=$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || true)
+    {
+        [[ -n "$cur" ]] && echo "$cur"
+        if [[ -f "$reg" ]]; then
+            # Newest lines are appended last, so reverse for most-recent-first. Prefer
+            # field 3 (repo toplevel); fall back to field 6 (source_dir) for older lines.
+            tail -r "$reg" 2>/dev/null | while IFS='|' read -r path branch repo created base src; do
+                if [[ -n "$repo" ]]; then echo "$repo"
+                elif [[ -n "$src" ]]; then echo "$src"
+                fi
+            done
+        fi
+    } | awk 'NF && !seen[$0]++' | while IFS= read -r p; do
+        [[ -z "$p" ]] && continue
+        local top
+        top=$(git -C "$p" rev-parse --show-toplevel 2>/dev/null || true)
+        if [[ -n "$top" ]]; then printf '%s\t%s\n' "$(basename "$top")" "$top"; fi
+    done | awk -F'\t' '!seen[$2]++'
+}
+
+# fzf-pick one of the known repos; echo the selected repo path. Non-zero on
+# no-fzf / empty list / cancellation. $1: optional initial query.
+repo_picker() {
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required to pick a repo (or pass --repo NAME / --from PATH)." >&2
+        return 1
+    fi
+    local rows sel
+    rows=$(known_repos)
+    if [[ -z "$rows" ]]; then
+        echo "Error: no known repos yet. Pass --repo NAME or --from PATH." >&2
+        return 1
+    fi
+    sel=$(printf '%s\n' "$rows" | fzf --no-multi --ansi --delimiter=$'\t' --with-nth=1 \
+        --prompt='repo> ' --query="${1:-}" \
+        --header='Select repo for the new session' \
+        --preview='echo {2}' --preview-window='down,3,wrap' || true)
+    [[ -z "$sel" ]] && return 1
+    printf '%s' "$sel" | cut -f2
+}
+
+# Resolve a --repo NAME (or path) to a source repo toplevel path (echoed). A real
+# path to a git repo wins; else case-insensitive basename match against known repos
+# (ambiguous => picker pre-filtered to NAME). Non-zero on failure.
+resolve_repo() {
+    local name="$1"
+    if [[ -e "$name" ]]; then
+        local top
+        top=$(git -C "$name" rev-parse --show-toplevel 2>/dev/null || true)
+        if [[ -n "$top" ]]; then printf '%s' "$top"; return 0; fi
+    fi
+    local rows matches count
+    rows=$(known_repos)
+    matches=$(printf '%s\n' "$rows" | awk -F'\t' -v n="$name" 'tolower($1)==tolower(n)')
+    count=$(printf '%s' "$matches" | grep -c . || true)
+    if [[ "$count" -eq 1 ]]; then
+        printf '%s' "$matches" | cut -f2
+        return 0
+    elif [[ "$count" -gt 1 ]]; then
+        repo_picker "$name"
+        return $?
+    fi
+    echo "Error: no known repo named '$name'." >&2
+    if [[ -n "$rows" ]]; then
+        echo "Known repos:" >&2
+        printf '%s\n' "$rows" | cut -f1 | sort -u | sed 's/^/  /' >&2
+    fi
+    echo "Pass --from PATH to branch from a repo with no prior session." >&2
+    return 1
+}
+
 # Output lines of worktree paths that have a tmux window with @agent-worktree set to that path
 attached_worktree_paths() {
     [[ -z "${TMUX:-}" ]] && return 0
@@ -3997,6 +4085,18 @@ while [[ $i -lt ${#remaining[@]} ]]; do
             from_dir="${remaining[$i]:-}"
             ((i++)) || true
             ;;
+        --repo)
+            # Optional value: a bare --repo (next token absent or another flag)
+            # means "open the picker"; otherwise the next token is the repo name.
+            ((i++)) || true
+            next="${remaining[$i]:-}"
+            if [[ -z "$next" || "$next" == -* ]]; then
+                repo_pick=true
+            else
+                repo_arg="$next"
+                ((i++)) || true
+            fi
+            ;;
         --branch)
             ((i++)) || true
             start_branch="${remaining[$i]:-}"
@@ -4096,6 +4196,17 @@ if [[ -n "$open_worktree" ]]; then
     [[ -z "$window_name" ]] && [[ -z "$window_path" ]] && window_name=$(basename "$open_worktree")
 fi
 if [[ "$worktree" == true ]]; then
+    # --repo selects the source repo by name (or opens a picker); it feeds the same
+    # resolution as --from below. The two name the same thing, so are exclusive.
+    if { [[ -n "$repo_arg" ]] || [[ "$repo_pick" == true ]]; } && [[ -n "$from_dir" ]]; then
+        echo "Error: --repo and --from are mutually exclusive." >&2
+        exit 1
+    fi
+    if [[ "$repo_pick" == true ]]; then
+        from_dir=$(repo_picker) || exit 1
+    elif [[ -n "$repo_arg" ]]; then
+        from_dir=$(resolve_repo "$repo_arg") || exit 1
+    fi
     # Resolve the source repo to branch from: --from, else --dir if it's a repo, else cwd.
     source_repo=""
     for cand in "$from_dir" "$start_dir" "."; do
@@ -4104,8 +4215,17 @@ if [[ "$worktree" == true ]]; then
         [[ -n "$source_repo" ]] && break
     done
     if [[ -z "$source_repo" ]]; then
-        echo "Error: Not in a git repository (and --from/--dir is not one). Cannot create worktree." >&2
-        exit 1
+        # Not in a repo and none named: let the user pick from past sessions rather
+        # than hard-failing.
+        picked=$(repo_picker) || {
+            echo "Error: Not in a git repository and no repo selected. Pass --repo NAME or --from PATH." >&2
+            exit 1
+        }
+        source_repo=$(git -C "$picked" rev-parse --show-toplevel 2>/dev/null || true)
+        if [[ -z "$source_repo" ]]; then
+            echo "Error: selected repo is not a git repository: $picked" >&2
+            exit 1
+        fi
     fi
     # If source_repo is itself a linked worktree (e.g. running `gas dev` from inside
     # another gas worktree), --show-toplevel returns the worktree dir, whose basename

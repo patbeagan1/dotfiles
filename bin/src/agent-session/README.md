@@ -42,6 +42,15 @@ gas new --worktree --branch develop -n my-feature "Implement login"
 
 Any flags after `NAME` are forwarded to the create flow (e.g. `gas dev my-feature --agent claude`). Override the base branch with `$AGENT_SESSION_DEV_BRANCH` (defaults to `develop`).
 
+**Picking the repo.** By default the worktree branches from the repo you're currently in. To start a session for a *different* project without `cd`-ing there first, add `--repo`:
+
+```bash
+gas dev my-feature --repo alltrails_android_2   # by name (from past sessions)
+gas dev my-feature --repo                        # fzf-pick from known repos
+```
+
+Known repos come from the repos used in your past sessions (the registry). If you run `gas dev`/`gas new --worktree` from a directory that isn't a git repo and don't pass `--repo`/`--from`, the picker opens automatically instead of erroring.
+
 ### Create session — `new` (alias `create`)
 
 `gas new [OPTIONS] [NAME] [PROMPT]` creates a tmux window (this is the original default behavior, now behind an explicit subcommand).
@@ -136,6 +145,7 @@ gas cleanup
 | `-p`, `--path PATH` | Set path for window name (alternative to `-n`) |
 | `--dir DIR` | Starting directory for panes (enables aliases; no need to cd) |
 | `--from DIR` | Source repo to branch the worktree from (default: `--dir` if it's a git repo, else current repo) |
+| `--repo NAME` | Source repo **by name**, matched (case-insensitive, by basename) against repos used in past sessions; also accepts a path. Bare `--repo` (no value) opens an fzf picker of known repos. When you're not in a git repo and pass neither `--repo` nor `--from`, the picker opens automatically. Mutually exclusive with `--from`. |
 | `--branch BRANCH` | Branch to use (with `--worktree`: base branch for new worktree) |
 | `--worktree` | Create a durable worktree with a fresh unique branch off `origin/<branch>`; use as cwd for panes |
 | `--agent AGENT` | Agent/harness to start: `cursor` (→ `cursor-agent`), `claude`, or any literal command. If omitted, uses the per-machine configured **harness command** (see below). |
