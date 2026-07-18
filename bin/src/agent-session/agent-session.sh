@@ -152,6 +152,10 @@ Subcommands:
                    repo's candidate branches + status, previews cross-branch conflicts
                    (via 'git merge-tree'), and suggests a landing order (clean branches
                    first). Read-only — it never merges.
+  pr               Guided PR creation from the current worktree: agentic code review,
+                   build/lint/tests (per-repo commands, remembered), fzf Jira ticket pick,
+                   branch rename to convention, template-filled draft PR via gh. Interactive
+                   by default; flags: --ticket KEY, --base BRANCH, --dry-run, -y/--yes.
   hooks            Install/remove the Claude Code hooks that report each agent's real
                    status to the fleet ('--install'/'--uninstall'/'--status'; '--user' for
                    the global scope, else this repo's .claude/settings.json). Requires jq;
@@ -3703,6 +3707,385 @@ merge_conflict_files() {
     return 0
 }
 
+# ==========================================================================
+# gas pr : guided PR creation from the current worktree.
+# Pipeline: agentic code review -> build/lint/tests -> Jira ticket -> branch
+# rename -> template-filled title/body -> editor -> gh pr create (draft).
+# Interactive by default; a small flag set overrides for non-interactive use.
+# ==========================================================================
+
+# Stable, regex/-config-safe per-repo key (basename of the OWNING repo, so all
+# worktrees of a repo share one config). Non-alphanumerics -> '_'.
+pr_repo_key() {
+    local repo="$1" common base
+    common=$(git -C "$repo" rev-parse --git-common-dir 2>/dev/null || true)
+    if [[ "$common" == */.git ]]; then
+        base=$(basename "$(dirname "$common")")
+    else
+        base=$(basename "$repo")
+    fi
+    printf '%s' "$base" | tr -c 'A-Za-z0-9' '_'
+}
+
+# AllTrails-flavored defaults, shown as suggestions when configuring a repo.
+pr_checks_default() {
+    case "$1" in
+        build) echo "./gradlew :app:assembleAlphaDebug" ;;
+        test)  echo "./gradlew testAlphaDebugUnitTest" ;;
+        lint)  echo "./gradlew detekt" ;;
+    esac
+}
+
+# Prompt once for build/test/lint commands and persist them. Blank => skip that
+# check for this repo. Marks the repo configured so we never re-prompt silently.
+pr_checks_configure() {
+    local repo="$1" key kind def val
+    key=$(pr_repo_key "$repo")
+    echo "Configure build / lint / test commands for repo '$key'." >&2
+    echo "(Press Enter to accept the [default]; type a space then Enter to skip a check.)" >&2
+    for kind in build test lint; do
+        def=$(pr_checks_default "$kind")
+        val=$(prompt_line "  ${kind} command [${def}]: " 2>/dev/null || true)
+        [[ -z "$val" ]] && val="$def"
+        [[ "$val" == " " ]] && val=""
+        config_set "pr_checks_${kind}_${key}" "$val"
+    done
+    config_set "pr_checks_configured_${key}" "1"
+}
+
+# Echo three lines: build / test / lint commands. Configures on first use when
+# interactive; when non-interactive & unconfigured, returns empty (skip checks).
+pr_checks_get_cmds() {
+    local repo="$1" interactive="${2:-true}" key
+    key=$(pr_repo_key "$repo")
+    if [[ "$(config_get "pr_checks_configured_${key}")" != "1" ]]; then
+        if [[ "$interactive" == true ]] && have_tty; then
+            pr_checks_configure "$repo"
+        else
+            printf '\n\n\n'
+            return 0
+        fi
+    fi
+    printf '%s\n' "$(config_get "pr_checks_build_${key}")"
+    printf '%s\n' "$(config_get "pr_checks_test_${key}")"
+    printf '%s\n' "$(config_get "pr_checks_lint_${key}")"
+}
+
+# Run stored build/lint/test commands in $repo; gate on first failure.
+# Interactive: asks whether to run checks at all (unless $yes).
+pr_checks() {
+    local repo="$1" yes="${2:-false}" cmds build test lint kind cmd interactive=true
+    if [[ "$yes" == true ]]; then
+        interactive=false
+    elif ! confirm "Run build / lint / tests before opening the PR?"; then
+        echo "Skipping local checks (you chose not to run them)."
+        return 0
+    fi
+    cmds=$(pr_checks_get_cmds "$repo" "$interactive")
+    build=$(printf '%s' "$cmds" | sed -n '1p')
+    test=$(printf '%s'  "$cmds" | sed -n '2p')
+    lint=$(printf '%s'  "$cmds" | sed -n '3p')
+    for kind in build test lint; do
+        eval "cmd=\$$kind"
+        if [[ -z "$cmd" ]]; then
+            echo "• ${kind}: (none configured — skipped)"
+            continue
+        fi
+        echo "• ${kind}: $cmd"
+        if ! ( cd "$repo" && eval "$cmd" ); then
+            echo "Error: ${kind} check failed: $cmd" >&2
+            echo "Fix and re-run 'gas pr'." >&2
+            return 1
+        fi
+    done
+    echo "Local checks passed."
+    return 0
+}
+
+# Extract a JIRA key (e.g. DISCO-1234) from a branch name, if present.
+pr_branch_ticket() {
+    printf '%s' "$1" | grep -oE '[A-Z][A-Z0-9]+-[0-9]+' | head -1 || true
+}
+
+# Resolve the PR's JIRA ticket: explicit arg > branch-encoded (confirm) > fzf pick.
+pr_ticket() {
+    local branch="$1" arg="${2:-}" key json
+    if [[ -n "$arg" ]]; then printf '%s' "$arg"; return 0; fi
+    key=$(pr_branch_ticket "$branch")
+    if [[ -n "$key" ]] && confirm "Use ticket ${key} (from branch name)?"; then
+        printf '%s' "$key"; return 0
+    fi
+    json=$(jira_fetch_sprint_json)
+    if [[ -z "$json" || "$json" == "[]" ]]; then
+        echo "No assigned open-sprint tickets found." >&2
+        return 1
+    fi
+    key=$(jira_pick_ticket "$json") || return 1
+    [[ -z "$key" ]] && { echo "No ticket selected." >&2; return 1; }
+    printf '%s' "$key"
+}
+
+# Lowercase initials from git user.name (fallback: email local-part).
+pr_initials() {
+    local name init
+    name=$(git config user.name 2>/dev/null || true)
+    [[ -z "$name" ]] && name=$(git config user.email 2>/dev/null | sed 's/@.*//' || true)
+    init=$(printf '%s' "$name" | awk '{for(i=1;i<=NF;i++)printf substr($i,1,1)}')
+    [[ -z "$init" ]] && init=$(printf '%s' "$name" | cut -c1-2)
+    printf '%s' "$init" | tr '[:upper:]' '[:lower:]'
+}
+
+# Rename the auto branch to {initials}/{TICKET}/{slug}; idempotent if already so.
+# Echoes the resulting branch name.
+pr_rename_branch() {
+    local cur="$1" ticket="$2" title="$3" init slug new
+    case "$cur" in
+        */"$ticket"/*) printf '%s' "$cur"; return 0 ;;
+    esac
+    init=$(pr_initials)
+    slug=$(jira_branch_slug "$title")
+    new="${init}/${ticket}/${slug}"
+    if git branch -m "$new" 2>/dev/null; then
+        printf '%s' "$new"
+    else
+        echo "Warning: could not rename branch to $new; keeping $cur." >&2
+        printf '%s' "$cur"
+    fi
+}
+
+# Run a claude prompt and STREAM a human-readable view of its progress to the
+# terminal as it happens (assistant text live, plus '· <Tool> <arg>' markers for
+# each tool call), rather than buffering until completion. Uses stream-json +
+# `jq --unbuffered`; falls back to plain streaming text if jq is unavailable.
+# Echoes claude's own exit status. First arg is the prompt; rest are extra flags.
+pr_claude_stream() {
+    local prompt="$1"; shift
+    if command -v jq &>/dev/null; then
+        claude -p "$prompt" --output-format stream-json --verbose "$@" 2>/dev/null \
+            | jq --unbuffered -j '
+                if .type=="assistant" then (.message.content[]?
+                    | if .type=="text" then .text
+                      elif .type=="tool_use" then "\n  · \(.name) \((.input.command // .input.file_path // .input.pattern // "")|tostring)\n"
+                      else "" end)
+                elif .type=="result" then "\n"
+                else empty end'
+        return "${PIPESTATUS[0]}"
+    fi
+    # No jq: stream claude's default (text) output straight through.
+    claude -p "$prompt" "$@" 2>/dev/null
+}
+
+# Advisory agentic code review of the diff vs base, via the /code-review skill
+# headless with a read-only tool allowlist. Streams progress live. Returns
+# non-zero only if the user chooses NOT to proceed after seeing findings.
+pr_review() {
+    local base="$1" yes="${2:-false}"
+    if ! command -v claude &>/dev/null; then
+        echo "Note: 'claude' not found — skipping agentic code review." >&2
+        return 0
+    fi
+    if [[ "$yes" != true ]] && ! confirm "Run an agentic code review of the diff vs ${base}?"; then
+        return 0
+    fi
+    echo "Running code review (streaming live output)…"
+    echo "----- Code review -----"
+    if ! pr_claude_stream "/code-review" \
+            --allowedTools Read Grep Glob "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)"; then
+        echo "(/code-review skill unavailable — falling back to a direct review prompt)" >&2
+        pr_claude_stream "Review the code changes in \`git diff origin/${base}...HEAD\` for correctness bugs, missed edge cases, and convention violations. Be concise; list concrete findings." \
+            --allowedTools Read Grep Glob "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)" \
+            || { echo "Note: code review failed to run — continuing." >&2; return 0; }
+    fi
+    printf '\n-----------------------\n\n'
+    if [[ "$yes" == true ]]; then return 0; fi
+    confirm "Proceed to open the PR despite any findings above?" || { echo "Aborted after review." >&2; return 1; }
+    return 0
+}
+
+# Echo the repo's PR template, or a minimal built-in fallback.
+pr_template() {
+    local repo="$1" f
+    for f in ".github/pull_request_template.md" ".github/PULL_REQUEST_TEMPLATE.md" \
+             "docs/pull_request_template.md"; do
+        if [[ -f "$repo/$f" ]]; then cat "$repo/$f"; return 0; fi
+    done
+    cat <<'EOF'
+### Technical Description
+
+🔴TBD
+
+### Testing
+
+🔴TBD
+EOF
+}
+
+# Split "<title>\n===PR-BODY===\n<body...>" (in $1) into title ($2) and body ($3).
+pr_split_output() {
+    local raw="$1" title_file="$2" body_file="$3"
+    head -1 "$raw" > "$title_file"
+    awk 'f{print} /^===PR-BODY===$/{f=1}' "$raw" > "$body_file"
+}
+
+# Generate title+body with claude (read-only allowlist) from diff+ticket+template.
+pr_generate() {
+    local repo="$1" base="$2" ticket="$3" summary="$4" title_file="$5" body_file="$6"
+    local sub url tmpl raw prompt
+    if ! command -v claude &>/dev/null; then
+        echo "Error: 'claude' not found — cannot generate the PR description." >&2
+        return 1
+    fi
+    sub=$(get_jira_subdomain 2>/dev/null || true)
+    url="https://${sub:-alltrails}.atlassian.net/browse/${ticket}"
+    tmpl=$(pr_template "$repo")
+    raw="${TMPDIR:-/tmp}/gas-pr-raw.$$"
+    prompt=$(cat <<EOF
+You are drafting a GitHub PR for the current branch. Base branch: ${base}.
+JIRA ticket: ${ticket} — ${summary}
+JIRA URL: ${url}
+
+Use \`git diff origin/${base}...HEAD\` and \`git log origin/${base}..HEAD\` to understand the change.
+
+Output EXACTLY this format (title on line 1, then the sentinel, then the body):
+<one-line PR title: imperative mood, <=50 chars, may prefix feat:/fix:/etc, reference ${ticket}>
+===PR-BODY===
+<the PR body>
+
+For the body, START from this repo template and fill it in, PRESERVING any lines
+that are 'required verbatim for release automation' (e.g. the '----------' separator
+and its surrounding comment block):
+--- TEMPLATE START ---
+${tmpl}
+--- TEMPLATE END ---
+
+Rules for the body:
+- Put ${url} on the JIRA link line (replace any 🔴TBD placeholder there).
+- Write the Technical Description from the ACTUAL diff (what changed and why).
+- Leave Screenshots and A11y checklist items as unchecked placeholders for the human.
+- Append an '### AI Usage' section with: Logic Summary (plain-English what the code
+  does), Prompt Disclosure (this PR was drafted with an AI agent via 'gas pr'), and a
+  Safety Check line confirming no secrets/PII were shared.
+- Do not invent screenshots or fabricate test results.
+EOF
+)
+    if ! claude -p "$prompt" \
+            --allowedTools Read Grep Glob "Bash(git diff:*)" "Bash(git log:*)" "Bash(git show:*)" \
+            > "$raw" 2>/dev/null; then
+        echo "Error: PR body generation failed." >&2
+        rm -f "$raw"; return 1
+    fi
+    pr_split_output "$raw" "$title_file" "$body_file"
+    rm -f "$raw"
+    if [[ ! -s "$title_file" || ! -s "$body_file" ]]; then
+        echo "Error: generated PR title/body was empty." >&2
+        return 1
+    fi
+}
+
+# Editor edit of the body, then push + gh pr create (draft default), or print the
+# command under dry-run; update an existing PR if one exists.
+pr_publish() {
+    local repo="$1" branch="$2" base="$3" title_file="$4" body_file="$5" dry="$6" yes="$7"
+    local title editor draft_flag existing url
+    title=$(cat "$title_file")
+
+    if [[ "$yes" != true ]] && confirm "Edit the PR description in your editor before publishing?"; then
+        editor=$(resolve_editor) || echo "No editor found. Set \$EDITOR (e.g. export EDITOR=nvim)." >&2
+        [[ -n "${editor:-}" ]] && "$editor" "$body_file" < /dev/tty > /dev/tty 2>&1 || true
+    fi
+
+    if ! command -v gh &>/dev/null; then
+        echo "Error: gh CLI not found — cannot create the PR." >&2
+        return 1
+    fi
+
+    # Draft by default; offer ready-for-review.
+    draft_flag="--draft"
+    if [[ "$yes" != true ]]; then
+        confirm "Create as a DRAFT PR? (No = ready for review)" || draft_flag=""
+    fi
+
+    existing=$( (cd "$repo" && gh pr view "$branch" --json url --jq .url) 2>/dev/null || true )
+    if [[ -n "$existing" ]]; then
+        echo "A PR already exists for '$branch': $existing"
+        if [[ "$dry" == true ]]; then
+            echo "[dry-run] would run: gh pr edit \"$branch\" --title \"$title\" --body-file \"$body_file\""
+            return 0
+        fi
+        if [[ "$yes" == true ]] || confirm "Update its title/body?"; then
+            ( cd "$repo" && gh pr edit "$branch" --title "$title" --body-file "$body_file" ) && open_url "$existing"
+        fi
+        return 0
+    fi
+
+    if [[ "$dry" == true ]]; then
+        echo "[dry-run] would run:"
+        echo "  git -C $repo push -u origin $branch"
+        echo "  gh pr create --base $base --head $branch --title \"$title\" --body-file $body_file $draft_flag"
+        return 0
+    fi
+
+    ( cd "$repo" && git push -u origin "$branch" ) || { echo "Error: git push failed." >&2; return 1; }
+    url=$( ( cd "$repo" && gh pr create --base "$base" --head "$branch" --title "$title" --body-file "$body_file" $draft_flag ) ) \
+        || { echo "Error: gh pr create failed." >&2; return 1; }
+    echo "Created PR: $url"
+    if [[ "$yes" != true ]]; then confirm "Open in browser?" && open_url "$url"; fi
+}
+
+# --- Subcommand: pr (guided PR creation) ---
+cmd_pr() {
+    local pr_ticket_arg="" pr_base="" pr_dry_run=false pr_yes=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help) echo "Usage: ${prog} pr [--ticket KEY] [--base BRANCH] [--dry-run] [-y|--yes]"; return 0 ;;
+            --ticket)  shift; pr_ticket_arg="${1:-}"; shift || true ;;
+            --base)    shift; pr_base="${1:-}"; shift || true ;;
+            --dry-run) pr_dry_run=true; shift ;;
+            -y|--yes)  pr_yes=true; shift ;;
+            *) echo "Error: unknown option for 'pr': $1" >&2; return 1 ;;
+        esac
+    done
+    [[ "${GAS_PR_DRY_RUN:-}" == 1 ]] && pr_dry_run=true
+
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        echo "Error: 'gas pr' must be run inside a git repository (worktree)." >&2
+        return 1
+    fi
+    local repo base branch
+    repo=$(git rev-parse --show-toplevel 2>/dev/null)
+    base="${pr_base:-$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')}"
+    [[ -z "$base" ]] && base="${AGENT_SESSION_DEV_BRANCH:-develop}"
+    branch=$(git branch --show-current 2>/dev/null)
+
+    git fetch origin "$base" 2>/dev/null || true
+    if git diff --quiet "origin/${base}...HEAD" 2>/dev/null; then
+        echo "Error: no changes vs origin/${base} — nothing to open a PR for." >&2
+        return 1
+    fi
+    echo "Preparing PR: branch '${branch}' → base '${base}' (repo: $(basename "$repo"))"
+
+    pr_review "$base" "$pr_yes" || return 1
+    pr_checks "$repo" "$pr_yes" || return 1
+
+    local ticket summary
+    ticket=$(pr_ticket "$branch" "$pr_ticket_arg") || return 1
+    summary=$(jira_ticket_details "$ticket" 2>/dev/null | head -1 || true)
+
+    local title_file body_file rc
+    title_file="${TMPDIR:-/tmp}/gas-pr-title.$$"
+    body_file="${TMPDIR:-/tmp}/gas-pr-body.$$"
+    if ! pr_generate "$repo" "$base" "$ticket" "$summary" "$title_file" "$body_file"; then
+        rm -f "$title_file" "$body_file"; return 1
+    fi
+
+    branch=$(pr_rename_branch "$branch" "$ticket" "$(cat "$title_file")")
+
+    pr_publish "$repo" "$branch" "$base" "$title_file" "$body_file" "$pr_dry_run" "$pr_yes"
+    rc=$?
+    rm -f "$title_file" "$body_file"
+    return $rc
+}
+
 # gas integrate [--repo PATH] : preview cross-branch conflicts among parallel agents.
 cmd_integrate() {
     local only_repo=""
@@ -3913,6 +4296,11 @@ for arg in "$@"; do
             shift
             break
             ;;
+        pr)
+            subcommand=pr
+            shift
+            break
+            ;;
         *)
             remaining+=("$arg")
             shift
@@ -4022,6 +4410,10 @@ if [[ "$subcommand" == conflicts ]]; then
 fi
 if [[ "$subcommand" == integrate ]]; then
     cmd_integrate "$@"
+    exit 0
+fi
+if [[ "$subcommand" == pr ]]; then
+    cmd_pr "$@"
     exit 0
 fi
 

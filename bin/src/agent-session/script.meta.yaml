@@ -6,6 +6,7 @@ roadmap:
   - "DONE: gas board (+ --line for tmux status-right), gas next, gas answer"
   - "DONE: collision awareness - gas conflicts / board --conflicts (files changed by >1 agent)"
   - "DONE: integration staging - gas integrate: cross-branch conflict preview + suggested landing order"
+  - "DONE: gas pr - guided PR creation: agentic code review, per-repo remembered build/lint/test checks, fzf jira pick, branch rename to convention, template-filled draft PR via gh (interactive, --dry-run)"
   - gas cost - aggregate token usage per worktree/day from Claude JSONL (standalone, optional)
   - gas assign - persistent task backlog with a concurrency cap that auto-spawns the next as agents finish
   # --- existing ---

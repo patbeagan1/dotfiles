@@ -78,6 +78,7 @@ gas new -d   # create in background, print switch command
 - **answer** `[--to NAME] [MSG]` – Reply into an agent's pane **without** switching. With no `MSG` it shows the agent's question and **prompts** you for the reply; targets the `next` waiting agent or `--to NAME`.
 - **conflicts** – Scan all agents and report **files changed by more than one of them** (vs each worktree's base), so overlapping work surfaces before it collides. Also `board --conflicts`.
 - **integrate** `[--repo PATH]` – Preview how the parallel agents' branches will merge: candidate branches + status per repo, **cross-branch conflict preview** via `git merge-tree`, and a suggested landing order. Read-only — never merges.
+- **pr** `[--ticket KEY] [--base BRANCH] [--dry-run] [-y|--yes]` – Guided PR creation from the current worktree. See [PR creation](#pr-creation-gas-pr).
 - **hooks** `[--install|--uninstall|--status] [--user]` – Install the Claude Code hooks that report each agent's real status to the fleet. See [Fleet orchestration](#fleet-orchestration).
 - **pick** (or **worktrees**) – Opens **the one picker in the git lens**: gas worktrees (from the registry) sorted attached→orphan, with a `status` preview (git state + PR). Enter switches to the worktree's live tmux window (or opens one for orphans); **`ctrl-a`** opens the unified actions menu (see [Actions menu](#actions-menu-ctrl-a)); **`ctrl-t`** toggles to the agent lens (i.e. `board`). It's the same picker as `board` — just a different default lens/sort/preview.
 - **branches** (or **pick-branch**) – fzf picker over git branches (local + remote-only). Same rich preview and **`ctrl-a`** actions menu. Enter switches to the branch's existing worktree/window, or creates a worktree for the branch and opens a window. A branch already checked out in the main repo opens a window there instead of creating a divergent branch.
@@ -230,6 +231,30 @@ gas config jira-project TEAM               # default project key for `gas jira c
 ```
 
 Requires [`acli`](https://developer.atlassian.com/cloud/acli/) (run `acli auth` once). The subdomain also falls back to the legacy `~/.jira_instance_subdomain` file. Env overrides: `$AGENT_SESSION_JIRA_SUBDOMAIN`, `$AGENT_SESSION_JIRA_BRANCH_PREFIX`, `$AGENT_SESSION_JIRA_PROJECT`.
+
+## PR creation (`gas pr`)
+
+`gas pr` turns a finished worktree into a well-formed **draft** GitHub PR through a guided pipeline. Run it from inside the worktree; it is **interactive by default** (it asks at each gate) with a few flags for non-interactive use.
+
+Pipeline:
+
+1. **Agentic code review** *(advisory)* — runs your `/code-review` skill headless (read-only tool allowlist) over the diff vs the base branch, **streaming its progress live** (tool activity + findings as they happen, via `stream-json` rendered with `jq`), then asks whether to proceed.
+2. **Build / lint / tests** *(gating)* — runs this repo's commands and aborts on the first failure. The commands are **remembered per repo**: the first time you run `gas pr` in a repo it prompts you for the build, test, and lint commands (with AllTrails gradle defaults as suggestions) and stores them in the gas config; a blank answer skips that check. To change them later, edit/delete the `pr_checks_*_<repo>` keys in `$AGENT_SESSION_CONFIG` (default `~/.config/agent-session/config`).
+3. **Ticket** — uses the JIRA key encoded in the branch name if present (confirmed), otherwise fzf-picks from your open-sprint assigned tickets (same picker as `gas jira`).
+4. **Branch rename** — renames the auto `agent-*` branch to the convention `{initials}/{TICKET}/{slug}` (idempotent).
+5. **Title + description** — reads the repo PR template (`.github/pull_request_template.md`), then a headless `claude` (read-only allowlist) fills it from the diff + ticket: the JIRA link, a Technical Description, and an AI-usage disclosure — leaving screenshots/a11y checkboxes for you.
+6. **Edit + publish** — opens the description in your `$EDITOR` (nvim) for final edits, then `git push` + `gh pr create --draft`. If a PR already exists for the branch it offers to update it instead.
+
+Flags (overrides; default flow is interactive):
+
+| Flag | Effect |
+|------|--------|
+| `--ticket KEY` | Use KEY instead of deriving/picking the ticket |
+| `--base BRANCH` | PR base branch (default: repo `origin/HEAD`, e.g. `develop`) |
+| `--dry-run` (or `GAS_PR_DRY_RUN=1`) | Print the `gh pr create` command; no push, no PR |
+| `-y`, `--yes` | Non-interactive: accept prompts, skip the review confirm and the editor; unconfigured checks are skipped rather than prompted |
+
+Requires `gh` (authenticated) and `claude`; the ticket step also uses `acli`/`fzf`. Each step degrades or aborts with a clear message when its dependency is missing.
 
 ## Fleet orchestration
 
