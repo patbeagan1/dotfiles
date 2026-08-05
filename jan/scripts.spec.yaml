@@ -1,0 +1,17 @@
+metadata:
+  name: jan
+  description: |
+    Incubator `scripts` project as a categorized `jan` subtree. Each script is
+    inlined with `help` (description) and `run` (execute from embedded source).
+    Script entries may declare `path` (source directory), `dependencies` (other
+    script names whose directories are prepended to PATH), and `requires`
+    (external utilities such as `fzf` that must exist before `run`), and `env` (variables
+    passed to the child process).
+    Use from the `jan-cli` directory, for example:
+      jan --spec-dir . --spec-root scripts.spec.yaml scripts git gd help
+      jan --spec-dir . --spec-root scripts.spec.yaml scripts git gd run -- <args>
+
+commands:
+  scripts:
+    about: Personal utilities from the monorepo `scripts/source` tree (auto-generated).
+    include: scripts.yaml

@@ -2,6 +2,81 @@
 # Categorized scripts with directory-inlined `run` and standard `help`.
 about: media utilities
 commands:
+  accioImage:
+    about: Download images from Google, Bing, and DuckDuckGo image search based on
+      a query
+    path: ../scripts/source/accioImage
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            accioImage
+
+
+            Download images from Google, Bing, and DuckDuckGo image search based on
+            a query
+
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_accioImage\" <<'JAN_EOF_accioImage__accioImage_70209c449ca8'\n\
+            #compdef accioImage\n\n# Zsh completion for accioImage\n# Generated automatically\
+            \ - customize as needed\n\n_accioImage() {\n    local context state line\n\
+            \    typeset -A opt_args\n    \n    _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show\
+            \ help information]' \\\n        '(-v --version)'{-v,--version}'[Show\
+            \ version information]' \\\n        '*::arg:_files'\n}\n\n_accioImage\
+            \ \"$@\"\nJAN_EOF_accioImage__accioImage_70209c449ca8\nchmod +x \"$tmpdir/_accioImage\"\
+            \ 2>/dev/null || true\ncat >\"$tmpdir/accioImage.py\" <<'JAN_EOF_accioImage_accioImage_py_6d5e4820bd2e'\n\
+            #!python3\n\nimport requests\nfrom bs4 import BeautifulSoup\nimport urllib.request\n\
+            import sys\n\n# Define the search query\nquery = sys.argv[1]\n\n# Set\
+            \ the user-agent string to avoid being blocked by the search engines\n\
+            headers = {\n    \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64;\
+            \ x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\"\
+            \n}\n\n# Set the URLs for the Google, Bing, and DuckDuckGo image searches\n\
+            # Send a GET request to each search engine with the user-agent headers\n\
+            # Use BeautifulSoup to parse the response HTML for each search engine\n\
+            # Find the first image result for each search engine\n# Download the images\
+            \ to the current directory\n\n\ndef parse_google(query: str):\n    google_url\
+            \ = \"https://www.google.com/search?q=\" + query + \"&tbm=isch\"\n   \
+            \ google_response = requests.get(google_url, headers=headers)\n    google_soup\
+            \ = BeautifulSoup(google_response.text, \"html.parser\")\n    google_img_url\
+            \ = [x for x in google_soup.find_all(\"img\")]\n    google_img_url = [\n\
+            \        {\"alt\": x[\"alt\"], \"data-src\": x[\"data-src\"]}\n      \
+            \  for x in google_img_url\n        if \"alt\" in x.attrs\n        if\
+            \ x[\"alt\"]\n        if \"width\" in x.attrs\n        if int(x[\"width\"\
+            ]) > 48\n        if \"data-src\" in x.attrs\n    ]\n    google_img_url\
+            \ = [x for x in google_img_url if x[\"data-src\"].startswith(\"http\"\
+            )]\n    google_img_url = google_img_url[0][\"data-src\"]\n    filename\
+            \ = f\"google_{query}.jpg\"\n    urllib.request.urlretrieve(google_img_url,\
+            \ filename)\n    print(google_url)\n    print(filename)\n\n\ndef parse_bing(query:\
+            \ str):\n    bing_url = \"https://www.bing.com/images/search?q=\" + query\n\
+            \    bing_response = requests.get(bing_url, headers=headers)\n    bing_soup\
+            \ = BeautifulSoup(bing_response.text, \"html.parser\")\n    bing_img_url\
+            \ = [\n        {\"alt\": x[\"alt\"], \"data-src\": x[\"data-src\"]}\n\
+            \        for x in bing_soup.find_all(\"img\")\n        if \"alt\" in x.attrs\n\
+            \        if x[\"alt\"]\n        if \"data-src\" in x.attrs\n    ]\n  \
+            \  bing_img_url = [x for x in bing_img_url if x[\"data-src\"].startswith(\"\
+            http\")]\n    bing_img_url = bing_img_url[0][\"data-src\"]\n    filename\
+            \ = f\"bing_{query}.jpg\"\n    urllib.request.urlretrieve(bing_img_url,\
+            \ filename)\n    print(bing_url)\n    print(filename)\n\n\ndef main():\n\
+            \    query = sys.argv[1]\n    parse_google(query)\n    parse_bing(query)\n\
+            \nif __name__ == \"__main__\":\n    main()\nJAN_EOF_accioImage_accioImage_py_6d5e4820bd2e\n\
+            chmod +x \"$tmpdir/accioImage.py\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/accioImage.py\" \"$@\"\n"
+          passthrough: true
   chafa-interactive:
     about: A script for automated tasks.
     path: ../scripts/source/chafa-interactive
