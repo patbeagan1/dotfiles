@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: git utilities
 commands:
   add-submodule:
     about: A script for automated tasks.
-    path: ../scripts/source/add-submodule
     commands:
       help:
         about: Describe this script.
@@ -73,7 +72,6 @@ commands:
           passthrough: true
   autogit:
     about: A script for automated tasks.
-    path: ../scripts/source/autogit
     commands:
       help:
         about: Describe this script.
@@ -137,7 +135,6 @@ commands:
           passthrough: true
   bcommit:
     about: A script for automated tasks.
-    path: ../scripts/source/bcommit
     commands:
       help:
         about: Describe this script.
@@ -197,7 +194,6 @@ commands:
           passthrough: true
   check-all-git-repos:
     about: A script for automated tasks.
-    path: ../scripts/source/check-all-git-repos
     commands:
       help:
         about: Describe this script.
@@ -252,7 +248,6 @@ commands:
           passthrough: true
   create-ticket:
     about: A script for automated tasks.
-    path: ../scripts/source/create-ticket
     commands:
       help:
         about: Describe this script.
@@ -299,7 +294,6 @@ commands:
   gd:
     about: 'A terminal UI for browsing `git diff` similar to gitg: list changed files
       by name, then open a less-like diff view for each file.'
-    path: ../scripts/source/gd
     commands:
       help:
         about: Describe this script.
@@ -478,7 +472,6 @@ commands:
           passthrough: true
   gitfile:
     about: A script for automated tasks.
-    path: ../scripts/source/gitfile
     commands:
       help:
         about: Describe this script.
@@ -519,7 +512,6 @@ commands:
           passthrough: true
   gitfilehistory:
     about: A script for automated tasks.
-    path: ../scripts/source/gitfilehistory
     commands:
       help:
         about: Describe this script.
@@ -562,7 +554,6 @@ commands:
           passthrough: true
   gitflux:
     about: A script for automated tasks.
-    path: ../scripts/source/gitflux
     commands:
       help:
         about: Describe this script.
@@ -605,7 +596,6 @@ commands:
           passthrough: true
   gitsync:
     about: A script for automated tasks.
-    path: ../scripts/source/gitsync
     commands:
       help:
         about: Describe this script.
@@ -646,7 +636,6 @@ commands:
           passthrough: true
   jj:
     about: A script for automated tasks.
-    path: ../scripts/source/jj
     commands:
       help:
         about: Describe this script.
@@ -686,7 +675,6 @@ commands:
           passthrough: true
   merge-project:
     about: A script for automated tasks.
-    path: ../scripts/source/merge-project
     commands:
       help:
         about: Describe this script.
@@ -739,7 +727,6 @@ commands:
           passthrough: true
   mergetest:
     about: A script for automated tasks.
-    path: ../scripts/source/mergetest
     commands:
       help:
         about: Describe this script.
@@ -781,7 +768,6 @@ commands:
           passthrough: true
   repick:
     about: A script for automated tasks.
-    path: ../scripts/source/repick
     commands:
       help:
         about: Describe this script.
@@ -847,7 +833,6 @@ commands:
           passthrough: true
   resquash:
     about: A script for automated tasks.
-    path: ../scripts/source/resquash
     commands:
       help:
         about: Describe this script.

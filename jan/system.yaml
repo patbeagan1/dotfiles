@@ -1,11 +1,10 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: system utilities
 commands:
   cputemp:
     about: A cross-platform CPU temperature monitoring script that works on both macOS
       and Linux systems.
-    path: ../scripts/source/cputemp
     commands:
       help:
         about: Describe this script.
@@ -71,7 +70,6 @@ commands:
           passthrough: true
   cputemp-linux-sorted:
     about: A script for automated tasks.
-    path: ../scripts/source/cputemp-linux-sorted
     commands:
       help:
         about: Describe this script.
@@ -115,7 +113,6 @@ commands:
           passthrough: true
   cputemp-linux-track:
     about: A script for automated tasks.
-    path: ../scripts/source/cputemp-linux-track
     commands:
       help:
         about: Describe this script.
@@ -157,7 +154,6 @@ commands:
           passthrough: true
   cputemp-mac:
     about: cputemp-mac utility script
-    path: ../scripts/source/cputemp-mac
     commands:
       help:
         about: Describe this script.
@@ -215,7 +211,6 @@ commands:
           passthrough: true
   install-deb:
     about: A script for automated tasks.
-    path: ../scripts/source/install-deb
     commands:
       help:
         about: Describe this script.
@@ -265,7 +260,6 @@ commands:
           passthrough: true
   lsdaemons:
     about: A script for automated tasks.
-    path: ../scripts/source/lsdaemons
     commands:
       help:
         about: Describe this script.
@@ -307,7 +301,6 @@ commands:
           passthrough: true
   machinetype:
     about: A script for automated tasks.
-    path: ../scripts/source/machinetype
     commands:
       help:
         about: Describe this script.
@@ -355,7 +348,6 @@ commands:
           passthrough: true
   sdk:
     about: A script for automated tasks.
-    path: ../scripts/source/sdk
     commands:
       help:
         about: Describe this script.
@@ -430,7 +422,6 @@ commands:
           passthrough: true
   server:
     about: A script for automated tasks.
-    path: ../scripts/source/server
     commands:
       help:
         about: Describe this script.
@@ -475,7 +466,6 @@ commands:
           passthrough: true
   task:
     about: A script for automated tasks.
-    path: ../scripts/source/task
     commands:
       help:
         about: Describe this script.
@@ -618,7 +608,6 @@ commands:
           passthrough: true
   trackusage:
     about: A script for automated tasks.
-    path: ../scripts/source/trackusage
     commands:
       help:
         about: Describe this script.
@@ -678,7 +667,6 @@ commands:
     - trackusage-impl
   trackusage-impl:
     about: A script for automated tasks.
-    path: ../scripts/source/trackusage-impl
     commands:
       help:
         about: Describe this script.
@@ -722,7 +710,6 @@ commands:
           passthrough: true
   upkeep:
     about: A script for automated tasks.
-    path: ../scripts/source/upkeep
     commands:
       help:
         about: Describe this script.
@@ -857,3 +844,70 @@ commands:
             $tmpdir/upkeep.zsh\" 2>/dev/null || true\ncd \"$tmpdir\"\nexec \"$tmpdir/upkeep.zsh\"\
             \ \"$@\"\n"
           passthrough: true
+  list-pkg-managers:
+    about: Probe which package-manager list commands succeed on this host (Deno).
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            list-pkg-managers
+
+
+            Probe which package-manager list commands succeed on this host (Deno).
+
+
+            Requires on host: deno
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/_check_program.ts\" <<'JAN_EOF_list_pkg_managers__check_program_ts_59103f4f3470'\n\
+            #!/usr/bin/env -S deno run --allow-run\n\n/*\n* Hardcoded list of commands\
+            \ to test\n*\n* While a little wasteful, each of these commands is run\
+            \ without sending the output to stdout\n* then we will give the user the\
+            \ option to run the successful commands again\n* so that they can see\
+            \ the output.\n*\n* These will show the commands which are installed with\
+            \ each of these package managers.\n* */\nconst commands = [\n    [\"brew\"\
+            , \"list\"],\n    [\"apt\", \"list\", \"--installed\"],\n    [\"yum\"\
+            , \"list\", \"installed\"],\n    [\"dnf\", \"list\", \"--installed\"],\n\
+            \    [\"zypper\", \"se\", \"--installed-only\"],\n    [\"pacman\", \"\
+            -Q\"],\n    [\"port\", \"installed\"],\n    [\"rpm\", \"-q\"],\n    [\"\
+            snap\", \"list\"],\n    [\"flatpak\", \"list\"],\n    [\"npm\", \"list\"\
+            , \"-g\"],\n    [\"cargo\", \"install\", \"--list\"],\n    [\"pip\", \"\
+            show\"],\n    [\"pip3\", \"show\"],\n    [\"gem\", \"list\", \"--installed\"\
+            ],\n    [\"pear\", \"list\"],\n    [\"composer\", \"show\"],\n    [\"\
+            dotnet\", \"nuget\", \"locals\", \"all\", \"--list\"],\n    [\"go\", \"\
+            list\", \"-m\"],\n    [\"conda\", \"list\"],\n];\n\nasync function runCommands(commands:\
+            \ string[][]) {\n    const successfulCommands: string[][] = [];\n\n  \
+            \  for (const command of commands) {\n        try {\n            // Run\
+            \ the command\n            const process = Deno.run({\n              \
+            \  cmd: command,\n                stdout: \"null\", // Ignore the stdout\n\
+            \                stderr: \"null\", // Ignore the stderr\n            });\n\
+            \n            // Wait for the command to finish and get the status\n \
+            \           const {code} = await process.status();\n\n            // Check\
+            \ if the command was successful\n            if (code === 0) {\n     \
+            \           successfulCommands.push(command);\n            }\n\n     \
+            \       process.close();\n        } catch (error) {\n            // ignoring\
+            \ errors, because we're just checking if the programs exist on the current\
+            \ machine.\n        }\n    }\n\n    return successfulCommands;\n}\n\n\
+            // Run the commands and print the ones that succeed\nrunCommands(commands)\n\
+            \    .then(successfulCommands => {\n        successfulCommands\n     \
+            \       .map((it) => it.join(\" \"))\n            .forEach((it) => console.log(it))\n\
+            \    });\nJAN_EOF_list_pkg_managers__check_program_ts_59103f4f3470\nchmod\
+            \ +x \"$tmpdir/_check_program.ts\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/_check_program.ts\" \"$@\"\n"
+          passthrough: true
+    requires:
+    - deno

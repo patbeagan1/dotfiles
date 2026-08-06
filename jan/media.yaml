@@ -1,11 +1,10 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: media utilities
 commands:
   accioImage:
     about: Download images from Google, Bing, and DuckDuckGo image search based on
       a query
-    path: ../scripts/source/accioImage
     commands:
       help:
         about: Describe this script.
@@ -79,7 +78,6 @@ commands:
           passthrough: true
   chafa-interactive:
     about: A script for automated tasks.
-    path: ../scripts/source/chafa-interactive
     commands:
       help:
         about: Describe this script.
@@ -139,7 +137,6 @@ commands:
           passthrough: true
   comic:
     about: A script for automated tasks.
-    path: ../scripts/source/comic
     commands:
       help:
         about: Describe this script.
@@ -181,7 +178,6 @@ commands:
           passthrough: true
   comicify:
     about: A script for automated tasks.
-    path: ../scripts/source/comicify
     commands:
       help:
         about: Describe this script.
@@ -233,7 +229,6 @@ commands:
           passthrough: true
   dot2pdf:
     about: A script for automated tasks.
-    path: ../scripts/source/dot2pdf
     commands:
       help:
         about: Describe this script.
@@ -275,7 +270,6 @@ commands:
           passthrough: true
   image-stitch:
     about: A script for automated tasks.
-    path: ../scripts/source/image-stitch
     commands:
       help:
         about: Describe this script.
@@ -352,7 +346,6 @@ commands:
           passthrough: true
   imagefix:
     about: A script for automated tasks.
-    path: ../scripts/source/imagefix
     commands:
       help:
         about: Describe this script.
@@ -418,7 +411,6 @@ commands:
           passthrough: true
   img_gif_to_spritesheet:
     about: A script for automated tasks.
-    path: ../scripts/source/img_gif_to_spritesheet
     commands:
       help:
         about: Describe this script.
@@ -465,7 +457,6 @@ commands:
           passthrough: true
   img_resize_200:
     about: A script for automated tasks.
-    path: ../scripts/source/img_resize_200
     commands:
       help:
         about: Describe this script.
@@ -509,7 +500,6 @@ commands:
           passthrough: true
   img_resize_32:
     about: A script for automated tasks.
-    path: ../scripts/source/img_resize_32
     commands:
       help:
         about: Describe this script.
@@ -553,7 +543,6 @@ commands:
           passthrough: true
   img_resize_64:
     about: A script for automated tasks.
-    path: ../scripts/source/img_resize_64
     commands:
       help:
         about: Describe this script.
@@ -597,7 +586,6 @@ commands:
           passthrough: true
   img_to_qrcode_set:
     about: A script for automated tasks.
-    path: ../scripts/source/img_to_qrcode_set
     commands:
       help:
         about: Describe this script.
@@ -686,7 +674,6 @@ commands:
           passthrough: true
   img_wiggle_parallel:
     about: A script for automated tasks.
-    path: ../scripts/source/img_wiggle_parallel
     commands:
       help:
         about: Describe this script.
@@ -730,7 +717,6 @@ commands:
           passthrough: true
   multi-qr:
     about: A script for automated tasks.
-    path: ../scripts/source/multi-qr
     commands:
       help:
         about: Describe this script.
@@ -790,7 +776,6 @@ commands:
           passthrough: true
   pdf2png:
     about: A script for automated tasks.
-    path: ../scripts/source/pdf2png
     commands:
       help:
         about: Describe this script.
@@ -832,7 +817,6 @@ commands:
           passthrough: true
   pdf2scaledpng:
     about: A script for automated tasks.
-    path: ../scripts/source/pdf2scaledpng
     commands:
       help:
         about: Describe this script.
@@ -878,7 +862,6 @@ commands:
           passthrough: true
   pngresize:
     about: A script for automated tasks.
-    path: ../scripts/source/pngresize
     commands:
       help:
         about: Describe this script.
@@ -920,7 +903,6 @@ commands:
           passthrough: true
   qrencoder:
     about: A script for automated tasks.
-    path: ../scripts/source/qrencoder
     commands:
       help:
         about: Describe this script.
@@ -963,7 +945,6 @@ commands:
           passthrough: true
   vid-compress:
     about: A script for automated tasks.
-    path: ../scripts/source/vid-compress
     commands:
       help:
         about: Describe this script.
@@ -1011,3 +992,64 @@ commands:
             chmod +x \"$tmpdir/vid-compress.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
             \nexec \"$tmpdir/vid-compress.sh\" \"$@\"\n"
           passthrough: true
+  download-images:
+    about: Download image URLs with Deno; names files by content hash and appends
+      record.csv.
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            download-images
+
+
+            Download image URLs with Deno; names files by content hash and appends
+            record.csv.
+
+
+            Requires on host: deno
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/download-images.ts\" <<'JAN_EOF_download_images_download_images_ts_ca6f53ee083e'\n\
+            #!/usr/bin/env -S deno run --allow-net --allow-write\n\n// Import required\
+            \ modules from the Deno standard library\nimport { Sha256 } from \"https://deno.land/std@0.160.0/hash/sha256.ts\"\
+            \nimport { writeCSV } from \"https://deno.land/x/csv/mod.ts\";\n\n// Function\
+            \ to download an image from a URL and store it with a specific filename\
+            \ format\nasync function downloadImage(url) {\n  try {\n    const response\
+            \ = await fetch(url);\n    if (!response.ok) {\n      throw new Error(`Failed\
+            \ to fetch ${url}: ${response.statusText}`);\n    }\n    const buffer\
+            \ = await response.arrayBuffer();\n    const hash = new Sha256();\n  \
+            \  hash.update(buffer);\n    const hexHash = hash.toString('hex');\n \
+            \   const timestamp = Date.now();\n    const extension = url.split('.').pop().split('?')[0];\n\
+            \    const newFileName = `${hexHash}-${timestamp}.${extension}`;\n   \
+            \ await Deno.writeFile(newFileName, new Uint8Array(buffer));\n    console.log(`Downloaded\
+            \ ${newFileName}`);\n\n    // Append a row to record.csv\n    const originalFileName\
+            \ = url.split('/').pop();\n    const csvData = [[originalFileName, newFileName,\
+            \ url]];\n    \n    const f = await Deno.open(\"./record.csv\", {\n  \
+            \    create: true,\n      append: true,\n    });\n    await f.write(new\
+            \ TextEncoder().encode(\"\\n\"));\n    await writeCSV(f, csvData);\n \
+            \   f.close();\n\n  } catch (error) {\n    console.error(`Error downloading\
+            \ ${url}: ${error.message}`);\n  }\n}\n\n// Get image URLs from command-line\
+            \ arguments\nconst imageUrls = Deno.args;\n\n// Validate that there are\
+            \ URLs provided\nif (imageUrls.length === 0) {\n  console.error('No image\
+            \ URLs provided. Please provide at least one URL as a command-line argument.');\n\
+            \  Deno.exit(1);\n}\n\n// Download all images using promises for parallel\
+            \ execution\nawait Promise.all(imageUrls.map(downloadImage));\nJAN_EOF_download_images_download_images_ts_ca6f53ee083e\n\
+            chmod +x \"$tmpdir/download-images.ts\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/download-images.ts\" \"$@\"\n"
+          passthrough: true
+    requires:
+    - deno

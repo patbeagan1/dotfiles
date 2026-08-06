@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: android utilities
 commands:
   android-dump:
     about: A script for automated tasks.
-    path: ../scripts/source/android-dump
     commands:
       help:
         about: Describe this script.
@@ -54,7 +53,6 @@ commands:
           passthrough: true
   android_dumpsys:
     about: A script for automated tasks.
-    path: ../scripts/source/android_dumpsys
     commands:
       help:
         about: Describe this script.
@@ -95,7 +93,6 @@ commands:
           passthrough: true
   android_enable_developer:
     about: A script for automated tasks.
-    path: ../scripts/source/android_enable_developer
     commands:
       help:
         about: Describe this script.
@@ -138,7 +135,6 @@ commands:
           passthrough: true
   emulator-start-charles:
     about: A script for automated tasks.
-    path: ../scripts/source/emulator-start-charles
     commands:
       help:
         about: Describe this script.
@@ -197,7 +193,6 @@ commands:
           passthrough: true
   gradle_by_module:
     about: A script for automated tasks.
-    path: ../scripts/source/gradle_by_module
     commands:
       help:
         about: Describe this script.

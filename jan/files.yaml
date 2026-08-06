@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: files utilities
 commands:
   basename:
     about: A script for automated tasks.
-    path: ../scripts/source/basename
     commands:
       help:
         about: Describe this script.
@@ -45,7 +44,6 @@ commands:
           passthrough: true
   cat-all-pretty:
     about: A script for automated tasks.
-    path: ../scripts/source/cat-all-pretty
     commands:
       help:
         about: Describe this script.
@@ -88,7 +86,6 @@ commands:
           passthrough: true
   cat-ansi-remote:
     about: A script for automated tasks.
-    path: ../scripts/source/cat-ansi-remote
     commands:
       help:
         about: Describe this script.
@@ -143,7 +140,6 @@ commands:
           passthrough: true
   cat-ansifile:
     about: A script for automated tasks.
-    path: ../scripts/source/cat-ansifile
     commands:
       help:
         about: Describe this script.
@@ -199,7 +195,6 @@ commands:
           passthrough: true
   cat-no-comment:
     about: A script for automated tasks.
-    path: ../scripts/source/cat-no-comment
     commands:
       help:
         about: Describe this script.
@@ -241,7 +236,6 @@ commands:
           passthrough: true
   chunk_by_quarter:
     about: A script for automated tasks.
-    path: ../scripts/source/chunk_by_quarter
     commands:
       help:
         about: Describe this script.
@@ -311,7 +305,6 @@ commands:
           passthrough: true
   compare:
     about: A script for automated tasks.
-    path: ../scripts/source/compare
     commands:
       help:
         about: Describe this script.
@@ -353,7 +346,6 @@ commands:
           passthrough: true
   compare_directories:
     about: A script for automated tasks.
-    path: ../scripts/source/compare_directories
     commands:
       help:
         about: Describe this script.
@@ -423,7 +415,6 @@ commands:
           passthrough: true
   diffall:
     about: A script for automated tasks.
-    path: ../scripts/source/diffall
     commands:
       help:
         about: Describe this script.
@@ -466,7 +457,6 @@ commands:
           passthrough: true
   filesplit:
     about: A script for automated tasks.
-    path: ../scripts/source/filesplit
     commands:
       help:
         about: Describe this script.
@@ -514,7 +504,6 @@ commands:
           passthrough: true
   filetype:
     about: A script for automated tasks.
-    path: ../scripts/source/filetype
     commands:
       help:
         about: Describe this script.
@@ -555,7 +544,6 @@ commands:
           passthrough: true
   flatten:
     about: A script for automated tasks.
-    path: ../scripts/source/flatten
     commands:
       help:
         about: Describe this script.
@@ -599,7 +587,6 @@ commands:
           passthrough: true
   folder_checksum:
     about: A script for automated tasks.
-    path: ../scripts/source/folder_checksum
     commands:
       help:
         about: Describe this script.
@@ -654,7 +641,6 @@ commands:
           passthrough: true
   fullpath:
     about: A script for automated tasks.
-    path: ../scripts/source/fullpath
     commands:
       help:
         about: Describe this script.
@@ -697,7 +683,6 @@ commands:
           passthrough: true
   nospaces:
     about: A script for automated tasks.
-    path: ../scripts/source/nospaces
     commands:
       help:
         about: Describe this script.
@@ -738,7 +723,6 @@ commands:
           passthrough: true
   notabs:
     about: A script for automated tasks.
-    path: ../scripts/source/notabs
     commands:
       help:
         about: Describe this script.
@@ -782,7 +766,6 @@ commands:
           passthrough: true
   remove_empty_dirs:
     about: A script for automated tasks.
-    path: ../scripts/source/remove_empty_dirs
     commands:
       help:
         about: Describe this script.
@@ -825,7 +808,6 @@ commands:
           passthrough: true
   rm_empty_dirs:
     about: A script for automated tasks.
-    path: ../scripts/source/rm_empty_dirs
     commands:
       help:
         about: Describe this script.
@@ -868,7 +850,6 @@ commands:
           passthrough: true
   rm_empty_files:
     about: A script for automated tasks.
-    path: ../scripts/source/rm_empty_files
     commands:
       help:
         about: Describe this script.

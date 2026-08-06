@@ -1,12 +1,11 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: tmux utilities
 commands:
   tmux-extend-column:
     about: Extends the current tmux window by adding 2 new panes in a new column to
       the right of the active pane. Focus remains in the original pane after the layout
       is created.
-    path: ../scripts/source/tmux-extend-column
     commands:
       help:
         about: Describe this script.

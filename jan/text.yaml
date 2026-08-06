@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: text utilities
 commands:
   append_keyword:
     about: A script for automated tasks.
-    path: ../scripts/source/append_keyword
     commands:
       help:
         about: Describe this script.
@@ -48,7 +47,6 @@ commands:
           passthrough: true
   dequote:
     about: A script for automated tasks.
-    path: ../scripts/source/dequote
     commands:
       help:
         about: Describe this script.
@@ -90,7 +88,6 @@ commands:
           passthrough: true
   dictionary:
     about: A script for automated tasks.
-    path: ../scripts/source/dictionary
     commands:
       help:
         about: Describe this script.
@@ -132,7 +129,6 @@ commands:
           passthrough: true
   emoji_block_text:
     about: A script for automated tasks.
-    path: ../scripts/source/emoji_block_text
     commands:
       help:
         about: Describe this script.
@@ -213,7 +209,6 @@ commands:
           passthrough: true
   format-latex-color:
     about: A script for automated tasks.
-    path: ../scripts/source/format-latex-color
     commands:
       help:
         about: Describe this script.
@@ -320,7 +315,6 @@ commands:
           passthrough: true
   quote:
     about: A script for automated tasks.
-    path: ../scripts/source/quote
     commands:
       help:
         about: Describe this script.
@@ -362,7 +356,6 @@ commands:
           passthrough: true
   simplify-prose:
     about: A script for automated tasks.
-    path: ../scripts/source/simplify-prose
     commands:
       help:
         about: Describe this script.
@@ -455,7 +448,6 @@ commands:
           passthrough: true
   text-to-keypad:
     about: A script for automated tasks.
-    path: ../scripts/source/text-to-keypad
     commands:
       help:
         about: Describe this script.
@@ -506,7 +498,6 @@ commands:
           passthrough: true
   tocamelcase:
     about: A script for automated tasks.
-    path: ../scripts/source/tocamelcase
     commands:
       help:
         about: Describe this script.
@@ -549,7 +540,6 @@ commands:
           passthrough: true
   tosnakecase:
     about: A script for automated tasks.
-    path: ../scripts/source/tosnakecase
     commands:
       help:
         about: Describe this script.

@@ -1,6 +1,6 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
-about: Personal utilities from the monorepo `scripts/source` tree (auto-generated).
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
+about: Personal utilities (categorized, inlined).
 commands:
   git:
     include: git.yaml

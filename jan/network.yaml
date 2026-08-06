@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: network utilities
 commands:
   duck:
     about: A script for automated tasks.
-    path: ../scripts/source/duck
     commands:
       help:
         about: Describe this script.
@@ -51,7 +50,6 @@ commands:
           passthrough: true
   duckduckgo:
     about: A script for automated tasks.
-    path: ../scripts/source/duckduckgo
     commands:
       help:
         about: Describe this script.
@@ -109,7 +107,6 @@ commands:
           passthrough: true
   ipqr:
     about: A script for automated tasks.
-    path: ../scripts/source/ipqr
     commands:
       help:
         about: Describe this script.
@@ -151,7 +148,6 @@ commands:
           passthrough: true
   killport:
     about: A script for automated tasks.
-    path: ../scripts/source/killport
     commands:
       help:
         about: Describe this script.
@@ -193,7 +189,6 @@ commands:
           passthrough: true
   myip_to_qr:
     about: A script for automated tasks.
-    path: ../scripts/source/myip_to_qr
     commands:
       help:
         about: Describe this script.
@@ -236,7 +231,6 @@ commands:
           passthrough: true
   open-ports:
     about: A script for automated tasks.
-    path: ../scripts/source/open-ports
     commands:
       help:
         about: Describe this script.
@@ -278,7 +272,6 @@ commands:
           passthrough: true
   report:
     about: A script for automated tasks.
-    path: ../scripts/source/report
     commands:
       help:
         about: Describe this script.
@@ -321,7 +314,6 @@ commands:
           passthrough: true
   scan-lan:
     about: A script for automated tasks.
-    path: ../scripts/source/scan-lan
     commands:
       help:
         about: Describe this script.
@@ -378,7 +370,6 @@ commands:
           passthrough: true
   scan-local-ports:
     about: A script for automated tasks.
-    path: ../scripts/source/scan-local-ports
     commands:
       help:
         about: Describe this script.
@@ -433,7 +424,6 @@ commands:
           passthrough: true
   setupSshKeygen:
     about: A script for automated tasks.
-    path: ../scripts/source/setupSshKeygen
     commands:
       help:
         about: Describe this script.
@@ -476,7 +466,6 @@ commands:
           passthrough: true
   url-to-file:
     about: A script for automated tasks.
-    path: ../scripts/source/url-to-file
     commands:
       help:
         about: Describe this script.
@@ -527,7 +516,6 @@ commands:
           passthrough: true
   web-open:
     about: A script for automated tasks.
-    path: ../scripts/source/web-open
     commands:
       help:
         about: Describe this script.
@@ -574,7 +562,6 @@ commands:
           passthrough: true
   webringify:
     about: A script for automated tasks.
-    path: ../scripts/source/webringify
     commands:
       help:
         about: Describe this script.
@@ -663,7 +650,6 @@ commands:
           passthrough: true
   wgeti-polite:
     about: A script for automated tasks.
-    path: ../scripts/source/wgeti-polite
     commands:
       help:
         about: Describe this script.
@@ -712,3 +698,62 @@ commands:
             chmod +x \"$tmpdir/wgeti-polite.zsh\" 2>/dev/null || true\ncd \"$tmpdir\"\
             \nexec \"$tmpdir/wgeti-polite.zsh\" \"$@\"\n"
           passthrough: true
+  url-performance:
+    about: Measure HTTP fetch times for URLs listed in a file (SBCL + Quicklisp/drakma).
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - 'cat <<''EOF''
+
+            url-performance
+
+
+            Measure HTTP fetch times for URLs listed in a file (SBCL + Quicklisp/drakma).
+
+
+            Requires on host: sbcl
+
+            EOF
+
+            '
+      run:
+        about: Run the script (inlined); forwards args.
+        exec:
+          argv:
+          - bash
+          - -lc
+          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
+            ' EXIT\ncat >\"$tmpdir/url-performance.lisp\" <<'JAN_EOF_url_performance_url_performance_lisp_7c550ab4da67'\n\
+            #!/usr/bin/env -S sbcl --script\n\n;;; Load Quicklisp\n(load (merge-pathnames\
+            \ \"quicklisp/setup.lisp\"\n                       (user-homedir-pathname)))\n\
+            \n;;; Ensure that the Drakma library is installed\n(ql:quickload \"drakma\"\
+            )\n(ql:quickload \"alexandria\")\n\n(line-up-first \"HELLO\"\n    string-downcase\n\
+            \    format t)\n\n\n;;; Function to fetch a URL and measure time taken\n\
+            (defun fetch-url-with-timing (url)\n  \"Fetches the URL and returns the\
+            \ content along with the time taken.\"\n  (let ((start-time (get-internal-real-time))\n\
+            \        (content nil))\n    (handler-case\n        (setq content (drakma:http-request\
+            \ url))\n      (error (e)\n        (format t \"Error fetching ~a: ~a~%\"\
+            \ url e)\n        (setq content nil)))\n    (let ((end-time (get-internal-real-time))\n\
+            \          (seconds (/ (float (- end-time start-time)) internal-time-units-per-second)))\n\
+            \      (values content seconds))))\n\n;;; Function to process a list of\
+            \ URLs\n(defun process-urls-from-file (filename)\n  \"Processes each URL\
+            \ in the file and prints the URL with its runtime.\"\n  (let ((urls (with-open-file\
+            \ (stream filename)\n                (loop for line = (read-line stream\
+            \ nil nil)\n                      while line\n                      collect\
+            \ line)))\n        (results '()))\n    (dolist (url urls)\n      (multiple-value-bind\
+            \ (content time-taken)\n          (fetch-url-with-timing url)\n      \
+            \  (push (cons url time-taken) results)))\n    ;; Print the results\n\
+            \    (format t \"~%Results:~%\")\n    (dolist (result (reverse results))\n\
+            \      (format t \"URL: ~a, Time taken: ~2f seconds~%\" (car result) (cdr\
+            \ result)))))\n\n;;; Main execution\n(defparameter *url-file*\n  (if (and\
+            \ *posix-argv* (cdr *posix-argv*))\n      (cadr *posix-argv*)\n      \"\
+            urls.txt\"))\n\n(process-urls-from-file *url-file*)\nJAN_EOF_url_performance_url_performance_lisp_7c550ab4da67\n\
+            chmod +x \"$tmpdir/url-performance.lisp\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            \nexec \"$tmpdir/url-performance.lisp\" \"$@\"\n"
+          passthrough: true
+    requires:
+    - sbcl

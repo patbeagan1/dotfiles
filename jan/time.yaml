@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: time utilities
 commands:
   days_until:
     about: A script for automated tasks.
-    path: ../scripts/source/days_until
     commands:
       help:
         about: Describe this script.
@@ -75,7 +74,6 @@ commands:
   halloween-countdown:
     about: Shows the number of days until Halloween. If Halloween has already passed
       this year, it shows days until next year's Halloween.
-    path: ../scripts/source/halloween-countdown
     commands:
       help:
         about: Describe this script.
@@ -126,7 +124,6 @@ commands:
   halloween-decorate:
     about: Adds spooky ASCII art decoration to the terminal for Halloween. Optionally
       sets terminal colors to a spooky orange/yellow theme.
-    path: ../scripts/source/halloween-decorate
     commands:
       help:
         about: Describe this script.
@@ -165,7 +162,6 @@ commands:
           passthrough: true
   pause:
     about: A script for automated tasks.
-    path: ../scripts/source/pause
     commands:
       help:
         about: Describe this script.
@@ -206,7 +202,6 @@ commands:
           passthrough: true
   pomodoro:
     about: A script for automated tasks.
-    path: ../scripts/source/pomodoro
     commands:
       help:
         about: Describe this script.
@@ -247,7 +242,6 @@ commands:
           passthrough: true
   timeclock:
     about: A script for automated tasks.
-    path: ../scripts/source/timeclock
     commands:
       help:
         about: Describe this script.
@@ -289,7 +283,6 @@ commands:
           passthrough: true
   xmas:
     about: A script for automated tasks.
-    path: ../scripts/source/xmas
     commands:
       help:
         about: Describe this script.
@@ -361,7 +354,6 @@ commands:
   xmas-countdown:
     about: Shows the number of days until Christmas. If Christmas has already passed
       this year, it shows days until next year's Christmas.
-    path: ../scripts/source/xmas-countdown
     commands:
       help:
         about: Describe this script.
@@ -411,7 +403,6 @@ commands:
   xmas-decorate:
     about: Adds festive ASCII art decoration to the terminal for Christmas. Optionally
       sets terminal colors to a festive green theme.
-    path: ../scripts/source/xmas-decorate
     commands:
       help:
         about: Describe this script.

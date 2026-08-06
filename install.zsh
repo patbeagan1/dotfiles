@@ -63,7 +63,7 @@ validate_env() {
         print_info "✅ Using libbeagan from: $LIBBEAGAN_HOME"
     fi
 
-    # Note: LIBBEAGAN_SCRIPTS validation is now handled by scripts/install.sh
+    # Personal utilities are provided by jan (dotfiles/jan), not LIBBEAGAN_SCRIPTS.
 
     if [[ "$has_errors" == "true" ]]; then
         return 1
@@ -169,8 +169,21 @@ setup_completions() {
 }
 
 setup_scripts() {
-    print_info "🔧 Setting up scripts..."
+    print_info "🔧 Setting up scripts / jan utilities..."
     export PATH=$PATH:$LIBBEAGAN_HOME/bin:$LIBBEAGAN_HOME/bin_local
+    local jan_dir="${LIBBEAGAN_HOME}/jan"
+    if [[ -d "$jan_dir" ]] && command -v jan >/dev/null 2>&1; then
+        jan use "$jan_dir" --root scripts.spec.yaml >/dev/null 2>&1 || true
+        local alias_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
+        mkdir -p "$(dirname "$alias_out")"
+        if jan --no-log alias --shell zsh -o "$alias_out" >/dev/null 2>&1; then
+            # shellcheck disable=SC1090
+            source "$alias_out"
+            print_info "✅ Preferred jan tree: $jan_dir"
+        fi
+    elif [[ -d "$jan_dir" ]]; then
+        print_info "ℹ️  jan tree present at $jan_dir (install jan-cli to activate)"
+    fi
 }
 
 check_dependencies() {

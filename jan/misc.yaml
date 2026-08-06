@@ -1,10 +1,9 @@
-# AUTO-GENERATED — run: python3 jan-cli/scripts/generate_scripts_jan_spec.py
-# Categorized scripts with directory-inlined `run` and standard `help`.
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each category file inlines script `help` + `run` bodies.
 about: misc utilities
 commands:
   appletoast:
     about: A script for automated tasks.
-    path: ../scripts/source/appletoast
     commands:
       help:
         about: Describe this script.
@@ -46,7 +45,6 @@ commands:
           passthrough: true
   apply-copyright-bash:
     about: A script for automated tasks.
-    path: ../scripts/source/apply-copyright-bash
     commands:
       help:
         about: Describe this script.
@@ -100,7 +98,6 @@ commands:
           passthrough: true
   apply-copyright-py:
     about: A script for automated tasks.
-    path: ../scripts/source/apply-copyright-py
     commands:
       help:
         about: Describe this script.
@@ -154,7 +151,6 @@ commands:
           passthrough: true
   argnum:
     about: A script for automated tasks.
-    path: ../scripts/source/argnum
     commands:
       help:
         about: Describe this script.
@@ -196,7 +192,6 @@ commands:
           passthrough: true
   aws-bucket-sizes:
     about: A script for automated tasks.
-    path: ../scripts/source/aws-bucket-sizes
     commands:
       help:
         about: Describe this script.
@@ -243,7 +238,6 @@ commands:
           passthrough: true
   backup_tmsu:
     about: A script for automated tasks.
-    path: ../scripts/source/backup_tmsu
     commands:
       help:
         about: Describe this script.
@@ -285,7 +279,6 @@ commands:
           passthrough: true
   binlink:
     about: A script for automated tasks.
-    path: ../scripts/source/binlink
     commands:
       help:
         about: Describe this script.
@@ -327,7 +320,6 @@ commands:
           passthrough: true
   cache:
     about: A script for automated tasks.
-    path: ../scripts/source/cache
     commands:
       help:
         about: Describe this script.
@@ -383,7 +375,6 @@ commands:
           passthrough: true
   cbr-show:
     about: A script for automated tasks.
-    path: ../scripts/source/cbr-show
     commands:
       help:
         about: Describe this script.
@@ -492,7 +483,6 @@ commands:
           passthrough: true
   check_program:
     about: A script for automated tasks.
-    path: ../scripts/source/check_program
     commands:
       help:
         about: Describe this script.
@@ -574,12 +564,48 @@ commands:
             JAN_EOF_check_program_check_program_py_5748db6365bf\nchmod +x \"$tmpdir/check_program.py\"\
             \ 2>/dev/null || true\ncat >\"$tmpdir/check_program.sh\" <<'JAN_EOF_check_program_check_program_sh_ad1c7fa7fd41'\n\
             #!/usr/bin/zsh\n\neval \"$(fzf < <(_check_program.ts))\"\nJAN_EOF_check_program_check_program_sh_ad1c7fa7fd41\n\
-            chmod +x \"$tmpdir/check_program.sh\" 2>/dev/null || true\ncd \"$tmpdir\"\
+            chmod +x \"$tmpdir/check_program.sh\" 2>/dev/null || true\ncat >\"$tmpdir/_check_program.ts\"\
+            \ <<'JAN_EOF_check_program__check_program_ts_59103f4f3470'\n#!/usr/bin/env\
+            \ -S deno run --allow-run\n\n/*\n* Hardcoded list of commands to test\n\
+            *\n* While a little wasteful, each of these commands is run without sending\
+            \ the output to stdout\n* then we will give the user the option to run\
+            \ the successful commands again\n* so that they can see the output.\n\
+            *\n* These will show the commands which are installed with each of these\
+            \ package managers.\n* */\nconst commands = [\n    [\"brew\", \"list\"\
+            ],\n    [\"apt\", \"list\", \"--installed\"],\n    [\"yum\", \"list\"\
+            , \"installed\"],\n    [\"dnf\", \"list\", \"--installed\"],\n    [\"\
+            zypper\", \"se\", \"--installed-only\"],\n    [\"pacman\", \"-Q\"],\n\
+            \    [\"port\", \"installed\"],\n    [\"rpm\", \"-q\"],\n    [\"snap\"\
+            , \"list\"],\n    [\"flatpak\", \"list\"],\n    [\"npm\", \"list\", \"\
+            -g\"],\n    [\"cargo\", \"install\", \"--list\"],\n    [\"pip\", \"show\"\
+            ],\n    [\"pip3\", \"show\"],\n    [\"gem\", \"list\", \"--installed\"\
+            ],\n    [\"pear\", \"list\"],\n    [\"composer\", \"show\"],\n    [\"\
+            dotnet\", \"nuget\", \"locals\", \"all\", \"--list\"],\n    [\"go\", \"\
+            list\", \"-m\"],\n    [\"conda\", \"list\"],\n];\n\nasync function runCommands(commands:\
+            \ string[][]) {\n    const successfulCommands: string[][] = [];\n\n  \
+            \  for (const command of commands) {\n        try {\n            // Run\
+            \ the command\n            const process = Deno.run({\n              \
+            \  cmd: command,\n                stdout: \"null\", // Ignore the stdout\n\
+            \                stderr: \"null\", // Ignore the stderr\n            });\n\
+            \n            // Wait for the command to finish and get the status\n \
+            \           const {code} = await process.status();\n\n            // Check\
+            \ if the command was successful\n            if (code === 0) {\n     \
+            \           successfulCommands.push(command);\n            }\n\n     \
+            \       process.close();\n        } catch (error) {\n            // ignoring\
+            \ errors, because we're just checking if the programs exist on the current\
+            \ machine.\n        }\n    }\n\n    return successfulCommands;\n}\n\n\
+            // Run the commands and print the ones that succeed\nrunCommands(commands)\n\
+            \    .then(successfulCommands => {\n        successfulCommands\n     \
+            \       .map((it) => it.join(\" \"))\n            .forEach((it) => console.log(it))\n\
+            \    });\nJAN_EOF_check_program__check_program_ts_59103f4f3470\nchmod\
+            \ +x \"$tmpdir/_check_program.ts\" 2>/dev/null || true\ncd \"$tmpdir\"\
             \nexec \"$tmpdir/check_program.sh\" \"$@\"\n"
           passthrough: true
+    requires:
+    - deno
+    - fzf
   check_program_snippets:
     about: A script for automated tasks.
-    path: ../scripts/source/check_program_snippets
     commands:
       help:
         about: Describe this script.
@@ -625,7 +651,6 @@ commands:
           passthrough: true
   checkcrlf:
     about: A script for automated tasks.
-    path: ../scripts/source/checkcrlf
     commands:
       help:
         about: Describe this script.
@@ -667,7 +692,6 @@ commands:
           passthrough: true
   convert-date:
     about: A script for automated tasks.
-    path: ../scripts/source/convert-date
     commands:
       help:
         about: Describe this script.
@@ -730,7 +754,6 @@ commands:
           passthrough: true
   convert_date:
     about: A script for automated tasks.
-    path: ../scripts/source/convert_date
     commands:
       help:
         about: Describe this script.
@@ -790,7 +813,6 @@ commands:
           passthrough: true
   crossview_to_parallel:
     about: A script for automated tasks.
-    path: ../scripts/source/crossview_to_parallel
     commands:
       help:
         about: Describe this script.
@@ -832,7 +854,6 @@ commands:
           passthrough: true
   curr:
     about: A script for automated tasks.
-    path: ../scripts/source/curr
     commands:
       help:
         about: Describe this script.
@@ -874,7 +895,6 @@ commands:
           passthrough: true
   deeplink:
     about: A script for automated tasks.
-    path: ../scripts/source/deeplink
     commands:
       help:
         about: Describe this script.
@@ -916,7 +936,6 @@ commands:
           passthrough: true
   dependencies:
     about: A script for automated tasks.
-    path: ../scripts/source/dependencies
     commands:
       help:
         about: Describe this script.
@@ -980,7 +999,6 @@ commands:
           passthrough: true
   discover-brute-force:
     about: A script for automated tasks.
-    path: ../scripts/source/discover-brute-force
     commands:
       help:
         about: Describe this script.
@@ -1026,7 +1044,6 @@ commands:
           passthrough: true
   divide:
     about: A script for automated tasks.
-    path: ../scripts/source/divide
     commands:
       help:
         about: Describe this script.
@@ -1077,7 +1094,6 @@ commands:
           passthrough: true
   dota-timer:
     about: A script for automated tasks.
-    path: ../scripts/source/dota-timer
     commands:
       help:
         about: Describe this script.
@@ -1148,7 +1164,6 @@ commands:
           passthrough: true
   double_revert:
     about: A script for automated tasks.
-    path: ../scripts/source/double_revert
     commands:
       help:
         about: Describe this script.
@@ -1200,7 +1215,6 @@ commands:
           passthrough: true
   dsl_xml_converter:
     about: A script for automated tasks.
-    path: ../scripts/source/dsl_xml_converter
     commands:
       help:
         about: Describe this script.
@@ -1333,7 +1347,6 @@ commands:
           passthrough: true
   ebook-from:
     about: A script for automated tasks.
-    path: ../scripts/source/ebook-from
     commands:
       help:
         about: Describe this script.
@@ -1386,7 +1399,6 @@ commands:
           passthrough: true
   editlast:
     about: A script for automated tasks.
-    path: ../scripts/source/editlast
     commands:
       help:
         about: Describe this script.
@@ -1428,7 +1440,6 @@ commands:
           passthrough: true
   example-stdin-script:
     about: A script for automated tasks.
-    path: ../scripts/source/example-stdin-script
     commands:
       help:
         about: Describe this script.
@@ -1470,7 +1481,6 @@ commands:
           passthrough: true
   fe:
     about: A script for automated tasks.
-    path: ../scripts/source/fe
     commands:
       help:
         about: Describe this script.
@@ -1585,7 +1595,6 @@ commands:
     - bat
   fix_script:
     about: A script for automated tasks.
-    path: ../scripts/source/fix_script
     commands:
       help:
         about: Describe this script.
@@ -1628,7 +1637,6 @@ commands:
           passthrough: true
   format-longbash:
     about: A script for automated tasks.
-    path: ../scripts/source/format-longbash
     commands:
       help:
         about: Describe this script.
@@ -1684,7 +1692,6 @@ commands:
           passthrough: true
   fullbackup:
     about: A script for automated tasks.
-    path: ../scripts/source/fullbackup
     commands:
       help:
         about: Describe this script.
@@ -1736,7 +1743,6 @@ commands:
           passthrough: true
   gallery:
     about: A script for automated tasks.
-    path: ../scripts/source/gallery
     commands:
       help:
         about: Describe this script.
@@ -1786,7 +1792,6 @@ commands:
           passthrough: true
   getbranch:
     about: A script for automated tasks.
-    path: ../scripts/source/getbranch
     commands:
       help:
         about: Describe this script.
@@ -1828,7 +1833,6 @@ commands:
           passthrough: true
   getimageflavors:
     about: A script for automated tasks.
-    path: ../scripts/source/getimageflavors
     commands:
       help:
         about: Describe this script.
@@ -1872,7 +1876,6 @@ commands:
           passthrough: true
   groceries:
     about: A script for automated tasks.
-    path: ../scripts/source/groceries
     commands:
       help:
         about: Describe this script.
@@ -1914,7 +1917,6 @@ commands:
           passthrough: true
   hl:
     about: A script for automated tasks.
-    path: ../scripts/source/hl
     commands:
       help:
         about: Describe this script.
@@ -1954,7 +1956,6 @@ commands:
           passthrough: true
   improve-prompt:
     about: A script for automated tasks.
-    path: ../scripts/source/improve-prompt
     commands:
       help:
         about: Describe this script.
@@ -2039,7 +2040,6 @@ commands:
           passthrough: true
   intensify:
     about: creates slack emojis that apply the intensify effect
-    path: ../scripts/source/intensify
     commands:
       help:
         about: Describe this script.
@@ -2097,7 +2097,6 @@ commands:
           passthrough: true
   isLinux:
     about: A script for automated tasks.
-    path: ../scripts/source/isLinux
     commands:
       help:
         about: Describe this script.
@@ -2138,7 +2137,6 @@ commands:
           passthrough: true
   isMac:
     about: A script for automated tasks.
-    path: ../scripts/source/isMac
     commands:
       help:
         about: Describe this script.
@@ -2179,7 +2177,6 @@ commands:
           passthrough: true
   issue:
     about: A script for automated tasks.
-    path: ../scripts/source/issue
     commands:
       help:
         about: Describe this script.
@@ -2481,7 +2478,6 @@ commands:
     - fzf
   itty:
     about: A script for automated tasks.
-    path: ../scripts/source/itty
     commands:
       help:
         about: Describe this script.
@@ -2534,7 +2530,6 @@ commands:
           passthrough: true
   jirabacklog:
     about: A script for automated tasks.
-    path: ../scripts/source/jirabacklog
     commands:
       help:
         about: Describe this script.
@@ -2598,7 +2593,6 @@ commands:
           passthrough: true
   kc:
     about: A script for automated tasks.
-    path: ../scripts/source/kc
     commands:
       help:
         about: Describe this script.
@@ -2638,7 +2632,6 @@ commands:
           passthrough: true
   kr:
     about: A script for automated tasks.
-    path: ../scripts/source/kr
     commands:
       help:
         about: Describe this script.
@@ -2678,7 +2671,6 @@ commands:
           passthrough: true
   last_branch:
     about: A script for automated tasks.
-    path: ../scripts/source/last_branch
     commands:
       help:
         about: Describe this script.
@@ -2720,7 +2712,6 @@ commands:
           passthrough: true
   last_commits_with_string:
     about: A script for automated tasks.
-    path: ../scripts/source/last_commits_with_string
     commands:
       help:
         about: Describe this script.
@@ -2765,7 +2756,6 @@ commands:
           passthrough: true
   lastfield:
     about: A script for automated tasks.
-    path: ../scripts/source/lastfield
     commands:
       help:
         about: Describe this script.
@@ -2807,7 +2797,6 @@ commands:
           passthrough: true
   lastlog:
     about: A script for automated tasks.
-    path: ../scripts/source/lastlog
     commands:
       help:
         about: Describe this script.
@@ -2849,7 +2838,6 @@ commands:
           passthrough: true
   lastmod:
     about: A script for automated tasks.
-    path: ../scripts/source/lastmod
     commands:
       help:
         about: Describe this script.
@@ -2898,7 +2886,6 @@ commands:
     about: 'Generate an HTML page from a list of URLs (passed as arguments), open
       it in the default browser, then exit. No temporary file is created: the page
       is opened via a `data:` URL.'
-    path: ../scripts/source/links-browse
     commands:
       help:
         about: Describe this script.
@@ -2965,7 +2952,6 @@ commands:
           passthrough: true
   lll:
     about: A script for automated tasks.
-    path: ../scripts/source/lll
     commands:
       help:
         about: Describe this script.
@@ -3007,7 +2993,6 @@ commands:
           passthrough: true
   lookbehind:
     about: A script for automated tasks.
-    path: ../scripts/source/lookbehind
     commands:
       help:
         about: Describe this script.
@@ -3049,7 +3034,6 @@ commands:
           passthrough: true
   loop:
     about: A script for automated tasks.
-    path: ../scripts/source/loop
     commands:
       help:
         about: Describe this script.
@@ -3096,7 +3080,6 @@ commands:
     about: A robust CLI tool that collects Kotlin files containing magic comments,
       optionally strips imports, and creates a ZIP archive with preserved directory
       structure.
-    path: ../scripts/source/magic-collector
     commands:
       help:
         about: Describe this script.
@@ -3252,7 +3235,6 @@ commands:
           passthrough: true
   manbash:
     about: A script for automated tasks.
-    path: ../scripts/source/manbash
     commands:
       help:
         about: Describe this script.
@@ -3294,7 +3276,6 @@ commands:
           passthrough: true
   manbook:
     about: A script for automated tasks.
-    path: ../scripts/source/manbook
     commands:
       help:
         about: Describe this script.
@@ -3336,7 +3317,6 @@ commands:
           passthrough: true
   math:
     about: A script for automated tasks.
-    path: ../scripts/source/math
     commands:
       help:
         about: Describe this script.
@@ -3377,7 +3357,6 @@ commands:
           passthrough: true
   mean:
     about: A script for automated tasks.
-    path: ../scripts/source/mean
     commands:
       help:
         about: Describe this script.
@@ -3419,7 +3398,6 @@ commands:
           passthrough: true
   median:
     about: A script for automated tasks.
-    path: ../scripts/source/median
     commands:
       help:
         about: Describe this script.
@@ -3462,7 +3440,6 @@ commands:
           passthrough: true
   metadata_purge:
     about: A script for automated tasks.
-    path: ../scripts/source/metadata_purge
     commands:
       help:
         about: Describe this script.
@@ -3506,7 +3483,6 @@ commands:
           passthrough: true
   minecraft-photopack:
     about: A script for automated tasks.
-    path: ../scripts/source/minecraft-photopack
     commands:
       help:
         about: Describe this script.
@@ -3584,7 +3560,6 @@ commands:
           passthrough: true
   module-dependencies:
     about: A script for automated tasks.
-    path: ../scripts/source/module-dependencies
     commands:
       help:
         about: Describe this script.
@@ -3630,7 +3605,6 @@ commands:
           passthrough: true
   mountcd:
     about: A script for automated tasks.
-    path: ../scripts/source/mountcd
     commands:
       help:
         about: Describe this script.
@@ -3672,7 +3646,6 @@ commands:
           passthrough: true
   mtg-booster:
     about: A script for automated tasks.
-    path: ../scripts/source/mtg-booster
     commands:
       help:
         about: Describe this script.
@@ -3826,7 +3799,6 @@ commands:
           passthrough: true
   multiline:
     about: A script for automated tasks.
-    path: ../scripts/source/multiline
     commands:
       help:
         about: Describe this script.
@@ -3868,7 +3840,6 @@ commands:
           passthrough: true
   new-module:
     about: A script for automated tasks.
-    path: ../scripts/source/new-module
     commands:
       help:
         about: Describe this script.
@@ -4039,7 +4010,6 @@ commands:
           passthrough: true
   nn:
     about: A script for automated tasks.
-    path: ../scripts/source/nn
     commands:
       help:
         about: Describe this script.
@@ -4087,7 +4057,6 @@ commands:
           passthrough: true
   note:
     about: A script for automated tasks.
-    path: ../scripts/source/note
     commands:
       help:
         about: Describe this script.
@@ -4196,7 +4165,6 @@ commands:
           passthrough: true
   note-aggron:
     about: A script for automated tasks.
-    path: ../scripts/source/note-aggron
     commands:
       help:
         about: Describe this script.
@@ -4247,7 +4215,6 @@ commands:
           passthrough: true
   nz:
     about: A script for automated tasks.
-    path: ../scripts/source/nz
     commands:
       help:
         about: Describe this script.
@@ -4330,7 +4297,6 @@ commands:
           passthrough: true
   oncron:
     about: A script for automated tasks.
-    path: ../scripts/source/oncron
     commands:
       help:
         about: Describe this script.
@@ -4396,7 +4362,6 @@ commands:
           passthrough: true
   open:
     about: A script for automated tasks.
-    path: ../scripts/source/open
     commands:
       help:
         about: Describe this script.
@@ -4441,7 +4406,6 @@ commands:
           passthrough: true
   openai_cli:
     about: A script for automated tasks.
-    path: ../scripts/source/openai_cli
     commands:
       help:
         about: Describe this script.
@@ -4535,7 +4499,6 @@ commands:
           passthrough: true
   partify:
     about: A script for automated tasks.
-    path: ../scripts/source/partify
     commands:
       help:
         about: Describe this script.
@@ -4595,7 +4558,6 @@ commands:
           passthrough: true
   pasteToEmulator:
     about: A script for automated tasks.
-    path: ../scripts/source/pasteToEmulator
     commands:
       help:
         about: Describe this script.
@@ -4637,7 +4599,6 @@ commands:
           passthrough: true
   peek:
     about: A script for automated tasks.
-    path: ../scripts/source/peek
     commands:
       help:
         about: Describe this script.
@@ -4678,7 +4639,6 @@ commands:
           passthrough: true
   pretty-csv:
     about: A script for automated tasks.
-    path: ../scripts/source/pretty-csv
     commands:
       help:
         about: Describe this script.
@@ -4738,7 +4698,6 @@ commands:
           passthrough: true
   prev-command:
     about: A script for automated tasks.
-    path: ../scripts/source/prev-command
     commands:
       help:
         about: Describe this script.
@@ -4796,7 +4755,6 @@ commands:
           passthrough: true
   psp:
     about: A script for automated tasks.
-    path: ../scripts/source/psp
     commands:
       help:
         about: Describe this script.
@@ -4837,7 +4795,6 @@ commands:
           passthrough: true
   pystart_script:
     about: A script for automated tasks.
-    path: ../scripts/source/pystart_script
     commands:
       help:
         about: Describe this script.
@@ -4924,7 +4881,6 @@ commands:
           passthrough: true
   random:
     about: A script for automated tasks.
-    path: ../scripts/source/random
     commands:
       help:
         about: Describe this script.
@@ -4975,7 +4931,6 @@ commands:
           passthrough: true
   randomart-of:
     about: A script for automated tasks.
-    path: ../scripts/source/randomart-of
     commands:
       help:
         about: Describe this script.
@@ -5029,7 +4984,6 @@ commands:
           passthrough: true
   realconf:
     about: A script for automated tasks.
-    path: ../scripts/source/realconf
     commands:
       help:
         about: Describe this script.
@@ -5071,7 +5025,6 @@ commands:
           passthrough: true
   rec:
     about: A script for automated tasks.
-    path: ../scripts/source/rec
     commands:
       help:
         about: Describe this script.
@@ -5113,7 +5066,6 @@ commands:
           passthrough: true
   rederr:
     about: A script for automated tasks.
-    path: ../scripts/source/rederr
     commands:
       help:
         about: Describe this script.
@@ -5155,7 +5107,6 @@ commands:
           passthrough: true
   remindme:
     about: A script for automated tasks.
-    path: ../scripts/source/remindme
     commands:
       help:
         about: Describe this script.
@@ -5210,7 +5161,6 @@ commands:
           passthrough: true
   restart_touchpad:
     about: A script for automated tasks.
-    path: ../scripts/source/restart_touchpad
     commands:
       help:
         about: Describe this script.
@@ -5251,7 +5201,6 @@ commands:
           passthrough: true
   restart_touchpad_2:
     about: A script for automated tasks.
-    path: ../scripts/source/restart_touchpad_2
     commands:
       help:
         about: Describe this script.
@@ -5293,7 +5242,6 @@ commands:
           passthrough: true
   revnum:
     about: A script for automated tasks.
-    path: ../scripts/source/revnum
     commands:
       help:
         about: Describe this script.
@@ -5335,7 +5283,6 @@ commands:
           passthrough: true
   savealias:
     about: A script for automated tasks.
-    path: ../scripts/source/savealias
     commands:
       help:
         about: Describe this script.
@@ -5386,7 +5333,6 @@ commands:
           passthrough: true
   script_content:
     about: A script for automated tasks.
-    path: ../scripts/source/script_content
     commands:
       help:
         about: Describe this script.
@@ -5428,7 +5374,6 @@ commands:
           passthrough: true
   search-alltrails-from-file:
     about: A script for automated tasks.
-    path: ../scripts/source/search-alltrails-from-file
     commands:
       help:
         about: Describe this script.
@@ -5480,7 +5425,6 @@ commands:
           passthrough: true
   search-ddg-from-file:
     about: A script for automated tasks.
-    path: ../scripts/source/search-ddg-from-file
     commands:
       help:
         about: Describe this script.
@@ -5531,7 +5475,6 @@ commands:
           passthrough: true
   search-mavencentral:
     about: A script for automated tasks.
-    path: ../scripts/source/search-mavencentral
     commands:
       help:
         about: Describe this script.
@@ -5578,7 +5521,6 @@ commands:
           passthrough: true
   shard:
     about: A script for automated tasks.
-    path: ../scripts/source/shard
     commands:
       help:
         about: Describe this script.
@@ -5695,7 +5637,6 @@ commands:
           passthrough: true
   show:
     about: A script for automated tasks.
-    path: ../scripts/source/show
     commands:
       help:
         about: Describe this script.
@@ -5757,7 +5698,6 @@ commands:
           passthrough: true
   simpleBackup:
     about: A script for automated tasks.
-    path: ../scripts/source/simpleBackup
     commands:
       help:
         about: Describe this script.
@@ -5800,7 +5740,6 @@ commands:
           passthrough: true
   snippets:
     about: A script for automated tasks.
-    path: ../scripts/source/snippets
     commands:
       help:
         about: Describe this script.
@@ -5842,7 +5781,6 @@ commands:
           passthrough: true
   speedtest:
     about: A script for automated tasks.
-    path: ../scripts/source/speedtest
     commands:
       help:
         about: Describe this script.
@@ -5884,7 +5822,6 @@ commands:
           passthrough: true
   starlog:
     about: A script for automated tasks.
-    path: ../scripts/source/starlog
     commands:
       help:
         about: Describe this script.
@@ -5937,7 +5874,6 @@ commands:
           passthrough: true
   sum:
     about: A script for automated tasks.
-    path: ../scripts/source/sum
     commands:
       help:
         about: Describe this script.
@@ -5978,7 +5914,6 @@ commands:
           passthrough: true
   svn:
     about: A script for automated tasks.
-    path: ../scripts/source/svn
     commands:
       help:
         about: Describe this script.
@@ -6025,7 +5960,6 @@ commands:
           passthrough: true
   tcommit:
     about: A script for automated tasks.
-    path: ../scripts/source/tcommit
     commands:
       help:
         about: Describe this script.
@@ -6067,7 +6001,6 @@ commands:
           passthrough: true
   test-libbeagan:
     about: A script for automated tasks.
-    path: ../scripts/source/test-libbeagan
     commands:
       help:
         about: Describe this script.
@@ -6227,7 +6160,6 @@ commands:
           passthrough: true
   tp:
     about: A script for automated tasks.
-    path: ../scripts/source/tp
     commands:
       help:
         about: Describe this script.
@@ -6269,7 +6201,6 @@ commands:
           passthrough: true
   trim:
     about: A script for automated tasks.
-    path: ../scripts/source/trim
     commands:
       help:
         about: Describe this script.
@@ -6310,7 +6241,6 @@ commands:
           passthrough: true
   variance:
     about: A script for automated tasks.
-    path: ../scripts/source/variance
     commands:
       help:
         about: Describe this script.
@@ -6353,7 +6283,6 @@ commands:
           passthrough: true
   wiki:
     about: A script for automated tasks.
-    path: ../scripts/source/wiki
     commands:
       help:
         about: Describe this script.
@@ -6410,7 +6339,6 @@ commands:
           passthrough: true
   zettelkasten:
     about: A script for automated tasks.
-    path: ../scripts/source/zettelkasten
     commands:
       help:
         about: Describe this script.
