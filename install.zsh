@@ -171,18 +171,55 @@ setup_completions() {
 setup_scripts() {
     print_info "🔧 Setting up scripts / jan utilities..."
     export PATH=$PATH:$LIBBEAGAN_HOME/bin:$LIBBEAGAN_HOME/bin_local
+    print_info "   PATH prepended with: $LIBBEAGAN_HOME/bin and $LIBBEAGAN_HOME/bin_local"
+
     local jan_dir="${LIBBEAGAN_HOME}/jan"
-    if [[ -d "$jan_dir" ]] && command -v jan >/dev/null 2>&1; then
-        jan use "$jan_dir" --root scripts.spec.yaml >/dev/null 2>&1 || true
-        local alias_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
-        mkdir -p "$(dirname "$alias_out")"
-        if jan --no-log alias --shell zsh -o "$alias_out" >/dev/null 2>&1; then
-            # shellcheck disable=SC1090
-            source "$alias_out"
-            print_info "✅ Preferred jan tree: $jan_dir"
+    print_info "   Looking for jan tree at: $jan_dir"
+
+    if [[ ! -d "$jan_dir" ]]; then
+        print_info "ℹ️  No jan tree at $jan_dir — skipping jan prefer / alias setup"
+        print_info "   Sync or copy dotfiles/jan there to enable personal utilities via jan"
+        return 0
+    fi
+    print_info "✅ Found jan tree: $jan_dir"
+
+    if ! command -v jan >/dev/null 2>&1; then
+        print_info "ℹ️  jan binary not on PATH — tree is present but not activated"
+        print_info "   Install jan-cli, then re-run install or: jan use \"$jan_dir\""
+        return 0
+    fi
+    print_info "   jan binary: $(command -v jan)"
+
+    print_info "   Running: jan use \"$jan_dir\" --root scripts.spec.yaml"
+    if jan use "$jan_dir" --root scripts.spec.yaml; then
+        print_info "✅ Preferred jan directory saved"
+        if command -v jan >/dev/null 2>&1; then
+            local show_out
+            show_out="$(jan use --show 2>/dev/null || true)"
+            if [[ -n "$show_out" ]]; then
+                print_info "   jan use --show:"
+                while IFS= read -r line; do
+                    print_info "     $line"
+                done <<< "$show_out"
+            fi
         fi
-    elif [[ -d "$jan_dir" ]]; then
-        print_info "ℹ️  jan tree present at $jan_dir (install jan-cli to activate)"
+    else
+        echo "⚠️  Warning: jan use failed for $jan_dir (continuing)"
+    fi
+
+    local alias_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
+    print_info "   Writing shell aliases to: $alias_out"
+    mkdir -p "$(dirname "$alias_out")"
+    if jan --no-log alias --shell zsh -o "$alias_out"; then
+        local alias_count
+        alias_count="$(grep -c '^alias ' "$alias_out" 2>/dev/null || echo 0)"
+        print_info "✅ Generated $alias_count alias(es) in $alias_out"
+        # shellcheck disable=SC1090
+        source "$alias_out"
+        print_info "✅ Sourced jan aliases into current shell"
+    else
+        echo "⚠️  Warning: jan alias generation failed (continuing)"
+        print_info "   You can retry later with: jan alias --shell zsh -o \"$alias_out\""
     fi
 }
 
