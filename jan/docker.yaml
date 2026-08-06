@@ -1,5 +1,6 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each category file inlines script `help` + `run` bodies.
+# Multiline exec bodies use YAML literal block style (|).
 about: docker utilities
 commands:
   docker-inspect-running:
@@ -9,39 +10,64 @@ commands:
         about: Describe this script.
         exec:
           argv:
-          - bash
-          - -lc
-          - 'cat <<''EOF''
+            - bash
+            - '-lc'
+            - |
+              cat <<'EOF'
+              docker-inspect-running
 
-            docker-inspect-running
+              A script for automated tasks.
 
-
-            A script for automated tasks.
-
-
-            EOF
-
-            '
+              EOF
       run:
-        about: Run the script (inlined); forwards args.
+        about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-          - bash
-          - -lc
-          - "set -euo pipefail\ntmpdir=\"$(mktemp -d)\"\ntrap 'rm -rf \"$tmpdir\"\
-            ' EXIT\ncat >\"$tmpdir/_docker-inspect-running\" <<'JAN_EOF_docker_inspect_running__docker_inspect_running_2de6f4f42fef'\n\
-            #compdef docker-inspect-running\n\n# Zsh completion for docker-inspect-running\n\
-            # Generated automatically - customize as needed\n\n_docker-inspect-running()\
-            \ {\n    local context state line\n    typeset -A opt_args\n    \n   \
-            \ _arguments -C \\\n        '(-h --help)'{-h,--help}'[Show help information]'\
-            \ \\\n        '(-v --version)'{-v,--version}'[Show version information]'\
-            \ \\\n        '*::arg:_files'\n}\n\n_docker-inspect-running \"$@\"\nJAN_EOF_docker_inspect_running__docker_inspect_running_2de6f4f42fef\n\
-            chmod +x \"$tmpdir/_docker-inspect-running\" 2>/dev/null || true\ncat\
-            \ >\"$tmpdir/docker-inspect-running.sh\" <<'JAN_EOF_docker_inspect_running_docker_inspect_running_sh_5a6d5f4019cb'\n\
-            #!/usr/bin/zsh\n\n[[ $EUID -ne 0 ]] && echo \"This script must be run\
-            \ as root.\" && exit 1\n\nmain() {\n\n\tselect_docker_id() {\n\n\t  docker\
-            \ ps |\\\n\t    fzf |\\\n\t    cut -d' ' -f1\n\t}\n\n\tdocker inspect\
-            \ \"$(select_docker_id)\" | jq\n}\n\nmain\nJAN_EOF_docker_inspect_running_docker_inspect_running_sh_5a6d5f4019cb\n\
-            chmod +x \"$tmpdir/docker-inspect-running.sh\" 2>/dev/null || true\ncd\
-            \ \"$tmpdir\"\nexec \"$tmpdir/docker-inspect-running.sh\" \"$@\"\n"
+            - bash
+            - '-lc'
+            - |
+              set -euo pipefail
+              tmpdir="$(mktemp -d)"
+              trap 'rm -rf "$tmpdir"' EXIT
+              cat >"$tmpdir/_docker-inspect-running" <<'JAN_EOF_docker_inspect_running__docker_inspect_running_2de6f4f42fef'
+              #compdef docker-inspect-running
+
+              # Zsh completion for docker-inspect-running
+              # Generated automatically - customize as needed
+
+              _docker-inspect-running() {
+                  local context state line
+                  typeset -A opt_args
+                  
+                  _arguments -C \
+                      '(-h --help)'{-h,--help}'[Show help information]' \
+                      '(-v --version)'{-v,--version}'[Show version information]' \
+                      '*::arg:_files'
+              }
+
+              _docker-inspect-running "$@"
+              JAN_EOF_docker_inspect_running__docker_inspect_running_2de6f4f42fef
+              chmod +x "$tmpdir/_docker-inspect-running" 2>/dev/null || true
+              cat >"$tmpdir/docker-inspect-running.sh" <<'JAN_EOF_docker_inspect_running_docker_inspect_running_sh_5a6d5f4019cb'
+              #!/usr/bin/zsh
+
+              [[ $EUID -ne 0 ]] && echo "This script must be run as root." && exit 1
+
+              main() {
+
+              	select_docker_id() {
+
+              	  docker ps |\
+              	    fzf |\
+              	    cut -d' ' -f1
+              	}
+
+              	docker inspect "$(select_docker_id)" | jq
+              }
+
+              main
+              JAN_EOF_docker_inspect_running_docker_inspect_running_sh_5a6d5f4019cb
+              chmod +x "$tmpdir/docker-inspect-running.sh" 2>/dev/null || true
+              cd "$tmpdir"
+              exec "$tmpdir/docker-inspect-running.sh" "$@"
           passthrough: true

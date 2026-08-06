@@ -1,3 +1,5 @@
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Multiline exec bodies use YAML literal block style (|).
 metadata:
   name: jan
   description: |
@@ -11,8 +13,7 @@ metadata:
       jan use /path/to/dotfiles/jan
       jan scripts git gd help
       jan scripts git gd run -- <args>
-
 commands:
   scripts:
-    about: Personal utilities (categorized, inlined).
+    about: 'Personal utilities (categorized, inlined).'
     include: scripts.yaml

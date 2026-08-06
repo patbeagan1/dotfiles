@@ -1,8 +1,9 @@
 {
-  "generator_version": "3",
-  "generated_at": "2026-08-06T02:35:03Z",
+  "generator_version": "3-literal",
+  "generated_at": "2026-08-06T03:12:41Z",
   "script_count": 218,
   "canonical": "dotfiles/jan",
+  "style": "yaml-literal",
   "categories": [
     "git.yaml",
     "android.yaml",
@@ -17,17 +18,17 @@
     "misc.yaml"
   ],
   "files": {
-    "git.yaml": "7dda70cdbd269c3b01dbf5b121f646d9de31a2741cef73f5f07c61cdc1b9ba20",
-    "android.yaml": "91017e21361ab5865ac23ff5e2d56d767f220f03ee0f345ffeba0c58a89adfff",
-    "docker.yaml": "63754096fbbfc9e5bfa027d08a0f6c8c67ad0ec2dfac5baf8f4e1edd39d07d15",
-    "network.yaml": "0447a4c173dc1bc3ff2976a384b768d29884270333704ef7317e77fc83fbb7ee",
-    "media.yaml": "08af118d5837f3542ebb7ed2c04d0a5dd6912155cef74589252a780993d11da4",
-    "files.yaml": "627598136758b12ad4058fc4d69c29f79e9a3d1d986384ba00f603f60b661169",
-    "text.yaml": "1a3e7573617a1863976846369746de99e332df6e7d8918412d10abbed006a4eb",
-    "tmux.yaml": "53480b1fd6481399bc400653d4a32f74abc56a54402fdc89476db05e450acfc6",
-    "time.yaml": "f3abb0a881c1e33b89601b35abc6346fd1957959c02c00c13201ddcfa57066c5",
-    "system.yaml": "d40316c7edc90524db98a8ccb1b62c99f762accd3341d65418955d8be153331a",
-    "misc.yaml": "67ccf1070a143bcb8d88bcfe230b12e725721cae49e683f855790a5e1ec4b57e",
-    "scripts.yaml": "1e92c705e18119e6a0e7e1fd58894bb42a4e9400d2b08649f18e6b96af1a5531"
+    "git.yaml": "a1f939984d28ba600c39dd8af1df356b6a2c2ff2dc07e049ecd6b3740e4895dd",
+    "android.yaml": "51b720df08b14171d42f8b849feb19732c0b960f0e79a748852f815401ca33cc",
+    "docker.yaml": "10896250c1bcd39e36443d8be2a212d36abf35b8c7cc6b125e0d9e112a30dcca",
+    "network.yaml": "ff47662af0b5bd8fe4998df87223897220a06114f0e7fd93784e826809f51be9",
+    "media.yaml": "694504eedf664963330a20737a2764aad98911788b97ff8e986f448ed45db513",
+    "files.yaml": "4bfda6362e89abbb95b3602bd19b4b7e61c814a55321a17f68d1114462d48133",
+    "text.yaml": "9933cc443fa3bc42fb42dce04982b49f6c690a85ac6463e1fa4567bd9f7c2a06",
+    "tmux.yaml": "c5f336df89534fd9655eaeff2c33517702e5d8c64d1186aabcee231bdeb35970",
+    "time.yaml": "76a2ae8447806cda1b061eb89afe1f002118fd514eef832869bca76e450d902d",
+    "system.yaml": "99dfbb6f48818a3053de6298e67e4d0bbc062e36c527dc570e9acaa25dfbe782",
+    "misc.yaml": "ef17d653268eb38bf3cd1de52150596fa3c91462e69b748325c38fedd6cdf42c",
+    "scripts.yaml": "493b6c4d3bc9c796c2461e7740bcb145ef143967043b090ce23444acf233bc9f"
   }
 }
