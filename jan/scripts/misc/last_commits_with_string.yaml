@@ -1,0 +1,34 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          last_commits_with_string
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          last_commits_with_string () 
+          { 
+              for i in $(ag "$1" | grep .php | sed 's/:.*//g' | sort | uniq );
+              do
+                  echo "$i" && head <(gitfilehistory "$i");
+              done
+          }
+
+          last_commits_with_string "$@"
+      passthrough: true

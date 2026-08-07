@@ -1,0 +1,35 @@
+about: Show the process using a specific TCP/UDP port.
+requires: [lsof]
+inputs:
+  port:
+    description: Port number (e.g. 443)
+    required: true
+  proto:
+    description: Protocol — tcp or udp
+    default: tcp
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-port
+
+          Show the process bound to a port.
+
+            jan scripts system lsof-port run --port 443
+            jan scripts system lsof-port run --port 53 --proto udp
+
+          Equivalent to: lsof -i tcp:443
+          EOF
+  run:
+    about: Run lsof for a port.
+    exec:
+      argv:
+        - lsof
+        - -i
+        - ${{ inputs.proto }}:${{ inputs.port }}
+

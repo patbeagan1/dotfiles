@@ -1,0 +1,32 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          binlink
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          binlink () 
+          { 
+              ln -s $(pwd)/$1 /usr/local/bin/$1
+          }
+
+          binlink "$@"
+          trackusage "$0"
+      passthrough: true

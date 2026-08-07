@@ -1,0 +1,103 @@
+about: creates slack emojis that apply the intensify effect
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          intensify
+
+          creates slack emojis that apply the intensify effect
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # intensify.sh
+          # Author: patrick
+          # Created: 2025-10-27
+
+          set -euo pipefail
+
+          # Description: Add your script description here
+
+          main() {
+              if [[ $# -lt 1 ]]; then
+                  echo "Usage: $0 <input_image> [output_gif]"
+                  exit 1
+              fi
+
+              input_img="$1"
+              output_gif="${2:-intensified.gif}"
+
+              if [[ ! -f "$input_img" ]]; then
+                  echo "Input file does not exist: $input_img"
+                  exit 1
+              fi
+
+              # Number of frames and shake amount
+              frames=8
+              shake=6
+
+              # Create temp directory for frames
+              tmpdir=$(mktemp -d)
+              trap 'rm -rf "$tmpdir"' EXIT
+
+              # Get input image dimensions
+              read width height < <(identify -format "%w %h" "$input_img")
+
+              # Generate frames with random offset
+              for i in $(seq 0 $((frames-1))); do
+                  x_offset=$((RANDOM % (2 * shake + 1) - shake))
+                  y_offset=$((RANDOM % (2 * shake + 1) - shake))
+                  convert "$input_img" -background none -gravity center -extent "${width}x${height}" \
+                      -roll "${x_offset:+$x_offset}${x_offset:+,}${y_offset:+$y_offset}" \
+                      "$tmpdir/frame_$i.png"
+              done
+
+              # Combine frames into an animated GIF
+              convert -delay 7 -loop 0 "$tmpdir/frame_"*.png "$output_gif"
+
+              echo "Intensified GIF created at: $output_gif"
+          }
+
+          # Show help
+          show_help() {
+              cat << EOF
+          Usage: $0 [OPTIONS]
+
+          intensify.sh - Add description here
+
+          OPTIONS:
+              -h, --help     Show this help message
+
+          EXAMPLES:
+              $0
+
+          EOF
+          }
+
+          # Parse command line arguments
+          while [[ $# -gt 0 ]]; do
+              case $1 in
+                  -h|--help)
+                      show_help
+                      exit 0
+                      ;;
+                  *)
+                      echo "Unknown option: $1"
+                      show_help
+                      exit 1
+                      ;;
+              esac
+          done
+
+          main "$@"
+      passthrough: true

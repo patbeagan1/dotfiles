@@ -1,0 +1,27 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          backup_tmsu
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          sqlite3 db .dump | gzip -c > "db.`date +%s`.dmp.gz"
+          sqlite3 db ".backup db.`date +%s`.bak"
+
+          trackusage "$0"
+      passthrough: true

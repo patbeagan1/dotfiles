@@ -1,0 +1,39 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          fullpath
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          fullpath () 
+          { 
+              case "$1" in 
+                  /*)
+                      printf '%s\n' "$1"
+                  ;;
+                  *)
+                      printf '%s\n' "$PWD/$1"
+                  ;;
+              esac
+          }
+
+          fullpath "$@"
+          trackusage "$0"
+      passthrough: true

@@ -1,0 +1,33 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          lastlog
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          lastlog () 
+          { 
+              cd /var/log;
+              less $(ls -1t | head -1)
+          }
+
+          lastlog "$@"
+          trackusage "$0"
+      passthrough: true

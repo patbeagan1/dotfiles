@@ -1,0 +1,32 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          pdf2png
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          pdf2png () 
+          { 
+              convert -verbose -density 400 -trim "$1" -quality 100 -flatten -sharpen 0x1.0 "$1".png
+          }
+
+          pdf2png "$@"
+          trackusage "$0"
+      passthrough: true

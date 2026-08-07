@@ -1,0 +1,27 @@
+about: 'Download image URLs with Deno; names files by content hash and appends record.csv.'
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          download-images
+
+          Download image URLs with Deno; names files by content hash and appends record.csv.
+
+          Requires on host: deno
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - deno
+        - eval
+        - |
+          --ext=ts
+      passthrough: true
+requires:
+  - deno

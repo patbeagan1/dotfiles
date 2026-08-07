@@ -1,0 +1,30 @@
+about: 'Probe which package-manager list commands succeed on this host (Deno).'
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          list-pkg-managers
+
+          Probe which package-manager list commands succeed on this host (Deno).
+
+          Requires on host: deno
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - deno
+        - eval
+        - |
+          --ext=ts
+      passthrough: true
+requires:
+  - deno
+
+  # --- process / open-file helpers (typed inputs) ---
+

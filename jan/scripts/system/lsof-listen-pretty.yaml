@@ -1,0 +1,25 @@
+about: Show IPv4 LISTEN sockets in a column-aligned table.
+requires: [lsof, grep, column]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-listen-pretty
+
+          Show open ports that are LISTEN (IPv4), column-aligned.
+
+            jan scripts system lsof-listen-pretty run
+          EOF
+  run:
+    about: Filter lsof LISTEN lines.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          lsof -Pni4 | grep LISTEN | column -t

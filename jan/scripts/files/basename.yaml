@@ -1,0 +1,33 @@
+about: Print the last path component of a path.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          basename
+
+          Print the last path component of a path.
+
+            jan scripts files basename run -- /tmp/foo/bar.txt
+            # → bar.txt
+          EOF
+  run:
+    about: Print the basename of the given path.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+          if [[ $# -lt 1 ]]; then
+            echo "usage: jan scripts files basename run -- <path>" >&2
+            exit 2
+          fi
+          p="$1"
+          p="${p%/}"
+          printf '%s\n' "${p##*/}"
+      passthrough: true

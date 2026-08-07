@@ -1,0 +1,25 @@
+about: Count processes per user (sorted descending).
+requires: [ps, sort, uniq]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          ps-users
+
+          Processes-per-user counter.
+
+            jan scripts system ps-users run
+          EOF
+  run:
+    about: Aggregate ps by user.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          ps hax -o user | sort | uniq -c | sort -r

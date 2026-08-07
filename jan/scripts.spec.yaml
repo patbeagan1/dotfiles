@@ -1,10 +1,10 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
-# Multiline exec bodies use YAML literal block style (|).
+# Categories include per-command YAML files under scripts/<category>/.
 metadata:
   name: jan
   description: |
-    Personal utilities as a categorized `jan` subtree. Each script is inlined
-    with `help` (description) and `run` (execute from embedded source).
+    Personal utilities as a categorized `jan` subtree. Category maps include
+    per-command YAML under `scripts/<category>/` (each with `help` + `run`).
     Script entries may declare `dependencies` (other script names whose
     directories are prepended to PATH), `requires` (external utilities such as
     `fzf` that must exist before `run`), `env` (`public` assignments and
@@ -17,5 +17,5 @@ metadata:
       jan scripts network api-get run --url 'https://api.example.com/v1/me'
 commands:
   scripts:
-    about: 'Personal utilities (categorized, inlined).'
+    about: 'Personal utilities (categorized; each command is a YAML include).'
     include: scripts.yaml

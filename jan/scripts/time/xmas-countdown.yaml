@@ -1,0 +1,52 @@
+about: |
+  Shows the number of days until Christmas. If Christmas has already passed this year, it shows days until next year's Christmas.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          xmas-countdown
+
+          Shows the number of days until Christmas. If Christmas has already passed this year, it shows days until next year's Christmas.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # Christmas Countdown Script
+          # Shows days until Christmas
+
+          XMAS_DATE=$(date -d "$(date +%Y)-12-25" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$(date +%Y)-12-25" +%s 2>/dev/null)
+          CURRENT_DATE=$(date +%s)
+
+          if [ -z "$XMAS_DATE" ]; then
+              # Fallback calculation
+              YEAR=$(date +%Y)
+              XMAS_DATE=$(date -d "$YEAR-12-25" +%s 2>/dev/null || echo "")
+          fi
+
+          if [ -n "$XMAS_DATE" ] && [ "$XMAS_DATE" -gt "$CURRENT_DATE" ]; then
+              DAYS=$(( ($XMAS_DATE - $CURRENT_DATE) / 86400 ))
+              echo "🎄 $DAYS days until Christmas! 🎄"
+          elif [ -n "$XMAS_DATE" ]; then
+              # Christmas has passed this year, show next year
+              YEAR=$(( $(date +%Y) + 1 ))
+              NEXT_XMAS=$(date -d "$YEAR-12-25" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$YEAR-12-25" +%s 2>/dev/null)
+              if [ -n "$NEXT_XMAS" ]; then
+                  DAYS=$(( ($NEXT_XMAS - $CURRENT_DATE) / 86400 ))
+                  echo "🎄 $DAYS days until next Christmas! 🎄"
+              else
+                  echo "🎄 Merry Christmas! 🎄"
+              fi
+          else
+              echo "🎄 Merry Christmas! 🎄"
+          fi
+      passthrough: true

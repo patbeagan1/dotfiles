@@ -1,0 +1,34 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          gitflux
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          gitflux () 
+          { 
+              for i in $(git ls-tree -r $(git rev-parse --abbrev-ref HEAD) --name-only);
+              do
+                  echo $(git log --oneline $i | wc -l) $i;
+              done
+          }
+
+          gitflux "$@"
+      passthrough: true

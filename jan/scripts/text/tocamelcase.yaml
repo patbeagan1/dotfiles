@@ -1,0 +1,31 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          tocamelcase
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          tocamelcase () 
+          { 
+              echo "$1" | perl -pe 's/(^|_)./uc($&)/ge;s/_//g'
+          }
+
+          tocamelcase "$@"
+      passthrough: true

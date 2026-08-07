@@ -1,7 +1,6 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
-# Each category file inlines script `help` + `run` bodies.
-# Multiline exec bodies use YAML literal block style (|).
-about: 'Personal utilities (categorized, inlined).'
+# Categories include per-command YAML under scripts/<category>/.
+about: 'Personal utilities (categorized; each command is a YAML include).'
 commands:
   git:
     include: git.yaml

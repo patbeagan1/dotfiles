@@ -1,0 +1,44 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          loop
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          loop () 
+          {
+              local shouldClear='false'	
+              if [ "$1" == "-c" ]; then
+              	shouldClear="true"
+          	shift;
+              fi;
+
+              while :; do
+                  eval $@;
+                  sleep 0.5;
+                  if [ $shouldClear == "true" ]; then
+                      clear;
+                  fi;
+              done
+          }
+
+          loop "$*"
+          trackusage "$0"
+      passthrough: true

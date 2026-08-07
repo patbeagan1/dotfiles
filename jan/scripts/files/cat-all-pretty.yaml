@@ -1,0 +1,34 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          cat-all-pretty
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          for i in *; do
+              echo
+              echo -----
+              echo
+              echo "# $i"
+              echo
+              cat "$i"
+          done
+          trackusage "$0"
+      passthrough: true

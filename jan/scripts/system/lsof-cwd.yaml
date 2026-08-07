@@ -1,0 +1,31 @@
+about: Show the current working directory of a process.
+requires: [lsof, grep]
+inputs:
+  pid:
+    description: Process ID
+    required: true
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-cwd
+
+          Show cwd of a process.
+
+            jan scripts system lsof-cwd run --pid 1234
+
+          Equivalent to: lsof -p PID | grep cwd
+          EOF
+  run:
+    about: Grep cwd from lsof -p.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          lsof -p "${{ inputs.pid }}" | grep cwd

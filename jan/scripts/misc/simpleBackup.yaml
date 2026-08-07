@@ -1,0 +1,32 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          simpleBackup
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          trackusage "$0"
+
+          DATE=$(date +%Y-%m-%d-%H%M%S)
+          BACKUP_DIR="$HOME"
+          SOURCE="$HOME/Downloads/MyHome"
+
+          tar -cvzpf $BACKUP_DIR/backup-$DATE.tar.gz $SOURCE
+      passthrough: true

@@ -1,0 +1,38 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          lll
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          . $LIB_MACHINE_TYPES
+
+          lll () 
+          { 
+              if is-test system os mac; then
+                  ls
+              else
+                  ls --color=auto -l --full-time;
+              fi
+          }
+
+          lll "$@"
+          trackusage "$0"
+      passthrough: true

@@ -1,0 +1,37 @@
+about: View a user's open files under a directory (-u + +D).
+requires: [lsof]
+inputs:
+  user:
+    description: Username
+    required: true
+  dir:
+    description: Directory to scan (lsof +D)
+    default: /etc
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-user-dir
+
+          View user activity under a directory.
+
+            jan scripts system lsof-user-dir run --user root --dir /var/log
+
+          Equivalent to: lsof -u user -a +D /etc
+          EOF
+  run:
+    about: Run lsof for user + directory.
+    exec:
+      argv:
+        - lsof
+        - -u
+        - ${{ inputs.user }}
+        - -a
+        - +D
+        - ${{ inputs.dir }}
+

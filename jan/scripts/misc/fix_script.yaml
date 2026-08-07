@@ -1,0 +1,36 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          fix_script
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          fix_script () 
+          { 
+              for i in *;
+              do
+                  echo >> $i;
+                  echo $(echo $i | cut -d'.' -f1) '"$@"' >> $i;
+              done
+          }
+
+          fix_script "$@"
+          trackusage "$0"
+      passthrough: true

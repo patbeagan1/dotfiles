@@ -1,0 +1,33 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          compare
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          compare () 
+          { 
+              printf "\t%s\n" "$@";
+              pr -w $(tput cols) -m -t $@
+          }
+
+          compare "$@"
+          trackusage "$0"
+      passthrough: true

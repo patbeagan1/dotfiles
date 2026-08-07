@@ -1,0 +1,32 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          dot2pdf
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          dot2pdf () 
+          { 
+              dot -Tpdf "$1" > "$1".pdf && open "$1".pdf
+          }
+
+          dot2pdf "$@"
+          trackusage "$0"
+      passthrough: true

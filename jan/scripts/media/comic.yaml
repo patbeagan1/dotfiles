@@ -1,0 +1,33 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          comic
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          comic () 
+          { 
+              zip -r $1.zip $1;
+              mv $1.zip $1.cbz
+          }
+          comic "$@"
+
+          trackusage "$0"
+      passthrough: true

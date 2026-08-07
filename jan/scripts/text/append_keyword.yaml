@@ -1,0 +1,35 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          append_keyword
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+          photo="'$1'"
+          shift
+          cmd="exiftool "
+          for i in "$@"; do
+                  cmd="$cmd-IPTC:Keywords+='$i' "
+          done
+          cmd="$cmd $photo"
+          echo "$cmd"
+          eval "$cmd"
+
+          trackusage "$0"
+      passthrough: true

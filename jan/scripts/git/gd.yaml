@@ -1,0 +1,300 @@
+about: |
+  A terminal UI for browsing `git diff` similar to gitg: list changed files by name, then open a less-like diff view for each file.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          gd
+
+          A terminal UI for browsing `git diff` similar to gitg: list changed files by name, then open a less-like diff view for each file.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - python3
+        - -c
+        - |
+          # (c) 2025 Pat Beagan: MIT License
+          """
+          Interactive gd (git diff) TUI - like gitg.
+          Browse changed files by name, then view each file's diff with a less-like pager.
+          """
+
+          import curses
+          import subprocess
+          import sys
+          from pathlib import Path
+
+
+          def run_git(
+              args: list[str], cwd: Path | None = None, allow_exit_1: bool = False
+          ) -> subprocess.CompletedProcess:
+              """Run git with args; raise on fatal errors. For diff, pass allow_exit_1=True (diff exits 1 when there are changes)."""
+              result = subprocess.run(
+                  ["git"] + args,
+                  cwd=cwd,
+                  capture_output=True,
+                  text=True,
+                  timeout=30,
+              )
+              if result.returncode == 0:
+                  return result
+              if allow_exit_1 and result.returncode == 1:
+                  return result
+              if "fatal:" in (result.stderr or ""):
+                  raise RuntimeError(result.stderr.strip() or f"git {' '.join(args)} failed")
+              return result
+
+
+          def get_diff_files(cwd: Path, staged: bool) -> list[str]:
+              """Return list of file paths that have diff (--name-only)."""
+              args = ["diff", "--name-only"]
+              if staged:
+                  args.append("--cached")
+              r = run_git(args, cwd=cwd, allow_exit_1=True)
+              out = (r.stdout or "").strip()
+              return [f for f in out.splitlines() if f] if out else []
+
+
+          def get_file_diff(cwd: Path, path: str, staged: bool) -> list[str]:
+              """Return lines of diff for one file."""
+              args = ["diff", "--"]
+              if staged:
+                  args = ["diff", "--cached", "--"]
+              args.append(path)
+              r = run_git(args, cwd=cwd, allow_exit_1=True)
+              text = (r.stdout or "").strip()
+              return text.splitlines() if text else ["(no diff)"]
+
+
+          def find_repo_root(start: Path) -> Path | None:
+              """Return git repo root containing start, or None."""
+              p = start.resolve()
+              for _ in range(64):
+                  if (p / ".git").exists():
+                      return p
+                  parent = p.parent
+                  if parent == p:
+                      break
+                  p = parent
+              return None
+
+
+          # ---------------------------------------------------------------------------
+          # TUI: file list + detail (less-like) views
+          # ---------------------------------------------------------------------------
+
+          class GdApp:
+              def __init__(self, stdscr, cwd: Path, staged: bool):
+                  self.stdscr = stdscr
+                  self.cwd = cwd
+                  self.staged = staged
+                  self.files: list[str] = []
+                  self.selection = 0
+                  self.diff_lines: list[str] = []
+                  self.diff_scroll = 0
+                  self.diff_scroll_x = 0
+                  self.diff_max_line_len = 0
+                  self.view = "list"  # "list" | "detail"
+                  self.detail_file: str | None = None
+                  self.msg = ""
+
+              def load_files(self) -> None:
+                  try:
+                      self.files = get_diff_files(self.cwd, self.staged)
+                  except RuntimeError as e:
+                      self.files = []
+                      self.msg = str(e)
+                  if not self.files and not self.msg:
+                      self.msg = "No changed files (try without --cached for working tree)"
+
+              def open_detail(self) -> None:
+                  if not self.files or self.selection >= len(self.files):
+                      return
+                  path = self.files[self.selection]
+                  self.detail_file = path
+                  self.diff_lines = get_file_diff(self.cwd, path, self.staged)
+                  self.diff_scroll = 0
+                  self.diff_scroll_x = 0
+                  self.diff_max_line_len = (
+                      max(len(line) for line in self.diff_lines) if self.diff_lines else 0
+                  )
+                  self.view = "detail"
+
+              def close_detail(self) -> None:
+                  self.view = "list"
+                  self.detail_file = None
+                  self.diff_lines = []
+
+              def run(self) -> None:
+                  curses.curs_set(0)
+                  curses.use_default_colors()
+                  try:
+                      curses.init_pair(1, curses.COLOR_GREEN, -1)
+                      curses.init_pair(2, curses.COLOR_RED, -1)
+                      curses.init_pair(3, curses.COLOR_CYAN, -1)
+                      curses.init_pair(4, curses.COLOR_YELLOW, -1)
+                  except curses.error:
+                      pass
+
+                  self.load_files()
+
+                  while True:
+                      self.draw()
+                      try:
+                          key = self.stdscr.getch()
+                      except (KeyboardInterrupt, EOFError):
+                          break
+
+                      if self.view == "list":
+                          if key in (ord("q"), ord("Q"), 27):
+                              break
+                          elif key in (curses.KEY_UP, ord("k")):
+                              self.selection = max(0, self.selection - 1)
+                          elif key in (curses.KEY_DOWN, ord("j")):
+                              self.selection = min(len(self.files) - 1, self.selection + 1)
+                          elif key in (curses.KEY_ENTER, ord("\n"), ord("\r")):
+                              if self.files:
+                                  self.open_detail()
+                          elif key == ord("g"):
+                              self.selection = 0
+                          elif key == ord("G"):
+                              self.selection = max(0, len(self.files) - 1)
+                      else:
+                          # detail view (less-like)
+                          if key in (ord("q"), ord("Q"), 27):
+                              self.close_detail()
+                              continue
+                          h, w = self.stdscr.getmaxyx()
+                          content_h = max(1, h - 2)
+                          content_w = max(1, w - 1)
+                          max_scroll = max(0, len(self.diff_lines) - content_h)
+                          max_scroll_x = max(0, self.diff_max_line_len - content_w)
+                          if key in (curses.KEY_DOWN, ord("j")):
+                              self.diff_scroll = min(max_scroll, self.diff_scroll + 1)
+                          elif key in (curses.KEY_UP, ord("k")):
+                              self.diff_scroll = max(0, self.diff_scroll - 1)
+                          elif key in (curses.KEY_NPAGE, ord(" ")):
+                              self.diff_scroll = min(max_scroll, self.diff_scroll + content_h)
+                          elif key in (curses.KEY_PPAGE, ord("b")):
+                              self.diff_scroll = max(0, self.diff_scroll - content_h)
+                          elif key in (curses.KEY_LEFT, ord("h")):
+                              self.diff_scroll_x = max(0, self.diff_scroll_x - 1)
+                          elif key in (curses.KEY_RIGHT, ord("l")):
+                              self.diff_scroll_x = min(max_scroll_x, self.diff_scroll_x + 1)
+                          elif key == ord("g"):
+                              self.diff_scroll = 0
+                          elif key == ord("G"):
+                              self.diff_scroll = max_scroll
+                          elif key == curses.KEY_HOME:
+                              self.diff_scroll = 0
+                          elif key == curses.KEY_END:
+                              self.diff_scroll = max_scroll
+
+              def draw(self) -> None:
+                  self.stdscr.erase()
+                  h, w = self.stdscr.getmaxyx()
+                  if h < 2 or w < 2:
+                      return
+
+                  if self.view == "list":
+                      self._draw_list(h, w)
+                  else:
+                      self._draw_detail(h, w)
+                  self.stdscr.refresh()
+
+              def _draw_list(self, h: int, w: int) -> None:
+                  title = "gd — git diff (files)"
+                  if self.staged:
+                      title += " [staged]"
+                  self.stdscr.addstr(0, 0, title[: w - 1], curses.A_BOLD)
+                  self.stdscr.addstr(1, 0, "j/k or ↑/↓ move  Enter open  q quit"[: w - 1], curses.A_DIM)
+                  y = 2
+                  if self.msg:
+                      self.stdscr.addstr(y, 0, self.msg[: w - 1])
+                      return
+                  for i, path in enumerate(self.files):
+                      if y >= h - 1:
+                          break
+                      attr = curses.A_REVERSE if i == self.selection else 0
+                      line = path[: w - 1]
+                      try:
+                          self.stdscr.addstr(y, 0, line, attr)
+                      except curses.error:
+                          pass
+                      y += 1
+
+              def _draw_detail(self, h: int, w: int) -> None:
+                  header = f"diff — {self.detail_file or ''}"
+                  self.stdscr.addstr(0, 0, header[: w - 1], curses.A_BOLD)
+                  hint = "j/k ↑/↓  space/b pg  h/l ←/→  g/G top/end  q back"
+                  self.stdscr.addstr(1, 0, hint[: w - 1], curses.A_DIM)
+                  content_h = max(1, h - 2)
+                  start = self.diff_scroll
+                  end = min(len(self.diff_lines), start + content_h)
+                  content_w = max(1, w - 1)
+                  for row, line in enumerate(self.diff_lines[start:end]):
+                      if row + 2 >= h:
+                          break
+                      s = line[self.diff_scroll_x : self.diff_scroll_x + content_w]
+                      attr = 0
+                      if s.startswith("+") and not s.startswith("+++"):
+                          try:
+                              attr = curses.color_pair(1)
+                          except curses.error:
+                              pass
+                      elif s.startswith("-") and not s.startswith("---"):
+                          try:
+                              attr = curses.color_pair(2)
+                          except curses.error:
+                              pass
+                      try:
+                          self.stdscr.addstr(2 + row, 0, s, attr)
+                      except curses.error:
+                          pass
+
+
+          def main() -> int:
+              import argparse
+              ap = argparse.ArgumentParser(
+                  description="Interactive git diff TUI: browse changed files, view each diff (less-like)."
+              )
+              ap.add_argument(
+                  "--cached",
+                  "-c",
+                  action="store_true",
+                  help="Show staged (cached) diff only",
+              )
+              ap.add_argument(
+                  "path",
+                  nargs="?",
+                  default=".",
+                  help="Repository path (default: current directory)",
+              )
+              args = ap.parse_args()
+              cwd = Path(args.path).resolve()
+              if not cwd.is_dir():
+                  print(f"gd: not a directory: {cwd}", file=sys.stderr)
+                  return 1
+              root = find_repo_root(cwd)
+              if not root:
+                  print("gd: not a git repository", file=sys.stderr)
+                  return 1
+              try:
+                  curses.wrapper(lambda stdscr: GdApp(stdscr, root, args.cached).run())
+              except RuntimeError as e:
+                  print(f"gd: {e}", file=sys.stderr)
+                  return 1
+              return 0
+
+
+          if __name__ == "__main__":
+              sys.exit(main())
+      passthrough: true

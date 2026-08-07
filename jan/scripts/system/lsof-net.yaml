@@ -1,0 +1,23 @@
+about: Show processes that currently use network connections (lsof -P -i -n).
+requires: [lsof]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-net
+
+          Show processes that use internet connections right now.
+
+            jan scripts system lsof-net run
+
+          Equivalent to: lsof -P -i -n
+          EOF
+  run:
+    about: Run lsof for internet connections.
+    exec:
+      argv: [lsof, -P, -i, -n]

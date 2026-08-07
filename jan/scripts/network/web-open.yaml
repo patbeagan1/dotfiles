@@ -1,0 +1,49 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          web-open
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - zsh
+        - -c
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          help() {
+              error_code=$?
+              echo "
+              Opens a browser to the specified content.
+              "
+              if [[ ! $error_code -eq 0 ]]; then echo "Err: $error_code"; fi
+          }
+
+          q() {
+              content="$(echo $* | sed "s/\n/%20/g" | sed 's/ /%20/g')" 
+              echo "$content"
+
+              if is-test system os mac; then
+                  open -a Safari "$content"
+              else
+                  firefox "$content"
+              fi
+          }
+
+          q "$@" || help
+          trackusage "$0"
+      passthrough: true

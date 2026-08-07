@@ -1,0 +1,25 @@
+about: Four-way scrollable process tree with full details (ps awwfux | less -S).
+requires: [ps, less]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          ps-tree
+
+          Show a scrollable process tree with full details.
+
+            jan scripts system ps-tree run
+          EOF
+  run:
+    about: Open process tree in less.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          ps awwfux | less -S

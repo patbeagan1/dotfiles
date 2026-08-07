@@ -1,0 +1,201 @@
+about: >
+  Post a message to a Discord guild channel looked up by name
+  (optional guild filter). Uses private env DISCORD_KEY.
+requires: [curl, jq]
+env:
+  private:
+    - DISCORD_KEY
+inputs:
+  auth:
+    description: Auth mode — bot (default), user, or raw
+    default: bot
+  channel:
+    description: "Channel name (e.g. general or #general) or snowflake ID"
+    required: true
+  message:
+    description: "Message content to send (max 2000 characters)"
+    required: true
+  guild:
+    description: "Optional guild name or ID to disambiguate duplicate channel names"
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          discord-post
+
+          Send a message to a guild text channel, resolving the channel by name.
+
+          Setup:
+            export DISCORD_KEY='…'   # Bot token — needs Send Messages + View Channel
+
+          Usage:
+            jan scripts network discord-post run --channel general --message 'hello'
+            jan scripts network discord-post run --channel '#alerts' --message 'ping' --guild 'My Server'
+            jan scripts network discord-post run --channel 1234567890 --message 'by id'
+
+          If several channels share the same name, pass --guild (name or id).
+          Auth modes (--auth): bot | user | raw
+          EOF
+  run:
+    about: Resolve channel by name and POST a message.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+
+          API="https://discord.com/api/v10"
+          AUTH_MODE="${{ inputs.auth }}"
+          CHANNEL_IN="${{ inputs.channel }}"
+          MESSAGE="${{ inputs.message }}"
+          GUILD_IN="${{ inputs.guild }}"
+          UA="jan-discord-post (personal script; +https://github.com/patbeagan1)"
+
+          case "$AUTH_MODE" in
+            bot)
+              if [[ "$DISCORD_KEY" == Bot\ * ]] || [[ "$DISCORD_KEY" == Bearer\ * ]]; then
+                AUTH_HEADER="$DISCORD_KEY"
+              else
+                AUTH_HEADER="Bot ${DISCORD_KEY}"
+              fi
+              ;;
+            user|raw)
+              AUTH_HEADER="$DISCORD_KEY"
+              ;;
+            *)
+              echo "unknown --auth '$AUTH_MODE' (expected bot|user|raw)" >&2
+              exit 2
+              ;;
+          esac
+
+          if [[ ${#MESSAGE} -gt 2000 ]]; then
+            echo "message is ${#MESSAGE} characters; Discord limit is 2000" >&2
+            exit 2
+          fi
+
+          discord_request() {
+            local method="$1" path="$2"
+            local data="${3-}"
+            local tmp
+            tmp="$(mktemp)"
+            if [[ -n "$data" ]]; then
+              HTTP_CODE="$(curl -sS -o "$tmp" -w '%{http_code}' \
+                -X "$method" \
+                -H "Authorization: ${AUTH_HEADER}" \
+                -H "User-Agent: ${UA}" \
+                -H "Accept: application/json" \
+                -H "Content-Type: application/json" \
+                --data "$data" \
+                "${API}${path}" || echo 000)"
+            else
+              HTTP_CODE="$(curl -sS -o "$tmp" -w '%{http_code}' \
+                -X "$method" \
+                -H "Authorization: ${AUTH_HEADER}" \
+                -H "User-Agent: ${UA}" \
+                -H "Accept: application/json" \
+                "${API}${path}" || echo 000)"
+            fi
+            HTTP_BODY="$(cat "$tmp")"
+            rm -f "$tmp"
+          }
+
+          discord_get() {
+            local path="$1"
+            discord_request GET "$path"
+            if [[ "$HTTP_CODE" != "200" ]]; then
+              echo "Discord API GET ${path} failed (HTTP ${HTTP_CODE}): ${HTTP_BODY}" >&2
+              exit 1
+            fi
+            printf '%s' "$HTTP_BODY"
+          }
+
+          me="$(discord_get /users/@me)"
+          echo "authenticated as $(jq -r '"\(.username)//\(.id)"' <<<"$me")" >&2
+
+          CHANNEL_IN="${CHANNEL_IN#\#}"
+          CHANNEL_IN="$(echo "$CHANNEL_IN" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          GUILD_IN="$(echo "$GUILD_IN" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+          TARGET_ID=""
+          TARGET_NAME=""
+          TARGET_GUILD=""
+
+          # Direct snowflake
+          if [[ "$CHANNEL_IN" =~ ^[0-9]{5,}$ ]]; then
+            TARGET_ID="$CHANNEL_IN"
+            TARGET_NAME="$CHANNEL_IN"
+          else
+            guilds="$(discord_get /users/@me/guilds)"
+            gn="$(jq 'length' <<<"$guilds")"
+            if [[ "$gn" -eq 0 ]]; then
+              echo "bot is in 0 guilds; invite it before posting" >&2
+              exit 1
+            fi
+
+            matches='[]'
+            while IFS=$'\t' read -r gid gname; do
+              [[ -z "$gid" ]] && continue
+              if [[ -n "$GUILD_IN" ]]; then
+                if [[ "$gid" != "$GUILD_IN" && "${gname,,}" != "${GUILD_IN,,}" ]]; then
+                  continue
+                fi
+              fi
+              discord_request GET "/guilds/${gid}/channels"
+              if [[ "$HTTP_CODE" != "200" ]]; then
+                echo "skip guild ${gname} (${gid}): HTTP ${HTTP_CODE}" >&2
+                continue
+              fi
+              # text-like: 0 guild-text, 5 announcement
+              chunk="$(jq -c --arg gid "$gid" --arg gname "$gname" --arg want "$CHANNEL_IN" '
+                [.[]
+                  | select(.type == 0 or .type == 5)
+                  | select((.name // "") | ascii_downcase == ($want | ascii_downcase))
+                  | {id, name, guild_id: $gid, guild_name: $gname}]
+              ' <<<"$HTTP_BODY")"
+              matches="$(jq -c --argjson a "$matches" --argjson b "$chunk" '$a + $b')"
+            done < <(jq -r '.[] | [.id, .name] | @tsv' <<<"$guilds")
+
+            n="$(jq 'length' <<<"$matches")"
+            if [[ "$n" -eq 0 ]]; then
+              echo "no text channel named '${CHANNEL_IN}' visible to this bot" >&2
+              if [[ -n "$GUILD_IN" ]]; then
+                echo "(searched guild filter: ${GUILD_IN})" >&2
+              fi
+              echo "tip: jan scripts network discord-channels run --scope all" >&2
+              exit 1
+            fi
+            if [[ "$n" -gt 1 ]]; then
+              echo "ambiguous channel name '${CHANNEL_IN}' — matches:" >&2
+              jq -r '.[] | "  #\(.name)  id=\(.id)  guild=\(.guild_name) (\(.guild_id))"' <<<"$matches" >&2
+              echo "pass --guild <name-or-id> to disambiguate" >&2
+              exit 2
+            fi
+            TARGET_ID="$(jq -r '.[0].id' <<<"$matches")"
+            TARGET_NAME="$(jq -r '.[0].name' <<<"$matches")"
+            TARGET_GUILD="$(jq -r '.[0].guild_name' <<<"$matches")"
+          fi
+
+          payload="$(jq -nc --arg c "$MESSAGE" '{content: $c}')"
+          discord_request POST "/channels/${TARGET_ID}/messages" "$payload"
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "failed to post to #${TARGET_NAME} (${TARGET_ID}) HTTP ${HTTP_CODE}: ${HTTP_BODY}" >&2
+            code="$(jq -r '.code // empty' <<<"$HTTP_BODY" 2>/dev/null || true)"
+            if [[ "$code" == "50001" || "$code" == "50013" || "$HTTP_CODE" == "403" ]]; then
+              echo "hint: bot needs View Channel + Send Messages in that channel" >&2
+            fi
+            exit 1
+          fi
+
+          mid="$(jq -r '.id' <<<"$HTTP_BODY")"
+          if [[ -n "$TARGET_GUILD" ]]; then
+            echo "posted message ${mid} to #${TARGET_NAME} in ${TARGET_GUILD} (${TARGET_ID})"
+          else
+            echo "posted message ${mid} to channel ${TARGET_ID}"
+          fi

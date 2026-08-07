@@ -1,0 +1,205 @@
+about: >
+  Create a review branch that deletes a given path, open a GitHub PR with
+  those deletions for full code review, then restore the local checkout.
+requires: [git, gh]
+inputs:
+  repo:
+    description: Path to the local git checkout
+    default: "."
+  path:
+    description: File or directory inside the repo to delete on the audit branch
+    required: true
+  base:
+    description: Base branch (empty = remote default branch)
+    default: ""
+  branch:
+    description: Audit branch name (empty = auto jan-audit/<slug>-<timestamp>)
+    default: ""
+  title:
+    description: PR title (empty = auto)
+    default: ""
+  body:
+    description: PR body (empty = auto)
+    default: ""
+  draft:
+    description: Create a draft PR if 1
+    default: "0"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          gh-audit
+
+          Snapshot the current tree for review by deleting a path on a new
+          branch and opening a GitHub PR that only contains those deletions.
+          Restores your previous local branch and deletes the local audit
+          branch afterward (the remote branch remains for the PR).
+
+          Requires: git, gh (authenticated), a clean working tree.
+
+          Usage:
+            jan scripts git gh-audit run --path src/legacy
+            jan scripts git gh-audit run --repo ~/code/app --path docs/old --base main
+            jan scripts git gh-audit run --path internal --draft 1 --title 'Audit: remove internal'
+
+          Notes:
+            - Refuses to run if the working tree is dirty.
+            - Does not delete the remote branch (needed for the PR).
+          EOF
+  run:
+    about: Branch, delete path, open PR, restore local checkout.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+
+          REPO="${{ inputs.repo }}"
+          DEL_PATH="${{ inputs.path }}"
+          BASE_IN="${{ inputs.base }}"
+          BRANCH_IN="${{ inputs.branch }}"
+          TITLE_IN="${{ inputs.title }}"
+          BODY_IN="${{ inputs.body }}"
+          DRAFT="${{ inputs.draft }}"
+
+          REPO="$(cd "$REPO" && pwd)"
+          cd "$REPO"
+
+          if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            echo "not a git repository: $REPO" >&2
+            exit 1
+          fi
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "working tree is dirty; commit/stash first so cleanup can restore a clean checkout" >&2
+            git status --short >&2
+            exit 1
+          fi
+
+          DEL_PATH="${DEL_PATH#./}"
+          if [[ -z "$DEL_PATH" || "$DEL_PATH" == "." || "$DEL_PATH" == "/" ]]; then
+            echo "refusing to delete repo root; pass a subdirectory or file via --path" >&2
+            exit 2
+          fi
+          if [[ "$DEL_PATH" == ..* || "$DEL_PATH" == */.. || "$DEL_PATH" == */../* ]]; then
+            echo "refusing path with '..': $DEL_PATH" >&2
+            exit 2
+          fi
+          if [[ ! -e "$DEL_PATH" ]]; then
+            echo "path does not exist in worktree: $DEL_PATH" >&2
+            exit 1
+          fi
+
+          ORIG_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+          if [[ "$ORIG_BRANCH" == "HEAD" ]]; then
+            echo "detached HEAD; check out a branch before running gh-audit" >&2
+            exit 1
+          fi
+          ORIG_SHA="$(git rev-parse HEAD)"
+
+          if ! git remote get-url origin >/dev/null 2>&1; then
+            echo "no 'origin' remote configured" >&2
+            exit 1
+          fi
+
+          git fetch origin --quiet
+
+          if [[ -n "$BASE_IN" ]]; then
+            BASE="$BASE_IN"
+          else
+            BASE="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null || true)"
+            if [[ -z "$BASE" ]]; then
+              BASE="$(git symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)"
+            fi
+            if [[ -z "$BASE" ]]; then
+              BASE="main"
+            fi
+          fi
+
+          if ! git rev-parse --verify "origin/${BASE}" >/dev/null 2>&1; then
+            echo "base ref not found: origin/${BASE}" >&2
+            exit 1
+          fi
+
+          slug="$(echo "$DEL_PATH" | sed 's#[^A-Za-z0-9._-]#-#g' | sed 's#--*#-#g' | cut -c1-40)"
+          ts="$(date -u +%Y%m%dT%H%M%SZ)"
+          if [[ -n "$BRANCH_IN" ]]; then
+            BRANCH="$BRANCH_IN"
+          else
+            BRANCH="jan-audit/${slug}-${ts}"
+          fi
+
+          if [[ -n "$TITLE_IN" ]]; then
+            TITLE="$TITLE_IN"
+          else
+            TITLE="audit: remove ${DEL_PATH} for review (${ts})"
+          fi
+
+          if [[ -n "$BODY_IN" ]]; then
+            BODY="$BODY_IN"
+          else
+            BODY="## Summary
+          Temporary audit branch that deletes \`${DEL_PATH}\` so the rest of the tree can be reviewed in a PR diff against \`${BASE}\`.
+
+          Generated by \`jan scripts git gh-audit\`.
+
+          ## Test plan
+          - [ ] Review the deletion diff
+          - [ ] Close or merge as appropriate (this PR is for review, not necessarily to land)"
+          fi
+
+          CLEANED_UP=0
+          cleanup() {
+            if [[ "$CLEANED_UP" -eq 1 ]]; then
+              return 0
+            fi
+            CLEANED_UP=1
+            cd "$REPO" || return 0
+            # Always try to get back to the original branch.
+            if git show-ref --verify --quiet "refs/heads/${ORIG_BRANCH}"; then
+              git checkout -q "$ORIG_BRANCH" 2>/dev/null || git checkout -q "$ORIG_SHA" 2>/dev/null || true
+            else
+              git checkout -q "$ORIG_SHA" 2>/dev/null || true
+            fi
+            if git show-ref --verify --quiet "refs/heads/${BRANCH}"; then
+              git branch -D "$BRANCH" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          echo "repo:   $REPO" >&2
+          echo "base:   origin/${BASE}" >&2
+          echo "branch: ${BRANCH}" >&2
+          echo "delete: ${DEL_PATH}" >&2
+
+          git checkout -q -B "$BRANCH" "origin/${BASE}"
+
+          if [[ -d "$DEL_PATH" ]]; then
+            git rm -qr -- "$DEL_PATH"
+          else
+            git rm -q -- "$DEL_PATH"
+          fi
+
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "nothing deleted (path already absent on origin/${BASE}?)" >&2
+            exit 1
+          fi
+
+          git commit -q -m "audit: remove ${DEL_PATH} for review"
+
+          git push -q -u origin "HEAD:refs/heads/${BRANCH}"
+
+          PR_ARGS=(pr create --base "$BASE" --head "$BRANCH" --title "$TITLE" --body "$BODY")
+          if [[ "$DRAFT" == "1" || "$DRAFT" == "true" || "$DRAFT" == "yes" ]]; then
+            PR_ARGS+=(--draft)
+          fi
+          PR_URL="$(gh "${PR_ARGS[@]}")"
+          echo "$PR_URL"
+
+          # trap runs cleanup: restore ORIG_BRANCH, delete local BRANCH

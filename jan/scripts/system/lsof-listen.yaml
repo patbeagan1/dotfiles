@@ -1,0 +1,23 @@
+about: List listening TCP/UDP ports with PIDs.
+requires: [lsof]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-listen
+
+          List listening ports and associated PIDs.
+
+            jan scripts system lsof-listen run
+
+          Equivalent to: lsof -Pan -i tcp -i udp
+          EOF
+  run:
+    about: Run lsof for listening sockets.
+    exec:
+      argv: [lsof, -Pan, -i, tcp, -i, udp]

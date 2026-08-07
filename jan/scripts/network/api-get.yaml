@@ -1,0 +1,53 @@
+about: >
+  GET an HTTPS URL with Authorization Bearer from private env API_KEY
+  (value never stored in YAML).
+requires: [curl]
+env:
+  private:
+    - API_KEY
+  public:
+    URL: ${{ inputs.url }}
+inputs:
+  url:
+    description: Absolute HTTPS URL to request
+    required: true
+  header:
+    description: Extra header name to send the key under (default Authorization Bearer)
+    default: Authorization
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          api-get
+
+          Call an HTTPS API using a private API key from the host environment.
+
+          Setup (once per shell / cron):
+            export API_KEY='…'   # never commit this
+
+          Usage:
+            jan scripts network api-get run --url 'https://api.example.com/v1/me'
+            jan scripts network api-get run --url 'https://api.example.com/v1/me' --header X-API-Key
+
+          The child process only receives essentials + API_KEY + URL (restricted env).
+          EOF
+  run:
+    about: curl with Bearer (or custom) header from API_KEY.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+          hdr="${{ inputs.header }}"
+          if [ "$hdr" = "Authorization" ]; then
+            auth="Authorization: Bearer ${API_KEY}"
+          else
+            auth="${hdr}: ${API_KEY}"
+          fi
+          curl -fsS -H "$auth" -H "Accept: application/json" "$URL"

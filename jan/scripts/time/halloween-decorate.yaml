@@ -1,0 +1,41 @@
+about: |
+  Adds spooky ASCII art decoration to the terminal for Halloween. Optionally sets terminal colors to a spooky orange/yellow theme.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          halloween-decorate
+
+          Adds spooky ASCII art decoration to the terminal for Halloween. Optionally sets terminal colors to a spooky orange/yellow theme.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # Halloween Decoration Script
+          # Adds spooky ASCII art to terminal
+
+          echo ""
+          echo "    .-."
+          echo "   (o o) boo!"
+          echo "   | O \\"
+          echo "   \\   \\"
+          echo "    \`~~~'"
+          echo ""
+          echo "🎃 Happy Halloween! 👻"
+          echo ""
+
+          # Optional: Set terminal colors to spooky theme
+          if command -v tput >/dev/null 2>&1; then
+              echo -e "\033[0;33m"  # Orange/yellow
+          fi
+      passthrough: true

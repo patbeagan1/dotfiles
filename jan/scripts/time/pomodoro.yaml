@@ -1,0 +1,26 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          pomodoro
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          sleep 25m
+          appletoast "Pomodoro" "Take a 5 minute break"
+          trackusage "$0"
+      passthrough: true

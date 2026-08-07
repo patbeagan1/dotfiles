@@ -1,0 +1,35 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          remove_empty_dirs
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          remove_empty_dirs () 
+          { 
+              find . -type d -empty | xargs -I % rmdir %
+          }
+
+          remove_empty_dirs "$@"
+          trackusage "$0"
+      passthrough: true

@@ -1,44 +1,6 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
-# Each category file inlines script `help` + `run` bodies.
-# Multiline exec bodies use YAML literal block style (|).
+# Each command is a YAML include under scripts/docker/.
 about: docker utilities
 commands:
   docker-inspect-running:
-    about: A script for automated tasks.
-    commands:
-      help:
-        about: Describe this script.
-        exec:
-          argv:
-            - bash
-            - '-lc'
-            - |
-              cat <<'EOF'
-              docker-inspect-running
-
-              A script for automated tasks.
-
-              EOF
-      run:
-        about: 'Run the script (inlined); forwards args.'
-        exec:
-          argv:
-            - 'zsh'
-            - '-c'
-            - |
-              [[ $EUID -ne 0 ]] && echo "This script must be run as root." && exit 1
-
-              main() {
-
-              	select_docker_id() {
-
-              	  docker ps |\
-              	    fzf |\
-              	    cut -d' ' -f1
-              	}
-
-              	docker inspect "$(select_docker_id)" | jq
-              }
-
-              main
-          passthrough: true
+    include: scripts/docker/docker-inspect-running.yaml

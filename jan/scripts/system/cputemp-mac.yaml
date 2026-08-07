@@ -1,0 +1,84 @@
+about: cputemp-mac utility script
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          cputemp-mac
+
+          cputemp-mac utility script
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          check_install() {
+              if hash "$1" 2>/dev/null; then
+                  return 0
+              else
+                  read -p "$1 is not installed. Want to install it?" -n 1 -r;
+                  echo;
+                  if [[ $REPLY =~ ^[Yy]$ ]]; then
+                      local com=""
+                      case "$1" in
+                          iStats*)
+                              com="gem install iStats"
+                          ;;
+                          *)
+                              com=""
+                          ;;
+                      esac;
+                      if [[ -n "$com" ]]; then
+                          eval "$com"
+                          return $?
+                      fi
+                  fi
+                  return 1
+              fi
+          }
+
+          cputemp () {
+              if is-test system os mac; then
+                  if ! check_install iStats; then
+                      echo "iStats is required for macOS CPU temperature monitoring."
+                      echo "Please install it with: gem install iStats"
+                      exit 1
+                  fi
+
+                  c=$(iStats | grep 'CPU temp' | sed s/[a-zA-Z\ :]*// | sed s/°.*//);
+                  if [[ -n "$c" ]]; then
+                      echo "9*$c/5+32" | bc -l;
+                  else
+                      echo "Could not read CPU temperature from iStats"
+                      exit 1
+                  fi
+              elif is-test system os linux; then
+                  if [[ ! -d "/sys/class/thermal" ]]; then
+                      echo "Thermal monitoring not available on this Linux system"
+                      exit 1
+                  fi
+
+                  paste \
+                      <(cat /sys/class/thermal/thermal_zone*/type) \
+                      <(cat /sys/class/thermal/thermal_zone*/temp) | \
+                      column -s $'\t' -t | \
+                      sed 's/\(.\)..$/.\1°C/'
+              else
+                  echo "Unsupported operating system. This script works on macOS and Linux."
+                  exit 1
+              fi
+          }
+
+          cputemp "$@"
+          trackusage "$0"
+      passthrough: true

@@ -1,0 +1,52 @@
+about: |
+  Shows the number of days until Halloween. If Halloween has already passed this year, it shows days until next year's Halloween.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          halloween-countdown
+
+          Shows the number of days until Halloween. If Halloween has already passed this year, it shows days until next year's Halloween.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # Halloween Countdown Script
+          # Shows days until Halloween
+
+          HALLOWEEN_DATE=$(date -d "$(date +%Y)-10-31" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$(date +%Y)-10-31" +%s 2>/dev/null)
+          CURRENT_DATE=$(date +%s)
+
+          if [ -z "$HALLOWEEN_DATE" ]; then
+              # Fallback calculation
+              YEAR=$(date +%Y)
+              HALLOWEEN_DATE=$(date -d "$YEAR-10-31" +%s 2>/dev/null || echo "")
+          fi
+
+          if [ -n "$HALLOWEEN_DATE" ] && [ "$HALLOWEEN_DATE" -gt "$CURRENT_DATE" ]; then
+              DAYS=$(( ($HALLOWEEN_DATE - $CURRENT_DATE) / 86400 ))
+              echo "🎃 $DAYS days until Halloween! 🎃"
+          elif [ -n "$HALLOWEEN_DATE" ]; then
+              # Halloween has passed this year, show next year
+              YEAR=$(( $(date +%Y) + 1 ))
+              NEXT_HALLOWEEN=$(date -d "$YEAR-10-31" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$YEAR-10-31" +%s 2>/dev/null)
+              if [ -n "$NEXT_HALLOWEEN" ]; then
+                  DAYS=$(( ($NEXT_HALLOWEEN - $CURRENT_DATE) / 86400 ))
+                  echo "🎃 $DAYS days until next Halloween! 🎃"
+              else
+                  echo "🎃 Happy Halloween! 🎃"
+              fi
+          else
+              echo "🎃 Happy Halloween! 🎃"
+          fi
+      passthrough: true

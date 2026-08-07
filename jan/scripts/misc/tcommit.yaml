@@ -1,0 +1,31 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          tcommit
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          tcommit () 
+          { 
+              echo "t" >> test.txt && git add --all && git commit -am "test"
+          }
+
+          tcommit "$@"
+      passthrough: true

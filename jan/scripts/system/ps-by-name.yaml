@@ -1,0 +1,30 @@
+about: Show processes matching a command name (ps -lfC).
+requires: [ps]
+inputs:
+  name:
+    description: Process name for ps -C
+    required: true
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          ps-by-name
+
+          Show all processes by name with a full header.
+
+            jan scripts system ps-by-name run --name nginx
+
+          Equivalent to: ps -lfC nginx
+          EOF
+  run:
+    about: Run ps -lfC.
+    exec:
+      argv:
+        - ps
+        - -lfC
+        - ${{ inputs.name }}

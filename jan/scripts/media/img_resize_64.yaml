@@ -1,0 +1,37 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          img_resize_64
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          img_resize_64 ()
+          {
+              in="$1";
+              out="$2";
+              convert "$in" -resize 64x64 -gravity center -extent 64x64 -fill transparent "$out"
+          }
+
+          img_resize_64 "$@"
+          trackusage "$0"
+      passthrough: true

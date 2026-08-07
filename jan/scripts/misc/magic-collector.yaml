@@ -1,0 +1,188 @@
+about: |
+  A robust CLI tool that collects Kotlin files containing magic comments, optionally strips imports, and creates a ZIP archive with preserved directory structure.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          magic-collector
+
+          A robust CLI tool that collects Kotlin files containing magic comments, optionally strips imports, and creates a ZIP archive with preserved directory structure.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - python3
+        - -c
+        - |
+          """
+          Magic Collector - Export source files with magic comments
+
+          A robust CLI tool that collects Kotlin files containing magic comments,
+          optionally strips imports, and creates a ZIP archive with preserved directory structure.
+
+          Magic Comment Format:
+          The tool searches for files containing the magic comment:
+              // MAGIC_IMPORT_ME
+
+          This comment can have optional whitespace before the double slash and after it.
+          The comment is case-sensitive and must be followed by a word boundary.
+          Examples of valid magic comments:
+              // MAGIC_IMPORT_ME
+              //MAGIC_IMPORT_ME
+              //  MAGIC_IMPORT_ME
+              // MAGIC_IMPORT_ME  // with trailing comment
+
+          Features:
+          - Flexible magic comment matching with regex
+          - Better import stripping with regex (safe for Kotlin)
+          - Preserve relative directory structure (avoids collisions)
+          - Clean up temp dir by default, but allow keeping it via --keep-temp
+          - Handle missing ag gracefully (fallback to Python scanning)
+          - Exclude .git, build, and other noisy directories by default
+          - Add logging and error handling
+          - Preserve file metadata (timestamps) inside the ZIP
+          - Include unit-testable helper functions
+
+          Author: Generated from note #278
+          Version: 1.0.0
+          License: MIT
+          """
+
+          import argparse
+          import subprocess
+          import tempfile
+          import shutil
+          import os
+          import re
+          import sys
+          import logging
+          import zipfile
+          from pathlib import Path
+
+          # === CONFIGURATION ===
+          MAGIC_COMMENT_PATTERN = r"//\s*MAGIC_IMPORT_ME\b"  # regex for magic comment
+          IMPORT_PATTERN = re.compile(r"^\s*import\s+.*")    # Kotlin import regex
+          EXCLUDE_DIRS = {".git", "build", ".idea", ".gradle"}
+
+          logger = logging.getLogger("magic_collector")
+
+          # === SEARCH ===
+          def find_files_with_magic_comment(root: Path):
+              """Find files containing the magic comment using ag if available, else fallback."""
+              try:
+                  subprocess.run(["ag", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+                  logger.info("Using ag (silver searcher) for file search.")
+                  # Build exclude patterns for ag
+                  exclude_args = []
+                  for exclude_dir in EXCLUDE_DIRS:
+                      exclude_args.extend(["--ignore-dir", exclude_dir])
+
+                  result = subprocess.run(
+                      ["ag", "-l"] + exclude_args + [MAGIC_COMMENT_PATTERN, str(root)],
+                      stdout=subprocess.PIPE,
+                      stderr=subprocess.PIPE,
+                      text=True,
+                      check=True
+                  )
+                  return [Path(line.strip()) for line in result.stdout.splitlines()]
+              except (subprocess.CalledProcessError, FileNotFoundError):
+                  logger.warning("ag not available or failed, falling back to Python scan.")
+                  return fallback_scan(root)
+
+
+          def fallback_scan(root: Path):
+              """Fallback: recursively scan files under root in Python."""
+              matches = []
+              for path in root.rglob("*.kt"):
+                  if any(part in EXCLUDE_DIRS for part in path.parts):
+                      continue
+                  try:
+                      text = path.read_text(encoding="utf-8", errors="ignore")
+                      if re.search(MAGIC_COMMENT_PATTERN, text):
+                          matches.append(path)
+                  except Exception as e:
+                      logger.error("Failed to read %s: %s", path, e)
+              return matches
+
+          # === FILE PROCESSING ===
+          def process_and_copy(src: Path, dst: Path, strip_imports: bool):
+              """Process one file: remove magic comment and optionally imports."""
+              dst.parent.mkdir(parents=True, exist_ok=True)
+
+              with src.open("r", encoding="utf-8", errors="ignore") as f_in, \
+                   dst.open("w", encoding="utf-8") as f_out:
+                  for line in f_in:
+                      if re.search(MAGIC_COMMENT_PATTERN, line):
+                          continue
+                      if strip_imports and IMPORT_PATTERN.match(line):
+                          continue
+                      f_out.write(line)
+
+              shutil.copystat(src, dst)  # preserve metadata
+
+          # === ZIPPING ===
+          def make_zip_from_dir(src_dir: Path, zip_path: Path):
+              """Create a zip archive from src_dir."""
+              with zipfile.ZipFile(zip_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                  for root, _, files in os.walk(src_dir):
+                      for fname in files:
+                          abs_path = Path(root) / fname
+                          rel = abs_path.relative_to(src_dir)
+                          zf.write(abs_path, arcname=str(rel))
+
+          # === MAIN ===
+          def main():
+              parser = argparse.ArgumentParser(
+                  description="Collect Kotlin files with a magic comment (// MAGIC_IMPORT_ME), optionally strip imports, and zip them."
+              )
+              parser.add_argument("root", type=Path, help="Root directory of the codebase to scan")
+              parser.add_argument("--strip-imports", action="store_true", help="Remove import statements from copied files")
+              parser.add_argument("--zip-out", type=Path, help="Explicit path for the output zip file")
+              parser.add_argument("--keep-temp", action="store_true", help="Keep temporary working directory after zipping")
+              parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+
+              args = parser.parse_args()
+              logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s: %(message)s")
+
+              if not args.root.exists():
+                  logger.error("Root directory %s does not exist.", args.root)
+                  sys.exit(1)
+
+              files = find_files_with_magic_comment(args.root)
+              if not files:
+                  logger.info("No files found with the magic comment.")
+                  return
+
+              tmpdir = Path(tempfile.mkdtemp(prefix="magic_collect_"))
+              logger.debug("Created temp directory at %s", tmpdir)
+
+              for f in files:
+                  try:
+                      rel = f.relative_to(args.root)
+                  except ValueError:
+                      rel = f.name  # fallback if file is outside root
+                  dst = tmpdir / rel
+                  process_and_copy(f, dst, args.strip_imports)
+
+              zip_path = args.zip_out or Path(tempfile.gettempdir()) / f"collected_magic_{os.getpid()}.zip"
+              make_zip_from_dir(tmpdir, zip_path)
+              logger.info("Created zip at %s", zip_path)
+
+              if not args.keep_temp:
+                  shutil.rmtree(tmpdir)
+                  logger.debug("Removed temp directory %s", tmpdir)
+              else:
+                  logger.info("Temp directory kept at %s", tmpdir)
+
+              print(zip_path)  # machine-readable output
+
+          if __name__ == "__main__":
+              main()
+      passthrough: true

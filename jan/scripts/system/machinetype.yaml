@@ -1,0 +1,50 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          machinetype
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          machinetype () 
+          { 
+              unameOut="$(uname -s)";
+              case "${unameOut}" in 
+                  Linux*)
+                      machine=Linux
+                  ;;
+                  Darwin*)
+                      machine=Mac
+                  ;;
+                  CYGWIN*)
+                      machine=Cygwin
+                  ;;
+                  MINGW*)
+                      machine=MinGw
+                  ;;
+                  *)
+                      machine="UNKNOWN:${unameOut}"
+                  ;;
+              esac;
+              echo -n ${machine}
+          }
+
+          machinetype "$@"
+          trackusage "$0"
+      passthrough: true

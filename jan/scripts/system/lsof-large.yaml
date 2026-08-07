@@ -1,0 +1,36 @@
+about: Show the largest open files (size threshold in MB).
+requires: [lsof, awk, sort, tail, column]
+inputs:
+  min_mb:
+    description: Minimum size in MiB to include
+    default: "1"
+  count:
+    description: How many largest entries to show
+    default: "10"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          lsof-large
+
+          Show the largest open files above a size threshold.
+
+            jan scripts system lsof-large run
+            jan scripts system lsof-large run --min_mb 50 --count 20
+          EOF
+  run:
+    about: Rank open files by size.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          min_bytes=$(awk -v m="${{ inputs.min_mb }}" 'BEGIN { printf "%.0f", m * 1048576 }')
+          lsof / 2>/dev/null | awk -v min="$min_bytes" '{
+            if ($7+0 > min) printf "%.1fMB %s %s\n", $7/1048576, $9, $1
+          }' | sort -n -u | tail -n "${{ inputs.count }}" | column -t

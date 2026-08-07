@@ -1,0 +1,39 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          diffall
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+
+          diffall () 
+          { 
+              for i in *;
+              do
+                  for j in *;
+                  do
+                      echo === $i \|\| $j;
+                      diff $i $j;
+                  done;
+              done
+          }
+
+          diffall "$@"
+          trackusage "$0"
+      passthrough: true

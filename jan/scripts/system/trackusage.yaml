@@ -1,0 +1,51 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          trackusage
+
+          A script for automated tasks.
+
+          Bundled dependencies (on PATH when run): trackusage-impl
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          # (c) 2022 Pat Beagan: MIT License
+          set -euo pipefail
+
+          # Lists by reversed size because we keep track of the number of bytes in each file
+          # We care the most about the most used ones.
+
+          foldername="$HOME/p-tracked-commands"
+          if [ "$1" == "-h" ]; then
+              echo "Options are:"
+              echo "-a print all"
+              echo "-m print most used"
+          elif [ "$1" == "-a" ]; then
+              echo Printing all tracked commands
+              ls -lSrc "$foldername"
+              exit 0
+          elif [ "$1" == "-m" ]; then
+              echo Printing most used tracked commands
+              ls -lSrc "$foldername" | tail
+              exit 0
+          fi
+
+          foldername="$HOME/p-tracked-commands"
+          mkdir -p "$foldername"
+          echo >> "$foldername"/"$(basename "$1")"
+      passthrough: true
+dependencies:
+  - trackusage-impl

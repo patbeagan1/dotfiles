@@ -1,0 +1,25 @@
+about: A script for automated tasks.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          crossview_to_parallel
+
+          A script for automated tasks.
+
+          EOF
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          convert "$1" -crop 2x1@  +repage  +adjoin out.png
+          montage -mode concatenate -tile 2x1@ $(ls -1 out* | sort -r) mon-out.png
+      passthrough: true
