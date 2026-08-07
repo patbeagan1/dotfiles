@@ -1,0 +1,125 @@
+about: |
+  Inspect a CSV/TSV with pandas: schema, null counts, numeric stats, and an
+  optional group-by rollup. Useful for quick looks at exports and logs.
+packages:
+  uv:
+    - pandas
+inputs:
+  file:
+    description: Path to CSV or TSV file
+    required: true
+  sep:
+    description: Field separator (default , ; use \\t for TSV)
+    default: ","
+  head:
+    description: Number of sample rows to print (0 to skip)
+    default: "5"
+  group:
+    description: Optional column name to aggregate numeric columns by
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          cat <<'EOF'
+          csv-summary
+
+          Inspect a CSV/TSV with pandas (schema, nulls, describe, optional group-by).
+
+          Requires: uv on PATH (jan installs pandas into a cached venv).
+
+          Examples:
+
+            jan scripts files csv-summary run --file ~/Downloads/export.csv
+            jan scripts files csv-summary run --file data.tsv --sep $'\t'
+            jan scripts files csv-summary run --file sales.csv --group region
+            jan scripts files csv-summary run --file sales.csv --group region --head 0
+
+          Inputs:
+            --file <PATH>     CSV/TSV to inspect (required)
+            --sep <CHAR>      Field separator (default: ,)
+            --head <N>        Sample rows to print (default: 5; 0 = none)
+            --group <COL>     Aggregate numeric columns by this column
+          EOF
+  run:
+    about: Load the file and print a pandas summary.
+    exec:
+      argv:
+        - python3
+        - -c
+        - |
+          import sys
+          from pathlib import Path
+
+          import pandas as pd
+
+          path = Path("${{ inputs.file }}").expanduser()
+          sep = "${{ inputs.sep }}"
+          if sep in (r"\t", "\\t"):
+              sep = "\t"
+          head_raw = "${{ inputs.head }}".strip() or "5"
+          group = "${{ inputs.group }}".strip()
+
+          try:
+              head_n = int(head_raw)
+          except ValueError:
+              print(f"invalid --head value: {head_raw!r}", file=sys.stderr)
+              sys.exit(2)
+
+          if not path.is_file():
+              print(f"file not found: {path}", file=sys.stderr)
+              sys.exit(2)
+
+          try:
+              df = pd.read_csv(path, sep=sep)
+          except Exception as e:
+              print(f"failed to read {path}: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"file: {path}")
+          print(f"shape: {df.shape[0]} rows × {df.shape[1]} columns")
+          print()
+
+          info = pd.DataFrame(
+              {
+                  "dtype": df.dtypes.astype(str),
+                  "nulls": df.isna().sum(),
+                  "null%": (df.isna().mean() * 100).round(1),
+                  "unique": df.nunique(dropna=True),
+              }
+          )
+          print("columns")
+          print(info.to_string())
+          print()
+
+          numeric = df.select_dtypes(include="number")
+          if not numeric.empty:
+              print("numeric summary")
+              print(numeric.describe().round(3).to_string())
+              print()
+
+          if group:
+              if group not in df.columns:
+                  print(f"unknown --group column: {group!r}", file=sys.stderr)
+                  print(f"available: {list(df.columns)}", file=sys.stderr)
+                  sys.exit(2)
+              if numeric.empty:
+                  print("no numeric columns to aggregate", file=sys.stderr)
+                  sys.exit(1)
+              rollup = (
+                  df.groupby(group, dropna=False)[list(numeric.columns)]
+                  .agg(["count", "sum", "mean"])
+                  .round(3)
+              )
+              print(f"group by {group!r}")
+              print(rollup.to_string())
+              print()
+
+          if head_n > 0:
+              print(f"head ({min(head_n, len(df))} rows)")
+              print(df.head(head_n).to_string(index=False))
+      passthrough: true

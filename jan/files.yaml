@@ -18,6 +18,8 @@ commands:
     include: scripts/files/compare.yaml
   compare_directories:
     include: scripts/files/compare_directories.yaml
+  csv-summary:
+    include: scripts/files/csv-summary.yaml
   diffall:
     include: scripts/files/diffall.yaml
   filesplit:

@@ -1,4 +1,4 @@
-about: A script for automated tasks.
+about: Generate sealed-deck HTML boosters from Scryfall and zip them.
 commands:
   help:
     about: Describe this script.
@@ -10,15 +10,23 @@ commands:
           cat <<'EOF'
           mtg-booster
 
-          A script for automated tasks.
+          Generate sealed-deck HTML boosters from Scryfall and zip them.
+          Writes sealed-deck-N.zip in the current directory.
 
+          Requires on host: deno, zip
           EOF
   run:
     about: 'Run the linked script; forwards args.'
-    exec:
+    include:
+      path: scripts/misc/mtg-booster.js
       argv:
         - deno
-        - eval
-        - |
-          --ext=ts
+        - run
+        - --allow-net
+        - --allow-write
+        - --allow-read
+        - --allow-run
       passthrough: true
+requires:
+  - deno
+  - zip
