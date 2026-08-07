@@ -52,5 +52,4 @@ commands:
           </style>
           EOF
 
-          trackusage "$0"
       passthrough: true

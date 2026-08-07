@@ -28,5 +28,4 @@ commands:
           }
 
           lookbehind "$@"
-          trackusage "$0"
       passthrough: true

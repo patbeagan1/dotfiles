@@ -28,5 +28,4 @@ commands:
           } 3>&1
 
           rederr "$@"
-          trackusage "$0"
       passthrough: true

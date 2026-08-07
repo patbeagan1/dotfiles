@@ -29,5 +29,4 @@ commands:
           }
 
           jj "$@"
-          trackusage "$0"
       passthrough: true

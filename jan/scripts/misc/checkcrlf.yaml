@@ -27,5 +27,4 @@ commands:
               dos2unix < "$1" | cmp -s - "$1"
           }
           checkcrlf "$@"
-          trackusage "$0"
       passthrough: true

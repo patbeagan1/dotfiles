@@ -32,5 +32,4 @@ commands:
           }
 
           fix_script "$@"
-          trackusage "$0"
       passthrough: true

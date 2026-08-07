@@ -50,5 +50,4 @@ commands:
           }
 
           android-dump "$@" || help
-          trackusage "$0"
       passthrough: true

@@ -36,5 +36,4 @@ commands:
           }
 
           lastmod "$@"
-          trackusage "$0"
       passthrough: true

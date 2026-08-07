@@ -28,5 +28,4 @@ commands:
           }
 
           script_content "$@"
-          trackusage "$0"
       passthrough: true

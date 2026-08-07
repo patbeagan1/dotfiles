@@ -40,5 +40,4 @@ commands:
           }
 
           loop "$*"
-          trackusage "$0"
       passthrough: true

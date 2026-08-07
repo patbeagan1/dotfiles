@@ -28,5 +28,4 @@ commands:
           }
 
           manbash "$@"
-          trackusage "$0"
       passthrough: true

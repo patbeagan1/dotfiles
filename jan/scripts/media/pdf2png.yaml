@@ -28,5 +28,4 @@ commands:
           }
 
           pdf2png "$@"
-          trackusage "$0"
       passthrough: true

@@ -29,5 +29,4 @@ commands:
           }
 
           rec "$@"
-          trackusage "$0"
       passthrough: true

@@ -28,5 +28,4 @@ commands:
           }
 
           rm_empty_files "$@"
-          trackusage "$0"
       passthrough: true

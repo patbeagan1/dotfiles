@@ -28,5 +28,4 @@ commands:
           }
 
           lastfield "$@"
-          trackusage "$0"
       passthrough: true

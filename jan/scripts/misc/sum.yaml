@@ -28,5 +28,4 @@ commands:
           }
 
           sum "$@"
-          trackusage "$0"
       passthrough: true

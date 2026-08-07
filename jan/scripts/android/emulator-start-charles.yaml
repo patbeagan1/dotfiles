@@ -67,5 +67,4 @@ commands:
           }
 
           main "$@" || help
-          trackusage "$0"
       passthrough: true

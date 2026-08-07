@@ -29,5 +29,4 @@ commands:
           }
 
           discover-brute-force "$@"
-          trackusage "$0"
       passthrough: true

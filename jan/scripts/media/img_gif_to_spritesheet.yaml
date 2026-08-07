@@ -38,5 +38,4 @@ commands:
           }
 
           img_gif_to_spritesheet "$@"
-          trackusage "$0"
       passthrough: true

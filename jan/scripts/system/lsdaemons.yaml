@@ -28,5 +28,4 @@ commands:
           }
 
           lsdaemons "$@"
-          trackusage "$0"
       passthrough: true

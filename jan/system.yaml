@@ -22,10 +22,6 @@ commands:
     include: scripts/system/server.yaml
   task:
     include: scripts/system/task.yaml
-  trackusage:
-    include: scripts/system/trackusage.yaml
-  trackusage-impl:
-    include: scripts/system/trackusage-impl.yaml
   upkeep:
     include: scripts/system/upkeep.yaml
   list-pkg-managers:

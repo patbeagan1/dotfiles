@@ -27,5 +27,4 @@ commands:
               eval printf %s "$1" 2> /dev/null
           }
           dequote "$@"
-          trackusage "$0"
       passthrough: true

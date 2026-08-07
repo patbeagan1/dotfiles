@@ -28,5 +28,4 @@ commands:
           }
 
           pause "$@"
-          trackusage "$0"
       passthrough: true

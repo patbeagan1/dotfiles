@@ -28,5 +28,4 @@ commands:
           }
 
           peek "$@"
-          trackusage "$0"
       passthrough: true

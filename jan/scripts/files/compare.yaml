@@ -29,5 +29,4 @@ commands:
           }
 
           compare "$@"
-          trackusage "$0"
       passthrough: true

@@ -22,5 +22,4 @@ commands:
         - |
           sleep 25m
           appletoast "Pomodoro" "Take a 5 minute break"
-          trackusage "$0"
       passthrough: true

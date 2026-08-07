@@ -62,5 +62,4 @@ commands:
           }
 
           ebook "$@" || help
-          trackusage "$0"
       passthrough: true

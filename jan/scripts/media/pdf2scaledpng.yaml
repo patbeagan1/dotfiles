@@ -36,5 +36,4 @@ commands:
           }
 
           pdf2scaledpng "$@"
-          trackusage "$0"
       passthrough: true

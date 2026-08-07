@@ -30,5 +30,4 @@ commands:
               echo
               cat "$i"
           done
-          trackusage "$0"
       passthrough: true

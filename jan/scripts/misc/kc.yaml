@@ -27,5 +27,4 @@ commands:
               kotlinc "$1" -include-runtime -d out.jar
           }
           kc "$@"
-          trackusage "$0"
       passthrough: true

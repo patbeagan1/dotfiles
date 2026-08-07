@@ -181,5 +181,4 @@ commands:
           else
             help
           fi
-          trackusage "$0"
       passthrough: true

@@ -26,5 +26,4 @@ commands:
           	sudo lsof -i -n -P | grep LISTEN
           }
           open-ports
-          trackusage "$0"
       passthrough: true

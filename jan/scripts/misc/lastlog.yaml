@@ -29,5 +29,4 @@ commands:
           }
 
           lastlog "$@"
-          trackusage "$0"
       passthrough: true

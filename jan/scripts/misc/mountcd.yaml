@@ -28,5 +28,4 @@ commands:
           }
 
           mountcd "$@"
-          trackusage "$0"
       passthrough: true

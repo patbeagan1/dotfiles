@@ -22,7 +22,6 @@ commands:
         - |
           # (c) 2022 Pat Beagan: MIT License
 
-          trackusage "$0"
 
           if [ $# -eq 0 ] || [ $1 == "help" ]; then 
           cat <<END

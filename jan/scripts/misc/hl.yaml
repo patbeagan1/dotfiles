@@ -28,5 +28,4 @@ commands:
           }
 
           hl "$@"
-          trackusage "$0"
       passthrough: true

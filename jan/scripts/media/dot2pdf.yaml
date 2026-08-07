@@ -28,5 +28,4 @@ commands:
           }
 
           dot2pdf "$@"
-          trackusage "$0"
       passthrough: true

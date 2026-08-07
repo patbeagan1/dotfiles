@@ -54,5 +54,4 @@ commands:
               done
           }
           comicify
-          trackusage "$0"
       passthrough: true

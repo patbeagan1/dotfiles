@@ -35,5 +35,4 @@ commands:
           }
 
           fullpath "$@"
-          trackusage "$0"
       passthrough: true

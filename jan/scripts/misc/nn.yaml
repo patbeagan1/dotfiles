@@ -45,5 +45,4 @@ commands:
           }
 
           nn "$*"
-          trackusage "$0"
       passthrough: true

@@ -125,5 +125,4 @@ commands:
           }
 
           minecraft-photopack "$@" || help
-          trackusage "$0"
       passthrough: true

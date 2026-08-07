@@ -31,5 +31,4 @@ commands:
           echo "$cmd"
           eval "$cmd"
 
-          trackusage "$0"
       passthrough: true

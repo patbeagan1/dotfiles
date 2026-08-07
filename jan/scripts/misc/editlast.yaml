@@ -28,5 +28,4 @@ commands:
           }
 
           editlast "$@"
-          trackusage "$0"
       passthrough: true

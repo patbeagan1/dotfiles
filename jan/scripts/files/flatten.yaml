@@ -29,5 +29,4 @@ commands:
           }
 
           flatten "$@"
-          trackusage "$0"
       passthrough: true

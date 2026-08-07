@@ -28,5 +28,4 @@ commands:
           }
 
           kr "$@"
-          trackusage "$0"
       passthrough: true

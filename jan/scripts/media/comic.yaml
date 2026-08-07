@@ -29,5 +29,4 @@ commands:
           }
           comic "$@"
 
-          trackusage "$0"
       passthrough: true

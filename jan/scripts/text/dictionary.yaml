@@ -28,5 +28,4 @@ commands:
           }
 
           dictionary "$@"
-          trackusage "$0"
       passthrough: true

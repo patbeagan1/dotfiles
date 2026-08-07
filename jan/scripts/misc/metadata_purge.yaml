@@ -32,5 +32,4 @@ commands:
           }
 
           metatdata_purge "$@"
-          trackusage "$0"
       passthrough: true

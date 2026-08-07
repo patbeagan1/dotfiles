@@ -28,5 +28,4 @@ commands:
           }
 
           myip_to_qr "$@"
-          trackusage "$0"
       passthrough: true

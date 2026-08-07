@@ -31,5 +31,4 @@ commands:
           }
 
           remove_empty_dirs "$@"
-          trackusage "$0"
       passthrough: true

@@ -27,5 +27,4 @@ commands:
                   open "$filename"
           }
           qr "$1"
-          trackusage "$0"
       passthrough: true

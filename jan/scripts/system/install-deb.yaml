@@ -52,5 +52,4 @@ commands:
           }
 
           install "$@" || help
-          trackusage "$0"
       passthrough: true

@@ -80,5 +80,4 @@ commands:
           }
 
           cputemp "$@"
-          trackusage "$0"
       passthrough: true

@@ -33,5 +33,4 @@ commands:
           }
 
           img_resize "$@"
-          trackusage "$0"
       passthrough: true

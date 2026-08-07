@@ -52,5 +52,4 @@ commands:
           }
 
           divide "$@" || help
-          trackusage "$0"
       passthrough: true

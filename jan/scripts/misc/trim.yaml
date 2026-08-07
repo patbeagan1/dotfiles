@@ -28,5 +28,4 @@ commands:
           }
 
           trim "$@"
-          trackusage "$0"
       passthrough: true

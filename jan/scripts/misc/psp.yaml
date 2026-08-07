@@ -28,5 +28,4 @@ commands:
           }
 
           psp "$@"
-          trackusage "$0"
       passthrough: true

@@ -29,5 +29,4 @@ commands:
           }
 
           median "$@"
-          trackusage "$0"
       passthrough: true

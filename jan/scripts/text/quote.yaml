@@ -29,5 +29,4 @@ commands:
           }
 
           quote "$@"
-          trackusage "$0"
       passthrough: true

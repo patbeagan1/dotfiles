@@ -23,5 +23,4 @@ commands:
           # (c) 2022 Pat Beagan: MIT License
 
           cat "$1" | grep -v '#' | grep -v "^$"
-          trackusage "$0"
       passthrough: true

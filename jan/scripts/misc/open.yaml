@@ -36,5 +36,4 @@ commands:
           }
 
           open "$@"
-          trackusage "$0"
       passthrough: true

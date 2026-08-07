@@ -48,5 +48,4 @@ commands:
           }
 
           f "$@" || help
-          trackusage "$0"
       passthrough: true

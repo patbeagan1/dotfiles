@@ -35,5 +35,4 @@ commands:
           }
 
           diffall "$@"
-          trackusage "$0"
       passthrough: true

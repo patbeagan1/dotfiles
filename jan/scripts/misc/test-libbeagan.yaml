@@ -133,7 +133,6 @@ commands:
                   "scripts/util/isMac"
                   "scripts/util/isLinux"
                   "scripts/util/machinetype"
-                  "scripts/sysadmin/trackusage"
                   "scripts/file_management/basename"
               )
 
