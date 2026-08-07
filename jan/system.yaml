@@ -1636,3 +1636,341 @@ commands:
           passthrough: true
     requires:
       - deno
+
+  # --- process / open-file helpers (typed inputs) ---
+
+  lsof-net:
+    about: Show processes that currently use network connections (lsof -P -i -n).
+    requires: [lsof]
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-net
+
+              Show processes that use internet connections right now.
+
+                jan scripts system lsof-net run
+
+              Equivalent to: lsof -P -i -n
+              EOF
+      run:
+        about: Run lsof for internet connections.
+        exec:
+          argv: [lsof, -P, -i, -n]
+
+  lsof-port:
+    about: Show the process using a specific TCP/UDP port.
+    requires: [lsof]
+    inputs:
+      port:
+        description: Port number (e.g. 443)
+        required: true
+      proto:
+        description: Protocol — tcp or udp
+        default: tcp
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-port
+
+              Show the process bound to a port.
+
+                jan scripts system lsof-port run --port 443
+                jan scripts system lsof-port run --port 53 --proto udp
+
+              Equivalent to: lsof -i tcp:443
+              EOF
+      run:
+        about: Run lsof for a port.
+        exec:
+          argv:
+            - lsof
+            - -i
+            - ${{ inputs.proto }}:${{ inputs.port }}
+
+  lsof-listen:
+    about: List listening TCP/UDP ports with PIDs.
+    requires: [lsof]
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-listen
+
+              List listening ports and associated PIDs.
+
+                jan scripts system lsof-listen run
+
+              Equivalent to: lsof -Pan -i tcp -i udp
+              EOF
+      run:
+        about: Run lsof for listening sockets.
+        exec:
+          argv: [lsof, -Pan, -i, tcp, -i, udp]
+
+  lsof-listen-pretty:
+    about: Show IPv4 LISTEN sockets in a column-aligned table.
+    requires: [lsof, grep, column]
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-listen-pretty
+
+              Show open ports that are LISTEN (IPv4), column-aligned.
+
+                jan scripts system lsof-listen-pretty run
+              EOF
+      run:
+        about: Filter lsof LISTEN lines.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - lsof -Pni4 | grep LISTEN | column -t
+
+  lsof-cmd:
+    about: List files opened by a command name (-c).
+    requires: [lsof]
+    inputs:
+      process:
+        description: Process / command name filter for lsof -c
+        required: true
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-cmd
+
+              List files opened by a particular command.
+
+                jan scripts system lsof-cmd run --process nginx
+
+              Equivalent to: lsof -c "nginx"
+              EOF
+      run:
+        about: Run lsof -c.
+        exec:
+          argv:
+            - lsof
+            - -c
+            - ${{ inputs.process }}
+
+  lsof-user-dir:
+    about: View a user's open files under a directory (-u + +D).
+    requires: [lsof]
+    inputs:
+      user:
+        description: Username
+        required: true
+      dir:
+        description: Directory to scan (lsof +D)
+        default: /etc
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-user-dir
+
+              View user activity under a directory.
+
+                jan scripts system lsof-user-dir run --user root --dir /var/log
+
+              Equivalent to: lsof -u user -a +D /etc
+              EOF
+      run:
+        about: Run lsof for user + directory.
+        exec:
+          argv:
+            - lsof
+            - -u
+            - ${{ inputs.user }}
+            - -a
+            - +D
+            - ${{ inputs.dir }}
+
+  lsof-cwd:
+    about: Show the current working directory of a process.
+    requires: [lsof, grep]
+    inputs:
+      pid:
+        description: Process ID
+        required: true
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-cwd
+
+              Show cwd of a process.
+
+                jan scripts system lsof-cwd run --pid 1234
+
+              Equivalent to: lsof -p PID | grep cwd
+              EOF
+      run:
+        about: Grep cwd from lsof -p.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - lsof -p "${{ inputs.pid }}" | grep cwd
+
+  lsof-large:
+    about: Show the largest open files (size threshold in MB).
+    requires: [lsof, awk, sort, tail, column]
+    inputs:
+      min_mb:
+        description: Minimum size in MiB to include
+        default: "1"
+      count:
+        description: How many largest entries to show
+        default: "10"
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              lsof-large
+
+              Show the largest open files above a size threshold.
+
+                jan scripts system lsof-large run
+                jan scripts system lsof-large run --min_mb 50 --count 20
+              EOF
+      run:
+        about: Rank open files by size.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              min_bytes=$(awk -v m="${{ inputs.min_mb }}" 'BEGIN { printf "%.0f", m * 1048576 }')
+              lsof / 2>/dev/null | awk -v min="$min_bytes" '{
+                if ($7+0 > min) printf "%.1fMB %s %s\n", $7/1048576, $9, $1
+              }' | sort -n -u | tail -n "${{ inputs.count }}" | column -t
+
+  ps-tree:
+    about: Four-way scrollable process tree with full details (ps awwfux | less -S).
+    requires: [ps, less]
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              ps-tree
+
+              Show a scrollable process tree with full details.
+
+                jan scripts system ps-tree run
+              EOF
+      run:
+        about: Open process tree in less.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - ps awwfux | less -S
+
+  ps-users:
+    about: Count processes per user (sorted descending).
+    requires: [ps, sort, uniq]
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              ps-users
+
+              Processes-per-user counter.
+
+                jan scripts system ps-users run
+              EOF
+      run:
+        about: Aggregate ps by user.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - ps hax -o user | sort | uniq -c | sort -r
+
+  ps-by-name:
+    about: Show processes matching a command name (ps -lfC).
+    requires: [ps]
+    inputs:
+      name:
+        description: Process name for ps -C
+        required: true
+    commands:
+      help:
+        about: Describe this script.
+        exec:
+          argv:
+            - bash
+            - -lc
+            - |
+              cat <<'EOF'
+              ps-by-name
+
+              Show all processes by name with a full header.
+
+                jan scripts system ps-by-name run --name nginx
+
+              Equivalent to: ps -lfC nginx
+              EOF
+      run:
+        about: Run ps -lfC.
+        exec:
+          argv:
+            - ps
+            - -lfC
+            - ${{ inputs.name }}
