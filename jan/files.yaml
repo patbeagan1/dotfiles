@@ -5,10 +5,6 @@ about: files utilities
 commands:
   basename:
     about: Print the last path component of a path.
-    inputs:
-      path:
-        description: Path to take the basename of
-        required: true
     commands:
       help:
         about: Describe this script.
@@ -22,20 +18,25 @@ commands:
 
               Print the last path component of a path.
 
-                jan scripts files basename run --path /tmp/foo/bar.txt
+                jan scripts files basename run -- /tmp/foo/bar.txt
                 # → bar.txt
               EOF
       run:
-        about: Print the basename of --path.
+        about: Print the basename of the given path.
         exec:
           argv:
             - bash
             - -lc
             - |
               set -euo pipefail
-              p="${{ inputs.path }}"
+              if [[ $# -lt 1 ]]; then
+                echo "usage: jan scripts files basename run -- <path>" >&2
+                exit 2
+              fi
+              p="$1"
               p="${p%/}"
               printf '%s\n' "${p##*/}"
+          passthrough: true
   cat-all-pretty:
     about: A script for automated tasks.
     commands:
