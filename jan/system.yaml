@@ -23,30 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cputemp" <<'JAN_EOF_cputemp__cputemp_5faedc0a2f0f'
-              #compdef cputemp
-
-              # Zsh completion for cputemp
-
-              # Completion function for cputemp
-              _cputemp() {
-                  # Add any specific completions here if needed
-                  # For now, no arguments are expected
-                  _arguments '*: :->args'
-              }
-
-              # Call the completion function
-              _cputemp "$@"
-              JAN_EOF_cputemp__cputemp_5faedc0a2f0f
-              chmod +x "$tmpdir/_cputemp" 2>/dev/null || true
-              cat >"$tmpdir/cputemp.sh" <<'JAN_EOF_cputemp_cputemp_sh_33b1f768b7b1'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
               # Cross-platform CPU temperature monitoring script
               # Supports macOS (via iStats) and Linux (via /sys/class/thermal)
@@ -83,7 +62,7 @@ commands:
                           echo "Please install it with: gem install iStats"
                           exit 1
                       fi
-                      
+
                       c=$(iStats | grep 'CPU temp' | sed s/[a-zA-Z\ :]*// | sed s/°.*//);
                       if [[ -n "$c" ]]; then
                           echo "9*$c/5+32" | bc -l;
@@ -96,7 +75,7 @@ commands:
                           echo "Thermal monitoring not available on this Linux system"
                           exit 1
                       fi
-                      
+
                       paste \
                           <(cat /sys/class/thermal/thermal_zone*/type) \
                           <(cat /sys/class/thermal/thermal_zone*/temp) | \
@@ -110,10 +89,6 @@ commands:
 
               cputemp "$@"
               trackusage "$0"
-              JAN_EOF_cputemp_cputemp_sh_33b1f768b7b1
-              chmod +x "$tmpdir/cputemp.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cputemp.sh" "$@"
           passthrough: true
   cputemp-linux-sorted:
     about: A script for automated tasks.
@@ -135,33 +110,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cputemp-linux-sorted" <<'JAN_EOF_cputemp_linux_sorted__cputemp_linux_sorted_9583e6eae834'
-              #compdef cputemp-linux-sorted
-
-              # Zsh completion for cputemp-linux-sorted
-              # Generated automatically - customize as needed
-
-              _cputemp-linux-sorted() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cputemp-linux-sorted "$@"
-              JAN_EOF_cputemp_linux_sorted__cputemp_linux_sorted_9583e6eae834
-              chmod +x "$tmpdir/_cputemp-linux-sorted" 2>/dev/null || true
-              cat >"$tmpdir/cputemp-linux-sorted.sh" <<'JAN_EOF_cputemp_linux_sorted_cputemp_linux_sorted_sh_38eb37854748'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               cputemp |
@@ -173,10 +124,6 @@ commands:
                       printf "\n" 
                   }' |
                   sort -nr
-              JAN_EOF_cputemp_linux_sorted_cputemp_linux_sorted_sh_38eb37854748
-              chmod +x "$tmpdir/cputemp-linux-sorted.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cputemp-linux-sorted.sh" "$@"
           passthrough: true
   cputemp-linux-track:
     about: A script for automated tasks.
@@ -198,41 +145,13 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cputemp-linux-track" <<'JAN_EOF_cputemp_linux_track__cputemp_linux_track_e5529591aed5'
-              #compdef cputemp-linux-track
-
-              # Zsh completion for cputemp-linux-track
-              # Generated automatically - customize as needed
-
-              _cputemp-linux-track() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cputemp-linux-track "$@"
-              JAN_EOF_cputemp_linux_track__cputemp_linux_track_e5529591aed5
-              chmod +x "$tmpdir/_cputemp-linux-track" 2>/dev/null || true
-              cat >"$tmpdir/cputemp-linux-track.sh" <<'JAN_EOF_cputemp_linux_track_cputemp_linux_track_sh_9975e7f53d5a'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               trackusage "$0"
               loop -c cputemp
-              JAN_EOF_cputemp_linux_track_cputemp_linux_track_sh_9975e7f53d5a
-              chmod +x "$tmpdir/cputemp-linux-track.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cputemp-linux-track.sh" "$@"
           passthrough: true
   cputemp-mac:
     about: cputemp-mac utility script
@@ -254,14 +173,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/cputemp-mac.sh" <<'JAN_EOF_cputemp_mac_cputemp_mac_sh_866c0261cb5f'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               check_install() {
@@ -296,7 +210,7 @@ commands:
                           echo "Please install it with: gem install iStats"
                           exit 1
                       fi
-                      
+
                       c=$(iStats | grep 'CPU temp' | sed s/[a-zA-Z\ :]*// | sed s/°.*//);
                       if [[ -n "$c" ]]; then
                           echo "9*$c/5+32" | bc -l;
@@ -309,7 +223,7 @@ commands:
                           echo "Thermal monitoring not available on this Linux system"
                           exit 1
                       fi
-                      
+
                       paste \
                           <(cat /sys/class/thermal/thermal_zone*/type) \
                           <(cat /sys/class/thermal/thermal_zone*/temp) | \
@@ -323,10 +237,6 @@ commands:
 
               cputemp "$@"
               trackusage "$0"
-              JAN_EOF_cputemp_mac_cputemp_mac_sh_866c0261cb5f
-              chmod +x "$tmpdir/cputemp-mac.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cputemp-mac.sh" "$@"
           passthrough: true
   install-deb:
     about: A script for automated tasks.
@@ -348,33 +258,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_install-deb" <<'JAN_EOF_install_deb__install_deb_75f5f2b005bc'
-              #compdef install-deb
-
-              # Zsh completion for install-deb
-              # Generated automatically - customize as needed
-
-              _install-deb() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _install-deb "$@"
-              JAN_EOF_install_deb__install_deb_75f5f2b005bc
-              chmod +x "$tmpdir/_install-deb" 2>/dev/null || true
-              cat >"$tmpdir/install-deb.sh" <<'JAN_EOF_install_deb_install_deb_sh_481446d99114'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -408,10 +294,6 @@ commands:
 
               install "$@" || help
               trackusage "$0"
-              JAN_EOF_install_deb_install_deb_sh_481446d99114
-              chmod +x "$tmpdir/install-deb.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/install-deb.sh" "$@"
           passthrough: true
   lsdaemons:
     about: A script for automated tasks.
@@ -433,33 +315,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_lsdaemons" <<'JAN_EOF_lsdaemons__lsdaemons_8d20775ca061'
-              #compdef lsdaemons
-
-              # Zsh completion for lsdaemons
-              # Generated automatically - customize as needed
-
-              _lsdaemons() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _lsdaemons "$@"
-              JAN_EOF_lsdaemons__lsdaemons_8d20775ca061
-              chmod +x "$tmpdir/_lsdaemons" 2>/dev/null || true
-              cat >"$tmpdir/lsdaemons.sh" <<'JAN_EOF_lsdaemons_lsdaemons_sh_09a9368c8dab'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               lsdaemons () 
@@ -469,10 +327,6 @@ commands:
 
               lsdaemons "$@"
               trackusage "$0"
-              JAN_EOF_lsdaemons_lsdaemons_sh_09a9368c8dab
-              chmod +x "$tmpdir/lsdaemons.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/lsdaemons.sh" "$@"
           passthrough: true
   machinetype:
     about: A script for automated tasks.
@@ -494,33 +348,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_machinetype" <<'JAN_EOF_machinetype__machinetype_9dfca5bf52b3'
-              #compdef machinetype
-
-              # Zsh completion for machinetype
-              # Generated automatically - customize as needed
-
-              _machinetype() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _machinetype "$@"
-              JAN_EOF_machinetype__machinetype_9dfca5bf52b3
-              chmod +x "$tmpdir/_machinetype" 2>/dev/null || true
-              cat >"$tmpdir/machinetype.sh" <<'JAN_EOF_machinetype_machinetype_sh_5da5c7ddc654'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               machinetype () 
@@ -548,10 +378,6 @@ commands:
 
               machinetype "$@"
               trackusage "$0"
-              JAN_EOF_machinetype_machinetype_sh_5da5c7ddc654
-              chmod +x "$tmpdir/machinetype.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/machinetype.sh" "$@"
           passthrough: true
   sdk:
     about: A script for automated tasks.
@@ -573,33 +399,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_sdk" <<'JAN_EOF_sdk__sdk_f65971f25b85'
-              #compdef sdk
-
-              # Zsh completion for sdk
-              # Generated automatically - customize as needed
-
-              _sdk() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _sdk "$@"
-              JAN_EOF_sdk__sdk_f65971f25b85
-              chmod +x "$tmpdir/_sdk" 2>/dev/null || true
-              cat >"$tmpdir/sdk.sh" <<'JAN_EOF_sdk_sdk_sh_ca989e36ec33'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               sdk () 
@@ -692,10 +494,6 @@ commands:
                   fi
               }
               sdk "$@"
-              JAN_EOF_sdk_sdk_sh_ca989e36ec33
-              chmod +x "$tmpdir/sdk.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/sdk.sh" "$@"
           passthrough: true
   server:
     about: A script for automated tasks.
@@ -717,33 +515,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_server" <<'JAN_EOF_server__server_02bc39a058fe'
-              #compdef server
-
-              # Zsh completion for server
-              # Generated automatically - customize as needed
-
-              _server() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _server "$@"
-              JAN_EOF_server__server_02bc39a058fe
-              chmod +x "$tmpdir/_server" 2>/dev/null || true
-              cat >"$tmpdir/server.sh" <<'JAN_EOF_server_server_sh_fdaec6394e77'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               server () 
@@ -762,10 +536,6 @@ commands:
 
               server "$@"
               trackusage "$0"
-              JAN_EOF_server_server_sh_fdaec6394e77
-              chmod +x "$tmpdir/server.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/server.sh" "$@"
           passthrough: true
   task:
     about: A script for automated tasks.
@@ -787,33 +557,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_task" <<'JAN_EOF_task__task_62b5128d005e'
-              #compdef task
-
-              # Zsh completion for task
-              # Generated automatically - customize as needed
-
-              _task() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _task "$@"
-              JAN_EOF_task__task_62b5128d005e
-              chmod +x "$tmpdir/_task" 2>/dev/null || true
-              cat >"$tmpdir/task.py" <<'JAN_EOF_task_task_py_ad20eac2af7a'
-              #!/usr/bin/env python3
               # (c) 2022 Pat Beagan: MIT License
 
               import argparse
@@ -1047,10 +793,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_task_task_py_ad20eac2af7a
-              chmod +x "$tmpdir/task.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/task.py" "$@"
           passthrough: true
   trackusage:
     about: A script for automated tasks.
@@ -1074,33 +816,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_trackusage" <<'JAN_EOF_trackusage__trackusage_38feeb982b44'
-              #compdef trackusage
-
-              # Zsh completion for trackusage
-              # Generated automatically - customize as needed
-
-              _trackusage() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _trackusage "$@"
-              JAN_EOF_trackusage__trackusage_38feeb982b44
-              chmod +x "$tmpdir/_trackusage" 2>/dev/null || true
-              cat >"$tmpdir/trackusage.sh" <<'JAN_EOF_trackusage_trackusage_sh_b8b7a72802be'
-              #!/usr/bin/env bash
               # (c) 2022 Pat Beagan: MIT License
               set -euo pipefail
 
@@ -1122,27 +840,9 @@ commands:
                   exit 0
               fi
 
-              trackusage-impl $(basename "$1")
-              JAN_EOF_trackusage_trackusage_sh_b8b7a72802be
-              chmod +x "$tmpdir/trackusage.sh" 2>/dev/null || true
-              mkdir -p "$tmpdir/bin"
-              cat >"$tmpdir/bin/trackusage-impl" <<'JAN_EOF_dep_trackusage_trackusage_impl_e44ba501f6d4'
-              #!/usr/bin/env bash
-              # (c) 2022 Pat Beagan: MIT License
-              set -euo pipefail
-
-              if [ -z "$1" ]; then
-                  echo "Requires a command name, to track usages."
-                  exit 1;
-              fi
               foldername="$HOME/p-tracked-commands"
               mkdir -p "$foldername"
               echo >> "$foldername"/"$(basename "$1")"
-              JAN_EOF_dep_trackusage_trackusage_impl_e44ba501f6d4
-              chmod +x "$tmpdir/bin/trackusage-impl"
-              export PATH="$tmpdir/bin:$PATH"
-              cd "$tmpdir"
-              exec "$tmpdir/trackusage.sh" "$@"
           passthrough: true
     dependencies:
       - trackusage-impl
@@ -1166,33 +866,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_trackusage-impl" <<'JAN_EOF_trackusage_impl__trackusage_impl_0677b11dca5d'
-              #compdef trackusage-impl
-
-              # Zsh completion for trackusage-impl
-              # Generated automatically - customize as needed
-
-              _trackusage-impl() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _trackusage-impl "$@"
-              JAN_EOF_trackusage_impl__trackusage_impl_0677b11dca5d
-              chmod +x "$tmpdir/_trackusage-impl" 2>/dev/null || true
-              cat >"$tmpdir/trackusage-impl.sh" <<'JAN_EOF_trackusage_impl_trackusage_impl_sh_e44ba501f6d4'
-              #!/usr/bin/env bash
               # (c) 2022 Pat Beagan: MIT License
               set -euo pipefail
 
@@ -1203,10 +879,6 @@ commands:
               foldername="$HOME/p-tracked-commands"
               mkdir -p "$foldername"
               echo >> "$foldername"/"$(basename "$1")"
-              JAN_EOF_trackusage_impl_trackusage_impl_sh_e44ba501f6d4
-              chmod +x "$tmpdir/trackusage-impl.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/trackusage-impl.sh" "$@"
           passthrough: true
   upkeep:
     about: A script for automated tasks.
@@ -1228,36 +900,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_upkeep" <<'JAN_EOF_upkeep__upkeep_8e4bf42f09a4'
-              #compdef upkeep
-
-              # Zsh completion for upkeep
-              # Generated automatically - customize as needed
-
-
-              _upkeep() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '-t[Custom option]' \
-                      '-v[Custom option]' \        '*::arg:_files'
-              }
-
-              _upkeep "$@"
-              JAN_EOF_upkeep__upkeep_8e4bf42f09a4
-              chmod +x "$tmpdir/_upkeep" 2>/dev/null || true
-              cat >"$tmpdir/upkeep.zsh" <<'JAN_EOF_upkeep_upkeep_zsh_9b6ca5d6285b'
-              #!/bin/zsh
-
               ###############################################################################
               # upkeep.zsh - Strict, cross-language, yearly maintenance script
               # Languages: Python, Node.js, Rust, Kotlin
@@ -1526,10 +1171,6 @@ commands:
               }
 
               main "$@"
-              JAN_EOF_upkeep_upkeep_zsh_9b6ca5d6285b
-              chmod +x "$tmpdir/upkeep.zsh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/upkeep.zsh" "$@"
           passthrough: true
   list-pkg-managers:
     about: 'Probe which package-manager list commands succeed on this host (Deno).'
@@ -1552,15 +1193,11 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'deno'
+            - 'eval'
+            - '--ext=ts'
+            - '--allow-run'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_check_program.ts" <<'JAN_EOF_list_pkg_managers__check_program_ts_59103f4f3470'
-              #!/usr/bin/env -S deno run --allow-run
-
               /*
               * Hardcoded list of commands to test
               *
@@ -1629,10 +1266,6 @@ commands:
                           .map((it) => it.join(" "))
                           .forEach((it) => console.log(it))
                   });
-              JAN_EOF_list_pkg_managers__check_program_ts_59103f4f3470
-              chmod +x "$tmpdir/_check_program.ts" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/_check_program.ts" "$@"
           passthrough: true
     requires:
       - deno

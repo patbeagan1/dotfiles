@@ -23,34 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_accioImage" <<'JAN_EOF_accioImage__accioImage_70209c449ca8'
-              #compdef accioImage
-
-              # Zsh completion for accioImage
-              # Generated automatically - customize as needed
-
-              _accioImage() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _accioImage "$@"
-              JAN_EOF_accioImage__accioImage_70209c449ca8
-              chmod +x "$tmpdir/_accioImage" 2>/dev/null || true
-              cat >"$tmpdir/accioImage.py" <<'JAN_EOF_accioImage_accioImage_py_6d5e4820bd2e'
-              #!python3
-
               import requests
               from bs4 import BeautifulSoup
               import urllib.request
@@ -119,10 +94,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_accioImage_accioImage_py_6d5e4820bd2e
-              chmod +x "$tmpdir/accioImage.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/accioImage.py" "$@"
           passthrough: true
   chafa-interactive:
     about: A script for automated tasks.
@@ -144,34 +115,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_chafa-interactive" <<'JAN_EOF_chafa_interactive__chafa_interactive_fec3de82a49f'
-              #compdef chafa-interactive
-
-              # Zsh completion for chafa-interactive
-              # Generated automatically - customize as needed
-
-              _chafa-interactive() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _chafa-interactive "$@"
-              JAN_EOF_chafa_interactive__chafa_interactive_fec3de82a49f
-              chmod +x "$tmpdir/_chafa-interactive" 2>/dev/null || true
-              cat >"$tmpdir/chafa-interactive.sh" <<'JAN_EOF_chafa_interactive_chafa_interactive_sh_b4d7a1d9e916'
-              #!/bin/bash
-
               # Check if file names are provided as arguments
               if [ $# -gt 0 ]; then
                   # Use the provided file names
@@ -220,10 +166,6 @@ commands:
                       fi
                   fi
               done
-              JAN_EOF_chafa_interactive_chafa_interactive_sh_b4d7a1d9e916
-              chmod +x "$tmpdir/chafa-interactive.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/chafa-interactive.sh" "$@"
           passthrough: true
   comic:
     about: A script for automated tasks.
@@ -245,33 +187,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_comic" <<'JAN_EOF_comic__comic_b8a1222478a5'
-              #compdef comic
-
-              # Zsh completion for comic
-              # Generated automatically - customize as needed
-
-              _comic() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _comic "$@"
-              JAN_EOF_comic__comic_b8a1222478a5
-              chmod +x "$tmpdir/_comic" 2>/dev/null || true
-              cat >"$tmpdir/comic.sh" <<'JAN_EOF_comic_comic_sh_95ea229e1d9f'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               comic () 
@@ -282,10 +200,6 @@ commands:
               comic "$@"
 
               trackusage "$0"
-              JAN_EOF_comic_comic_sh_95ea229e1d9f
-              chmod +x "$tmpdir/comic.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/comic.sh" "$@"
           passthrough: true
   comicify:
     about: A script for automated tasks.
@@ -307,33 +221,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_comicify" <<'JAN_EOF_comicify__comicify_e1d0b0f21923'
-              #compdef comicify
-
-              # Zsh completion for comicify
-              # Generated automatically - customize as needed
-
-              _comicify() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _comicify "$@"
-              JAN_EOF_comicify__comicify_e1d0b0f21923
-              chmod +x "$tmpdir/_comicify" 2>/dev/null || true
-              cat >"$tmpdir/comicify.sh" <<'JAN_EOF_comicify_comicify_sh_9541799a081f'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               comicify ()
@@ -369,10 +259,6 @@ commands:
               }
               comicify
               trackusage "$0"
-              JAN_EOF_comicify_comicify_sh_9541799a081f
-              chmod +x "$tmpdir/comicify.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/comicify.sh" "$@"
           passthrough: true
   dot2pdf:
     about: A script for automated tasks.
@@ -394,33 +280,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_dot2pdf" <<'JAN_EOF_dot2pdf__dot2pdf_a8826487d72e'
-              #compdef dot2pdf
-
-              # Zsh completion for dot2pdf
-              # Generated automatically - customize as needed
-
-              _dot2pdf() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _dot2pdf "$@"
-              JAN_EOF_dot2pdf__dot2pdf_a8826487d72e
-              chmod +x "$tmpdir/_dot2pdf" 2>/dev/null || true
-              cat >"$tmpdir/dot2pdf.sh" <<'JAN_EOF_dot2pdf_dot2pdf_sh_25d039241365'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               dot2pdf () 
@@ -430,10 +292,6 @@ commands:
 
               dot2pdf "$@"
               trackusage "$0"
-              JAN_EOF_dot2pdf_dot2pdf_sh_25d039241365
-              chmod +x "$tmpdir/dot2pdf.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/dot2pdf.sh" "$@"
           passthrough: true
   image-stitch:
     about: A script for automated tasks.
@@ -455,34 +313,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_image-stitch" <<'JAN_EOF_image_stitch__image_stitch_baaae6fa5da1'
-              #compdef image-stitch
-
-              # Zsh completion for image-stitch
-              # Generated automatically - customize as needed
-
-              _image-stitch() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _image-stitch "$@"
-              JAN_EOF_image_stitch__image_stitch_baaae6fa5da1
-              chmod +x "$tmpdir/_image-stitch" 2>/dev/null || true
-              cat >"$tmpdir/image-stitch.py" <<'JAN_EOF_image_stitch_image_stitch_py_0fe070d3c132'
-              #!python3
-
               import sys
               import cv2
               import numpy as np
@@ -572,10 +405,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_image_stitch_image_stitch_py_0fe070d3c132
-              chmod +x "$tmpdir/image-stitch.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/image-stitch.py" "$@"
           passthrough: true
   imagefix:
     about: A script for automated tasks.
@@ -597,33 +426,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_imagefix" <<'JAN_EOF_imagefix__imagefix_4606c99e198e'
-              #compdef imagefix
-
-              # Zsh completion for imagefix
-              # Generated automatically - customize as needed
-
-              _imagefix() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _imagefix "$@"
-              JAN_EOF_imagefix__imagefix_4606c99e198e
-              chmod +x "$tmpdir/_imagefix" 2>/dev/null || true
-              cat >"$tmpdir/imagefix.sh" <<'JAN_EOF_imagefix_imagefix_sh_36502edf2595'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -632,7 +437,7 @@ commands:
               help () {
                   local bold='\033[1m'
                   local normal='\033[0m'
-                  
+
                   error_code=$?
                   echo -e "
               Usage: $bold imagefix filename.jpg [quality] $normal
@@ -679,7 +484,7 @@ commands:
                       -resize "$2" \
                       -quality $quality \
                       mid."$1"
-                      
+
                       magick mid."$1"\
                       -define webp:alpha-compression=1\
                       -define webp:alpha-quality=0\
@@ -702,10 +507,6 @@ commands:
               }
 
               imageFix "$@" || help
-              JAN_EOF_imagefix_imagefix_sh_36502edf2595
-              chmod +x "$tmpdir/imagefix.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/imagefix.sh" "$@"
           passthrough: true
   img_gif_to_spritesheet:
     about: A script for automated tasks.
@@ -727,33 +528,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_gif_to_spritesheet" <<'JAN_EOF_img_gif_to_spritesheet__img_gif_to_spritesheet_bd85db10e1b3'
-              #compdef img_gif_to_spritesheet
-
-              # Zsh completion for img_gif_to_spritesheet
-              # Generated automatically - customize as needed
-
-              _img_gif_to_spritesheet() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_gif_to_spritesheet "$@"
-              JAN_EOF_img_gif_to_spritesheet__img_gif_to_spritesheet_bd85db10e1b3
-              chmod +x "$tmpdir/_img_gif_to_spritesheet" 2>/dev/null || true
-              cat >"$tmpdir/img_gif_to_spritesheet.sh" <<'JAN_EOF_img_gif_to_spritesheet_img_gif_to_spritesheet_sh_34315f00e59a'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -773,10 +550,6 @@ commands:
 
               img_gif_to_spritesheet "$@"
               trackusage "$0"
-              JAN_EOF_img_gif_to_spritesheet_img_gif_to_spritesheet_sh_34315f00e59a
-              chmod +x "$tmpdir/img_gif_to_spritesheet.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_gif_to_spritesheet.sh" "$@"
           passthrough: true
   img_resize_200:
     about: A script for automated tasks.
@@ -798,33 +571,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_resize_200" <<'JAN_EOF_img_resize_200__img_resize_200_338bd041d2bf'
-              #compdef img_resize_200
-
-              # Zsh completion for img_resize_200
-              # Generated automatically - customize as needed
-
-              _img_resize_200() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_resize_200 "$@"
-              JAN_EOF_img_resize_200__img_resize_200_338bd041d2bf
-              chmod +x "$tmpdir/_img_resize_200" 2>/dev/null || true
-              cat >"$tmpdir/img_resize_200.sh" <<'JAN_EOF_img_resize_200_img_resize_200_sh_e02e824965f0'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -839,10 +588,6 @@ commands:
 
               img_resize "$@"
               trackusage "$0"
-              JAN_EOF_img_resize_200_img_resize_200_sh_e02e824965f0
-              chmod +x "$tmpdir/img_resize_200.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_resize_200.sh" "$@"
           passthrough: true
   img_resize_32:
     about: A script for automated tasks.
@@ -864,33 +609,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_resize_32" <<'JAN_EOF_img_resize_32__img_resize_32_23e0554bb5d6'
-              #compdef img_resize_32
-
-              # Zsh completion for img_resize_32
-              # Generated automatically - customize as needed
-
-              _img_resize_32() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_resize_32 "$@"
-              JAN_EOF_img_resize_32__img_resize_32_23e0554bb5d6
-              chmod +x "$tmpdir/_img_resize_32" 2>/dev/null || true
-              cat >"$tmpdir/img_resize_32.sh" <<'JAN_EOF_img_resize_32_img_resize_32_sh_717a3b9fc98a'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -905,10 +626,6 @@ commands:
 
               img_resize_32 "$@"
               trackusage "$0"
-              JAN_EOF_img_resize_32_img_resize_32_sh_717a3b9fc98a
-              chmod +x "$tmpdir/img_resize_32.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_resize_32.sh" "$@"
           passthrough: true
   img_resize_64:
     about: A script for automated tasks.
@@ -930,33 +647,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_resize_64" <<'JAN_EOF_img_resize_64__img_resize_64_3d3e218c31ab'
-              #compdef img_resize_64
-
-              # Zsh completion for img_resize_64
-              # Generated automatically - customize as needed
-
-              _img_resize_64() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_resize_64 "$@"
-              JAN_EOF_img_resize_64__img_resize_64_3d3e218c31ab
-              chmod +x "$tmpdir/_img_resize_64" 2>/dev/null || true
-              cat >"$tmpdir/img_resize_64.sh" <<'JAN_EOF_img_resize_64_img_resize_64_sh_51fc8b1a28fa'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -971,10 +664,6 @@ commands:
 
               img_resize_64 "$@"
               trackusage "$0"
-              JAN_EOF_img_resize_64_img_resize_64_sh_51fc8b1a28fa
-              chmod +x "$tmpdir/img_resize_64.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_resize_64.sh" "$@"
           passthrough: true
   img_to_qrcode_set:
     about: A script for automated tasks.
@@ -996,34 +685,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_to_qrcode_set" <<'JAN_EOF_img_to_qrcode_set__img_to_qrcode_set_a0dc1154ed63'
-              #compdef img_to_qrcode_set
-
-              # Zsh completion for img_to_qrcode_set
-              # Generated automatically - customize as needed
-
-              _img_to_qrcode_set() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_to_qrcode_set "$@"
-              JAN_EOF_img_to_qrcode_set__img_to_qrcode_set_a0dc1154ed63
-              chmod +x "$tmpdir/_img_to_qrcode_set" 2>/dev/null || true
-              cat >"$tmpdir/img_to_qrcode_set.py" <<'JAN_EOF_img_to_qrcode_set_img_to_qrcode_set_py_24523e8eade4'
-              #!/usr/bin/env python3
-
               import numpy as np
               from PIL import Image, ImageDraw, ImageColor
               import qrcode
@@ -1129,10 +793,6 @@ commands:
                   args = parser.parse_args()
 
                   main(args.image_path, args.output_path)
-              JAN_EOF_img_to_qrcode_set_img_to_qrcode_set_py_24523e8eade4
-              chmod +x "$tmpdir/img_to_qrcode_set.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_to_qrcode_set.py" "$@"
           passthrough: true
   img_wiggle_parallel:
     about: A script for automated tasks.
@@ -1154,33 +814,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_img_wiggle_parallel" <<'JAN_EOF_img_wiggle_parallel__img_wiggle_parallel_383f1428767b'
-              #compdef img_wiggle_parallel
-
-              # Zsh completion for img_wiggle_parallel
-              # Generated automatically - customize as needed
-
-              _img_wiggle_parallel() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _img_wiggle_parallel "$@"
-              JAN_EOF_img_wiggle_parallel__img_wiggle_parallel_383f1428767b
-              chmod +x "$tmpdir/_img_wiggle_parallel" 2>/dev/null || true
-              cat >"$tmpdir/img_wiggle_parallel.sh" <<'JAN_EOF_img_wiggle_parallel_img_wiggle_parallel_sh_493a24e43147'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               img_wiggle_parallel ()
@@ -1190,10 +826,6 @@ commands:
               }
               img_wiggle_parallel "$@"
               trackusage "$0"
-              JAN_EOF_img_wiggle_parallel_img_wiggle_parallel_sh_493a24e43147
-              chmod +x "$tmpdir/img_wiggle_parallel.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/img_wiggle_parallel.sh" "$@"
           passthrough: true
   multi-qr:
     about: A script for automated tasks.
@@ -1215,34 +847,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_multi-qr" <<'JAN_EOF_multi_qr__multi_qr_565b56f64e21'
-              #compdef multi-qr
-
-              # Zsh completion for multi-qr
-              # Generated automatically - customize as needed
-
-              _multi-qr() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _multi-qr "$@"
-              JAN_EOF_multi_qr__multi_qr_565b56f64e21
-              chmod +x "$tmpdir/_multi-qr" 2>/dev/null || true
-              cat >"$tmpdir/multi-qr.sh" <<'JAN_EOF_multi_qr_multi_qr_sh_5b409771cfdf'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -1307,10 +914,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_multi_qr_multi_qr_sh_5b409771cfdf
-              chmod +x "$tmpdir/multi-qr.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/multi-qr.sh" "$@"
           passthrough: true
   pdf2png:
     about: A script for automated tasks.
@@ -1332,33 +935,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_pdf2png" <<'JAN_EOF_pdf2png__pdf2png_5e456c3c3632'
-              #compdef pdf2png
-
-              # Zsh completion for pdf2png
-              # Generated automatically - customize as needed
-
-              _pdf2png() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _pdf2png "$@"
-              JAN_EOF_pdf2png__pdf2png_5e456c3c3632
-              chmod +x "$tmpdir/_pdf2png" 2>/dev/null || true
-              cat >"$tmpdir/pdf2png.sh" <<'JAN_EOF_pdf2png_pdf2png_sh_1b9bf808d8cb'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               pdf2png () 
@@ -1368,10 +947,6 @@ commands:
 
               pdf2png "$@"
               trackusage "$0"
-              JAN_EOF_pdf2png_pdf2png_sh_1b9bf808d8cb
-              chmod +x "$tmpdir/pdf2png.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/pdf2png.sh" "$@"
           passthrough: true
   pdf2scaledpng:
     about: A script for automated tasks.
@@ -1393,35 +968,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_pdf2scaledpng" <<'JAN_EOF_pdf2scaledpng__pdf2scaledpng_ec26e7c1c91b'
-              #compdef pdf2scaledpng
-
-              # Zsh completion for pdf2scaledpng
-              # Generated automatically - customize as needed
-
-              _pdf2scaledpng() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _pdf2scaledpng "$@"
-              JAN_EOF_pdf2scaledpng__pdf2scaledpng_ec26e7c1c91b
-              chmod +x "$tmpdir/_pdf2scaledpng" 2>/dev/null || true
-              cat >"$tmpdir/pdf2scaledpng.sh" <<'JAN_EOF_pdf2scaledpng_pdf2scaledpng_sh_c02714cba722'
-              #!/bin/bash
-
-
               pdf2scaledpng "$@"
               #!/bin/bash
 
@@ -1439,10 +988,6 @@ commands:
 
               pdf2scaledpng "$@"
               trackusage "$0"
-              JAN_EOF_pdf2scaledpng_pdf2scaledpng_sh_c02714cba722
-              chmod +x "$tmpdir/pdf2scaledpng.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/pdf2scaledpng.sh" "$@"
           passthrough: true
   pngresize:
     about: A script for automated tasks.
@@ -1464,33 +1009,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_pngresize" <<'JAN_EOF_pngresize__pngresize_6a31d90d735d'
-              #compdef pngresize
-
-              # Zsh completion for pngresize
-              # Generated automatically - customize as needed
-
-              _pngresize() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _pngresize "$@"
-              JAN_EOF_pngresize__pngresize_6a31d90d735d
-              chmod +x "$tmpdir/_pngresize" 2>/dev/null || true
-              cat >"$tmpdir/pngresize.sh" <<'JAN_EOF_pngresize_pngresize_sh_342d274221de'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               pngresize () 
@@ -1500,10 +1021,6 @@ commands:
 
               pngresize "$@"
               trackusage "$0"
-              JAN_EOF_pngresize_pngresize_sh_342d274221de
-              chmod +x "$tmpdir/pngresize.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/pngresize.sh" "$@"
           passthrough: true
   qrencoder:
     about: A script for automated tasks.
@@ -1525,32 +1042,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_qrencoder" <<'JAN_EOF_qrencoder__qrencoder_2a2c1bf86315'
-              #compdef qrencoder
-
-              # Zsh completion for qrencoder
-              # Generated automatically - customize as needed
-
-              _qrencoder() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _qrencoder "$@"
-              JAN_EOF_qrencoder__qrencoder_2a2c1bf86315
-              chmod +x "$tmpdir/_qrencoder" 2>/dev/null || true
-              cat >"$tmpdir/qrencoder.sh" <<'JAN_EOF_qrencoder_qrencoder_sh_3bc451ddb8cf'
               qr() {
                   local filename="/tmp/qr-output-$(python3 -c 'import time; print(time.time())').png"
                   qrencode -l L -v 1 -o "$filename" "$1" &&
@@ -1559,10 +1053,6 @@ commands:
               }
               qr "$1"
               trackusage "$0"
-              JAN_EOF_qrencoder_qrencoder_sh_3bc451ddb8cf
-              chmod +x "$tmpdir/qrencoder.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/qrencoder.sh" "$@"
           passthrough: true
   vid-compress:
     about: A script for automated tasks.
@@ -1584,34 +1074,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_vid-compress" <<'JAN_EOF_vid_compress__vid_compress_e31e2660c4c2'
-              #compdef vid-compress
-
-              # Zsh completion for vid-compress
-              # Generated automatically - customize as needed
-
-              _vid-compress() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _vid-compress "$@"
-              JAN_EOF_vid_compress__vid_compress_e31e2660c4c2
-              chmod +x "$tmpdir/_vid-compress" 2>/dev/null || true
-              cat >"$tmpdir/vid-compress.sh" <<'JAN_EOF_vid_compress_vid_compress_sh_182b3a0ae93f'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -1649,10 +1114,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_vid_compress_vid_compress_sh_182b3a0ae93f
-              chmod +x "$tmpdir/vid-compress.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/vid-compress.sh" "$@"
           passthrough: true
   download-images:
     about: 'Download image URLs with Deno; names files by content hash and appends record.csv.'
@@ -1675,15 +1136,12 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'deno'
+            - 'eval'
+            - '--ext=ts'
+            - '--allow-net'
+            - '--allow-write'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/download-images.ts" <<'JAN_EOF_download_images_download_images_ts_ca6f53ee083e'
-              #!/usr/bin/env -S deno run --allow-net --allow-write
-
               // Import required modules from the Deno standard library
               import { Sha256 } from "https://deno.land/std@0.160.0/hash/sha256.ts"
               import { writeCSV } from "https://deno.land/x/csv/mod.ts";
@@ -1708,7 +1166,7 @@ commands:
                   // Append a row to record.csv
                   const originalFileName = url.split('/').pop();
                   const csvData = [[originalFileName, newFileName, url]];
-                  
+
                   const f = await Deno.open("./record.csv", {
                     create: true,
                     append: true,
@@ -1733,10 +1191,6 @@ commands:
 
               // Download all images using promises for parallel execution
               await Promise.all(imageUrls.map(downloadImage));
-              JAN_EOF_download_images_download_images_ts_ca6f53ee083e
-              chmod +x "$tmpdir/download-images.ts" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/download-images.ts" "$@"
           passthrough: true
     requires:
       - deno

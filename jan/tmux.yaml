@@ -24,14 +24,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/tmux-extend-column.sh" <<'JAN_EOF_tmux_extend_column_tmux_extend_column_sh_1c614280354d'
-              #!/usr/bin/env bash
               # tmux-extend-column: Add 2 new panes as a new column to the current tmux window.
               # (c) 2025 Pat Beagan: MIT License
 
@@ -76,8 +71,4 @@ commands:
               tmux select-pane -t "$current_pane"
 
               echo "Added 2 new panes as a new column to the right."
-              JAN_EOF_tmux_extend_column_tmux_extend_column_sh_1c614280354d
-              chmod +x "$tmpdir/tmux-extend-column.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/tmux-extend-column.sh" "$@"
           passthrough: true

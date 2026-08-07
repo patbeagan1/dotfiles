@@ -56,33 +56,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cat-all-pretty" <<'JAN_EOF_cat_all_pretty__cat_all_pretty_578a69d8095d'
-              #compdef cat-all-pretty
-
-              # Zsh completion for cat-all-pretty
-              # Generated automatically - customize as needed
-
-              _cat-all-pretty() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cat-all-pretty "$@"
-              JAN_EOF_cat_all_pretty__cat_all_pretty_578a69d8095d
-              chmod +x "$tmpdir/_cat-all-pretty" 2>/dev/null || true
-              cat >"$tmpdir/cat-all-pretty.sh" <<'JAN_EOF_cat_all_pretty_cat_all_pretty_sh_a53e2f792773'
-              #!/usr/bin/env bash
               # (c) 2022 Pat Beagan: MIT License
 
               for i in *; do
@@ -94,10 +70,6 @@ commands:
                   cat "$i"
               done
               trackusage "$0"
-              JAN_EOF_cat_all_pretty_cat_all_pretty_sh_a53e2f792773
-              chmod +x "$tmpdir/cat-all-pretty.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cat-all-pretty.sh" "$@"
           passthrough: true
   cat-ansi-remote:
     about: A script for automated tasks.
@@ -119,34 +91,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cat-ansi-remote" <<'JAN_EOF_cat_ansi_remote__cat_ansi_remote_8c93c48762fe'
-              #compdef cat-ansi-remote
-
-              # Zsh completion for cat-ansi-remote
-              # Generated automatically - customize as needed
-
-              _cat-ansi-remote() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cat-ansi-remote "$@"
-              JAN_EOF_cat_ansi_remote__cat_ansi_remote_8c93c48762fe
-              chmod +x "$tmpdir/_cat-ansi-remote" 2>/dev/null || true
-              cat >"$tmpdir/cat-ansi-remote.sh" <<'JAN_EOF_cat_ansi_remote_cat_ansi_remote_sh_2a64fbc15d7a'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -195,10 +142,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_cat_ansi_remote_cat_ansi_remote_sh_2a64fbc15d7a
-              chmod +x "$tmpdir/cat-ansi-remote.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cat-ansi-remote.sh" "$@"
           passthrough: true
   cat-ansifile:
     about: A script for automated tasks.
@@ -220,34 +163,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cat-ansifile" <<'JAN_EOF_cat_ansifile__cat_ansifile_0f9d8bde02f8'
-              #compdef cat-ansifile
-
-              # Zsh completion for cat-ansifile
-              # Generated automatically - customize as needed
-
-              _cat-ansifile() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cat-ansifile "$@"
-              JAN_EOF_cat_ansifile__cat_ansifile_0f9d8bde02f8
-              chmod +x "$tmpdir/_cat-ansifile" 2>/dev/null || true
-              cat >"$tmpdir/cat-ansifile.sh" <<'JAN_EOF_cat_ansifile_cat_ansifile_sh_d0ffed13a361'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -296,10 +214,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_cat_ansifile_cat_ansifile_sh_d0ffed13a361
-              chmod +x "$tmpdir/cat-ansifile.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cat-ansifile.sh" "$@"
           passthrough: true
   cat-no-comment:
     about: A script for automated tasks.
@@ -321,41 +235,13 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_cat-no-comment" <<'JAN_EOF_cat_no_comment__cat_no_comment_220810d5b4ba'
-              #compdef cat-no-comment
-
-              # Zsh completion for cat-no-comment
-              # Generated automatically - customize as needed
-
-              _cat-no-comment() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _cat-no-comment "$@"
-              JAN_EOF_cat_no_comment__cat_no_comment_220810d5b4ba
-              chmod +x "$tmpdir/_cat-no-comment" 2>/dev/null || true
-              cat >"$tmpdir/cat-no-comment.sh" <<'JAN_EOF_cat_no_comment_cat_no_comment_sh_15151961ea1f'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               cat "$1" | grep -v '#' | grep -v "^$"
               trackusage "$0"
-              JAN_EOF_cat_no_comment_cat_no_comment_sh_15151961ea1f
-              chmod +x "$tmpdir/cat-no-comment.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/cat-no-comment.sh" "$@"
           passthrough: true
   chunk_by_quarter:
     about: A script for automated tasks.
@@ -377,33 +263,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_chunk_by_quarter" <<'JAN_EOF_chunk_by_quarter__chunk_by_quarter_6c0f77988242'
-              #compdef chunk_by_quarter
-
-              # Zsh completion for chunk_by_quarter
-              # Generated automatically - customize as needed
-
-              _chunk_by_quarter() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _chunk_by_quarter "$@"
-              JAN_EOF_chunk_by_quarter__chunk_by_quarter_6c0f77988242
-              chmod +x "$tmpdir/_chunk_by_quarter" 2>/dev/null || true
-              cat >"$tmpdir/chunk_by_quarter.py" <<'JAN_EOF_chunk_by_quarter_chunk_by_quarter_py_bf6608658711'
-              #!/usr/bin/env python3
               # (c) 2022 Pat Beagan: MIT License
 
               import os
@@ -486,10 +348,6 @@ commands:
 
 
               main()
-              JAN_EOF_chunk_by_quarter_chunk_by_quarter_py_bf6608658711
-              chmod +x "$tmpdir/chunk_by_quarter.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/chunk_by_quarter.py" "$@"
           passthrough: true
   compare:
     about: A script for automated tasks.
@@ -511,33 +369,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_compare" <<'JAN_EOF_compare__compare_d25d56ede5ba'
-              #compdef compare
-
-              # Zsh completion for compare
-              # Generated automatically - customize as needed
-
-              _compare() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _compare "$@"
-              JAN_EOF_compare__compare_d25d56ede5ba
-              chmod +x "$tmpdir/_compare" 2>/dev/null || true
-              cat >"$tmpdir/compare.sh" <<'JAN_EOF_compare_compare_sh_864e4d03cbfb'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               compare () 
@@ -548,10 +382,6 @@ commands:
 
               compare "$@"
               trackusage "$0"
-              JAN_EOF_compare_compare_sh_864e4d03cbfb
-              chmod +x "$tmpdir/compare.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/compare.sh" "$@"
           passthrough: true
   compare_directories:
     about: A script for automated tasks.
@@ -573,34 +403,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_compare_directories" <<'JAN_EOF_compare_directories__compare_directories_00cc330d5751'
-              #compdef compare_directories
-
-              # Zsh completion for compare_directories
-              # Generated automatically - customize as needed
-
-              _compare_directories() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _compare_directories "$@"
-              JAN_EOF_compare_directories__compare_directories_00cc330d5751
-              chmod +x "$tmpdir/_compare_directories" 2>/dev/null || true
-              cat >"$tmpdir/compare_directories.py" <<'JAN_EOF_compare_directories_compare_directories_py_acac36e4f79e'
-              #!python3
-
               import os
               import hashlib
               import argparse
@@ -655,10 +460,6 @@ commands:
 
               # Compare the hashes from both directories
               compare_hashes(dir1_hashes, dir2_hashes, dir1, dir2)
-              JAN_EOF_compare_directories_compare_directories_py_acac36e4f79e
-              chmod +x "$tmpdir/compare_directories.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/compare_directories.py" "$@"
           passthrough: true
   diffall:
     about: A script for automated tasks.
@@ -680,33 +481,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_diffall" <<'JAN_EOF_diffall__diffall_fd891ad58d10'
-              #compdef diffall
-
-              # Zsh completion for diffall
-              # Generated automatically - customize as needed
-
-              _diffall() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _diffall "$@"
-              JAN_EOF_diffall__diffall_fd891ad58d10
-              chmod +x "$tmpdir/_diffall" 2>/dev/null || true
-              cat >"$tmpdir/diffall.sh" <<'JAN_EOF_diffall_diffall_sh_983facb1f18f'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               diffall () 
@@ -723,10 +500,6 @@ commands:
 
               diffall "$@"
               trackusage "$0"
-              JAN_EOF_diffall_diffall_sh_983facb1f18f
-              chmod +x "$tmpdir/diffall.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/diffall.sh" "$@"
           passthrough: true
   filesplit:
     about: A script for automated tasks.
@@ -748,33 +521,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_filesplit" <<'JAN_EOF_filesplit__filesplit_d07b8e5b4e0d'
-              #compdef filesplit
-
-              # Zsh completion for filesplit
-              # Generated automatically - customize as needed
-
-              _filesplit() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _filesplit "$@"
-              JAN_EOF_filesplit__filesplit_d07b8e5b4e0d
-              chmod +x "$tmpdir/_filesplit" 2>/dev/null || true
-              cat >"$tmpdir/filesplit.py" <<'JAN_EOF_filesplit_filesplit_py_5f5923e407f2'
-              #!/usr/bin/env python3
               # (c) 2022 Pat Beagan: MIT License
 
               import sys
@@ -799,10 +548,6 @@ commands:
                               current_filename = get_filename()
                           with open(current_filename, "a") as g:
                               g.write(line)
-              JAN_EOF_filesplit_filesplit_py_5f5923e407f2
-              chmod +x "$tmpdir/filesplit.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/filesplit.py" "$@"
           passthrough: true
   filetype:
     about: A script for automated tasks.
@@ -824,33 +569,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_filetype" <<'JAN_EOF_filetype__filetype_9d3f459d740e'
-              #compdef filetype
-
-              # Zsh completion for filetype
-              # Generated automatically - customize as needed
-
-              _filetype() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _filetype "$@"
-              JAN_EOF_filetype__filetype_9d3f459d740e
-              chmod +x "$tmpdir/_filetype" 2>/dev/null || true
-              cat >"$tmpdir/filetype.sh" <<'JAN_EOF_filetype_filetype_sh_2370d01a0491'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               filetype () 
@@ -859,10 +580,6 @@ commands:
               }
 
               filetype "$@"
-              JAN_EOF_filetype_filetype_sh_2370d01a0491
-              chmod +x "$tmpdir/filetype.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/filetype.sh" "$@"
           passthrough: true
   flatten:
     about: A script for automated tasks.
@@ -884,33 +601,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_flatten" <<'JAN_EOF_flatten__flatten_39a73d0319d6'
-              #compdef flatten
-
-              # Zsh completion for flatten
-              # Generated automatically - customize as needed
-
-              _flatten() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _flatten "$@"
-              JAN_EOF_flatten__flatten_39a73d0319d6
-              chmod +x "$tmpdir/_flatten" 2>/dev/null || true
-              cat >"$tmpdir/flatten.sh" <<'JAN_EOF_flatten_flatten_sh_93aff0e5210c'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               flatten () 
@@ -921,10 +614,6 @@ commands:
 
               flatten "$@"
               trackusage "$0"
-              JAN_EOF_flatten_flatten_sh_93aff0e5210c
-              chmod +x "$tmpdir/flatten.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/flatten.sh" "$@"
           passthrough: true
   folder_checksum:
     about: A script for automated tasks.
@@ -946,34 +635,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_folder_checksum" <<'JAN_EOF_folder_checksum__folder_checksum_a303df4e3390'
-              #compdef folder_checksum
-
-              # Zsh completion for folder_checksum
-              # Generated automatically - customize as needed
-
-              _folder_checksum() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _folder_checksum "$@"
-              JAN_EOF_folder_checksum__folder_checksum_a303df4e3390
-              chmod +x "$tmpdir/_folder_checksum" 2>/dev/null || true
-              cat >"$tmpdir/folder_checksum.sh" <<'JAN_EOF_folder_checksum_folder_checksum_sh_37696ef104fe'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -1022,10 +686,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_folder_checksum_folder_checksum_sh_37696ef104fe
-              chmod +x "$tmpdir/folder_checksum.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/folder_checksum.sh" "$@"
           passthrough: true
   fullpath:
     about: A script for automated tasks.
@@ -1047,33 +707,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_fullpath" <<'JAN_EOF_fullpath__fullpath_1b91b3fe0852'
-              #compdef fullpath
-
-              # Zsh completion for fullpath
-              # Generated automatically - customize as needed
-
-              _fullpath() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _fullpath "$@"
-              JAN_EOF_fullpath__fullpath_1b91b3fe0852
-              chmod +x "$tmpdir/_fullpath" 2>/dev/null || true
-              cat >"$tmpdir/fullpath.sh" <<'JAN_EOF_fullpath_fullpath_sh_55ac525845b6'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               fullpath () 
@@ -1090,10 +726,6 @@ commands:
 
               fullpath "$@"
               trackusage "$0"
-              JAN_EOF_fullpath_fullpath_sh_55ac525845b6
-              chmod +x "$tmpdir/fullpath.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/fullpath.sh" "$@"
           passthrough: true
   nospaces:
     about: A script for automated tasks.
@@ -1115,33 +747,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_nospaces" <<'JAN_EOF_nospaces__nospaces_f80fa3ebf9a9'
-              #compdef nospaces
-
-              # Zsh completion for nospaces
-              # Generated automatically - customize as needed
-
-              _nospaces() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _nospaces "$@"
-              JAN_EOF_nospaces__nospaces_f80fa3ebf9a9
-              chmod +x "$tmpdir/_nospaces" 2>/dev/null || true
-              cat >"$tmpdir/nospaces.sh" <<'JAN_EOF_nospaces_nospaces_sh_27d78dec79b8'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               nospaces () 
@@ -1151,10 +759,6 @@ commands:
 
               nospaces "$@"
               trackusage "$0"
-              JAN_EOF_nospaces_nospaces_sh_27d78dec79b8
-              chmod +x "$tmpdir/nospaces.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/nospaces.sh" "$@"
           passthrough: true
   notabs:
     about: A script for automated tasks.
@@ -1176,33 +780,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_notabs" <<'JAN_EOF_notabs__notabs_506f46e70e0a'
-              #compdef notabs
-
-              # Zsh completion for notabs
-              # Generated automatically - customize as needed
-
-              _notabs() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _notabs "$@"
-              JAN_EOF_notabs__notabs_506f46e70e0a
-              chmod +x "$tmpdir/_notabs" 2>/dev/null || true
-              cat >"$tmpdir/notabs.sh" <<'JAN_EOF_notabs_notabs_sh_f498e51e116c'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               notabs () 
@@ -1221,10 +801,6 @@ commands:
 
               notabs "$@"
               trackusage "$0"
-              JAN_EOF_notabs_notabs_sh_f498e51e116c
-              chmod +x "$tmpdir/notabs.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/notabs.sh" "$@"
           passthrough: true
   remove_empty_dirs:
     about: A script for automated tasks.
@@ -1246,33 +822,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_remove_empty_dirs" <<'JAN_EOF_remove_empty_dirs__remove_empty_dirs_be57efc89a5a'
-              #compdef remove_empty_dirs
-
-              # Zsh completion for remove_empty_dirs
-              # Generated automatically - customize as needed
-
-              _remove_empty_dirs() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _remove_empty_dirs "$@"
-              JAN_EOF_remove_empty_dirs__remove_empty_dirs_be57efc89a5a
-              chmod +x "$tmpdir/_remove_empty_dirs" 2>/dev/null || true
-              cat >"$tmpdir/remove_empty_dirs.sh" <<'JAN_EOF_remove_empty_dirs_remove_empty_dirs_sh_fbba10d299e3'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -1285,10 +837,6 @@ commands:
 
               remove_empty_dirs "$@"
               trackusage "$0"
-              JAN_EOF_remove_empty_dirs_remove_empty_dirs_sh_fbba10d299e3
-              chmod +x "$tmpdir/remove_empty_dirs.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/remove_empty_dirs.sh" "$@"
           passthrough: true
   rm_empty_dirs:
     about: A script for automated tasks.
@@ -1310,33 +858,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_rm_empty_dirs" <<'JAN_EOF_rm_empty_dirs__rm_empty_dirs_6b1cbd551090'
-              #compdef rm_empty_dirs
-
-              # Zsh completion for rm_empty_dirs
-              # Generated automatically - customize as needed
-
-              _rm_empty_dirs() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _rm_empty_dirs "$@"
-              JAN_EOF_rm_empty_dirs__rm_empty_dirs_6b1cbd551090
-              chmod +x "$tmpdir/_rm_empty_dirs" 2>/dev/null || true
-              cat >"$tmpdir/rm_empty_dirs.sh" <<'JAN_EOF_rm_empty_dirs_rm_empty_dirs_sh_523186fb0a8a'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               rm_empty_dirs () 
@@ -1346,10 +870,6 @@ commands:
 
               rm_empty_dirs "$@"
               trackusage "$0"
-              JAN_EOF_rm_empty_dirs_rm_empty_dirs_sh_523186fb0a8a
-              chmod +x "$tmpdir/rm_empty_dirs.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/rm_empty_dirs.sh" "$@"
           passthrough: true
   rm_empty_files:
     about: A script for automated tasks.
@@ -1371,33 +891,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_rm_empty_files" <<'JAN_EOF_rm_empty_files__rm_empty_files_c1169dbe0af0'
-              #compdef rm_empty_files
-
-              # Zsh completion for rm_empty_files
-              # Generated automatically - customize as needed
-
-              _rm_empty_files() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _rm_empty_files "$@"
-              JAN_EOF_rm_empty_files__rm_empty_files_c1169dbe0af0
-              chmod +x "$tmpdir/_rm_empty_files" 2>/dev/null || true
-              cat >"$tmpdir/rm_empty_files.sh" <<'JAN_EOF_rm_empty_files_rm_empty_files_sh_1ac4da9abdc9'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               rm_empty_files () 
@@ -1407,8 +903,4 @@ commands:
 
               rm_empty_files "$@"
               trackusage "$0"
-              JAN_EOF_rm_empty_files_rm_empty_files_sh_1ac4da9abdc9
-              chmod +x "$tmpdir/rm_empty_files.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/rm_empty_files.sh" "$@"
           passthrough: true

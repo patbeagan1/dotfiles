@@ -23,32 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_duck" <<'JAN_EOF_duck__duck_6e6809bdc023'
-              #compdef duck
-
-              # Zsh completion for duck
-              # Generated automatically - customize as needed
-
-              _duck() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _duck "$@"
-              JAN_EOF_duck__duck_6e6809bdc023
-              chmod +x "$tmpdir/_duck" 2>/dev/null || true
-              cat >"$tmpdir/duck.sh" <<'JAN_EOF_duck_duck_sh_97151c338d05'
               : << COMMENT
               This can be set up with the following file 
 
@@ -74,10 +51,6 @@ commands:
               }
 
               main "$@"
-              JAN_EOF_duck_duck_sh_97151c338d05
-              chmod +x "$tmpdir/duck.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/duck.sh" "$@"
           passthrough: true
   duckduckgo:
     about: A script for automated tasks.
@@ -99,33 +72,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_duckduckgo" <<'JAN_EOF_duckduckgo__duckduckgo_cacf4bf1561e'
-              #compdef duckduckgo
-
-              # Zsh completion for duckduckgo
-              # Generated automatically - customize as needed
-
-              _duckduckgo() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _duckduckgo "$@"
-              JAN_EOF_duckduckgo__duckduckgo_cacf4bf1561e
-              chmod +x "$tmpdir/_duckduckgo" 2>/dev/null || true
-              cat >"$tmpdir/duckduckgo.sh" <<'JAN_EOF_duckduckgo_duckduckgo_sh_184d1b7751f9'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -163,7 +112,7 @@ commands:
 
               q() {
                   local content='https://duckduckgo.com/'
-                  
+
                   content+=$(echo "$@" | sed 's/ /%20/g')
                   content+='%20'
 
@@ -186,10 +135,6 @@ commands:
 
               q "$@" || help
               trackusage "$0"
-              JAN_EOF_duckduckgo_duckduckgo_sh_184d1b7751f9
-              chmod +x "$tmpdir/duckduckgo.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/duckduckgo.sh" "$@"
           passthrough: true
   ipqr:
     about: A script for automated tasks.
@@ -211,41 +156,13 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_ipqr" <<'JAN_EOF_ipqr__ipqr_0c2dda3304cb'
-              #compdef ipqr
-
-              # Zsh completion for ipqr
-              # Generated automatically - customize as needed
-
-              _ipqr() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _ipqr "$@"
-              JAN_EOF_ipqr__ipqr_0c2dda3304cb
-              chmod +x "$tmpdir/_ipqr" 2>/dev/null || true
-              cat >"$tmpdir/ipqr.sh" <<'JAN_EOF_ipqr_ipqr_sh_615b96b4ae0c'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               qrencode -l L -v 1 -o /tmp/qr-out.png -r <(echo http://"$(ipconfig getifaddr en0)":8000) && open /tmp/qr-out.png
               trackusage "$0"
-              JAN_EOF_ipqr_ipqr_sh_615b96b4ae0c
-              chmod +x "$tmpdir/ipqr.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/ipqr.sh" "$@"
           passthrough: true
   killport:
     about: A script for automated tasks.
@@ -267,33 +184,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_killport" <<'JAN_EOF_killport__killport_c2d76621afd5'
-              #compdef killport
-
-              # Zsh completion for killport
-              # Generated automatically - customize as needed
-
-              _killport() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _killport "$@"
-              JAN_EOF_killport__killport_c2d76621afd5
-              chmod +x "$tmpdir/_killport" 2>/dev/null || true
-              cat >"$tmpdir/killport.sh" <<'JAN_EOF_killport_killport_sh_5a5a30ded38f'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               killport () 
@@ -303,10 +196,6 @@ commands:
 
               killport "$@"
               trackusage "$0"
-              JAN_EOF_killport_killport_sh_5a5a30ded38f
-              chmod +x "$tmpdir/killport.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/killport.sh" "$@"
           passthrough: true
   myip_to_qr:
     about: A script for automated tasks.
@@ -328,33 +217,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_myip_to_qr" <<'JAN_EOF_myip_to_qr__myip_to_qr_ad483e17e5b8'
-              #compdef myip_to_qr
-
-              # Zsh completion for myip_to_qr
-              # Generated automatically - customize as needed
-
-              _myip_to_qr() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _myip_to_qr "$@"
-              JAN_EOF_myip_to_qr__myip_to_qr_ad483e17e5b8
-              chmod +x "$tmpdir/_myip_to_qr" 2>/dev/null || true
-              cat >"$tmpdir/myip_to_qr.sh" <<'JAN_EOF_myip_to_qr_myip_to_qr_sh_6ea092d1a1cd'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               myip_to_qr () 
@@ -364,10 +229,6 @@ commands:
 
               myip_to_qr "$@"
               trackusage "$0"
-              JAN_EOF_myip_to_qr_myip_to_qr_sh_6ea092d1a1cd
-              chmod +x "$tmpdir/myip_to_qr.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/myip_to_qr.sh" "$@"
           passthrough: true
   open-ports:
     about: A script for automated tasks.
@@ -389,33 +250,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_open-ports" <<'JAN_EOF_open_ports__open_ports_31af80964ac3'
-              #compdef open-ports
-
-              # Zsh completion for open-ports
-              # Generated automatically - customize as needed
-
-              _open-ports() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _open-ports "$@"
-              JAN_EOF_open_ports__open_ports_31af80964ac3
-              chmod +x "$tmpdir/_open-ports" 2>/dev/null || true
-              cat >"$tmpdir/open-ports.sh" <<'JAN_EOF_open_ports_open_ports_sh_cb960d922df4'
-              #!/usr/bin/env bash
               # (c) 2022 Pat Beagan: MIT License
 
               open-ports () {
@@ -423,10 +260,6 @@ commands:
               }
               open-ports
               trackusage "$0"
-              JAN_EOF_open_ports_open_ports_sh_cb960d922df4
-              chmod +x "$tmpdir/open-ports.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/open-ports.sh" "$@"
           passthrough: true
   report:
     about: A script for automated tasks.
@@ -448,33 +281,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_report" <<'JAN_EOF_report__report_17ed255473a1'
-              #compdef report
-
-              # Zsh completion for report
-              # Generated automatically - customize as needed
-
-              _report() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _report "$@"
-              JAN_EOF_report__report_17ed255473a1
-              chmod +x "$tmpdir/_report" 2>/dev/null || true
-              cat >"$tmpdir/report.sh" <<'JAN_EOF_report_report_sh_64d601aebb63'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               report () 
@@ -484,10 +293,6 @@ commands:
 
               report "$@"
               trackusage "$0"
-              JAN_EOF_report_report_sh_64d601aebb63
-              chmod +x "$tmpdir/report.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/report.sh" "$@"
           passthrough: true
   scan-lan:
     about: A script for automated tasks.
@@ -509,34 +314,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_scan-lan" <<'JAN_EOF_scan_lan__scan_lan_479f7334cc44'
-              #compdef scan-lan
-
-              # Zsh completion for scan-lan
-              # Generated automatically - customize as needed
-
-              _scan-lan() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _scan-lan "$@"
-              JAN_EOF_scan_lan__scan_lan_479f7334cc44
-              chmod +x "$tmpdir/_scan-lan" 2>/dev/null || true
-              cat >"$tmpdir/scan-lan.sh" <<'JAN_EOF_scan_lan_scan_lan_sh_fc93a7b6b9a3'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -596,10 +376,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_scan_lan_scan_lan_sh_fc93a7b6b9a3
-              chmod +x "$tmpdir/scan-lan.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/scan-lan.sh" "$@"
           passthrough: true
   scan-local-ports:
     about: A script for automated tasks.
@@ -621,34 +397,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_scan-local-ports" <<'JAN_EOF_scan_local_ports__scan_local_ports_37662774ec97'
-              #compdef scan-local-ports
-
-              # Zsh completion for scan-local-ports
-              # Generated automatically - customize as needed
-
-              _scan-local-ports() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _scan-local-ports "$@"
-              JAN_EOF_scan_local_ports__scan_local_ports_37662774ec97
-              chmod +x "$tmpdir/_scan-local-ports" 2>/dev/null || true
-              cat >"$tmpdir/scan-local-ports.sh" <<'JAN_EOF_scan_local_ports_scan_local_ports_sh_de92c4bcffb6'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -701,10 +452,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_scan_local_ports_scan_local_ports_sh_de92c4bcffb6
-              chmod +x "$tmpdir/scan-local-ports.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/scan-local-ports.sh" "$@"
           passthrough: true
   setupSshKeygen:
     about: A script for automated tasks.
@@ -726,41 +473,13 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_setupSshKeygen" <<'JAN_EOF_setupSshKeygen__setupSshKeygen_cccdb350d94e'
-              #compdef setupSshKeygen
-
-              # Zsh completion for setupSshKeygen
-              # Generated automatically - customize as needed
-
-              _setupSshKeygen() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _setupSshKeygen "$@"
-              JAN_EOF_setupSshKeygen__setupSshKeygen_cccdb350d94e
-              chmod +x "$tmpdir/_setupSshKeygen" 2>/dev/null || true
-              cat >"$tmpdir/setupSshKeygen.sh" <<'JAN_EOF_setupSshKeygen_setupSshKeygen_sh_52686048daa1'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               ssh-keygen && printf "\neval \`ssh-agent -s\`\nssh-add ~/.ssh/id_rsa" >> ~/.bash_profile
               trackusage "$0"
-              JAN_EOF_setupSshKeygen_setupSshKeygen_sh_52686048daa1
-              chmod +x "$tmpdir/setupSshKeygen.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/setupSshKeygen.sh" "$@"
           passthrough: true
   url-to-file:
     about: A script for automated tasks.
@@ -782,34 +501,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_url-to-file" <<'JAN_EOF_url_to_file__url_to_file_d87dc78ff138'
-              #compdef url-to-file
-
-              # Zsh completion for url-to-file
-              # Generated automatically - customize as needed
-
-              _url-to-file() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _url-to-file "$@"
-              JAN_EOF_url_to_file__url_to_file_d87dc78ff138
-              chmod +x "$tmpdir/_url-to-file" 2>/dev/null || true
-              cat >"$tmpdir/url-to-file.py" <<'JAN_EOF_url_to_file_url_to_file_py_0bdda590a347'
-              #!/usr/bin/env python3
-
               import sys
               import re
               import os
@@ -822,23 +516,19 @@ commands:
               def generate_meta_redirect(url: str):
                   meta_tag = f'<meta http-equiv="Refresh" content="0; url=\'{url}\'" />\n'
                   filename = sanitize_filename(url)
-                  
+
                   with open(filename, 'w') as f:
                       f.write(meta_tag)
-                  
+
                   print(f"Meta redirect written to {filename}")
 
               if __name__ == "__main__":
                   if len(sys.argv) != 2:
                       print("Usage: python3 script.py <URL>")
                       sys.exit(1)
-                  
+
                   url = sys.argv[1]
                   generate_meta_redirect(url)
-              JAN_EOF_url_to_file_url_to_file_py_0bdda590a347
-              chmod +x "$tmpdir/url-to-file.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/url-to-file.py" "$@"
           passthrough: true
   web-open:
     about: A script for automated tasks.
@@ -860,33 +550,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_web-open" <<'JAN_EOF_web_open__web_open_e7838bfb422b'
-              #compdef web-open
-
-              # Zsh completion for web-open
-              # Generated automatically - customize as needed
-
-              _web-open() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _web-open "$@"
-              JAN_EOF_web_open__web_open_e7838bfb422b
-              chmod +x "$tmpdir/_web-open" 2>/dev/null || true
-              cat >"$tmpdir/web-open.sh" <<'JAN_EOF_web_open_web_open_sh_e5c49a4bfbd3'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -913,10 +579,6 @@ commands:
 
               q "$@" || help
               trackusage "$0"
-              JAN_EOF_web_open_web_open_sh_e5c49a4bfbd3
-              chmod +x "$tmpdir/web-open.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/web-open.sh" "$@"
           passthrough: true
   webringify:
     about: A script for automated tasks.
@@ -938,33 +600,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_webringify" <<'JAN_EOF_webringify__webringify_5b751e4cff96'
-              #compdef webringify
-
-              # Zsh completion for webringify
-              # Generated automatically - customize as needed
-
-              _webringify() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _webringify "$@"
-              JAN_EOF_webringify__webringify_5b751e4cff96
-              chmod +x "$tmpdir/_webringify" 2>/dev/null || true
-              cat >"$tmpdir/webringify.sh" <<'JAN_EOF_webringify_webringify_sh_d9572370cf1d'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -1027,7 +665,7 @@ commands:
                       echo '<script src="./webring.js"></script>' >> "webring/$count.html"
                       echo '</body></html>' >> "webring/$count.html"
                       count=$((count + 1))
-                      
+
                       echo "<html><body>" >> "webring/index.html"
                       echo "<a href=\"$count.html\">$count</a>" >> "webring/index.html"
                       echo "</body></html>" >> "webring/index.html"
@@ -1085,10 +723,6 @@ commands:
 
               webringify "$@" || help
               trackusage "$0"
-              JAN_EOF_webringify_webringify_sh_d9572370cf1d
-              chmod +x "$tmpdir/webringify.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/webringify.sh" "$@"
           passthrough: true
   wgeti-polite:
     about: A script for automated tasks.
@@ -1110,35 +744,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_wgeti-polite" <<'JAN_EOF_wgeti_polite__wgeti_polite_be7c5595cfec'
-              #compdef wgeti-polite
-
-              # Zsh completion for wgeti-polite
-              # Generated automatically - customize as needed
-
-
-              _wgeti-polite() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '-r[Custom option]' \        '*::arg:_files'
-              }
-
-              _wgeti-polite "$@"
-              JAN_EOF_wgeti_polite__wgeti_polite_be7c5595cfec
-              chmod +x "$tmpdir/_wgeti-polite" 2>/dev/null || true
-              cat >"$tmpdir/wgeti-polite.zsh" <<'JAN_EOF_wgeti_polite_wgeti_polite_zsh_7807cd2bfb79'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
               IFS=$'\n\t'
 
@@ -1168,10 +776,6 @@ commands:
 
               f "$@" || help
               trackusage "$0"
-              JAN_EOF_wgeti_polite_wgeti_polite_zsh_7807cd2bfb79
-              chmod +x "$tmpdir/wgeti-polite.zsh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/wgeti-polite.zsh" "$@"
           passthrough: true
   url-performance:
     about: 'Measure HTTP fetch times for URLs listed in a file (SBCL + Quicklisp/drakma).'
@@ -1194,15 +798,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'sbcl'
+            - '--script'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/url-performance.lisp" <<'JAN_EOF_url_performance_url_performance_lisp_7c550ab4da67'
-              #!/usr/bin/env -S sbcl --script
-
               ;;; Load Quicklisp
               (load (merge-pathnames "quicklisp/setup.lisp"
                                      (user-homedir-pathname)))
@@ -1254,10 +852,6 @@ commands:
                     "urls.txt"))
 
               (process-urls-from-file *url-file*)
-              JAN_EOF_url_performance_url_performance_lisp_7c550ab4da67
-              chmod +x "$tmpdir/url-performance.lisp" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/url-performance.lisp" "$@"
           passthrough: true
     requires:
       - sbcl

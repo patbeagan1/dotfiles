@@ -23,34 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_days_until" <<'JAN_EOF_days_until__days_until_e63108634711'
-              #compdef days_until
-
-              # Zsh completion for days_until
-              # Generated automatically - customize as needed
-
-              _days_until() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _days_until "$@"
-              JAN_EOF_days_until__days_until_e63108634711
-              chmod +x "$tmpdir/_days_until" 2>/dev/null || true
-              cat >"$tmpdir/days_until.py" <<'JAN_EOF_days_until_days_until_py_43b0ef65d76f'
-              #!/usr/bin/env python3 
-
               import sys
               import argparse
               from datetime import datetime
@@ -65,13 +40,13 @@ commands:
 
                   # Current date and time
                   current_date = datetime.now()
-                  
+
                   # Time until the event
                   time_until = event_date - current_date
 
                   if time_until.days == -1:
                       return f"Today is {event_name}"
-                  
+
                   # Offset to midnight
                   curr_day = datetime.now()
                   offset = datetime.now() - datetime(year=curr_day.year, month=curr_day.month, day=curr_day.day)
@@ -123,10 +98,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_days_until_days_until_py_43b0ef65d76f
-              chmod +x "$tmpdir/days_until.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/days_until.py" "$@"
           passthrough: true
   halloween-countdown:
     about: |
@@ -149,14 +120,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/halloween-countdown.sh" <<'JAN_EOF_halloween_countdown_halloween_countdown_sh_1d015369f085'
-              #!/bin/bash
               # Halloween Countdown Script
               # Shows days until Halloween
 
@@ -185,10 +151,6 @@ commands:
               else
                   echo "🎃 Happy Halloween! 🎃"
               fi
-              JAN_EOF_halloween_countdown_halloween_countdown_sh_1d015369f085
-              chmod +x "$tmpdir/halloween-countdown.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/halloween-countdown.sh" "$@"
           passthrough: true
   halloween-decorate:
     about: |
@@ -211,14 +173,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/halloween-decorate.sh" <<'JAN_EOF_halloween_decorate_halloween_decorate_sh_8431f60c4843'
-              #!/bin/bash
               # Halloween Decoration Script
               # Adds spooky ASCII art to terminal
 
@@ -236,10 +193,6 @@ commands:
               if command -v tput >/dev/null 2>&1; then
                   echo -e "\033[0;33m"  # Orange/yellow
               fi
-              JAN_EOF_halloween_decorate_halloween_decorate_sh_8431f60c4843
-              chmod +x "$tmpdir/halloween-decorate.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/halloween-decorate.sh" "$@"
           passthrough: true
   pause:
     about: A script for automated tasks.
@@ -261,33 +214,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_pause" <<'JAN_EOF_pause__pause_353edec844f2'
-              #compdef pause
-
-              # Zsh completion for pause
-              # Generated automatically - customize as needed
-
-              _pause() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _pause "$@"
-              JAN_EOF_pause__pause_353edec844f2
-              chmod +x "$tmpdir/_pause" 2>/dev/null || true
-              cat >"$tmpdir/pause.sh" <<'JAN_EOF_pause_pause_sh_d8a48e9ad185'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               pause () 
@@ -297,10 +226,6 @@ commands:
 
               pause "$@"
               trackusage "$0"
-              JAN_EOF_pause_pause_sh_d8a48e9ad185
-              chmod +x "$tmpdir/pause.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/pause.sh" "$@"
           passthrough: true
   pomodoro:
     about: A script for automated tasks.
@@ -322,39 +247,12 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_pomodoro" <<'JAN_EOF_pomodoro__pomodoro_9bb76d3a0034'
-              #compdef pomodoro
-
-              # Zsh completion for pomodoro
-              # Generated automatically - customize as needed
-
-              _pomodoro() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _pomodoro "$@"
-              JAN_EOF_pomodoro__pomodoro_9bb76d3a0034
-              chmod +x "$tmpdir/_pomodoro" 2>/dev/null || true
-              cat >"$tmpdir/pomodoro.sh" <<'JAN_EOF_pomodoro_pomodoro_sh_7e898addbea7'
               sleep 25m
               appletoast "Pomodoro" "Take a 5 minute break"
               trackusage "$0"
-              JAN_EOF_pomodoro_pomodoro_sh_7e898addbea7
-              chmod +x "$tmpdir/pomodoro.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/pomodoro.sh" "$@"
           passthrough: true
   timeclock:
     about: A script for automated tasks.
@@ -376,33 +274,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_timeclock" <<'JAN_EOF_timeclock__timeclock_c5a531fe1076'
-              #compdef timeclock
-
-              # Zsh completion for timeclock
-              # Generated automatically - customize as needed
-
-              _timeclock() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _timeclock "$@"
-              JAN_EOF_timeclock__timeclock_c5a531fe1076
-              chmod +x "$tmpdir/_timeclock" 2>/dev/null || true
-              cat >"$tmpdir/timeclock.sh" <<'JAN_EOF_timeclock_timeclock_sh_c6fc411ca0f7'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               timeclock () 
@@ -411,10 +285,6 @@ commands:
               }
 
               timeclock "$@"
-              JAN_EOF_timeclock_timeclock_sh_c6fc411ca0f7
-              chmod +x "$tmpdir/timeclock.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/timeclock.sh" "$@"
           passthrough: true
   xmas:
     about: A script for automated tasks.
@@ -436,33 +306,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_xmas" <<'JAN_EOF_xmas__xmas_acfc9deaff12'
-              #compdef xmas
-
-              # Zsh completion for xmas
-              # Generated automatically - customize as needed
-
-              _xmas() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _xmas "$@"
-              JAN_EOF_xmas__xmas_acfc9deaff12
-              chmod +x "$tmpdir/_xmas" 2>/dev/null || true
-              cat >"$tmpdir/xmas.py" <<'JAN_EOF_xmas_xmas_py_4d0621d6fbfd'
-              #!/usr/bin/env python3
               import argparse
               import random
 
@@ -508,10 +354,6 @@ commands:
                   garland_color = convert_color(args.garland)
                   border_color = convert_color(args.border)
                   create_christmas_tree(args.height, tree_color, bauble_color, garland_color, border_color)
-              JAN_EOF_xmas_xmas_py_4d0621d6fbfd
-              chmod +x "$tmpdir/xmas.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/xmas.py" "$@"
           passthrough: true
   xmas-countdown:
     about: |
@@ -534,14 +376,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/xmas-countdown.sh" <<'JAN_EOF_xmas_countdown_xmas_countdown_sh_efa6fe54a844'
-              #!/bin/bash
               # Christmas Countdown Script
               # Shows days until Christmas
 
@@ -570,10 +407,6 @@ commands:
               else
                   echo "🎄 Merry Christmas! 🎄"
               fi
-              JAN_EOF_xmas_countdown_xmas_countdown_sh_efa6fe54a844
-              chmod +x "$tmpdir/xmas-countdown.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/xmas-countdown.sh" "$@"
           passthrough: true
   xmas-decorate:
     about: |
@@ -596,14 +429,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/xmas-decorate.sh" <<'JAN_EOF_xmas_decorate_xmas_decorate_sh_8f116a869cef'
-              #!/bin/bash
               # Christmas Decoration Script
               # Adds festive ASCII art to terminal
 
@@ -626,8 +454,4 @@ commands:
               if command -v tput >/dev/null 2>&1; then
                   echo -e "\033[0;32m"  # Green
               fi
-              JAN_EOF_xmas_decorate_xmas_decorate_sh_8f116a869cef
-              chmod +x "$tmpdir/xmas-decorate.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/xmas-decorate.sh" "$@"
           passthrough: true

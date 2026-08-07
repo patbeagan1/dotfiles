@@ -110,8 +110,8 @@ def render_argv_block(
             out.append(code_indent + cl)
         else:
             out.append("")
-    if passthrough and len(argv_head) >= 2 and argv_head[1] in {"-lc", "-c"}:
-        out.append(f"{item}jan-script")
+    # Do not inject a fake $0: with `passthrough: true`, jan appends user args after
+    # the -c/-lc string, matching classic `bash -lc '…' -- args` ($0=--, $@=args).
     return out
 
 
@@ -127,12 +127,14 @@ def extract_heredoc(lines: list[str], start_idx: int, tag: str) -> list[str]:
 
 
 def find_wrapper_start(lines: list[str], exec_idx: int) -> int | None:
-    for j in range(exec_idx, max(-1, exec_idx - 40), -1):
+    for j in range(exec_idx, max(-1, exec_idx - 5000), -1):
         if MKTEMP_RE.search(lines[j]):
             start = j
             if start > 0 and "set -euo pipefail" in lines[start - 1]:
                 start -= 1
             return start
+        # don't cross into a previous script's run block blindly forever —
+        # but heredocs can be long; 5000 lines is enough for this tree.
     return None
 
 

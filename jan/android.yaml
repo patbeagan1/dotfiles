@@ -23,33 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_android-dump" <<'JAN_EOF_android_dump__android_dump_1a56787e9d59'
-              #compdef android-dump
-
-              # Zsh completion for android-dump
-              # Generated automatically - customize as needed
-
-              _android-dump() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _android-dump "$@"
-              JAN_EOF_android_dump__android_dump_1a56787e9d59
-              chmod +x "$tmpdir/_android-dump" 2>/dev/null || true
-              cat >"$tmpdir/android-dump.sh" <<'JAN_EOF_android_dump_android_dump_sh_920fa61e5d2c'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -81,10 +57,6 @@ commands:
 
               android-dump "$@" || help
               trackusage "$0"
-              JAN_EOF_android_dump_android_dump_sh_920fa61e5d2c
-              chmod +x "$tmpdir/android-dump.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/android-dump.sh" "$@"
           passthrough: true
   android_dumpsys:
     about: A script for automated tasks.
@@ -106,38 +78,10 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_android_dumpsys" <<'JAN_EOF_android_dumpsys__android_dumpsys_b1835a3c670b'
-              #compdef android_dumpsys
-
-              # Zsh completion for android_dumpsys
-              # Generated automatically - customize as needed
-
-              _android_dumpsys() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _android_dumpsys "$@"
-              JAN_EOF_android_dumpsys__android_dumpsys_b1835a3c670b
-              chmod +x "$tmpdir/_android_dumpsys" 2>/dev/null || true
-              cat >"$tmpdir/android_dumpsys.sh" <<'JAN_EOF_android_dumpsys_android_dumpsys_sh_47fd694e4c7e'
-              #!/bin/bash
               adb shell dumpsys activity top
-              JAN_EOF_android_dumpsys_android_dumpsys_sh_47fd694e4c7e
-              chmod +x "$tmpdir/android_dumpsys.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/android_dumpsys.sh" "$@"
           passthrough: true
   android_enable_developer:
     about: A script for automated tasks.
@@ -159,40 +103,11 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_android_enable_developer" <<'JAN_EOF_android_enable_developer__android_enable_develop_be56e4a6df62'
-              #compdef android_enable_developer
-
-              # Zsh completion for android_enable_developer
-              # Generated automatically - customize as needed
-
-              _android_enable_developer() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _android_enable_developer "$@"
-              JAN_EOF_android_enable_developer__android_enable_develop_be56e4a6df62
-              chmod +x "$tmpdir/_android_enable_developer" 2>/dev/null || true
-              cat >"$tmpdir/android_enable_developer.sh" <<'JAN_EOF_android_enable_developer_android_enable_develope_735220236f38'
-              #!/usr/bin/env zsh
-
               adb shell settings put global development_settings_enabled 1
               adb shell settings put global always_finish_activities 1
-              JAN_EOF_android_enable_developer_android_enable_develope_735220236f38
-              chmod +x "$tmpdir/android_enable_developer.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/android_enable_developer.sh" "$@"
           passthrough: true
   emulator-start-charles:
     about: A script for automated tasks.
@@ -214,34 +129,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_emulator-start-charles" <<'JAN_EOF_emulator_start_charles__emulator_start_charles_de0e61f5eaa9'
-              #compdef emulator-start-charles
-
-              # Zsh completion for emulator-start-charles
-              # Generated automatically - customize as needed
-
-              _emulator-start-charles() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _emulator-start-charles "$@"
-              JAN_EOF_emulator_start_charles__emulator_start_charles_de0e61f5eaa9
-              chmod +x "$tmpdir/_emulator-start-charles" 2>/dev/null || true
-              cat >"$tmpdir/emulator-start-charles.sh" <<'JAN_EOF_emulator_start_charles_emulator_start_charles_sh_642b226e999e'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -290,10 +180,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_emulator_start_charles_emulator_start_charles_sh_642b226e999e
-              chmod +x "$tmpdir/emulator-start-charles.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/emulator-start-charles.sh" "$@"
           passthrough: true
   gradle_by_module:
     about: A script for automated tasks.
@@ -315,37 +201,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gradle_by_module" <<'JAN_EOF_gradle_by_module__gradle_by_module_d8c0b4bd2af7'
-              #compdef gradle_by_module
-
-              # Zsh completion for gradle_by_module
-              # Generated automatically - customize as needed
-
-
-              _gradle_by_module() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '-d[Custom option]' \
-                      '-h[Custom option]' \
-                      '-t[Custom option]' \        '*::arg:_files'
-              }
-
-              _gradle_by_module "$@"
-              JAN_EOF_gradle_by_module__gradle_by_module_d8c0b4bd2af7
-              chmod +x "$tmpdir/_gradle_by_module" 2>/dev/null || true
-              cat >"$tmpdir/gradle_by_module.zsh" <<'JAN_EOF_gradle_by_module_gradle_by_module_zsh_afc8c6bee8ca'
-              #!/bin/zsh
-
               show_help() {
                 cat <<EOF
               Usage: $(basename "$0") [options]
@@ -457,8 +315,4 @@ commands:
               echo
 
               eval "$gradle_cmd ${gradle_tasks[*]}"
-              JAN_EOF_gradle_by_module_gradle_by_module_zsh_afc8c6bee8ca
-              chmod +x "$tmpdir/gradle_by_module.zsh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gradle_by_module.zsh" "$@"
           passthrough: true

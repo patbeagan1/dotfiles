@@ -23,33 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_append_keyword" <<'JAN_EOF_append_keyword__append_keyword_8adc22db64ef'
-              #compdef append_keyword
-
-              # Zsh completion for append_keyword
-              # Generated automatically - customize as needed
-
-              _append_keyword() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _append_keyword "$@"
-              JAN_EOF_append_keyword__append_keyword_8adc22db64ef
-              chmod +x "$tmpdir/_append_keyword" 2>/dev/null || true
-              cat >"$tmpdir/append_keyword.sh" <<'JAN_EOF_append_keyword_append_keyword_sh_b74588f4e4ec'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
               photo="'$1'"
               shift
@@ -62,10 +38,6 @@ commands:
               eval "$cmd"
 
               trackusage "$0"
-              JAN_EOF_append_keyword_append_keyword_sh_b74588f4e4ec
-              chmod +x "$tmpdir/append_keyword.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/append_keyword.sh" "$@"
           passthrough: true
   dequote:
     about: A script for automated tasks.
@@ -87,33 +59,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_dequote" <<'JAN_EOF_dequote__dequote_fbb1477f65ed'
-              #compdef dequote
-
-              # Zsh completion for dequote
-              # Generated automatically - customize as needed
-
-              _dequote() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _dequote "$@"
-              JAN_EOF_dequote__dequote_fbb1477f65ed
-              chmod +x "$tmpdir/_dequote" 2>/dev/null || true
-              cat >"$tmpdir/dequote.sh" <<'JAN_EOF_dequote_dequote_sh_5ea548453cd5'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               dequote () 
@@ -122,10 +70,6 @@ commands:
               }
               dequote "$@"
               trackusage "$0"
-              JAN_EOF_dequote_dequote_sh_5ea548453cd5
-              chmod +x "$tmpdir/dequote.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/dequote.sh" "$@"
           passthrough: true
   dictionary:
     about: A script for automated tasks.
@@ -147,33 +91,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_dictionary" <<'JAN_EOF_dictionary__dictionary_f250cb02256c'
-              #compdef dictionary
-
-              # Zsh completion for dictionary
-              # Generated automatically - customize as needed
-
-              _dictionary() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _dictionary "$@"
-              JAN_EOF_dictionary__dictionary_f250cb02256c
-              chmod +x "$tmpdir/_dictionary" 2>/dev/null || true
-              cat >"$tmpdir/dictionary.sh" <<'JAN_EOF_dictionary_dictionary_sh_97a621ad4972'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               dictionary () 
@@ -183,10 +103,6 @@ commands:
 
               dictionary "$@"
               trackusage "$0"
-              JAN_EOF_dictionary_dictionary_sh_97a621ad4972
-              chmod +x "$tmpdir/dictionary.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/dictionary.sh" "$@"
           passthrough: true
   emoji_block_text:
     about: A script for automated tasks.
@@ -208,34 +124,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'node'
+            - '-e'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_emoji_block_text" <<'JAN_EOF_emoji_block_text__emoji_block_text_7745b2051cbc'
-              #compdef emoji_block_text
-
-              # Zsh completion for emoji_block_text
-              # Generated automatically - customize as needed
-
-              _emoji_block_text() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _emoji_block_text "$@"
-              JAN_EOF_emoji_block_text__emoji_block_text_7745b2051cbc
-              chmod +x "$tmpdir/_emoji_block_text" 2>/dev/null || true
-              cat >"$tmpdir/emoji_block_text.js" <<'JAN_EOF_emoji_block_text_emoji_block_text_js_2b4c666180d5'
-              #!/usr/bin/env node
-
               const chars = {
                 ' ': [
                   [0,0,0],
@@ -453,10 +344,6 @@ commands:
                 }
                 process.stdout.write('\r\n');
               }
-              JAN_EOF_emoji_block_text_emoji_block_text_js_2b4c666180d5
-              chmod +x "$tmpdir/emoji_block_text.js" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/emoji_block_text.js" "$@"
           passthrough: true
   format-latex-color:
     about: A script for automated tasks.
@@ -478,34 +365,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_format-latex-color" <<'JAN_EOF_format_latex_color__format_latex_color_cac297b77f24'
-              #compdef format-latex-color
-
-              # Zsh completion for format-latex-color
-              # Generated automatically - customize as needed
-
-              _format-latex-color() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _format-latex-color "$@"
-              JAN_EOF_format_latex_color__format_latex_color_cac297b77f24
-              chmod +x "$tmpdir/_format-latex-color" 2>/dev/null || true
-              cat >"$tmpdir/format-latex-color.py" <<'JAN_EOF_format_latex_color_format_latex_color_py_a25639d6e892'
-              #!/usr/bin/env python3
-
               import argparse
               import random
 
@@ -539,7 +401,7 @@ commands:
                       elif method == "keyword":
                           if keyword_map is None:
                               raise ValueError("keyword_map must be provided for 'keyword' method.")
-                          
+
                           matched = False
                           for keyword, color in keyword_map.items():
                               if keyword.lower() in word.lower():
@@ -630,10 +492,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_format_latex_color_format_latex_color_py_a25639d6e892
-              chmod +x "$tmpdir/format-latex-color.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/format-latex-color.py" "$@"
           passthrough: true
   quote:
     about: A script for automated tasks.
@@ -655,33 +513,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_quote" <<'JAN_EOF_quote__quote_500889461425'
-              #compdef quote
-
-              # Zsh completion for quote
-              # Generated automatically - customize as needed
-
-              _quote() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _quote "$@"
-              JAN_EOF_quote__quote_500889461425
-              chmod +x "$tmpdir/_quote" 2>/dev/null || true
-              cat >"$tmpdir/quote.sh" <<'JAN_EOF_quote_quote_sh_0089cfa5f4dd'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               quote () 
@@ -692,10 +526,6 @@ commands:
 
               quote "$@"
               trackusage "$0"
-              JAN_EOF_quote_quote_sh_0089cfa5f4dd
-              chmod +x "$tmpdir/quote.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/quote.sh" "$@"
           passthrough: true
   simplify-prose:
     about: A script for automated tasks.
@@ -717,33 +547,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_simplify-prose" <<'JAN_EOF_simplify_prose__simplify_prose_07590cf83e45'
-              #compdef simplify-prose
-
-              # Zsh completion for simplify-prose
-              # Generated automatically - customize as needed
-
-              _simplify-prose() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _simplify-prose "$@"
-              JAN_EOF_simplify_prose__simplify_prose_07590cf83e45
-              chmod +x "$tmpdir/_simplify-prose" 2>/dev/null || true
-              cat >"$tmpdir/simplify-prose.sh" <<'JAN_EOF_simplify_prose_simplify_prose_sh_0592843e90ef'
-              #!/usr/bin/env zsh
               # (c) 2022 Pat Beagan: MIT License
 
               set -euo pipefail
@@ -906,10 +712,6 @@ commands:
                 help
               fi
               trackusage "$0"
-              JAN_EOF_simplify_prose_simplify_prose_sh_0592843e90ef
-              chmod +x "$tmpdir/simplify-prose.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/simplify-prose.sh" "$@"
           passthrough: true
   text-to-keypad:
     about: A script for automated tasks.
@@ -931,33 +733,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_text-to-keypad" <<'JAN_EOF_text_to_keypad__text_to_keypad_2e081d7738c7'
-              #compdef text-to-keypad
-
-              # Zsh completion for text-to-keypad
-              # Generated automatically - customize as needed
-
-              _text-to-keypad() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _text-to-keypad "$@"
-              JAN_EOF_text_to_keypad__text_to_keypad_2e081d7738c7
-              chmod +x "$tmpdir/_text-to-keypad" 2>/dev/null || true
-              cat >"$tmpdir/text-to-keypad.py" <<'JAN_EOF_text_to_keypad_text_to_keypad_py_172e3de3627d'
-              #!/usr/bin/env python3
               import sys
 
               def keypad_translate(text):
@@ -980,10 +758,6 @@ commands:
 
               text = " ".join(sys.argv[1:])
               print(keypad_translate(text))   # Output: '112'
-              JAN_EOF_text_to_keypad_text_to_keypad_py_172e3de3627d
-              chmod +x "$tmpdir/text-to-keypad.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/text-to-keypad.py" "$@"
           passthrough: true
   tocamelcase:
     about: A script for automated tasks.
@@ -1005,33 +779,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_tocamelcase" <<'JAN_EOF_tocamelcase__tocamelcase_d0bd3341a0af'
-              #compdef tocamelcase
-
-              # Zsh completion for tocamelcase
-              # Generated automatically - customize as needed
-
-              _tocamelcase() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _tocamelcase "$@"
-              JAN_EOF_tocamelcase__tocamelcase_d0bd3341a0af
-              chmod +x "$tmpdir/_tocamelcase" 2>/dev/null || true
-              cat >"$tmpdir/tocamelcase.sh" <<'JAN_EOF_tocamelcase_tocamelcase_sh_4511cf500364'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               tocamelcase () 
@@ -1040,10 +790,6 @@ commands:
               }
 
               tocamelcase "$@"
-              JAN_EOF_tocamelcase_tocamelcase_sh_4511cf500364
-              chmod +x "$tmpdir/tocamelcase.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/tocamelcase.sh" "$@"
           passthrough: true
   tosnakecase:
     about: A script for automated tasks.
@@ -1065,33 +811,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_tosnakecase" <<'JAN_EOF_tosnakecase__tosnakecase_cf2145692c68'
-              #compdef tosnakecase
-
-              # Zsh completion for tosnakecase
-              # Generated automatically - customize as needed
-
-              _tosnakecase() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _tosnakecase "$@"
-              JAN_EOF_tosnakecase__tosnakecase_cf2145692c68
-              chmod +x "$tmpdir/_tosnakecase" 2>/dev/null || true
-              cat >"$tmpdir/tosnakecase.sh" <<'JAN_EOF_tosnakecase_tosnakecase_sh_a76814513c94'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               tosnakecase () 
@@ -1100,8 +822,4 @@ commands:
               }
 
               tosnakecase "$@"
-              JAN_EOF_tosnakecase_tosnakecase_sh_a76814513c94
-              chmod +x "$tmpdir/tosnakecase.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/tosnakecase.sh" "$@"
           passthrough: true

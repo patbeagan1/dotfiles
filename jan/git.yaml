@@ -23,34 +23,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_add-submodule" <<'JAN_EOF_add_submodule__add_submodule_36531f2d4fd4'
-              #compdef add-submodule
-
-              # Zsh completion for add-submodule
-              # Generated automatically - customize as needed
-
-              _add-submodule() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _add-submodule "$@"
-              JAN_EOF_add_submodule__add_submodule_36531f2d4fd4
-              chmod +x "$tmpdir/_add-submodule" 2>/dev/null || true
-              cat >"$tmpdir/add-submodule.sh" <<'JAN_EOF_add_submodule_add_submodule_sh_9a6e0c506706'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -130,10 +105,6 @@ commands:
               }
 
               add_submodule "$@"
-              JAN_EOF_add_submodule_add_submodule_sh_9a6e0c506706
-              chmod +x "$tmpdir/add-submodule.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/add-submodule.sh" "$@"
           passthrough: true
   autogit:
     about: A script for automated tasks.
@@ -155,34 +126,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_autogit" <<'JAN_EOF_autogit__autogit_60d4f772af26'
-              #compdef autogit
-
-              # Zsh completion for autogit
-              # Generated automatically - customize as needed
-
-              _autogit() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _autogit "$@"
-              JAN_EOF_autogit__autogit_60d4f772af26
-              chmod +x "$tmpdir/_autogit" 2>/dev/null || true
-              cat >"$tmpdir/autogit.py" <<'JAN_EOF_autogit_autogit_py_344d63df589e'
-              #!/usr/bin/env python3
-
               import os
               import subprocess
               import time
@@ -234,10 +180,6 @@ commands:
 
               if __name__ == "__main__":
                   main()
-              JAN_EOF_autogit_autogit_py_344d63df589e
-              chmod +x "$tmpdir/autogit.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/autogit.py" "$@"
           passthrough: true
   bcommit:
     about: A script for automated tasks.
@@ -259,33 +201,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_bcommit" <<'JAN_EOF_bcommit__bcommit_893a31eea55e'
-              #compdef bcommit
-
-              # Zsh completion for bcommit
-              # Generated automatically - customize as needed
-
-              _bcommit() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _bcommit "$@"
-              JAN_EOF_bcommit__bcommit_893a31eea55e
-              chmod +x "$tmpdir/_bcommit" 2>/dev/null || true
-              cat >"$tmpdir/bcommit.sh" <<'JAN_EOF_bcommit_bcommit_sh_cebc7fff5174'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               bcommit () 
@@ -333,10 +251,6 @@ commands:
                   fi
               }
               bcommit "$@"
-              JAN_EOF_bcommit_bcommit_sh_cebc7fff5174
-              chmod +x "$tmpdir/bcommit.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/bcommit.sh" "$@"
           passthrough: true
   check-all-git-repos:
     about: A script for automated tasks.
@@ -358,34 +272,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_check-all-git-repos" <<'JAN_EOF_check_all_git_repos__check_all_git_repos_f06e3fbe2248'
-              #compdef check-all-git-repos
-
-              # Zsh completion for check-all-git-repos
-              # Generated automatically - customize as needed
-
-              _check-all-git-repos() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _check-all-git-repos "$@"
-              JAN_EOF_check_all_git_repos__check_all_git_repos_f06e3fbe2248
-              chmod +x "$tmpdir/_check-all-git-repos" 2>/dev/null || true
-              cat >"$tmpdir/check-all-git-repos.sh" <<'JAN_EOF_check_all_git_repos_check_all_git_repos_sh_8bd7140055f6'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -435,10 +324,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_check_all_git_repos_check_all_git_repos_sh_8bd7140055f6
-              chmod +x "$tmpdir/check-all-git-repos.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/check-all-git-repos.sh" "$@"
           passthrough: true
   create-ticket:
     about: A script for automated tasks.
@@ -460,34 +345,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_create-ticket" <<'JAN_EOF_create_ticket__create_ticket_0d7558bb1002'
-              #compdef create-ticket
-
-              # Zsh completion for create-ticket
-              # Generated automatically - customize as needed
-
-              _create-ticket() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _create-ticket "$@"
-              JAN_EOF_create_ticket__create_ticket_0d7558bb1002
-              chmod +x "$tmpdir/_create-ticket" 2>/dev/null || true
-              cat >"$tmpdir/create-ticket.sh" <<'JAN_EOF_create_ticket_create_ticket_sh_83a076ee7c80'
-              #!/bin/bash
-
               curl --verbose \
                 --get \
                 --data-urlencode "pid=10047" \
@@ -498,10 +358,6 @@ commands:
                 --data-urlencode "assignee=ug%3A03682da5-16e1-4bbe-a74c-1c2d69a71c10" \
                 --data-urlencode "summary=$1" \
                 "https://alltrails.atlassian.net/secure/CreateIssueDetails!init.jspa"
-              JAN_EOF_create_ticket_create_ticket_sh_83a076ee7c80
-              chmod +x "$tmpdir/create-ticket.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/create-ticket.sh" "$@"
           passthrough: true
   gd:
     about: |
@@ -524,31 +380,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'python3'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gd" <<'JAN_EOF_gd__gd_d27dca0c4ec3'
-              #compdef gd
-
-              # Zsh completion for gd (interactive git diff TUI)
-              _gd() {
-                  local context state line
-                  typeset -A opt_args
-
-                  _arguments -C \
-                      '(-c --cached)'{-c,--cached}'[Show staged (cached) diff only]' \
-                      '(-h --help)'{-h,--help}'[Show help]' \
-                      '*::path:_files -/'
-              }
-
-              _gd "$@"
-              JAN_EOF_gd__gd_d27dca0c4ec3
-              chmod +x "$tmpdir/_gd" 2>/dev/null || true
-              cat >"$tmpdir/gd.py" <<'JAN_EOF_gd_gd_py_6478a88d2b30'
-              #!/usr/bin/env python3
               # (c) 2025 Pat Beagan: MIT License
               """
               Interactive gd (git diff) TUI - like gitg.
@@ -825,10 +659,6 @@ commands:
 
               if __name__ == "__main__":
                   sys.exit(main())
-              JAN_EOF_gd_gd_py_6478a88d2b30
-              chmod +x "$tmpdir/gd.py" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gd.py" "$@"
           passthrough: true
   gitfile:
     about: A script for automated tasks.
@@ -850,33 +680,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gitfile" <<'JAN_EOF_gitfile__gitfile_ed4746ad3663'
-              #compdef gitfile
-
-              # Zsh completion for gitfile
-              # Generated automatically - customize as needed
-
-              _gitfile() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _gitfile "$@"
-              JAN_EOF_gitfile__gitfile_ed4746ad3663
-              chmod +x "$tmpdir/_gitfile" 2>/dev/null || true
-              cat >"$tmpdir/gitfile.sh" <<'JAN_EOF_gitfile_gitfile_sh_61c09d0317c6'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               gitfile () 
@@ -885,10 +691,6 @@ commands:
               }
 
               gitfile "$@"
-              JAN_EOF_gitfile_gitfile_sh_61c09d0317c6
-              chmod +x "$tmpdir/gitfile.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gitfile.sh" "$@"
           passthrough: true
   gitfilehistory:
     about: A script for automated tasks.
@@ -910,33 +712,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gitfilehistory" <<'JAN_EOF_gitfilehistory__gitfilehistory_0c75b99bbaf7'
-              #compdef gitfilehistory
-
-              # Zsh completion for gitfilehistory
-              # Generated automatically - customize as needed
-
-              _gitfilehistory() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _gitfilehistory "$@"
-              JAN_EOF_gitfilehistory__gitfilehistory_0c75b99bbaf7
-              chmod +x "$tmpdir/_gitfilehistory" 2>/dev/null || true
-              cat >"$tmpdir/gitfilehistory.sh" <<'JAN_EOF_gitfilehistory_gitfilehistory_sh_d070ea1be00a'
-              #!/bin/bash
               # (c) 2022 Pat Beagan: MIT License
 
               gitfilehistory () 
@@ -945,10 +723,6 @@ commands:
               }
 
               gitfilehistory "$@"
-              JAN_EOF_gitfilehistory_gitfilehistory_sh_d070ea1be00a
-              chmod +x "$tmpdir/gitfilehistory.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gitfilehistory.sh" "$@"
           passthrough: true
   gitflux:
     about: A script for automated tasks.
@@ -970,33 +744,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gitflux" <<'JAN_EOF_gitflux__gitflux_c4258fa23fbf'
-              #compdef gitflux
-
-              # Zsh completion for gitflux
-              # Generated automatically - customize as needed
-
-              _gitflux() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _gitflux "$@"
-              JAN_EOF_gitflux__gitflux_c4258fa23fbf
-              chmod +x "$tmpdir/_gitflux" 2>/dev/null || true
-              cat >"$tmpdir/gitflux.sh" <<'JAN_EOF_gitflux_gitflux_sh_a76a2c79c977'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               gitflux () 
@@ -1008,10 +758,6 @@ commands:
               }
 
               gitflux "$@"
-              JAN_EOF_gitflux_gitflux_sh_a76a2c79c977
-              chmod +x "$tmpdir/gitflux.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gitflux.sh" "$@"
           passthrough: true
   gitsync:
     about: A script for automated tasks.
@@ -1033,33 +779,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_gitsync" <<'JAN_EOF_gitsync__gitsync_343209a296f1'
-              #compdef gitsync
-
-              # Zsh completion for gitsync
-              # Generated automatically - customize as needed
-
-              _gitsync() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _gitsync "$@"
-              JAN_EOF_gitsync__gitsync_343209a296f1
-              chmod +x "$tmpdir/_gitsync" 2>/dev/null || true
-              cat >"$tmpdir/gitsync.sh" <<'JAN_EOF_gitsync_gitsync_sh_9fefc34cfdf1'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               gitsync () 
@@ -1068,10 +790,6 @@ commands:
               }
 
               gitsync "$@"
-              JAN_EOF_gitsync_gitsync_sh_9fefc34cfdf1
-              chmod +x "$tmpdir/gitsync.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/gitsync.sh" "$@"
           passthrough: true
   jj:
     about: A script for automated tasks.
@@ -1093,33 +811,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_jj" <<'JAN_EOF_jj__jj_0ef9d1044658'
-              #compdef jj
-
-              # Zsh completion for jj
-              # Generated automatically - customize as needed
-
-              _jj() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _jj "$@"
-              JAN_EOF_jj__jj_0ef9d1044658
-              chmod +x "$tmpdir/_jj" 2>/dev/null || true
-              cat >"$tmpdir/jj.sh" <<'JAN_EOF_jj_jj_sh_cdcaa72af963'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               jj () 
@@ -1130,10 +824,6 @@ commands:
 
               jj "$@"
               trackusage "$0"
-              JAN_EOF_jj_jj_sh_cdcaa72af963
-              chmod +x "$tmpdir/jj.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/jj.sh" "$@"
           passthrough: true
   merge-project:
     about: A script for automated tasks.
@@ -1155,34 +845,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
-            - '-lc'
+            - 'zsh'
+            - '-c'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_merge-project" <<'JAN_EOF_merge_project__merge_project_b861c1ccd239'
-              #compdef merge-project
-
-              # Zsh completion for merge-project
-              # Generated automatically - customize as needed
-
-              _merge-project() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _merge-project "$@"
-              JAN_EOF_merge_project__merge_project_b861c1ccd239
-              chmod +x "$tmpdir/_merge-project" 2>/dev/null || true
-              cat >"$tmpdir/merge-project.sh" <<'JAN_EOF_merge_project_merge_project_sh_67635b038c2d'
-              #!/usr/bin/env zsh
-
               set -euo pipefail
 
               scriptname="$(basename "$0")"
@@ -1226,10 +891,6 @@ commands:
 
               main "$@" || help
               trackusage "$0"
-              JAN_EOF_merge_project_merge_project_sh_67635b038c2d
-              chmod +x "$tmpdir/merge-project.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/merge-project.sh" "$@"
           passthrough: true
   mergetest:
     about: A script for automated tasks.
@@ -1251,33 +912,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_mergetest" <<'JAN_EOF_mergetest__mergetest_e03e9b78f88f'
-              #compdef mergetest
-
-              # Zsh completion for mergetest
-              # Generated automatically - customize as needed
-
-              _mergetest() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _mergetest "$@"
-              JAN_EOF_mergetest__mergetest_e03e9b78f88f
-              chmod +x "$tmpdir/_mergetest" 2>/dev/null || true
-              cat >"$tmpdir/mergetest.sh" <<'JAN_EOF_mergetest_mergetest_sh_d019ca05416c'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               mergetest () 
@@ -1288,10 +925,6 @@ commands:
               }
 
               mergetest "$@"
-              JAN_EOF_mergetest_mergetest_sh_d019ca05416c
-              chmod +x "$tmpdir/mergetest.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/mergetest.sh" "$@"
           passthrough: true
   repick:
     about: A script for automated tasks.
@@ -1313,33 +946,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_repick" <<'JAN_EOF_repick__repick_af92723b02dc'
-              #compdef repick
-
-              # Zsh completion for repick
-              # Generated automatically - customize as needed
-
-              _repick() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _repick "$@"
-              JAN_EOF_repick__repick_af92723b02dc
-              chmod +x "$tmpdir/_repick" 2>/dev/null || true
-              cat >"$tmpdir/repick.sh" <<'JAN_EOF_repick_repick_sh_a8fa712ef11b'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               repick () 
@@ -1391,10 +1000,6 @@ commands:
                   fi
               }
               repick "$@"
-              JAN_EOF_repick_repick_sh_a8fa712ef11b
-              chmod +x "$tmpdir/repick.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/repick.sh" "$@"
           passthrough: true
   resquash:
     about: A script for automated tasks.
@@ -1416,33 +1021,9 @@ commands:
         about: 'Run the script (inlined); forwards args.'
         exec:
           argv:
-            - bash
+            - 'bash'
             - '-lc'
             - |
-              set -euo pipefail
-              tmpdir="$(mktemp -d)"
-              trap 'rm -rf "$tmpdir"' EXIT
-              cat >"$tmpdir/_resquash" <<'JAN_EOF_resquash__resquash_b19feeb168cf'
-              #compdef resquash
-
-              # Zsh completion for resquash
-              # Generated automatically - customize as needed
-
-              _resquash() {
-                  local context state line
-                  typeset -A opt_args
-                  
-                  _arguments -C \
-                      '(-h --help)'{-h,--help}'[Show help information]' \
-                      '(-v --version)'{-v,--version}'[Show version information]' \
-                      '*::arg:_files'
-              }
-
-              _resquash "$@"
-              JAN_EOF_resquash__resquash_b19feeb168cf
-              chmod +x "$tmpdir/_resquash" 2>/dev/null || true
-              cat >"$tmpdir/resquash.sh" <<'JAN_EOF_resquash_resquash_sh_9d327945ce1e'
-              #!/bin/bash 
               # (c) 2022 Pat Beagan: MIT License
 
               resquash () 
@@ -1510,10 +1091,6 @@ commands:
               }
 
               resquash "$@"
-              JAN_EOF_resquash_resquash_sh_9d327945ce1e
-              chmod +x "$tmpdir/resquash.sh" 2>/dev/null || true
-              cd "$tmpdir"
-              exec "$tmpdir/resquash.sh" "$@"
           passthrough: true
 
   gh-audit:
