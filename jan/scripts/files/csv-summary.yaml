@@ -3,7 +3,7 @@ about: |
   optional group-by rollup. Useful for quick looks at exports and logs.
 packages:
   uv:
-    - pandas
+    - pandas==3.0.5
 inputs:
   file:
     description: Path to CSV or TSV file

@@ -27,7 +27,8 @@ const startUrl = "https://api.scryfall.com/cards/search" +
   "&order=set" +
   "&page=1" +
   "&q=e%3A" +
-  "sok" +
+  "tla" +
+  // "sok" +
   // "neo" +
   // "dmu" +
   "&unique=prints";
