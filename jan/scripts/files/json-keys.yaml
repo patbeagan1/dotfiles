@@ -1,7 +1,7 @@
 about: |
   List top-level keys of a JSON object (types included). Shares the same
   `packages.gradle` jackson-databind pin as `json-summary`, so both scripts
-  reuse one hash-keyed jar env; each `.kt` still compiles once into that env.
+  reuse one hash-keyed jar env. Kotlin is inlined in this YAML (compile-once).
 packages:
   gradle:
     - com.fasterxml.jackson.core:jackson-databind:2.18.3
@@ -22,6 +22,7 @@ commands:
 
           Print sorted top-level object keys with a simple type tag.
           Shares packages.gradle with json-summary (same CLASSPATH env).
+          Source is inlined in this YAML via exec.kotlin.
 
           usage:
             jan scripts files json-keys run --file payload.json
@@ -32,6 +33,54 @@ commands:
   run:
     about: List top-level JSON object keys.
     exec:
-      kotlin: scripts/files/json-keys.kt
+      kotlin: |
+        import com.fasterxml.jackson.databind.JsonNode
+        import com.fasterxml.jackson.databind.ObjectMapper
+        import java.io.File
+
+        fun main(args: Array<String>) {
+            if (args.isEmpty()) {
+                System.err.println("usage: InlineKt <file|->")
+                kotlin.system.exitProcess(2)
+            }
+            val fileArg = args[0]
+            val mapper = ObjectMapper()
+            val root: JsonNode = if (fileArg == "-") {
+                mapper.readTree(System.`in`)
+            } else {
+                val f = File(expandHome(fileArg))
+                if (!f.isFile) {
+                    System.err.println("file not found: $fileArg")
+                    kotlin.system.exitProcess(2)
+                }
+                mapper.readTree(f)
+            }
+
+            if (!root.isObject) {
+                System.err.println("root is not a JSON object (got ${root.nodeType})")
+                kotlin.system.exitProcess(1)
+            }
+            for (name in root.fieldNames().asSequence().toList().sorted()) {
+                val child = root.get(name)
+                val kind = when {
+                    child.isObject -> "object"
+                    child.isArray -> "array(${child.size()})"
+                    child.isTextual -> "string"
+                    child.isNumber -> "number"
+                    child.isBoolean -> "boolean"
+                    child.isNull -> "null"
+                    else -> child.nodeType.toString().lowercase()
+                }
+                println("$name\t$kind")
+            }
+        }
+
+        fun expandHome(path: String): String {
+            if (path == "~") return System.getProperty("user.home")
+            if (path.startsWith("~/") || path.startsWith("~\\")) {
+                return System.getProperty("user.home") + path.substring(1)
+            }
+            return path
+        }
       argv:
         - "${{ inputs.file }}"
