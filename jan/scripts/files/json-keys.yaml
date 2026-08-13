@@ -1,0 +1,37 @@
+about: |
+  List top-level keys of a JSON object (types included). Shares the same
+  `packages.gradle` jackson-databind pin as `json-summary`, so both scripts
+  reuse one hash-keyed jar env; each `.kt` still compiles once into that env.
+packages:
+  gradle:
+    - com.fasterxml.jackson.core:jackson-databind:2.18.3
+inputs:
+  file:
+    description: Path to a JSON file, or - for stdin
+    default: "-"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          json-keys
+
+          Print sorted top-level object keys with a simple type tag.
+          Shares packages.gradle with json-summary (same CLASSPATH env).
+
+          usage:
+            jan scripts files json-keys run --file payload.json
+            cat payload.json | jan scripts files json-keys run --file -
+
+          Requires: gradle (first resolve), kotlinc (first compile), kotlin (run).
+          EOF
+  run:
+    about: List top-level JSON object keys.
+    exec:
+      kotlin: scripts/files/json-keys.kt
+      argv:
+        - "${{ inputs.file }}"

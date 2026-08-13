@@ -1,7 +1,8 @@
 about: |
   Inspect JSON with Jackson (via packages.gradle): pretty-print (ANSI-colored),
   structural summary, or a simple dotted-path extract. Useful for API payloads
-  and config dumps. jan compiles the Kotlin once into the package cache.
+  and config dumps. jan compiles the Kotlin once into the package cache. Shares
+  the jackson-databind pin with `json-keys` (same gradle env hash).
 packages:
   gradle:
     - com.fasterxml.jackson.core:jackson-databind:2.18.3
