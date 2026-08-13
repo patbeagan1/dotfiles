@@ -8,6 +8,8 @@ commands:
     include: scripts/time/halloween-countdown.yaml
   halloween-decorate:
     include: scripts/time/halloween-decorate.yaml
+  birthday-decorate:
+    include: scripts/time/birthday-decorate.yaml
   pause:
     include: scripts/time/pause.yaml
   pomodoro:

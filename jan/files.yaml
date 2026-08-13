@@ -20,6 +20,8 @@ commands:
     include: scripts/files/compare_directories.yaml
   csv-summary:
     include: scripts/files/csv-summary.yaml
+  json-summary:
+    include: scripts/files/json-summary.yaml
   diffall:
     include: scripts/files/diffall.yaml
   filesplit:

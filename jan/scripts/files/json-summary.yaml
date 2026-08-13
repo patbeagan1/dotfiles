@@ -1,0 +1,181 @@
+about: |
+  Inspect JSON with Jackson (via packages.gradle): pretty-print, structural
+  summary, or a simple dotted-path extract. Useful for API payloads and config
+  dumps. Compiles once into the cached gradle env, then runs with `kotlin`.
+packages:
+  gradle:
+    - com.fasterxml.jackson.core:jackson-databind:2.18.3
+requires:
+  - kotlinc
+  - kotlin
+inputs:
+  file:
+    description: Path to a JSON file, or - for stdin
+    default: "-"
+  mode:
+    description: "pretty | summary | path (default pretty)"
+    default: pretty
+  path:
+    description: Dotted path for mode=path (e.g. data.items.0.name)
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      argv:
+        - bash
+        - '-lc'
+        - |
+          cat <<'EOF'
+          json-summary
+
+          Inspect JSON with Jackson (packages.gradle → CLASSPATH).
+
+          usage:
+            jan scripts files json-summary run --file payload.json
+            jan scripts files json-summary run --file payload.json --mode summary
+            jan scripts files json-summary run --file payload.json --mode path --path data.items.0
+            cat payload.json | jan scripts files json-summary run --file -
+
+          modes:
+            pretty   Indent and print the document (default)
+            summary  Types, object keys, array lengths (recursive)
+            path     Extract a dotted path (numbers index arrays)
+
+          Requires: gradle (first resolve), kotlinc + kotlin (compile/run).
+          EOF
+  run:
+    about: Pretty-print, summarize, or extract from JSON.
+    exec:
+      argv:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+          if [[ -z "${CLASSPATH:-}" ]]; then
+            echo "CLASSPATH empty — packages.gradle env was not injected" >&2
+            exit 1
+          fi
+          first="${CLASSPATH%%:*}"
+          env_root="$(cd "$(dirname "$first")/.." && pwd)"
+          src_dir="$env_root/src"
+          classes="$env_root/classes"
+          mkdir -p "$src_dir" "$classes"
+          src="$src_dir/JsonSummary.kt"
+          hash_file="$env_root/.src-hash"
+
+          cat >"$src.new" <<'KOTLIN'
+          import com.fasterxml.jackson.databind.JsonNode
+          import com.fasterxml.jackson.databind.ObjectMapper
+          import com.fasterxml.jackson.databind.SerializationFeature
+          import java.io.File
+
+          fun main(args: Array<String>) {
+              if (args.size < 2) {
+                  System.err.println("usage: JsonSummaryKt <file|-> <pretty|summary|path> [dotted.path]")
+                  kotlin.system.exitProcess(2)
+              }
+              val fileArg = args[0]
+              val mode = args[1].lowercase()
+              val dotted = args.getOrNull(2).orEmpty()
+
+              val mapper = ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT)
+              val root: JsonNode = if (fileArg == "-") {
+                  mapper.readTree(System.`in`)
+              } else {
+                  val f = File(fileArg)
+                  if (!f.isFile) {
+                      System.err.println("file not found: $fileArg")
+                      kotlin.system.exitProcess(2)
+                  }
+                  mapper.readTree(f)
+              }
+
+              when (mode) {
+                  "pretty" -> println(mapper.writeValueAsString(root))
+                  "summary" -> {
+                      println("json summary")
+                      summarize(root, "", 0)
+                  }
+                  "path" -> {
+                      if (dotted.isBlank()) {
+                          System.err.println("mode=path requires a dotted --path")
+                          kotlin.system.exitProcess(2)
+                      }
+                      val node = walk(root, dotted)
+                      if (node == null || node.isMissingNode) {
+                          System.err.println("path not found: $dotted")
+                          kotlin.system.exitProcess(1)
+                      }
+                      if (node.isValueNode && !node.isBinary) {
+                          println(node.asText())
+                      } else {
+                          println(mapper.writeValueAsString(node))
+                      }
+                  }
+                  else -> {
+                      System.err.println("unknown mode: $mode (pretty|summary|path)")
+                      kotlin.system.exitProcess(2)
+                  }
+              }
+          }
+
+          fun walk(node: JsonNode, dotted: String): JsonNode? {
+              var cur: JsonNode = node
+              for (part in dotted.split('.').filter { it.isNotEmpty() }) {
+                  cur = when {
+                      cur.isArray && part.toIntOrNull() != null -> cur.get(part.toInt())
+                      cur.isObject -> cur.get(part)
+                      else -> return null
+                  } ?: return null
+              }
+              return cur
+          }
+
+          fun summarize(node: JsonNode, path: String, depth: Int) {
+              val indent = "  ".repeat(depth)
+              val label = if (path.isEmpty()) "(root)" else path
+              when {
+                  node.isObject -> {
+                      val fields = node.fieldNames().asSequence().toList().sorted()
+                      println("$indent$label: object (${fields.size} keys)")
+                      for (name in fields) {
+                          summarize(node.get(name), name, depth + 1)
+                      }
+                  }
+                  node.isArray -> {
+                      println("$indent$label: array (${node.size()} items)")
+                      if (node.size() > 0) {
+                          println("$indent  [0] sample:")
+                          summarize(node.get(0), "[0]", depth + 2)
+                      }
+                  }
+                  node.isTextual -> println("$indent$label: string (${node.asText().length} chars)")
+                  node.isNumber -> println("$indent$label: number = ${node.numberValue()}")
+                  node.isBoolean -> println("$indent$label: boolean = ${node.booleanValue()}")
+                  node.isNull -> println("$indent$label: null")
+                  else -> println("$indent$label: ${node.nodeType}")
+              }
+          }
+          KOTLIN
+
+          new_hash="$(sha256sum "$src.new" | awk '{print $1}')"
+          old_hash="$(cat "$hash_file" 2>/dev/null || true)"
+          if [[ "$new_hash" != "$old_hash" || ! -e "$classes/JsonSummaryKt.class" ]]; then
+            mv "$src.new" "$src"
+            rm -rf "$classes"
+            mkdir -p "$classes"
+            kotlinc -cp "$CLASSPATH" -d "$classes" "$src"
+            printf '%s\n' "$new_hash" >"$hash_file"
+          else
+            rm -f "$src.new"
+          fi
+
+          file_arg='${{ inputs.file }}'
+          mode_arg='${{ inputs.mode }}'
+          path_arg='${{ inputs.path }}'
+          # Expand ~ in file paths
+          if [[ "$file_arg" != "-" && "$file_arg" == ~* ]]; then
+            file_arg="${file_arg/#\~/$HOME}"
+          fi
+          kotlin -cp "$CLASSPATH:$classes" JsonSummaryKt "$file_arg" "$mode_arg" "$path_arg"
