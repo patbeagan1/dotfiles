@@ -4,7 +4,9 @@ about: |
   reuse one hash-keyed jar env. Kotlin is inlined in this YAML (compile-once).
 packages:
   gradle:
-    - com.fasterxml.jackson.core:jackson-databind:2.18.3
+    java: ">=21"
+    packages:
+      - com.fasterxml.jackson.core:jackson-databind:2.18.3
 inputs:
   file:
     description: Path to a JSON file, or - for stdin

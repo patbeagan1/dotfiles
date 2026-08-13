@@ -5,7 +5,9 @@ about: |
   the jackson-databind pin with `json-keys` (same gradle env hash).
 packages:
   gradle:
-    - com.fasterxml.jackson.core:jackson-databind:2.18.3
+    java: 21
+    packages:
+      - com.fasterxml.jackson.core:jackson-databind:2.18.3
 inputs:
   file:
     description: Path to a JSON file, or - for stdin

@@ -1,11 +1,13 @@
 about: |
   Adds a festive birthday cake ASCII decoration to the terminal, colored with
-  chalk and assembled with lodash. Declares `packages.pnpm` so jan materializes
-  a hash-keyed node_modules before run.
+  chalk and assembled with lodash. Uses `exec.node` (inline) with packages.pnpm
+  and a minimum Node version.
 packages:
   pnpm:
-    - chalk@4.1.2
-    - lodash@4.17.21
+    node: ">=18"
+    packages:
+      - chalk@4.1.2
+      - lodash@4.17.21
 inputs:
   name:
     description: Optional celebrant name
@@ -22,7 +24,9 @@ commands:
           birthday-decorate
 
           Adds a festive birthday cake ASCII decoration to the terminal, colored
-          with chalk and assembled with lodash (via packages.pnpm).
+          with chalk and assembled with lodash (via packages.pnpm + exec.node).
+
+          You can still use argv: [node, -e, …] instead of exec.node if you prefer.
 
           usage:
             jan scripts time birthday-decorate run
@@ -32,58 +36,58 @@ commands:
   run:
     about: Print the birthday decoration.
     exec:
+      node: |
+        const chalk = require("chalk");
+        const _ = require("lodash");
+
+        // exec.node inline: process.argv[0] is node; inputs start at [1].
+        let name = ((process.argv[1] || "").trim() || "");
+        if (name) {
+          name = `, ${name}`;
+        }
+
+        const wishes = _.shuffle([
+          "Make a wish!",
+          "Another trip around the sun.",
+          "Cake first, adulting later.",
+          "May your bugs be few.",
+          "Confetti mode: enabled.",
+        ]);
+        const wish = wishes[0];
+
+        const cake = [
+          "        ,,,,,,",
+          "      .;;;;;;;.",
+          "     ;;;'   ';;;",
+          "     ;;;     ;;;",
+          "     ';;;;;;;;;' ",
+          "       ';;;;;'  ",
+        ];
+        const candles = "       i i i i";
+        const flames = "       * * * *";
+
+        const banner = chalk.bold.magenta(
+          _.pad(` Happy Birthday${name}! `, 28, "*")
+        );
+        const line = chalk.dim(_.repeat("·", 28));
+
+        console.log("");
+        console.log(banner);
+        console.log(line);
+        console.log(chalk.yellow(flames));
+        console.log(chalk.whiteBright(candles));
+        for (const row of cake) {
+          console.log(chalk.cyan(row));
+        }
+        console.log(line);
+        console.log(chalk.green(`  ${wish}`));
+        console.log(chalk.bold.red("  🎂  ") + chalk.bold.yellow("🎉") + chalk.bold.blue("  🎈"));
+        console.log("");
+        console.log(
+          chalk.gray(
+            `  (chalk@${require("chalk/package.json").version}, lodash@${require("lodash/package.json").version}; node ${process.versions.node})`
+          )
+        );
+        console.log("");
       argv:
-        - node
-        - -e
-        - |
-          const chalk = require("chalk");
-          const _ = require("lodash");
-
-          let name = ("${{ inputs.name }}".trim() || "");
-          if(name) { 
-            name = `, ${name}`
-          }
-
-          const wishes = _.shuffle([
-            "Make a wish!",
-            "Another trip around the sun.",
-            "Cake first, adulting later.",
-            "May your bugs be few.",
-            "Confetti mode: enabled.",
-          ]);
-          const wish = wishes[0];
-
-          const cake = [
-            "        ,,,,,,",
-            "      .;;;;;;;.",
-            "     ;;;'   ';;;",
-            "     ;;;     ;;;",
-            "     ';;;;;;;;;' ",
-            "       ';;;;;'  ",
-          ];
-          const candles = "       i i i i";
-          const flames = "       * * * *";
-
-          const banner = chalk.bold.magenta(
-            _.pad(` Happy Birthday${name}! `, 28, "*")
-          );
-          const line = chalk.dim(_.repeat("·", 28));
-
-          console.log("");
-          console.log(banner);
-          console.log(line);
-          console.log(chalk.yellow(flames));
-          console.log(chalk.whiteBright(candles));
-          for (const row of cake) {
-            console.log(chalk.cyan(row));
-          }
-          console.log(line);
-          console.log(chalk.green(`  ${wish}`));
-          console.log(chalk.bold.red("  🎂  ") + chalk.bold.yellow("🎉") + chalk.bold.blue("  🎈"));
-          console.log("");
-          console.log(
-            chalk.gray(
-              `  (chalk@${require("chalk/package.json").version}, lodash@${require("lodash/package.json").version})`
-            )
-          );
-          console.log("");
+        - "${{ inputs.name }}"
