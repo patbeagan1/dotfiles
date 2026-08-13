@@ -16,7 +16,7 @@ commands:
     include: scripts/system/lsdaemons.yaml
   machinetype:
     include: scripts/system/machinetype.yaml
-  sdk:
+  sdk-tool:
     include: scripts/system/sdk.yaml
   server:
     include: scripts/system/server.yaml
