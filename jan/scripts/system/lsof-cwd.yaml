@@ -4,6 +4,7 @@ inputs:
   pid:
     description: Process ID
     required: true
+    type: pid
 commands:
   help:
     about: Describe this script.

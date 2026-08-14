@@ -7,6 +7,7 @@ inputs:
   dir:
     description: Directory to scan (lsof +D)
     default: /etc
+    type: dir
 commands:
   help:
     about: Describe this script.

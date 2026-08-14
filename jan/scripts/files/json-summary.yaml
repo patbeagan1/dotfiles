@@ -12,9 +12,11 @@ inputs:
   file:
     description: Path to a JSON file, or - for stdin
     default: "-"
+    type: file
   mode:
     description: "pretty | summary | path (default pretty)"
     default: pretty
+    choices: [pretty, summary, path]
   path:
     description: Dotted path for mode=path (e.g. data.items.0.name)
     default: ""

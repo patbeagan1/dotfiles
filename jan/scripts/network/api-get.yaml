@@ -8,12 +8,13 @@ env:
   public:
     URL: ${{ inputs.url }}
 inputs:
-  url:
-    description: Absolute HTTPS URL to request
-    required: true
-  header:
-    description: Extra header name to send the key under (default Authorization Bearer)
-    default: Authorization
+    url:
+      description: Absolute HTTPS URL to request
+      required: true
+      type: https
+    header:
+      description: Extra header name to send the key under (default Authorization Bearer)
+      default: Authorization
 commands:
   help:
     about: Describe this script.

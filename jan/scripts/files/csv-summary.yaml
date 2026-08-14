@@ -11,12 +11,14 @@ inputs:
   file:
     description: Path to CSV or TSV file
     required: true
+    type: file
   sep:
     description: Field separator (default , ; use \\t for TSV)
     default: ","
   head:
     description: Number of sample rows to print (0 to skip)
     default: "5"
+    type: int
   group:
     description: Optional column name to aggregate numeric columns by
     default: ""

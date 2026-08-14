@@ -6,9 +6,11 @@ inputs:
   repo:
     description: Path to the local git checkout
     default: "."
+    type: dir
   path:
     description: File or directory inside the repo to delete on the audit branch
     required: true
+    type: path
   base:
     description: Base branch (empty = remote default branch)
     default: ""

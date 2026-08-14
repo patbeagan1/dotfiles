@@ -4,9 +4,11 @@ inputs:
   min_mb:
     description: Minimum size in MiB to include
     default: "1"
+    type: uint
   count:
     description: How many largest entries to show
     default: "10"
+    type: uint
 commands:
   help:
     about: Describe this script.

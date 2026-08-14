@@ -10,15 +10,18 @@ inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
     default: bot
+    choices: [bot, user, raw]
   channels:
     description: Comma-separated channel IDs to watch (empty = all DM channels from /users/@me/channels)
     default: ""
   limit:
     description: Max recent messages to inspect per channel
     default: "25"
+    type: uint
   mark_read:
     description: Set to 1 to advance local cursors after a successful listing
     default: "0"
+    type: bool
 commands:
   help:
     about: Describe this script.

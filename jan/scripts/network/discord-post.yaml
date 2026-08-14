@@ -9,6 +9,7 @@ inputs:
   auth:
     description: Auth mode — bot (default), user, or raw
     default: bot
+    choices: [bot, user, raw]
   channel:
     description: "Channel name (e.g. general or #general) or snowflake ID"
     required: true

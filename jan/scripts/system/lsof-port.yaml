@@ -4,9 +4,11 @@ inputs:
   port:
     description: Port number (e.g. 443)
     required: true
+    type: port
   proto:
     description: Protocol — tcp or udp
     default: tcp
+    choices: [tcp, udp]
 commands:
   help:
     about: Describe this script.

@@ -10,9 +10,11 @@ inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
     default: bot
+    choices: [bot, user, raw]
   scope:
     description: What to list — dms, guilds, guild-channels, or all
     default: all
+    choices: [dms, guilds, guild-channels, all]
   guild:
     description: Guild ID (required for scope=guild-channels; optional filter for scope=all)
     default: ""
