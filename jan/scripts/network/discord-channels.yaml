@@ -1,10 +1,11 @@
 about: >
-  List Discord DM and/or guild channels visible to DISCORD_KEY
-  (Bot token by default). Defaults to guilds + their channels.
-requires: [curl, jq]
+  List Discord DM and/or guild channels visible to DISCORD_KEY from
+  `pass discord/bot` (Bot token by default). Defaults to guilds + their
+  channels.
+requires: [curl, jq, pass]
 env:
-  private:
-    - DISCORD_KEY
+  pass:
+    DISCORD_KEY: discord/bot
 inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
@@ -19,17 +20,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           discord-channels
 
           List Discord channels visible to your token.
 
           Setup:
-            export DISCORD_KEY='…'   # Bot token (default) — never commit
+            pass insert discord/bot   # Bot token (default); first line only
 
           Usage:
             jan scripts network discord-channels run
@@ -54,10 +52,7 @@ commands:
   run:
     about: List Discord channels via the REST API.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           set -euo pipefail
 
           API="https://discord.com/api/v10"

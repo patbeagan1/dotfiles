@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           lookbehind
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           # (c) 2022 Pat Beagan: MIT License
 
           lookbehind () 

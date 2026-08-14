@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           upkeep
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - zsh
-        - -c
-        - |
+      zsh: |
           ###############################################################################
           # upkeep.zsh - Strict, cross-language, yearly maintenance script
           # Languages: Python, Node.js, Rust, Kotlin

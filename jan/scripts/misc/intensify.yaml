@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           intensify
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           # intensify.sh
           # Author: patrick
           # Created: 2025-10-27

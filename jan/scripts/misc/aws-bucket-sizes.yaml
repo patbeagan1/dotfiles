@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           aws-bucket-sizes
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           # Get a list of all bucket names
           buckets=$(aws s3 ls | awk '{print $3}')
 

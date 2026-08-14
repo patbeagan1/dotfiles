@@ -4,10 +4,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           links-browse
 
@@ -17,10 +14,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           # links-browse: Generate an HTML page from link arguments and open it in the browser.
           # Uses a data URL so no temporary file is created. (c) 2025 Pat Beagan: MIT License
 

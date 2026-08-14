@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           gradle_by_module
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - zsh
-        - -c
-        - |
+      zsh: |
           show_help() {
             cat <<EOF
           Usage: $(basename "$0") [options]

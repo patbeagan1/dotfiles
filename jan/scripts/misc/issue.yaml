@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           issue
 
@@ -18,10 +15,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - zsh
-        - -c
-        - |
+      zsh: |
           # ==============================================================================
           # A Zsh CLI note-taking application using gh issues as the backend.
           # Assumes the current directory is the repository for notes.

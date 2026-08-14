@@ -12,14 +12,19 @@ inputs:
   name:
     description: Optional celebrant name
     default: Birthday
+tests:
+  given_a_name_when_run_then_mentions_birthday:
+    when: |
+      run --name Ada
+    then: |
+      test "$JAN_STATUS" -eq 0
+      grep -q 'Happy Birthday' "$JAN_STDOUT_FILE"
+      grep -q 'Ada' "$JAN_STDOUT_FILE"
 commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           birthday-decorate
 

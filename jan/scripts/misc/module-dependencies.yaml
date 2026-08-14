@@ -3,10 +3,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           module-dependencies
 
@@ -16,10 +13,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - zsh
-        - -c
-        - |
+      zsh: |
           :<< COMMENT
           This will print all of the import statements which are in files under the 
           current directory. It can be used to plan for what kind of module we'll 

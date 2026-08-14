@@ -28,10 +28,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           gh-audit
 
@@ -54,10 +51,7 @@ commands:
   run:
     about: Branch, delete path, open PR, restore local checkout.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           set -euo pipefail
 
           REPO="${{ inputs.repo }}"

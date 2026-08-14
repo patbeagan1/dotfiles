@@ -1,10 +1,10 @@
 about: >
   Post a message to a Discord guild channel looked up by name
-  (optional guild filter). Uses private env DISCORD_KEY.
-requires: [curl, jq]
+  (optional guild filter). Loads DISCORD_KEY from `pass discord/bot`.
+requires: [curl, jq, pass]
 env:
-  private:
-    - DISCORD_KEY
+  pass:
+    DISCORD_KEY: discord/bot
 inputs:
   auth:
     description: Auth mode — bot (default), user, or raw
@@ -22,17 +22,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           discord-post
 
           Send a message to a guild text channel, resolving the channel by name.
 
           Setup:
-            export DISCORD_KEY='…'   # Bot token — needs Send Messages + View Channel
+            pass insert discord/bot   # Bot token; needs Send Messages + View Channel
 
           Usage:
             jan scripts network discord-post run --channel general --message 'hello'
@@ -45,10 +42,7 @@ commands:
   run:
     about: Resolve channel by name and POST a message.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           set -euo pipefail
 
           API="https://discord.com/api/v10"

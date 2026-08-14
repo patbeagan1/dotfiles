@@ -20,14 +20,21 @@ inputs:
   group:
     description: Optional column name to aggregate numeric columns by
     default: ""
+tests:
+  given_a_tiny_csv_when_summarized_then_prints_shape:
+    given: |
+      printf 'region,sales\nwest,10\n' > data.csv
+    when: |
+      run --file data.csv --head 0
+    then: |
+      test "$JAN_STATUS" -eq 0
+      grep -q 'shape:' "$JAN_STDOUT_FILE"
+      grep -q '1 rows' "$JAN_STDOUT_FILE"
 commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           csv-summary
 

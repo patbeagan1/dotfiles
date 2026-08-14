@@ -4,10 +4,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - '-lc'
-        - |
+      bash: |
           cat <<'EOF'
           tmux-extend-column
 
@@ -17,10 +14,7 @@ commands:
   run:
     about: 'Run the linked script; forwards args.'
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           # tmux-extend-column: Add 2 new panes as a new column to the current tmux window.
           # (c) 2025 Pat Beagan: MIT License
 

@@ -18,10 +18,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           api-get
 
@@ -39,10 +36,7 @@ commands:
   run:
     about: curl with Bearer (or custom) header from API_KEY.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           set -euo pipefail
           hdr="${{ inputs.header }}"
           if [ "$hdr" = "Authorization" ]; then

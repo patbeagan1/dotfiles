@@ -7,8 +7,8 @@ metadata:
     per-command YAML under `scripts/<category>/` (each with `help` + `run`).
     Script entries may declare `dependencies` (other script names whose
     directories are prepended to PATH), `requires` (external utilities such as
-    `fzf` that must exist before `run`), `env` (`public` assignments and
-    `private` host secret names), `inputs` (typed `--flags` / `${{ inputs.x }}`),
+    `fzf` that must exist before `run`), `env` (`public` assignments,
+    `private` host secret names, and `pass` store ids), `inputs` (typed `--flags` / `${{ inputs.x }}`),
     and `cron` (schedules for `jan cron`).
     Prefer this tree once, then invoke commands:
       jan use /path/to/dotfiles/jan

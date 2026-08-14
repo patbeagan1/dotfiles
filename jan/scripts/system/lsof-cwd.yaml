@@ -8,10 +8,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           lsof-cwd
 
@@ -24,8 +21,5 @@ commands:
   run:
     about: Grep cwd from lsof -p.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           lsof -p "${{ inputs.pid }}" | grep cwd

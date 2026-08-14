@@ -1,10 +1,11 @@
 about: >
   Check Discord for messages newer than the last local cursor (DMs and/or
-  explicit channel IDs). Uses private env DISCORD_KEY (Bot token by default).
-requires: [curl, jq]
+  explicit channel IDs). Loads DISCORD_KEY from `pass discord/bot` (Bot token
+  by default).
+requires: [curl, jq, pass]
 env:
-  private:
-    - DISCORD_KEY
+  pass:
+    DISCORD_KEY: discord/bot
 inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
@@ -22,10 +23,7 @@ commands:
   help:
     about: Describe this script.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           cat <<'EOF'
           discord-unread
 
@@ -34,7 +32,7 @@ commands:
           local cursor file and treats anything newer as unread.
 
           Setup:
-            export DISCORD_KEY='…'   # Bot token (default) — never commit
+            pass insert discord/bot   # Bot token (default); first line only
 
           Usage:
             jan scripts network discord-unread run
@@ -56,10 +54,7 @@ commands:
   run:
     about: Query Discord for new messages since the local cursor.
     exec:
-      argv:
-        - bash
-        - -lc
-        - |
+      bash: |
           set -euo pipefail
 
           API="https://discord.com/api/v10"
