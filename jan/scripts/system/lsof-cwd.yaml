@@ -22,4 +22,6 @@ commands:
     about: Grep cwd from lsof -p.
     exec:
       bash: |
-          lsof -p "${{ inputs.pid }}" | grep cwd
+          lsof -p "${1-}" | grep cwd
+      argv:
+        - "${{ inputs.pid }}"

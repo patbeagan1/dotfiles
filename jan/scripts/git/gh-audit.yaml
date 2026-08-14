@@ -54,13 +54,13 @@ commands:
       bash: |
           set -euo pipefail
 
-          REPO="${{ inputs.repo }}"
-          DEL_PATH="${{ inputs.path }}"
-          BASE_IN="${{ inputs.base }}"
-          BRANCH_IN="${{ inputs.branch }}"
-          TITLE_IN="${{ inputs.title }}"
-          BODY_IN="${{ inputs.body }}"
-          DRAFT="${{ inputs.draft }}"
+          REPO="${1-}"
+          DEL_PATH="${2-}"
+          BASE_IN="${3-}"
+          BRANCH_IN="${4-}"
+          TITLE_IN="${5-}"
+          BODY_IN="${6-}"
+          DRAFT="${7-}"
 
           REPO="$(cd "$REPO" && pwd)"
           cd "$REPO"
@@ -197,3 +197,11 @@ commands:
           echo "$PR_URL"
 
           # trap runs cleanup: restore ORIG_BRANCH, delete local BRANCH
+      argv:
+        - "${{ inputs.repo }}"
+        - "${{ inputs.path }}"
+        - "${{ inputs.base }}"
+        - "${{ inputs.branch }}"
+        - "${{ inputs.title }}"
+        - "${{ inputs.body }}"
+        - "${{ inputs.draft }}"

@@ -5,7 +5,7 @@ about: >
 requires: [curl, jq, pass]
 env:
   pass:
-    DISCORD_KEY: discord/bot
+    DISCORD_KEY: API/DISCORD
 inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
@@ -58,10 +58,10 @@ commands:
           set -euo pipefail
 
           API="https://discord.com/api/v10"
-          AUTH_MODE="${{ inputs.auth }}"
-          CHANNELS_CSV="${{ inputs.channels }}"
-          LIMIT="${{ inputs.limit }}"
-          MARK_READ="${{ inputs.mark_read }}"
+          AUTH_MODE="${1-}"
+          CHANNELS_CSV="${2-}"
+          LIMIT="${3-}"
+          MARK_READ="${4-}"
           UA="jan-discord-unread (personal script; +https://github.com/patbeagan1)"
 
           case "$AUTH_MODE" in
@@ -168,3 +168,8 @@ commands:
           else
             echo "cursors unchanged (pass --mark_read 1 to advance)" >&2
           fi
+      argv:
+        - "${{ inputs.auth }}"
+        - "${{ inputs.channels }}"
+        - "${{ inputs.limit }}"
+        - "${{ inputs.mark_read }}"

@@ -23,6 +23,5 @@ commands:
     exec:
       argv:
         - lsof
-        - -lc
-        - |
-          ${{ inputs.process }}
+        - -c
+        - ${{ inputs.process }}

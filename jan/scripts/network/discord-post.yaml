@@ -4,7 +4,7 @@ about: >
 requires: [curl, jq, pass]
 env:
   pass:
-    DISCORD_KEY: discord/bot
+    DISCORD_KEY: API/DISCORD
 inputs:
   auth:
     description: Auth mode — bot (default), user, or raw
@@ -46,10 +46,10 @@ commands:
           set -euo pipefail
 
           API="https://discord.com/api/v10"
-          AUTH_MODE="${{ inputs.auth }}"
-          CHANNEL_IN="${{ inputs.channel }}"
-          MESSAGE="${{ inputs.message }}"
-          GUILD_IN="${{ inputs.guild }}"
+          AUTH_MODE="${1-}"
+          CHANNEL_IN="${2-}"
+          MESSAGE="${3-}"
+          GUILD_IN="${4-}"
           UA="jan-discord-post (personal script; +https://github.com/patbeagan1)"
 
           case "$AUTH_MODE" in
@@ -193,3 +193,8 @@ commands:
           else
             echo "posted message ${mid} to channel ${TARGET_ID}"
           fi
+      argv:
+        - "${{ inputs.auth }}"
+        - "${{ inputs.channel }}"
+        - "${{ inputs.message }}"
+        - "${{ inputs.guild }}"

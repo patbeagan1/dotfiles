@@ -24,7 +24,10 @@ commands:
     about: Rank open files by size.
     exec:
       bash: |
-          min_bytes=$(awk -v m="${{ inputs.min_mb }}" 'BEGIN { printf "%.0f", m * 1048576 }')
+          min_bytes=$(awk -v m="${1-}" 'BEGIN { printf "%.0f", m * 1048576 }')
           lsof / 2>/dev/null | awk -v min="$min_bytes" '{
             if ($7+0 > min) printf "%.1fMB %s %s\n", $7/1048576, $9, $1
-          }' | sort -n -u | tail -n "${{ inputs.count }}" | column -t
+          }' | sort -n -u | tail -n "${2-}" | column -t
+      argv:
+        - "${{ inputs.min_mb }}"
+        - "${{ inputs.count }}"

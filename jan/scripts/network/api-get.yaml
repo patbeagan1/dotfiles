@@ -38,10 +38,12 @@ commands:
     exec:
       bash: |
           set -euo pipefail
-          hdr="${{ inputs.header }}"
+          hdr="${1-}"
           if [ "$hdr" = "Authorization" ]; then
             auth="Authorization: Bearer ${API_KEY}"
           else
             auth="${hdr}: ${API_KEY}"
           fi
           curl -fsS -H "$auth" -H "Accept: application/json" "$URL"
+      argv:
+        - "${{ inputs.header }}"

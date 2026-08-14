@@ -5,7 +5,7 @@ about: >
 requires: [curl, jq, pass]
 env:
   pass:
-    DISCORD_KEY: discord/bot
+    DISCORD_KEY: API/DISCORD
 inputs:
   auth:
     description: Auth mode — bot (Authorization Bot …), user (raw token), or raw (DISCORD_KEY already includes type)
@@ -56,9 +56,9 @@ commands:
           set -euo pipefail
 
           API="https://discord.com/api/v10"
-          AUTH_MODE="${{ inputs.auth }}"
-          SCOPE="${{ inputs.scope }}"
-          GUILD="${{ inputs.guild }}"
+          AUTH_MODE="${1-}"
+          SCOPE="${2-}"
+          GUILD="${3-}"
           UA="jan-discord-channels (personal script; +https://github.com/patbeagan1)"
 
           case "$AUTH_MODE" in
@@ -241,3 +241,7 @@ commands:
               exit 2
               ;;
           esac
+      argv:
+        - "${{ inputs.auth }}"
+        - "${{ inputs.scope }}"
+        - "${{ inputs.guild }}"
