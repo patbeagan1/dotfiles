@@ -3,22 +3,20 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          curr
+      text: |
+        curr
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          curr () 
-          { 
-              git fetch && git branch -a | grep --color=auto release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
-          }
-          curr "$@"
+        curr () 
+        { 
+            git fetch && git branch -a | grep --color=auto release-v | sed 's/remotes\/origin\///g' | sort | tail -1 | sed 's/\*//g'
+        }
+        curr "$@"
       passthrough: true

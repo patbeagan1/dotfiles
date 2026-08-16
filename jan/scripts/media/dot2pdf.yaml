@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          dot2pdf
+      text: |
+        dot2pdf
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          dot2pdf () 
-          { 
-              dot -Tpdf "$1" > "$1".pdf && open "$1".pdf
-          }
+        dot2pdf () 
+        { 
+            dot -Tpdf "$1" > "$1".pdf && open "$1".pdf
+        }
 
-          dot2pdf "$@"
+        dot2pdf "$@"
       passthrough: true

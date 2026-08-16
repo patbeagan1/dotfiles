@@ -3,22 +3,20 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          kc
+      text: |
+        kc
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          kc () 
-          { 
-              kotlinc "$1" -include-runtime -d out.jar
-          }
-          kc "$@"
+        kc () 
+        { 
+            kotlinc "$1" -include-runtime -d out.jar
+        }
+        kc "$@"
       passthrough: true

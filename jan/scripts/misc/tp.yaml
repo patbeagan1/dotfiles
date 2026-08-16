@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          tp
+      text: |
+        tp
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          tp () 
-          { 
-              PS1='\[\e]0;\w\a\]\n\[\e[00;33m\][\d \A \[\e[01;35m\]\w\[\e[00;33m\]]\[\e[0m\]$(__git_ps1 " \[\033[1;32m\](%s)\[\033[0m\]") $(__awsenv_ps1)\n\$ '
-          }
+        tp () 
+        { 
+            PS1='\[\e]0;\w\a\]\n\[\e[00;33m\][\d \A \[\e[01;35m\]\w\[\e[00;33m\]]\[\e[0m\]$(__git_ps1 " \[\033[1;32m\](%s)\[\033[0m\]") $(__awsenv_ps1)\n\$ '
+        }
 
-          tp "$@"
+        tp "$@"
       passthrough: true

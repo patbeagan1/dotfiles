@@ -9,20 +9,18 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lsof-cwd
+      text: |
+        lsof-cwd
 
-          Show cwd of a process.
+        Show cwd of a process.
 
-            jan scripts system lsof-cwd run --pid 1234
+        jan scripts system lsof-cwd run --pid 1234
 
-          Equivalent to: lsof -p PID | grep cwd
-          EOF
+        Equivalent to: lsof -p PID | grep cwd
   run:
     about: Grep cwd from lsof -p.
     exec:
       bash: |
-          lsof -p "${1-}" | grep cwd
+        lsof -p "${1-}" | grep cwd
       argv:
         - "${{ inputs.pid }}"

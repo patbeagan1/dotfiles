@@ -3,42 +3,40 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          search-mavencentral
+      text: |
+        search-mavencentral
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          set -x
+        set -x
 
-          url="http://search.maven.org/solrsearch/select"
+        url="http://search.maven.org/solrsearch/select"
 
-          typeset -A params
-          params=(
-              'rows' '20'
-              'wt' 'json'
-          )
+        typeset -A params
+        params=(
+            'rows' '20'
+            'wt' 'json'
+        )
 
-          function construct() {
-              local isFirst='true'
+        function construct() {
+            local isFirst='true'
 
-              for k v in "${(@kv)params}"; do 
-                  if [ "$isFirst" = 'true' ]; then 
-                      url="$url?$k=$v"
-                      ifFirst='false'
-                  else
-                      url="$url&$k=$v"
-                  fi
-                  echo $url
-              done
-          }
+            for k v in "${(@kv)params}"; do 
+                if [ "$isFirst" = 'true' ]; then 
+                    url="$url?$k=$v"
+                    ifFirst='false'
+                else
+                    url="$url&$k=$v"
+                fi
+                echo $url
+            done
+        }
 
-          construct
+        construct
 
-          curl "$url&q=$1"
+        curl "$url&q=$1"
       passthrough: true

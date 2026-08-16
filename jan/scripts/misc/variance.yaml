@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          variance
+      text: |
+        variance
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          variance () 
-          { 
-              math $(sum $(echo $(for i in $(echo "$1" | tr ',' ' '); do math $(math $i-$(mean "$1"))^2; done) | tr ' ' ',')) / $(count_list "$1")
-          }
+        variance () 
+        { 
+            math $(sum $(echo $(for i in $(echo "$1" | tr ',' ' '); do math $(math $i-$(mean "$1"))^2; done) | tr ' ' ',')) / $(count_list "$1")
+        }
 
-          variance "$@"
+        variance "$@"
       passthrough: true

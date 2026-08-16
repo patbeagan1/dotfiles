@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          appletoast
+      text: |
+        appletoast
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          appletoast () 
-          { 
-              title="$1";
-              body="$2";
-              osascript -e 'on run {body, title}' -e 'display notification {body} with title {title}' -e 'end run' "$body" "$title"
-          }
-          appletoast "$@"
+        appletoast () 
+        { 
+            title="$1";
+            body="$2";
+            osascript -e 'on run {body, title}' -e 'display notification {body} with title {title}' -e 'end run' "$body" "$title"
+        }
+        appletoast "$@"
       passthrough: true

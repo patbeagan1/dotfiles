@@ -4,16 +4,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          ps-tree
+      text: |
+        ps-tree
 
-          Show a scrollable process tree with full details.
+        Show a scrollable process tree with full details.
 
-            jan scripts system ps-tree run
-          EOF
+        jan scripts system ps-tree run
   run:
     about: Open process tree in less.
     exec:
       bash: |
-          ps awwfux | less -S
+        ps awwfux | less -S

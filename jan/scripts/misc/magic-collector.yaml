@@ -4,13 +4,11 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          magic-collector
+      text: |
+        magic-collector
 
-          A robust CLI tool that collects Kotlin files containing magic comments, optionally strips imports, and creates a ZIP archive with preserved directory structure.
+        A robust CLI tool that collects Kotlin files containing magic comments, optionally strips imports, and creates a ZIP archive with preserved directory structure.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:

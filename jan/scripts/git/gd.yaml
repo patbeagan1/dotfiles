@@ -4,13 +4,11 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          gd
+      text: |
+        gd
 
-          A terminal UI for browsing `git diff` similar to gitg: list changed files by name, then open a less-like diff view for each file.
+        A terminal UI for browsing `git diff` similar to gitg: list changed files by name, then open a less-like diff view for each file.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:

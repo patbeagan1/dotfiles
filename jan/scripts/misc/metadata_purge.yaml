@@ -3,27 +3,25 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          metadata_purge
+      text: |
+        metadata_purge
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          metadata_purge () 
-          { 
-              for i in *.jpg;
-              do
-                  echo "Processing $i";
-                  exiftool -all= "$i";
-              done
-          }
+        metadata_purge () 
+        { 
+            for i in *.jpg;
+            do
+                echo "Processing $i";
+                exiftool -all= "$i";
+            done
+        }
 
-          metatdata_purge "$@"
+        metatdata_purge "$@"
       passthrough: true

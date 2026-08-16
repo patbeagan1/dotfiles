@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          jj
+      text: |
+        jj
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          jj () 
-          { 
-              javac ${1};
-              java $(echo ${1} | sed s/\.java// )
-          }
+        jj () 
+        { 
+            javac ${1};
+            java $(echo ${1} | sed s/\.java// )
+        }
 
-          jj "$@"
+        jj "$@"
       passthrough: true

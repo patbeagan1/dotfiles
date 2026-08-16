@@ -3,25 +3,23 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          basename
+      text: |
+        basename
 
-          Print the last path component of a path.
+        Print the last path component of a path.
 
-            jan scripts files basename run -- /tmp/foo/bar.txt
-            # → bar.txt
-          EOF
+        jan scripts files basename run -- /tmp/foo/bar.txt
+        # → bar.txt
   run:
     about: Print the basename of the given path.
     exec:
       bash: |
-          set -euo pipefail
-          if [[ $# -lt 1 ]]; then
-            echo "usage: jan scripts files basename run -- <path>" >&2
-            exit 2
-          fi
-          p="$1"
-          p="${p%/}"
-          printf '%s\n' "${p##*/}"
+        set -euo pipefail
+        if [[ $# -lt 1 ]]; then
+          echo "usage: jan scripts files basename run -- <path>" >&2
+          exit 2
+        fi
+        p="$1"
+        p="${p%/}"
+        printf '%s\n' "${p##*/}"
       passthrough: true

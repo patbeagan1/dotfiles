@@ -3,17 +3,15 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          pomodoro
+      text: |
+        pomodoro
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          sleep 25m
-          appletoast "Pomodoro" "Take a 5 minute break"
+        sleep 25m
+        appletoast "Pomodoro" "Take a 5 minute break"
       passthrough: true

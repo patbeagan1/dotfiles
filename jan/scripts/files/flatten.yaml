@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          flatten
+      text: |
+        flatten
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
-    about: 'Run the linked script; forwards args.'
+    about: "Run the linked script; forwards args."
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          flatten () 
-          { 
-              test -d __flattened_files || mkdir __flattened_files;
-              which gmv > /dev/null && find "$1" -type f -exec gmv --backup=numbered $(echo '{}') __flattened_files \;
-          }
+        flatten () 
+        { 
+            test -d __flattened_files || mkdir __flattened_files;
+            which gmv > /dev/null && find "$1" -type f -exec gmv --backup=numbered $(echo '{}') __flattened_files \;
+        }
 
-          flatten "$@"
+        flatten "$@"
       passthrough: true

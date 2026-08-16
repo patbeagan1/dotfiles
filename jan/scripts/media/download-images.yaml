@@ -3,14 +3,12 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          download-images
+      text: |
+        download-images
 
-          Download image URLs with Deno; names files by content hash and appends record.csv.
+        Download image URLs with Deno; names files by content hash and appends record.csv.
 
-          Requires on host: deno
-          EOF
+        Requires on host: deno
   run:
     about: 'Run the linked script; forwards args.'
     exec:

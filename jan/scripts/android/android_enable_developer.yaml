@@ -3,17 +3,15 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          android_enable_developer
+      text: |
+        android_enable_developer
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          adb shell settings put global development_settings_enabled 1
-          adb shell settings put global always_finish_activities 1
+        adb shell settings put global development_settings_enabled 1
+        adb shell settings put global always_finish_activities 1
       passthrough: true

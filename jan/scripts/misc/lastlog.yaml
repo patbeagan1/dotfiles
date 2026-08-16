@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lastlog
+      text: |
+        lastlog
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          lastlog () 
-          { 
-              cd /var/log;
-              less $(ls -1t | head -1)
-          }
+        lastlog () 
+        { 
+            cd /var/log;
+            less $(ls -1t | head -1)
+        }
 
-          lastlog "$@"
+        lastlog "$@"
       passthrough: true

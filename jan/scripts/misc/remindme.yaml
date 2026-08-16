@@ -3,69 +3,67 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          remindme
+      text: |
+        remindme
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          set -euo pipefail
+        set -euo pipefail
 
-          scriptname="$(basename "$0")"
-          help() {
-              error_code=$?
-              echo "
-          Usage: $scriptname [-h|--help] <reminder_text>
+        scriptname="$(basename "$0")"
+        help() {
+            error_code=$?
+            echo "
+        Usage: $scriptname [-h|--help] <reminder_text>
 
-          Creates a reminder in the macOS Reminders app using AppleScript.
-          Adds the reminder to the default 'Reminders' list.
+        Creates a reminder in the macOS Reminders app using AppleScript.
+        Adds the reminder to the default 'Reminders' list.
 
-          Arguments:
-            reminder_text    Text content for the reminder
+        Arguments:
+          reminder_text    Text content for the reminder
 
-          Features:
-            - Uses macOS Reminders app
-            - Adds to default 'Reminders' list
-            - Works with AppleScript automation
+        Features:
+          - Uses macOS Reminders app
+          - Adds to default 'Reminders' list
+          - Works with AppleScript automation
 
-          Examples:
-            $scriptname 'Call mom tomorrow'
-            $scriptname 'Buy groceries on Friday'
-          "
-              exit $error_code
-          }
+        Examples:
+          $scriptname 'Call mom tomorrow'
+          $scriptname 'Buy groceries on Friday'
+        "
+            exit $error_code
+        }
 
-          main() {
+        main() {
 
-              emulate -L zsh
-              zmodload zsh/zutil || return 1
+            emulate -L zsh
+            zmodload zsh/zutil || return 1
 
-              local help
-              zparseopts -D -F -K -- \
-                  {h,-help}=help ||
-                  return 1
+            local help
+            zparseopts -D -F -K -- \
+                {h,-help}=help ||
+                return 1
 
-              if (($#help)); then help; fi
+            if (($#help)); then help; fi
 
-          remindme () {
-          	osascript - "$1" <<END
-          on run a
-          tell app "Reminders"
-          tell list "Reminders" of default account
-          make new reminder with properties {name:item 1 of a}
-          end
-          end
-          end
-          END
-          }
+        remindme () {
+        	osascript - "$1" <<END
+        on run a
+        tell app "Reminders"
+        tell list "Reminders" of default account
+        make new reminder with properties {name:item 1 of a}
+        end
+        end
+        end
+        END
+        }
 
-              remindme "$@" || help
-          }
+            remindme "$@" || help
+        }
 
-          main "$@" || help
+        main "$@" || help
       passthrough: true

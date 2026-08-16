@@ -3,22 +3,20 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          qrencoder
+      text: |
+        qrencoder
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          qr() {
-              local filename="/tmp/qr-output-$(python3 -c 'import time; print(time.time())').png"
-              qrencode -l L -v 1 -o "$filename" "$1" &&
-                  echo "$filename" &&
-                  open "$filename"
-          }
-          qr "$1"
+        qr() {
+            local filename="/tmp/qr-output-$(python3 -c 'import time; print(time.time())').png"
+            qrencode -l L -v 1 -o "$filename" "$1" &&
+                echo "$filename" &&
+                open "$filename"
+        }
+        qr "$1"
       passthrough: true

@@ -16,20 +16,18 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          json-keys
+      text: |
+        json-keys
 
-          Print sorted top-level object keys with a simple type tag.
-          Shares packages.gradle with json-summary (same CLASSPATH env).
-          Source is inlined in this YAML via exec.kotlin.
+        Print sorted top-level object keys with a simple type tag.
+        Shares packages.gradle with json-summary (same CLASSPATH env).
+        Source is inlined in this YAML via exec.kotlin.
 
-          usage:
-            jan scripts files json-keys run --file payload.json
-            cat payload.json | jan scripts files json-keys run --file -
+        usage:
+        jan scripts files json-keys run --file payload.json
+        cat payload.json | jan scripts files json-keys run --file -
 
-          Requires: gradle (first resolve), kotlinc (first compile), kotlin (run).
-          EOF
+        Requires: gradle (first resolve), kotlinc (first compile), kotlin (run).
   run:
     about: List top-level JSON object keys.
     exec:

@@ -3,17 +3,15 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          restart_touchpad
+      text: |
+        restart_touchpad
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          sudo  modprobe -r psmouse
-          sudo modprobe psmouse
+        sudo  modprobe -r psmouse
+        sudo modprobe psmouse
       passthrough: true

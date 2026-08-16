@@ -3,30 +3,28 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          fullpath
+      text: |
+        fullpath
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          fullpath () 
-          { 
-              case "$1" in 
-                  /*)
-                      printf '%s\n' "$1"
-                  ;;
-                  *)
-                      printf '%s\n' "$PWD/$1"
-                  ;;
-              esac
-          }
+        fullpath () 
+        { 
+            case "$1" in 
+                /*)
+                    printf '%s\n' "$1"
+                ;;
+                *)
+                    printf '%s\n' "$PWD/$1"
+                ;;
+            esac
+        }
 
-          fullpath "$@"
+        fullpath "$@"
       passthrough: true

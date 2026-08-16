@@ -8,16 +8,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          ps-by-name
+      text: |
+        ps-by-name
 
-          Show all processes by name with a full header.
+        Show all processes by name with a full header.
 
-            jan scripts system ps-by-name run --name nginx
+        jan scripts system ps-by-name run --name nginx
 
-          Equivalent to: ps -lfC nginx
-          EOF
+        Equivalent to: ps -lfC nginx
   run:
     about: Run ps -lfC.
     exec:

@@ -4,16 +4,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          ps-users
+      text: |
+        ps-users
 
-          Processes-per-user counter.
+        Processes-per-user counter.
 
-            jan scripts system ps-users run
-          EOF
+        jan scripts system ps-users run
   run:
     about: Aggregate ps by user.
     exec:
       bash: |
-          ps hax -o user | sort | uniq -c | sort -r
+        ps hax -o user | sort | uniq -c | sort -r

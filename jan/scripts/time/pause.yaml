@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          pause
+      text: |
+        pause
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          pause () 
-          { 
-              read -p "$*"
-          }
+        pause () 
+        { 
+            read -p "$*"
+        }
 
-          pause "$@"
+        pause "$@"
       passthrough: true

@@ -3,20 +3,18 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          groceries
+      text: |
+        groceries
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          function q-heb {
-          web-open 'https://www.heb.com/search?Ns=product.salePrice%7C0&q='"$1"
+        function q-heb {
+        web-open 'https://www.heb.com/search?Ns=product.salePrice%7C0&q='"$1"
 
-          }
-          while IFS= read -r line; do q-heb $line; sleep 20; done < "$1"
+        }
+        while IFS= read -r line; do q-heb $line; sleep 20; done < "$1"
       passthrough: true

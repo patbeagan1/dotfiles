@@ -3,57 +3,55 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          ebook-from
+      text: |
+        ebook-from
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          set -euo pipefail
-          IFS=$'\n\t'
+        set -euo pipefail
+        IFS=$'\n\t'
 
-          scriptname="$(basename "$0")"
+        scriptname="$(basename "$0")"
 
-          help () {
-              error_code=$?
-              echo "
-          Usage: $scriptname [-h|--help] <file>
+        help () {
+            error_code=$?
+            echo "
+        Usage: $scriptname [-h|--help] <file>
 
-          Converts a text file into a web-based ebook with simplified prose and webring navigation.
-          Creates a local web server to view the ebook in a browser.
+        Converts a text file into a web-based ebook with simplified prose and webring navigation.
+        Creates a local web server to view the ebook in a browser.
 
-          Process:
-          1. Simplifies the prose using simplify-prose
-          2. Splits the content into sections using filesplit.py
-          3. Creates HTML pages with webring navigation
-          4. Starts a local HTTP server to view the ebook
+        Process:
+        1. Simplifies the prose using simplify-prose
+        2. Splits the content into sections using filesplit.py
+        3. Creates HTML pages with webring navigation
+        4. Starts a local HTTP server to view the ebook
 
-          Arguments:
-            file    Text file to convert to ebook format
+        Arguments:
+          file    Text file to convert to ebook format
 
-          Examples:
-            $scriptname book.txt
-            $scriptname /path/to/story.txt
-          "
-              exit $error_code
-          }
+        Examples:
+          $scriptname book.txt
+          $scriptname /path/to/story.txt
+        "
+            exit $error_code
+        }
 
-          ebook () {
-          	simplify-prose -p "$1" > $1"".simplified.txt
-          	filesplit.py "$1".simplified.txt -------
-              cd $(ls -1rt | tail -1)
-              webringify
-              cd webring
-              pwd
-              python3 -m http.server
-          }
+        ebook () {
+        	simplify-prose -p "$1" > $1"".simplified.txt
+        	filesplit.py "$1".simplified.txt -------
+            cd $(ls -1rt | tail -1)
+            webringify
+            cd webring
+            pwd
+            python3 -m http.server
+        }
 
-          ebook "$@" || help
+        ebook "$@" || help
       passthrough: true

@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          pdf2png
+      text: |
+        pdf2png
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          pdf2png () 
-          { 
-              convert -verbose -density 400 -trim "$1" -quality 100 -flatten -sharpen 0x1.0 "$1".png
-          }
+        pdf2png () 
+        { 
+            convert -verbose -density 400 -trim "$1" -quality 100 -flatten -sharpen 0x1.0 "$1".png
+        }
 
-          pdf2png "$@"
+        pdf2png "$@"
       passthrough: true

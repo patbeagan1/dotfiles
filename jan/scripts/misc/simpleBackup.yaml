@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          simpleBackup
+      text: |
+        simpleBackup
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
 
-          DATE=$(date +%Y-%m-%d-%H%M%S)
-          BACKUP_DIR="$HOME"
-          SOURCE="$HOME/Downloads/MyHome"
+        DATE=$(date +%Y-%m-%d-%H%M%S)
+        BACKUP_DIR="$HOME"
+        SOURCE="$HOME/Downloads/MyHome"
 
-          tar -cvzpf $BACKUP_DIR/backup-$DATE.tar.gz $SOURCE
+        tar -cvzpf $BACKUP_DIR/backup-$DATE.tar.gz $SOURCE
       passthrough: true

@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          binlink
+      text: |
+        binlink
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          binlink () 
-          { 
-              ln -s $(pwd)/$1 /usr/local/bin/$1
-          }
+        binlink () 
+        { 
+            ln -s $(pwd)/$1 /usr/local/bin/$1
+        }
 
-          binlink "$@"
+        binlink "$@"
       passthrough: true

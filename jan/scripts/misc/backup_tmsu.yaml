@@ -3,18 +3,16 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          backup_tmsu
+      text: |
+        backup_tmsu
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          sqlite3 db .dump | gzip -c > "db.`date +%s`.dmp.gz"
-          sqlite3 db ".backup db.`date +%s`.bak"
+        sqlite3 db .dump | gzip -c > "db.`date +%s`.dmp.gz"
+        sqlite3 db ".backup db.`date +%s`.bak"
 
       passthrough: true

@@ -3,29 +3,27 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lll
+      text: |
+        lll
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          . $LIB_MACHINE_TYPES
+        . $LIB_MACHINE_TYPES
 
-          lll () 
-          { 
-              if is-test system os mac; then
-                  ls
-              else
-                  ls --color=auto -l --full-time;
-              fi
-          }
+        lll () 
+        { 
+            if is-test system os mac; then
+                ls
+            else
+                ls --color=auto -l --full-time;
+            fi
+        }
 
-          lll "$@"
+        lll "$@"
       passthrough: true

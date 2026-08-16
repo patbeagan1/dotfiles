@@ -3,25 +3,23 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          cat-all-pretty
+      text: |
+        cat-all-pretty
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          for i in *; do
-              echo
-              echo -----
-              echo
-              echo "# $i"
-              echo
-              cat "$i"
-          done
+        for i in *; do
+            echo
+            echo -----
+            echo
+            echo "# $i"
+            echo
+            cat "$i"
+        done
       passthrough: true

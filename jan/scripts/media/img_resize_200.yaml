@@ -3,28 +3,26 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          img_resize_200
+      text: |
+        img_resize_200
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          set -euo pipefail
-          IFS=$'\n\t'
+        set -euo pipefail
+        IFS=$'\n\t'
 
-          img_resize ()
-          {
-              in="$1";
-              out="$2";
-              convert "$in" -resize 200x200 -gravity center -extent 200x200 -fill black "$out"
-          }
+        img_resize ()
+        {
+            in="$1";
+            out="$2";
+            convert "$in" -resize 200x200 -gravity center -extent 200x200 -fill black "$out"
+        }
 
-          img_resize "$@"
+        img_resize "$@"
       passthrough: true

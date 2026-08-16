@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lastfield
+      text: |
+        lastfield
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          lastfield () 
-          { 
-              awk -F "/" '{print $NF}'
-          }
+        lastfield () 
+        { 
+            awk -F "/" '{print $NF}'
+        }
 
-          lastfield "$@"
+        lastfield "$@"
       passthrough: true

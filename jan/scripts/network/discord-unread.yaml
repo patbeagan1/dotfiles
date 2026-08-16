@@ -26,151 +26,149 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          discord-unread
+      text: |
+        discord-unread
 
-          Report Discord messages newer than your last check. Discord's public
-          API does not expose client "unread" badges, so this script keeps a
-          local cursor file and treats anything newer as unread.
+        Report Discord messages newer than your last check. Discord's public
+        API does not expose client "unread" badges, so this script keeps a
+        local cursor file and treats anything newer as unread.
 
-          Setup:
-            pass insert discord/bot   # Bot token (default); first line only
+        Setup:
+        pass insert discord/bot   # Bot token (default); first line only
 
-          Usage:
-            jan scripts network discord-unread run
-            jan scripts network discord-unread run --channels '123,456' --limit 50
-            jan scripts network discord-unread run --mark_read 1
+        Usage:
+        jan scripts network discord-unread run
+        jan scripts network discord-unread run --channels '123,456' --limit 50
+        jan scripts network discord-unread run --mark_read 1
 
-          Auth modes (--auth):
-            bot   Authorization: Bot $DISCORD_KEY   (default)
-            user  Authorization: $DISCORD_KEY       (user/client token)
-            raw   Authorization: $DISCORD_KEY       (already includes "Bot "/"Bearer ")
+        Auth modes (--auth):
+        bot   Authorization: Bot $DISCORD_KEY   (default)
+        user  Authorization: $DISCORD_KEY       (user/client token)
+        raw   Authorization: $DISCORD_KEY       (already includes "Bot "/"Bearer ")
 
-          State file:
-            ${XDG_CONFIG_HOME:-~/.config}/jan-cli/discord-unread-state.json
+        State file:
+        ${XDG_CONFIG_HOME:-~/.config}/jan-cli/discord-unread-state.json
 
-          Notes:
-            - Bots only see DMs they participate in, plus channels you list.
-            - Requires curl and jq. Respect Discord rate limits and ToS.
-          EOF
+        Notes:
+        - Bots only see DMs they participate in, plus channels you list.
+        - Requires curl and jq. Respect Discord rate limits and ToS.
   run:
     about: Query Discord for new messages since the local cursor.
     exec:
       bash: |
-          set -euo pipefail
+        set -euo pipefail
 
-          API="https://discord.com/api/v10"
-          AUTH_MODE="${1-}"
-          CHANNELS_CSV="${2-}"
-          LIMIT="${3-}"
-          MARK_READ="${4-}"
-          UA="jan-discord-unread (personal script; +https://github.com/patbeagan1)"
+        API="https://discord.com/api/v10"
+        AUTH_MODE="${1-}"
+        CHANNELS_CSV="${2-}"
+        LIMIT="${3-}"
+        MARK_READ="${4-}"
+        UA="jan-discord-unread (personal script; +https://github.com/patbeagan1)"
 
-          case "$AUTH_MODE" in
-            bot)
-              if [[ "$DISCORD_KEY" == Bot\ * ]] || [[ "$DISCORD_KEY" == Bearer\ * ]]; then
-                AUTH_HEADER="$DISCORD_KEY"
-              else
-                AUTH_HEADER="Bot ${DISCORD_KEY}"
-              fi
-              ;;
-            user|raw)
+        case "$AUTH_MODE" in
+          bot)
+            if [[ "$DISCORD_KEY" == Bot\ * ]] || [[ "$DISCORD_KEY" == Bearer\ * ]]; then
               AUTH_HEADER="$DISCORD_KEY"
-              ;;
-            *)
-              echo "unknown --auth '$AUTH_MODE' (expected bot|user|raw)" >&2
-              exit 2
-              ;;
-          esac
-
-          cfg_root="${XDG_CONFIG_HOME:-$HOME/.config}/jan-cli"
-          mkdir -p "$cfg_root"
-          state_file="$cfg_root/discord-unread-state.json"
-          if [[ ! -f "$state_file" ]]; then
-            echo '{}' >"$state_file"
-          fi
-
-          discord_get() {
-            local path="$1"
-            local tmp http body
-            tmp="$(mktemp)"
-            http="$(curl -sS -o "$tmp" -w '%{http_code}' \
-              -H "Authorization: ${AUTH_HEADER}" \
-              -H "User-Agent: ${UA}" \
-              -H "Accept: application/json" \
-              "${API}${path}" || true)"
-            body="$(cat "$tmp")"
-            rm -f "$tmp"
-            if [[ "$http" != "200" ]]; then
-              echo "Discord API ${path} failed (HTTP ${http}): ${body}" >&2
-              exit 1
+            else
+              AUTH_HEADER="Bot ${DISCORD_KEY}"
             fi
-            printf '%s' "$body"
-          }
+            ;;
+          user|raw)
+            AUTH_HEADER="$DISCORD_KEY"
+            ;;
+          *)
+            echo "unknown --auth '$AUTH_MODE' (expected bot|user|raw)" >&2
+            exit 2
+            ;;
+        esac
 
-          me="$(discord_get /users/@me)"
-          me_tag="$(jq -r '"\(.username)//\(.id)"' <<<"$me")"
-          echo "authenticated as ${me_tag}" >&2
+        cfg_root="${XDG_CONFIG_HOME:-$HOME/.config}/jan-cli"
+        mkdir -p "$cfg_root"
+        state_file="$cfg_root/discord-unread-state.json"
+        if [[ ! -f "$state_file" ]]; then
+          echo '{}' >"$state_file"
+        fi
 
-          channel_ids=()
-          if [[ -n "${CHANNELS_CSV// /}" ]]; then
-            IFS=',' read -r -a channel_ids <<<"$CHANNELS_CSV"
-          else
-            dms="$(discord_get /users/@me/channels)"
-            mapfile -t channel_ids < <(jq -r '.[].id' <<<"$dms")
+        discord_get() {
+          local path="$1"
+          local tmp http body
+          tmp="$(mktemp)"
+          http="$(curl -sS -o "$tmp" -w '%{http_code}' \
+            -H "Authorization: ${AUTH_HEADER}" \
+            -H "User-Agent: ${UA}" \
+            -H "Accept: application/json" \
+            "${API}${path}" || true)"
+          body="$(cat "$tmp")"
+          rm -f "$tmp"
+          if [[ "$http" != "200" ]]; then
+            echo "Discord API ${path} failed (HTTP ${http}): ${body}" >&2
+            exit 1
           fi
+          printf '%s' "$body"
+        }
 
-          # trim whitespace from ids
-          cleaned=()
-          for id in "${channel_ids[@]+"${channel_ids[@]}"}"; do
-            id="$(echo "$id" | tr -d '[:space:]')"
-            [[ -n "$id" ]] && cleaned+=("$id")
-          done
-          channel_ids=("${cleaned[@]+"${cleaned[@]}"}")
+        me="$(discord_get /users/@me)"
+        me_tag="$(jq -r '"\(.username)//\(.id)"' <<<"$me")"
+        echo "authenticated as ${me_tag}" >&2
 
-          if [[ ${#channel_ids[@]} -eq 0 ]]; then
-            echo "no channels to check (pass --channels or ensure the token has DM channels)" >&2
-            exit 0
+        channel_ids=()
+        if [[ -n "${CHANNELS_CSV// /}" ]]; then
+          IFS=',' read -r -a channel_ids <<<"$CHANNELS_CSV"
+        else
+          dms="$(discord_get /users/@me/channels)"
+          mapfile -t channel_ids < <(jq -r '.[].id' <<<"$dms")
+        fi
+
+        # trim whitespace from ids
+        cleaned=()
+        for id in "${channel_ids[@]+"${channel_ids[@]}"}"; do
+          id="$(echo "$id" | tr -d '[:space:]')"
+          [[ -n "$id" ]] && cleaned+=("$id")
+        done
+        channel_ids=("${cleaned[@]+"${cleaned[@]}"}")
+
+        if [[ ${#channel_ids[@]} -eq 0 ]]; then
+          echo "no channels to check (pass --channels or ensure the token has DM channels)" >&2
+          exit 0
+        fi
+
+        found=0
+        new_state="$(cat "$state_file")"
+
+        for cid in "${channel_ids[@]}"; do
+          last="$(jq -r --arg c "$cid" '.[$c] // "0"' <<<"$new_state")"
+          msgs="$(discord_get "/channels/${cid}/messages?limit=${LIMIT}")"
+          # Discord returns newest-first; keep only ids > last cursor
+          unread="$(jq -c --arg last "$last" '
+            [.[] | select((.id | tonumber) > ($last | tonumber))]
+            | sort_by(.id | tonumber)
+          ' <<<"$msgs")"
+          count="$(jq 'length' <<<"$unread")"
+          if [[ "$count" -eq 0 ]]; then
+            continue
           fi
+          found=$((found + count))
+          ch_label="$(jq -r --arg c "$cid" '
+            (map(select(.channel_id == $c)) | .[0].channel_id) // $c
+          ' <<<"$msgs" 2>/dev/null || echo "$cid")"
+          echo "=== channel ${cid} (${count} new) ==="
+          jq -r '.[] | "\(.timestamp // "?")  \(.author.username // "?")  \((.content // "") | if length > 100 then .[0:97] + "…" else . end)"' <<<"$unread"
+          newest="$(jq -r '.[-1].id' <<<"$unread")"
+          new_state="$(jq --arg c "$cid" --arg id "$newest" '.[$c]=$id' <<<"$new_state")"
+        done
 
-          found=0
-          new_state="$(cat "$state_file")"
+        if [[ "$found" -eq 0 ]]; then
+          echo "no new messages"
+        else
+          echo "total new messages: ${found}" >&2
+        fi
 
-          for cid in "${channel_ids[@]}"; do
-            last="$(jq -r --arg c "$cid" '.[$c] // "0"' <<<"$new_state")"
-            msgs="$(discord_get "/channels/${cid}/messages?limit=${LIMIT}")"
-            # Discord returns newest-first; keep only ids > last cursor
-            unread="$(jq -c --arg last "$last" '
-              [.[] | select((.id | tonumber) > ($last | tonumber))]
-              | sort_by(.id | tonumber)
-            ' <<<"$msgs")"
-            count="$(jq 'length' <<<"$unread")"
-            if [[ "$count" -eq 0 ]]; then
-              continue
-            fi
-            found=$((found + count))
-            ch_label="$(jq -r --arg c "$cid" '
-              (map(select(.channel_id == $c)) | .[0].channel_id) // $c
-            ' <<<"$msgs" 2>/dev/null || echo "$cid")"
-            echo "=== channel ${cid} (${count} new) ==="
-            jq -r '.[] | "\(.timestamp // "?")  \(.author.username // "?")  \((.content // "") | if length > 100 then .[0:97] + "…" else . end)"' <<<"$unread"
-            newest="$(jq -r '.[-1].id' <<<"$unread")"
-            new_state="$(jq --arg c "$cid" --arg id "$newest" '.[$c]=$id' <<<"$new_state")"
-          done
-
-          if [[ "$found" -eq 0 ]]; then
-            echo "no new messages"
-          else
-            echo "total new messages: ${found}" >&2
-          fi
-
-          if [[ "$MARK_READ" == "1" || "$MARK_READ" == "true" || "$MARK_READ" == "yes" ]]; then
-            printf '%s\n' "$new_state" >"$state_file"
-            echo "updated cursors in ${state_file}" >&2
-          else
-            echo "cursors unchanged (pass --mark_read 1 to advance)" >&2
-          fi
+        if [[ "$MARK_READ" == "1" || "$MARK_READ" == "true" || "$MARK_READ" == "yes" ]]; then
+          printf '%s\n' "$new_state" >"$state_file"
+          echo "updated cursors in ${state_file}" >&2
+        else
+          echo "cursors unchanged (pass --mark_read 1 to advance)" >&2
+        fi
       argv:
         - "${{ inputs.auth }}"
         - "${{ inputs.channels }}"

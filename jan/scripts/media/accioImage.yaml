@@ -3,13 +3,11 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          accioImage
+      text: |
+        accioImage
 
-          Download images from Google, Bing, and DuckDuckGo image search based on a query
+        Download images from Google, Bing, and DuckDuckGo image search based on a query
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:

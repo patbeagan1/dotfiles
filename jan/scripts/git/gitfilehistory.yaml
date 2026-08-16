@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          gitfilehistory
+      text: |
+        gitfilehistory
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          gitfilehistory () 
-          { 
-              git log -m --oneline --full-history --pretty=tformat:"%h %ar %Cred%an %Creset%s" --follow "${1}"
-          }
+        gitfilehistory () 
+        { 
+            git log -m --oneline --full-history --pretty=tformat:"%h %ar %Cred%an %Creset%s" --follow "${1}"
+        }
 
-          gitfilehistory "$@"
+        gitfilehistory "$@"
       passthrough: true

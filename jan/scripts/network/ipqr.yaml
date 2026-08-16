@@ -3,18 +3,16 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          ipqr
+      text: |
+        ipqr
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          qrencode -l L -v 1 -o /tmp/qr-out.png -r <(echo http://"$(ipconfig getifaddr en0)":8000) && open /tmp/qr-out.png
+        qrencode -l L -v 1 -o /tmp/qr-out.png -r <(echo http://"$(ipconfig getifaddr en0)":8000) && open /tmp/qr-out.png
       passthrough: true

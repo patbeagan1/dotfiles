@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          myip_to_qr
+      text: |
+        myip_to_qr
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          myip_to_qr () 
-          { 
-              qrencode -o /tmp/qrcode.png $(ifconfig | grep 'inet 19' | cut -d' ' -f 2 | sed 's/$/:8000/' | sed 's/^/https:\/\//') && open /tmp/qrcode.png
-          }
+        myip_to_qr () 
+        { 
+            qrencode -o /tmp/qrcode.png $(ifconfig | grep 'inet 19' | cut -d' ' -f 2 | sed 's/$/:8000/' | sed 's/^/https:\/\//') && open /tmp/qrcode.png
+        }
 
-          myip_to_qr "$@"
+        myip_to_qr "$@"
       passthrough: true

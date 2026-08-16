@@ -24,25 +24,23 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          json-summary
+      text: |
+        json-summary
 
-          Inspect JSON with Jackson (packages.gradle → classpath via exec.kotlin).
+        Inspect JSON with Jackson (packages.gradle → classpath via exec.kotlin).
 
-          usage:
-            jan scripts files json-summary run --file payload.json
-            jan scripts files json-summary run --file payload.json --mode summary
-            jan scripts files json-summary run --file payload.json --mode path --path data.items.0
-            cat payload.json | jan scripts files json-summary run --file -
+        usage:
+        jan scripts files json-summary run --file payload.json
+        jan scripts files json-summary run --file payload.json --mode summary
+        jan scripts files json-summary run --file payload.json --mode path --path data.items.0
+        cat payload.json | jan scripts files json-summary run --file -
 
-          modes:
-            pretty   Indent and print the document (ANSI colors; set NO_COLOR=1 to disable)
-            summary  Types, object keys, array lengths (recursive)
-            path     Extract a dotted path (numbers index arrays)
+        modes:
+        pretty   Indent and print the document (ANSI colors; set NO_COLOR=1 to disable)
+        summary  Types, object keys, array lengths (recursive)
+        path     Extract a dotted path (numbers index arrays)
 
-          Requires: gradle (first resolve), kotlinc (first compile), kotlin (run).
-          EOF
+        Requires: gradle (first resolve), kotlinc (first compile), kotlin (run).
   run:
     about: Pretty-print, summarize, or extract from JSON.
     exec:

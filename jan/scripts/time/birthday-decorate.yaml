@@ -24,20 +24,18 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          birthday-decorate
+      text: |
+        birthday-decorate
 
-          Adds a festive birthday cake ASCII decoration to the terminal, colored
-          with chalk and assembled with lodash (via packages.pnpm + exec.node).
+        Adds a festive birthday cake ASCII decoration to the terminal, colored
+        with chalk and assembled with lodash (via packages.pnpm + exec.node).
 
-          You can still use argv: [node, -e, …] instead of exec.node if you prefer.
+        You can still use argv: [node, -e, …] instead of exec.node if you prefer.
 
-          usage:
-            jan scripts time birthday-decorate run
-            jan scripts time birthday-decorate run --name Ada
+        usage:
+        jan scripts time birthday-decorate run
+        jan scripts time birthday-decorate run --name Ada
 
-          EOF
   run:
     about: Print the birthday decoration.
     exec:

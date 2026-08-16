@@ -3,16 +3,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          android_dumpsys
+      text: |
+        android_dumpsys
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          adb shell dumpsys activity top
+        adb shell dumpsys activity top
       passthrough: true

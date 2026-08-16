@@ -4,91 +4,89 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          links-browse
+      text: |
+        links-browse
 
-          Generate an HTML page from a list of URLs (passed as arguments), open it in the default browser, then exit. No temporary file is created: the page is opened via a `data:` URL.
+        Generate an HTML page from a list of URLs (passed as arguments), open it in the default browser, then exit. No temporary file is created: the page is opened via a `data:` URL.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # links-browse: Generate an HTML page from link arguments and open it in the browser.
-          # Uses a data URL so no temporary file is created. (c) 2025 Pat Beagan: MIT License
+        # links-browse: Generate an HTML page from link arguments and open it in the browser.
+        # Uses a data URL so no temporary file is created. (c) 2025 Pat Beagan: MIT License
 
-          set -euo pipefail
+        set -euo pipefail
 
-          usage() {
-              cat << EOF
-          Usage: links-browse URL [URL ...]
+        usage() {
+            cat << EOF
+        Usage: links-browse URL [URL ...]
 
-          Generates a minimal HTML page listing the given URLs as links, opens it in the
-          default browser, then exits. No file is written to disk (uses a data URL).
+        Generates a minimal HTML page listing the given URLs as links, opens it in the
+        default browser, then exits. No file is written to disk (uses a data URL).
 
-          Example:
-            links-browse https://example.com https://github.com
-          EOF
-          }
+        Example:
+          links-browse https://example.com https://github.com
+        EOF
+        }
 
-          if [[ $# -eq 0 ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-              usage
-              exit 0
-          fi
+        if [[ $# -eq 0 ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+            usage
+            exit 0
+        fi
 
-          build_html() {
-              cat << 'HTMLEOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <title>Links</title>
-            <style>
-              body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 60rem; }
-              a { display: block; margin: 0.5rem 0; }
-            </style>
-          </head>
-          <body>
-            <h1>Links</h1>
-            <ul>
-          HTMLEOF
-              for url in "$@"; do
-                  # Escape HTML specials in the URL for the href and in the display text
-                  url_escaped=$(printf '%s' "$url" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
-                  printf '    <li><a href="%s">%s</a></li>\n' "$url_escaped" "$url_escaped"
-              done
-              echo '  </ul>'
-              echo '</body>'
-              echo '</html>'
-          }
+        build_html() {
+            cat << 'HTMLEOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>Links</title>
+          <style>
+            body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 60rem; }
+            a { display: block; margin: 0.5rem 0; }
+          </style>
+        </head>
+        <body>
+          <h1>Links</h1>
+          <ul>
+        HTMLEOF
+            for url in "$@"; do
+                # Escape HTML specials in the URL for the href and in the display text
+                url_escaped=$(printf '%s' "$url" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+                printf '    <li><a href="%s">%s</a></li>\n' "$url_escaped" "$url_escaped"
+            done
+            echo '  </ul>'
+            echo '</body>'
+            echo '</html>'
+        }
 
-          html=$(build_html "$@")
+        html=$(build_html "$@")
 
-          # Encode for data URL (percent-encoding). Python is used for reliable encoding.
-          encoded=$(printf '%s' "$html" | python3 -c "
-          import sys
-          import urllib.parse
-          print(urllib.parse.quote(sys.stdin.read(), safe=''))
-          ")
+        # Encode for data URL (percent-encoding). Python is used for reliable encoding.
+        encoded=$(printf '%s' "$html" | python3 -c "
+        import sys
+        import urllib.parse
+        print(urllib.parse.quote(sys.stdin.read(), safe=''))
+        ")
 
-          data_url="data:text/html;charset=utf-8,$encoded"
+        data_url="data:text/html;charset=utf-8,$encoded"
 
-          # Prefer launching a browser directly with the data URL (no temp file, works with Snap/sandbox).
-          # xdg-open often uses gio, which doesn't support data URLs; sandboxed browsers can't read /tmp or ~/.cache.
-          for browser in firefox chromium-browser google-chrome chromium; do
-              if command -v "$browser" &>/dev/null; then
-                  exec "$browser" "$data_url"
-              fi
-          done
+        # Prefer launching a browser directly with the data URL (no temp file, works with Snap/sandbox).
+        # xdg-open often uses gio, which doesn't support data URLs; sandboxed browsers can't read /tmp or ~/.cache.
+        for browser in firefox chromium-browser google-chrome chromium; do
+            if command -v "$browser" &>/dev/null; then
+                exec "$browser" "$data_url"
+            fi
+        done
 
-          # Fallback: xdg-open (macOS open, or Linux when it works with data URLs)
-          if command -v xdg-open &>/dev/null; then
-              exec xdg-open "$data_url"
-          elif command -v open &>/dev/null; then
-              exec open "$data_url"
-          fi
+        # Fallback: xdg-open (macOS open, or Linux when it works with data URLs)
+        if command -v xdg-open &>/dev/null; then
+            exec xdg-open "$data_url"
+        elif command -v open &>/dev/null; then
+            exec open "$data_url"
+        fi
 
-          echo "links-browse: no browser found (tried firefox, chromium, xdg-open, open)" >&2
-          exit 1
+        echo "links-browse: no browser found (tried firefox, chromium, xdg-open, open)" >&2
+        exit 1
       passthrough: true

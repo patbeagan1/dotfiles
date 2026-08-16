@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          script_content
+      text: |
+        script_content
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          script_content () 
-          { 
-              cat $(which "${1}")
-          }
+        script_content () 
+        { 
+            cat $(which "${1}")
+        }
 
-          script_content "$@"
+        script_content "$@"
       passthrough: true

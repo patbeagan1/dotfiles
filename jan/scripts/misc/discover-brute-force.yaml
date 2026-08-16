@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          discover-brute-force
+      text: |
+        discover-brute-force
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          discover-brute-force () 
-          { 
-              sudo zcat /var/log/auth.log.*.gz |\
-              awk '/Failed password/&&!/for invalid user/{a[$9]++}/Failed password for invalid user/{a["*" $11]++}END{for (i in a) printf "%6s\t%s\n", a[i], i|"sort -n"}'
-          }
+        discover-brute-force () 
+        { 
+            sudo zcat /var/log/auth.log.*.gz |\
+            awk '/Failed password/&&!/for invalid user/{a[$9]++}/Failed password for invalid user/{a["*" $11]++}END{for (i in a) printf "%6s\t%s\n", a[i], i|"sort -n"}'
+        }
 
-          discover-brute-force "$@"
+        discover-brute-force "$@"
       passthrough: true

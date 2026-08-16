@@ -3,24 +3,22 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          comic
+      text: |
+        comic
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          comic () 
-          { 
-              zip -r $1.zip $1;
-              mv $1.zip $1.cbz
-          }
-          comic "$@"
+        comic () 
+        { 
+            zip -r $1.zip $1;
+            mv $1.zip $1.cbz
+        }
+        comic "$@"
 
       passthrough: true

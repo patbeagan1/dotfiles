@@ -3,25 +3,23 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          create-ticket
+      text: |
+        create-ticket
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          curl --verbose \
-            --get \
-            --data-urlencode "pid=10047" \
-            --data-urlencode "issuetype=10004" \
-            --data-urlencode "components=10013" \
-            --data-urlencode "priority=3" \
-            --data-urlencode "customfield_10133=10197" \
-            --data-urlencode "assignee=ug%3A03682da5-16e1-4bbe-a74c-1c2d69a71c10" \
-            --data-urlencode "summary=$1" \
-            "https://alltrails.atlassian.net/secure/CreateIssueDetails!init.jspa"
+        curl --verbose \
+          --get \
+          --data-urlencode "pid=10047" \
+          --data-urlencode "issuetype=10004" \
+          --data-urlencode "components=10013" \
+          --data-urlencode "priority=3" \
+          --data-urlencode "customfield_10133=10197" \
+          --data-urlencode "assignee=ug%3A03682da5-16e1-4bbe-a74c-1c2d69a71c10" \
+          --data-urlencode "summary=$1" \
+          "https://alltrails.atlassian.net/secure/CreateIssueDetails!init.jspa"
       passthrough: true

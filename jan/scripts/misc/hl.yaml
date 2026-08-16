@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          hl
+      text: |
+        hl
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          hl () 
-          { 
-              grep --color=auto --color -i -E "$1|$" "$2"
-          }
+        hl () 
+        { 
+            grep --color=auto --color -i -E "$1|$" "$2"
+        }
 
-          hl "$@"
+        hl "$@"
       passthrough: true

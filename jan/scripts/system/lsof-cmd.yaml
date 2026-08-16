@@ -8,16 +8,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lsof-cmd
+      text: |
+        lsof-cmd
 
-          List files opened by a particular command.
+        List files opened by a particular command.
 
-            jan scripts system lsof-cmd run --process nginx
+        jan scripts system lsof-cmd run --process nginx
 
-          Equivalent to: lsof -c "nginx"
-          EOF
+        Equivalent to: lsof -c "nginx"
   run:
     about: Run lsof -c.
     exec:

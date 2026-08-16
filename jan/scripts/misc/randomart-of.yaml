@@ -3,61 +3,59 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          randomart-of
+      text: |
+        randomart-of
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          set -euo pipefail
+        set -euo pipefail
 
-          scriptname="$(basename "$0")"
-          help() {
-              error_code=$?
-              echo "
-          Usage: $scriptname [-h|--help] <key_file>
+        scriptname="$(basename "$0")"
+        help() {
+            error_code=$?
+            echo "
+        Usage: $scriptname [-h|--help] <key_file>
 
-          Displays the randomart (ASCII art representation) of an SSH key.
-          Uses ssh-keygen to show the visual fingerprint of the key.
+        Displays the randomart (ASCII art representation) of an SSH key.
+        Uses ssh-keygen to show the visual fingerprint of the key.
 
-          Arguments:
-            key_file    Path to the SSH key file (public or private)
+        Arguments:
+          key_file    Path to the SSH key file (public or private)
 
-          Features:
-            - Shows ASCII art representation of SSH key fingerprint
-            - Uses ssh-keygen -lv for detailed key information
-            - Visual way to verify key fingerprints
+        Features:
+          - Shows ASCII art representation of SSH key fingerprint
+          - Uses ssh-keygen -lv for detailed key information
+          - Visual way to verify key fingerprints
 
-          Examples:
-            $scriptname ~/.ssh/id_rsa.pub
-            $scriptname ~/.ssh/id_ed25519
-          "
-              exit $error_code
-          }
+        Examples:
+          $scriptname ~/.ssh/id_rsa.pub
+          $scriptname ~/.ssh/id_ed25519
+        "
+            exit $error_code
+        }
 
-          main() {
+        main() {
 
-              emulate -L zsh
-              zmodload zsh/zutil || return 1
+            emulate -L zsh
+            zmodload zsh/zutil || return 1
 
-              local help
-              zparseopts -D -F -K -- \
-                  {h,-help}=help ||
-                  return 1
+            local help
+            zparseopts -D -F -K -- \
+                {h,-help}=help ||
+                return 1
 
-              if (($#help)); then help; fi
+            if (($#help)); then help; fi
 
-          randomart-of () {
-          	ssh-keygen -lv -f "$1"
-          }
+        randomart-of () {
+        	ssh-keygen -lv -f "$1"
+        }
 
-              randomart-of "$@" || help
-          }
+            randomart-of "$@" || help
+        }
 
-          main "$@" || help
+        main "$@" || help
       passthrough: true

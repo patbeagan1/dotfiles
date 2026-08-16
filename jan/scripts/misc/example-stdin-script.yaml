@@ -3,18 +3,16 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          example-stdin-script
+      text: |
+        example-stdin-script
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          pr () { echo "'$(cat /dev/stdin)'"; }
-          echo "$0" | sed 's/^.*\///g' | pr
+        pr () { echo "'$(cat /dev/stdin)'"; }
+        echo "$0" | sed 's/^.*\///g' | pr
 
       passthrough: true

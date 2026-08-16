@@ -3,31 +3,29 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          open
+      text: |
+        open
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          open () 
-          { 
-              if [ "$(uname)" == "Linux" ]; then
-                  gnome-open "$@";
-              else
-                  if [ "$(uname)" == "Darwin" ]; then
-                      command open "$@";
-                  else
-                      echo "This command is not supported.";
-                  fi;
-              fi
-          }
+        open () 
+        { 
+            if [ "$(uname)" == "Linux" ]; then
+                gnome-open "$@";
+            else
+                if [ "$(uname)" == "Darwin" ]; then
+                    command open "$@";
+                else
+                    echo "This command is not supported.";
+                fi;
+            fi
+        }
 
-          open "$@"
+        open "$@"
       passthrough: true

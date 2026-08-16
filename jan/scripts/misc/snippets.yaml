@@ -3,25 +3,23 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          snippets
+      text: |
+        snippets
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          function main() {
-            local filename=""
-            if [ -z "$1" ]; then 
-          	  filename="snippet.txt"
-            else
-          	  filename="$1"
-            fi
-            eval "$(fzf < "$filename")"
-          }
-          main "$@"
+        function main() {
+          local filename=""
+          if [ -z "$1" ]; then 
+        	  filename="snippet.txt"
+          else
+        	  filename="$1"
+          fi
+          eval "$(fzf < "$filename")"
+        }
+        main "$@"
       passthrough: true

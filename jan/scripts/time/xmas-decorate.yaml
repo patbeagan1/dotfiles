@@ -4,37 +4,35 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          xmas-decorate
+      text: |
+        xmas-decorate
 
-          Adds festive ASCII art decoration to the terminal for Christmas. Optionally sets terminal colors to a festive green theme.
+        Adds festive ASCII art decoration to the terminal for Christmas. Optionally sets terminal colors to a festive green theme.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # Christmas Decoration Script
-          # Adds festive ASCII art to terminal
+        # Christmas Decoration Script
+        # Adds festive ASCII art to terminal
 
-          echo ""
-          echo "     *"
-          echo "    / \\"
-          echo "   /   \\"
-          echo "  /     \\"
-          echo " /       \\"
-          echo " |       |"
-          echo " |       |"
-          echo " |       |"
-          echo " |       |"
-          echo " |_______|"
-          echo ""
-          echo "🎄 Merry Christmas! 🎅"
-          echo ""
+        echo ""
+        echo "     *"
+        echo "    / \\"
+        echo "   /   \\"
+        echo "  /     \\"
+        echo " /       \\"
+        echo " |       |"
+        echo " |       |"
+        echo " |       |"
+        echo " |       |"
+        echo " |_______|"
+        echo ""
+        echo "🎄 Merry Christmas! 🎅"
+        echo ""
 
-          # Optional: Set terminal colors to festive theme
-          if command -v tput >/dev/null 2>&1; then
-              echo -e "\033[0;32m"  # Green
-          fi
+        # Optional: Set terminal colors to festive theme
+        if command -v tput >/dev/null 2>&1; then
+            echo -e "\033[0;32m"  # Green
+        fi
       passthrough: true

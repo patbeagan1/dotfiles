@@ -3,14 +3,12 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          url-performance
+      text: |
+        url-performance
 
-          Measure HTTP fetch times for URLs listed in a file (SBCL + Quicklisp/drakma).
+        Measure HTTP fetch times for URLs listed in a file (SBCL + Quicklisp/drakma).
 
-          Requires on host: sbcl
-          EOF
+        Requires on host: sbcl
   run:
     about: 'Run the linked script; forwards args.'
     exec:
@@ -74,4 +72,3 @@ requires:
   - sbcl
 
   # --- HTTP helpers (private API key + typed inputs) ---
-

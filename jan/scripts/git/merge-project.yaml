@@ -3,57 +3,55 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          merge-project
+      text: |
+        merge-project
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          set -euo pipefail
+        set -euo pipefail
 
-          scriptname="$(basename "$0")"
-          help() {
-              error_code=$?
-              echo "
-          Usage: $scriptname [-h|--help]
+        scriptname="$(basename "$0")"
+        help() {
+            error_code=$?
+            echo "
+        Usage: $scriptname [-h|--help]
 
-          This is used to merge other projects back into the incubator.
-          "
-              exit $error_code
-          }
+        This is used to merge other projects back into the incubator.
+        "
+            exit $error_code
+        }
 
-          main() {
+        main() {
 
-              emulate -L zsh
-              zmodload zsh/zutil || return 1
+            emulate -L zsh
+            zmodload zsh/zutil || return 1
 
-              local help
-              zparseopts -D -F -K -- \
-                  {h,-help}=help ||
-                  return 1
+            local help
+            zparseopts -D -F -K -- \
+                {h,-help}=help ||
+                return 1
 
-              if (($#help)); then help; fi
+            if (($#help)); then help; fi
 
-          merge-project () {
-          	if [ $# -ne 2 ]
-          	then
-          		echo 'requires <repo> <default-branch>'
-          		return 1
-          	fi
-          	if git remote | grep -q "^repo-$1$"; then
-          		git remote remove repo-"$1"
-          	fi
-          	git remote add -f repo-"$1" git@github.com:patbeagan1/"$1".git
-          	git merge repo-"$1"/"$2" --allow-unrelated-histories
-          }
+        merge-project () {
+        	if [ $# -ne 2 ]
+        	then
+        		echo 'requires <repo> <default-branch>'
+        		return 1
+        	fi
+        	if git remote | grep -q "^repo-$1$"; then
+        		git remote remove repo-"$1"
+        	fi
+        	git remote add -f repo-"$1" git@github.com:patbeagan1/"$1".git
+        	git merge repo-"$1"/"$2" --allow-unrelated-histories
+        }
 
-              merge-project "$@" || help
-          }
+            merge-project "$@" || help
+        }
 
-          main "$@" || help
+        main "$@" || help
       passthrough: true

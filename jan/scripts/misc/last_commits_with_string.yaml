@@ -3,26 +3,24 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          last_commits_with_string
+      text: |
+        last_commits_with_string
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          last_commits_with_string () 
-          { 
-              for i in $(ag "$1" | grep .php | sed 's/:.*//g' | sort | uniq );
-              do
-                  echo "$i" && head <(gitfilehistory "$i");
-              done
-          }
+        last_commits_with_string () 
+        { 
+            for i in $(ag "$1" | grep .php | sed 's/:.*//g' | sort | uniq );
+            do
+                echo "$i" && head <(gitfilehistory "$i");
+            done
+        }
 
-          last_commits_with_string "$@"
+        last_commits_with_string "$@"
       passthrough: true

@@ -3,17 +3,15 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          crossview_to_parallel
+      text: |
+        crossview_to_parallel
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          convert "$1" -crop 2x1@  +repage  +adjoin out.png
-          montage -mode concatenate -tile 2x1@ $(ls -1 out* | sort -r) mon-out.png
+        convert "$1" -crop 2x1@  +repage  +adjoin out.png
+        montage -mode concatenate -tile 2x1@ $(ls -1 out* | sort -r) mon-out.png
       passthrough: true

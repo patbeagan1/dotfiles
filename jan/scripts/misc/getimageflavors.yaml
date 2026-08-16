@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          getimageflavors
+      text: |
+        getimageflavors
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          getgateway () { ag -g $1 }
-          rm /tmp/imgoutput.html
-          for i in $(getgateway $1); do 
-              echo "<p>$i</p><img src='file://$(pwd)/$i' style='width: 100px' />" >> /tmp/imgoutput.html; 
-          done
-          open /tmp/imgoutput.html
+        getgateway () { ag -g $1 }
+        rm /tmp/imgoutput.html
+        for i in $(getgateway $1); do 
+            echo "<p>$i</p><img src='file://$(pwd)/$i' style='width: 100px' />" >> /tmp/imgoutput.html; 
+        done
+        open /tmp/imgoutput.html
       passthrough: true

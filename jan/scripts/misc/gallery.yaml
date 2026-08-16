@@ -3,47 +3,45 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          gallery
+      text: |
+        gallery
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          filename="index.html"
+        filename="index.html"
 
-          echo > "$filename"
+        echo > "$filename"
 
-          echo '<div>' >> "$filename"
-          for i in $(find -L . \( ! -regex '.*/\..*' \) -type f -prune); do
-          echo "<a href=\"$i\"><img src=\"$i\" loading=\"lazy\"></a>" >> "$filename"
-          done
-          echo '</div>' >> "$filename"
+        echo '<div>' >> "$filename"
+        for i in $(find -L . \( ! -regex '.*/\..*' \) -type f -prune); do
+        echo "<a href=\"$i\"><img src=\"$i\" loading=\"lazy\"></a>" >> "$filename"
+        done
+        echo '</div>' >> "$filename"
 
-          cat <<EOF >> "$filename"
-          <style>
-          img {
-              background-color: #eee;
-              display: inline-block;
-              margin: 0 0 1em;
-              max-width: 24%;
-              max-height:50%;
-          }
+        cat <<EOF >> "$filename"
+        <style>
+        img {
+            background-color: #eee;
+            display: inline-block;
+            margin: 0 0 1em;
+            max-width: 24%;
+            max-height:50%;
+        }
 
-          img:hover {
-              -webkit-transform:scale(1.25); /* Safari and Chrome */
-              -moz-transform:scale(1.25); /* Firefox */
-              -ms-transform:scale(1.25); /* IE 9 */
-              -o-transform:scale(1.25); /* Opera */
-               transform:scale(1.25);
-          }
-          </style>
-          EOF
+        img:hover {
+            -webkit-transform:scale(1.25); /* Safari and Chrome */
+            -moz-transform:scale(1.25); /* Firefox */
+            -ms-transform:scale(1.25); /* IE 9 */
+            -o-transform:scale(1.25); /* Opera */
+             transform:scale(1.25);
+        }
+        </style>
+        EOF
 
       passthrough: true

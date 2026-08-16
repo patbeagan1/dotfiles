@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          manbash
+      text: |
+        manbash
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          manbash () 
-          { 
-              man -P "less '+/^ *'${1}" bash
-          }
+        manbash () 
+        { 
+            man -P "less '+/^ *'${1}" bash
+        }
 
-          manbash "$@"
+        manbash "$@"
       passthrough: true

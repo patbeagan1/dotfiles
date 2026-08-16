@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          rederr
+      text: |
+        rederr
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          rederr () 
-          { 
-              "$@" 2>&1 1>&3 | sed "s,.*,\033[31m&\e[0m," 1>&2
-          } 3>&1
+        rederr () 
+        { 
+            "$@" 2>&1 1>&3 | sed "s,.*,\033[31m&\e[0m," 1>&2
+        } 3>&1
 
-          rederr "$@"
+        rederr "$@"
       passthrough: true

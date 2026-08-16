@@ -3,22 +3,20 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          dequote
+      text: |
+        dequote
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          dequote () 
-          { 
-              eval printf %s "$1" 2> /dev/null
-          }
-          dequote "$@"
+        dequote () 
+        { 
+            eval printf %s "$1" 2> /dev/null
+        }
+        dequote "$@"
       passthrough: true

@@ -3,47 +3,45 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          new-module
+      text: |
+        new-module
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
-          set -euo pipefail
+        # (c) 2022 Pat Beagan: MIT License
+        set -euo pipefail
 
-          if [ $# -ne 1 ]; then 
-          	echo "Usage: $0 <module-name>"
-          	exit 1
-          fi
+        if [ $# -ne 1 ]; then 
+        	echo "Usage: $0 <module-name>"
+        	exit 1
+        fi
 
-          echo "include(\"$1\")" >> settings.gradle.kts
-          mkdir -p "$1/src/main/kotlin/com/example"
-          mkdir -p "$1/src/main/resources/"
-          cat << EOF > "$1/src/main/kotlin/com/example/Main.kt"
-          package com.example;
+        echo "include(\"$1\")" >> settings.gradle.kts
+        mkdir -p "$1/src/main/kotlin/com/example"
+        mkdir -p "$1/src/main/resources/"
+        cat << EOF > "$1/src/main/kotlin/com/example/Main.kt"
+        package com.example;
 
-          fun main() = println("Hello")
-          EOF
-          cat << EOF > "$1/build.gradle.kts"
-          plugins {
-              kotlin("jvm")
-          }
+        fun main() = println("Hello")
+        EOF
+        cat << EOF > "$1/build.gradle.kts"
+        plugins {
+            kotlin("jvm")
+        }
 
-          group = "com.example"
-          version = "1.0"
+        group = "com.example"
+        version = "1.0"
 
-          repositories {
-              mavenCentral()
-          }
+        repositories {
+            mavenCentral()
+        }
 
-          dependencies {
-              implementation(kotlin("stdlib"))
-          }
-          EOF
+        dependencies {
+            implementation(kotlin("stdlib"))
+        }
+        EOF
       passthrough: true

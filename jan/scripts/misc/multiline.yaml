@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          multiline
+      text: |
+        multiline
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          multiline () 
-          { 
-              echo "$@" | tr " " "\n"
-          }
+        multiline () 
+        { 
+            echo "$@" | tr " " "\n"
+        }
 
-          multiline "$@"
+        multiline "$@"
       passthrough: true

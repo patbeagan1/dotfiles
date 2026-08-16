@@ -3,18 +3,16 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          cat-no-comment
+      text: |
+        cat-no-comment
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          cat "$1" | grep -v '#' | grep -v "^$"
+        cat "$1" | grep -v '#' | grep -v "^$"
       passthrough: true

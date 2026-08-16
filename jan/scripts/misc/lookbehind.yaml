@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lookbehind
+      text: |
+        lookbehind
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          lookbehind () 
-          { 
-              printf "((?!%s).)*" "$1"
-          }
+        lookbehind () 
+        { 
+            printf "((?!%s).)*" "$1"
+        }
 
-          lookbehind "$@"
+        lookbehind "$@"
       passthrough: true

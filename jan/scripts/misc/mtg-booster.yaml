@@ -3,15 +3,13 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          mtg-booster
+      text: |
+        mtg-booster
 
-          Generate sealed-deck HTML boosters from Scryfall and zip them.
-          Writes sealed-deck-N.zip in the current directory.
+        Generate sealed-deck HTML boosters from Scryfall and zip them.
+        Writes sealed-deck-N.zip in the current directory.
 
-          Requires on host: deno, zip
-          EOF
+        Requires on host: deno, zip
   run:
     about: 'Run the linked script; forwards args.'
     include:

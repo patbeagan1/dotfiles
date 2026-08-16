@@ -36,28 +36,26 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          csv-summary
+      text: |
+        csv-summary
 
-          Inspect a CSV/TSV with pandas (schema, nulls, describe, optional group-by).
+        Inspect a CSV/TSV with pandas (schema, nulls, describe, optional group-by).
 
-          Uses exec.python + packages.uv (python >=3.11). You can still use
-          argv: [python3, -c, …] instead of exec.python if you prefer.
+        Uses exec.python + packages.uv (python >=3.11). You can still use
+        argv: [python3, -c, …] instead of exec.python if you prefer.
 
-          Examples:
+        Examples:
 
-            jan scripts files csv-summary run --file ~/Downloads/export.csv
-            jan scripts files csv-summary run --file data.tsv --sep $'\t'
-            jan scripts files csv-summary run --file sales.csv --group region
-            jan scripts files csv-summary run --file sales.csv --group region --head 0
+        jan scripts files csv-summary run --file ~/Downloads/export.csv
+        jan scripts files csv-summary run --file data.tsv --sep $'\t'
+        jan scripts files csv-summary run --file sales.csv --group region
+        jan scripts files csv-summary run --file sales.csv --group region --head 0
 
-          Inputs:
-            --file <PATH>     CSV/TSV to inspect (required)
-            --sep <CHAR>      Field separator (default: ,)
-            --head <N>        Sample rows to print (default: 5; 0 = none)
-            --group <COL>     Aggregate numeric columns by this column
-          EOF
+        Inputs:
+        --file <PATH>     CSV/TSV to inspect (required)
+        --sep <CHAR>      Field separator (default: ,)
+        --head <N>        Sample rows to print (default: 5; 0 = none)
+        --group <COL>     Aggregate numeric columns by this column
   run:
     about: Load the file and print a pandas summary.
     exec:

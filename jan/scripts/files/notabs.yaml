@@ -3,32 +3,30 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          notabs
+      text: |
+        notabs
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          notabs () 
-          { 
-              if [ $# -lt 2 ]; then
-                  echo "Usage: notabs <file> <num spaces to use>";
-              else
-                  n="";
-                  for i in $(seq 1 $2);
-                  do
-                      n+=" ";
-                  done;
-                  sed "s/	/$n/g" $1;
-              fi
-          }
+        notabs () 
+        { 
+            if [ $# -lt 2 ]; then
+                echo "Usage: notabs <file> <num spaces to use>";
+            else
+                n="";
+                for i in $(seq 1 $2);
+                do
+                    n+=" ";
+                done;
+                sed "s/	/$n/g" $1;
+            fi
+        }
 
-          notabs "$@"
+        notabs "$@"
       passthrough: true

@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          dictionary
+      text: |
+        dictionary
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          dictionary () 
-          { 
-              curl "dict://dict.org/d:$1"
-          }
+        dictionary () 
+        { 
+            curl "dict://dict.org/d:$1"
+        }
 
-          dictionary "$@"
+        dictionary "$@"
       passthrough: true

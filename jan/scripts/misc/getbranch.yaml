@@ -3,22 +3,20 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          getbranch
+      text: |
+        getbranch
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          getbranch () 
-          { 
-              printf $(git rev-parse --abbrev-ref HEAD)
-          }
-          getbranch "$@"
+        getbranch () 
+        { 
+            printf $(git rev-parse --abbrev-ref HEAD)
+        }
+        getbranch "$@"
       passthrough: true

@@ -3,23 +3,21 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          rm_empty_dirs
+      text: |
+        rm_empty_dirs
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          rm_empty_dirs () 
-          { 
-              find "$1" -empty -type d -delete
-          }
+        rm_empty_dirs () 
+        { 
+            find "$1" -empty -type d -delete
+        }
 
-          rm_empty_dirs "$@"
+        rm_empty_dirs "$@"
       passthrough: true

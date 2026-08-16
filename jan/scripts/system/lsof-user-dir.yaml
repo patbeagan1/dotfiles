@@ -12,16 +12,14 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          lsof-user-dir
+      text: |
+        lsof-user-dir
 
-          View user activity under a directory.
+        View user activity under a directory.
 
-            jan scripts system lsof-user-dir run --user root --dir /var/log
+        jan scripts system lsof-user-dir run --user root --dir /var/log
 
-          Equivalent to: lsof -u user -a +D /etc
-          EOF
+        Equivalent to: lsof -u user -a +D /etc
   run:
     about: Run lsof for user + directory.
     exec:
@@ -32,4 +30,3 @@ commands:
         - -a
         - +D
         - ${{ inputs.dir }}
-

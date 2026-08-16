@@ -3,32 +3,30 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          server
+      text: |
+        server
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # (c) 2022 Pat Beagan: MIT License
+        # (c) 2022 Pat Beagan: MIT License
 
-          server () 
-          { 
-              if [ $# -lt 2 ]; then
-                  port="$1";
-                  if [ -z "$port" ]; then
-                      port="8000";
-                  fi;
-                  echo Running server on "$port";
-                  python -m SimpleHTTPServer "$port";
-              else
-                  echo Too many arguments.;
-              fi
-          }
+        server () 
+        { 
+            if [ $# -lt 2 ]; then
+                port="$1";
+                if [ -z "$port" ]; then
+                    port="8000";
+                fi;
+                echo Running server on "$port";
+                python -m SimpleHTTPServer "$port";
+            else
+                echo Too many arguments.;
+            fi
+        }
 
-          server "$@"
+        server "$@"
       passthrough: true

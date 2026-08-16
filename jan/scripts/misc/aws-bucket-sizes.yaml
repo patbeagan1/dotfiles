@@ -3,27 +3,25 @@ commands:
   help:
     about: Describe this script.
     exec:
-      bash: |
-          cat <<'EOF'
-          aws-bucket-sizes
+      text: |
+        aws-bucket-sizes
 
-          A script for automated tasks.
+        A script for automated tasks.
 
-          EOF
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
-          # Get a list of all bucket names
-          buckets=$(aws s3 ls | awk '{print $3}')
+        # Get a list of all bucket names
+        buckets=$(aws s3 ls | awk '{print $3}')
 
-          # Loop through each bucket
-          for bucket in $buckets
-          do
-            echo "Getting size for bucket: $bucket"
+        # Loop through each bucket
+        for bucket in $buckets
+        do
+          echo "Getting size for bucket: $bucket"
 
-            # Use --summarize and --human-readable to get the total size
-            aws s3 ls s3://$bucket --recursive --human-readable --summarize
-            echo "------------------------------"
-          done
+          # Use --summarize and --human-readable to get the total size
+          aws s3 ls s3://$bucket --recursive --human-readable --summarize
+          echo "------------------------------"
+        done
       passthrough: true
