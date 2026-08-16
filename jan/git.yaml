@@ -1,6 +1,10 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/git/.
 about: git utilities
+aliases:
+  g: git
+  gs: git status
+  gb: git branch
 commands:
   add-submodule:
     include: scripts/git/add-submodule.yaml

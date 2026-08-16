@@ -1,6 +1,10 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/files/.
 about: files utilities
+aliases:
+  l: ls -F
+  la: ls -A
+  ll: ls -lhA
 commands:
   basename:
     include: scripts/files/basename.yaml

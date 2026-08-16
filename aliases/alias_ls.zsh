@@ -1,9 +1,10 @@
 #alias ls='ls -Fh --color=auto'
 # alias ll='ls -l'
 alias l.='ls -d .* --color=auto'
-alias l='ls -F'
-alias la='ls -A'
-alias ll="ls -lhA"
+# `l`, `la`, `ll` are declared in jan/files.yaml and emitted by `jan alias`.
+# alias l='ls -F'
+# alias la='ls -A'
+# alias ll="ls -lhA"
 alias lla='ls -la'
 alias lr='ls -ralt'
 alias lsd='ls --group-directories-first'

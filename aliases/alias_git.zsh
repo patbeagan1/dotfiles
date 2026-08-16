@@ -29,7 +29,9 @@ alias revert-file='git checkout origin/develop --'
 alias revert-files='find . -exec git checkout origin/develop -- {} \;'
 
 # Alias to list the last 10 branches
-alias lb="last_branch.sh | tail -10"
+# `lb` is an extra jan name on jan/scripts/misc/last_branch.yaml (`jan alias`).
+# Previously: last_branch.sh | tail -10
+# alias lb="last_branch.sh | tail -10"
 # Alias to list branches excluding those marked as old
 alias lbb="last_branch.sh | grep -v old"
 # Alias to select and checkout a branch from the last 10 branches
@@ -47,13 +49,14 @@ alias git-view4="git log --graph --abbrev-commit --decorate --format=format:'%C(
 alias gv='git-view3'
 
 # Alias for git command
-alias g="git"
+# `g`, `gs`, `gb` are declared in jan/git.yaml and emitted by `jan alias`.
+# alias g="git"
 # Alias to push to the master branch
 alias gpom="git push origin master"
 # Alias to check the status of the git repository
-alias gs="git status"
+# alias gs="git status"
 # Alias to list branches
-alias gb="git branch"
+# alias gb="git branch"
 # Alias to checkout a branch
 alias gco="git checkout"
 # Function to log commits over time
