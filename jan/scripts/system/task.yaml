@@ -1,4 +1,5 @@
 about: A script for automated tasks.
+aliases: [tk]
 commands:
   help:
     about: Describe this script.

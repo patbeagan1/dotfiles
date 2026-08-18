@@ -1,7 +1,77 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/system/.
 about: system utilities
+aliases:
+  alert: 'notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e ''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'')"'
+  comment: ': <<EOF'
+  cpv: rsync -ah --info=progress2
+  ctl: sudo systemctl
+  decrypt: gpg -d
+  dush: du -sh
+  egrep: egrep --color=auto
+  encrypt: gpg -c
+  fgrep: fgrep --color=auto
+  fhere: 'find . -name '
+  findempty: 'find . -type f -empty '
+  grep: grep --color=auto
+  h: history
+  herefile: 'cat << EOF >>'
+  histg: 'history | grep'
+  historyg: 'history | grep'
+  is: is-test
+  jam: 'java -jar '
+  ks: kotlinc-jvm
+  mkdir: mkdir -pv
+  mnt: 'mount | grep -E ^/dev | column -t'
+  num_users: 'who | wc -l'
+  psg: 'ps aux | grep -v grep | grep -i -e VSZ -e'
+  search: grep
+  show-hardware-displays: sudo lshw -numeric -C display
+  slp: 'command -v is-test >/dev/null || { echo "is-test not installed, please install it."; return 1; }; is-test system os mac && pmset sleepnow || systemctl suspend'
+  strictmode: set -euo pipefail
+  tk_today: tk -due day
+  tkn: tk --next
+  tkr: 'tk --read | head -15'
+  tkrr: tk --read
+  track-script-usage: trackusage.sh -a
+  verify-directory-contents: rsync -rvcn
+  verify-hash: 'is-test system os linux && sha256sum || shasum -a 256'
+  week: 'date +%V'
 commands:
+  macos-shell:
+    os: [macos]
+    about: macos shell aliases (emitted by jan alias)
+    aliases:
+      java11: 'export JAVA_HOME=$JAVA_11_HOME'
+      java8: 'export JAVA_HOME=$JAVA_8_HOME'
+      javaSet10: 'export JAVA_HOME=$(/usr/libexec/java_home -v 10); java -version'
+      javaSet11: 'export JAVA_HOME=$(/usr/libexec/java_home -v 11); java -version'
+      javaSet12: 'export JAVA_HOME=$(/usr/libexec/java_home -v 12); java -version'
+      javaSet13: 'export JAVA_HOME=$(/usr/libexec/java_home -v 13); java -version'
+      javaSet14: 'export JAVA_HOME=$(/usr/libexec/java_home -v 14); java -version'
+      javaSet15: 'export JAVA_HOME=$(/usr/libexec/java_home -v 15); java -version'
+      javaSet16: 'export JAVA_HOME=$(/usr/libexec/java_home -v 16); java -version'
+      javaSet17: 'export JAVA_HOME=$(/usr/libexec/java_home -v 17); java -version'
+      javaSet21: 'export JAVA_HOME=$(/usr/libexec/java_home -v 21); java -version'
+      javaSet24: 'export JAVA_HOME=$(/usr/libexec/java_home -v 24); java -version'
+      javaSet7: 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.7); java -version'
+      javaSet8: 'export JAVA_HOME=$(/usr/libexec/java_home -v 1.8); java -version'
+      javaSet9: 'export JAVA_HOME=$(/usr/libexec/java_home -v 9); java -version'
+      java_list: '/bin/zsh -lc "/usr/libexec/java_home -V 2>&1 | cat"'
+      mac_hideFiles: defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app
+      mac_hideFinderLocation: 'defaults write com.apple.finder _FXShowPosixPathInTitle -bool NO && killall Finder'
+      mac_showFiles: defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app
+      mac_showFinderLocation: 'defaults write com.apple.finder _FXShowPosixPathInTitle -bool YES && killall Finder'
+      readOutLoud: say -v Moira -i -f
+      read_out_loud: readOutLoud
+  linux-shell:
+    os: [linux]
+    about: linux shell aliases (emitted by jan alias)
+    aliases:
+      battery: 'is-test system os linux && upower -d || echo Linux only'
+      ps: ps -aux
+      qp: 'ps auxwww|more'
+      tulpn: netstat -tulpn
   cputemp:
     include: scripts/system/cputemp.yaml
   cputemp-linux-sorted:

@@ -1,6 +1,58 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/misc/.
 about: misc utilities
+aliases:
+  backup_myhome: 'rsync -aPzv --checksum --remove-source-files --exclude="~/Downloads/MyHome/BIG" --exclude="~/Downloads/MyHome/bin" ~/Downlaods/MyHome /Volumes/home | tee backup_out.log'
+  ca: cursor-agent
+  cg: 'ollama run gemma3:latest'
+  cgg: 'cat | cg'
+  d10: random 10
+  d12: random 12
+  d2: random 2
+  d20: random 20
+  d4: random 4
+  d6: random 6
+  d8: random 8
+  find_filenames_matching: ag -g
+  findname: find . -name
+  foreach-line: while IFS= read -r line
+  fuck: 'eval $(thefuck $(fc -ln -1)); history -r'
+  gemini-cli: 'npx https://github.com/google-gemini/gemini-cli'
+  gpt: openai_cli.py --prompt
+  i: inspect
+  jc: j c
+  jslint: npm run lint --silent -- --frail
+  ls-files-by-size: 'ls -l | tr -s " " | cut -d" " -f 5-100 | sort -n | trim.sh'
+  map: xargs -n1
+  nix-install: nix-env -iA nixpkgs.
+  nn-d: 'nz.sh diary:'
+  nn-diary: 'nz.sh diary:'
+  nn-link: 'nz.sh link:'
+  nn-t: 'nz.sh todo:'
+  nn-todo: 'nz.sh todo:'
+  nnl: 'nz.sh | tail'
+  nnt: 'nz.sh | tail'
+  note-list: gas note
+  nt: 'nz.sh | tail'
+  ntagas: tagger.py -s n tagas
+  ntagcheck: tagger.py -s n tagcheck
+  nvimg: alacritty --command nvim
+  pn: pnpm
+  random_temp_file: '/tmp/$(date +%s)_$(random 1000)'
+  sequence_diagram: 'open http://www.plantuml.com/plantuml/uml/'
+  tagas: tagger.py tagas
+  tagcheck: tagger.py tagcheck
+  teleport: waypoint_go
+  to_clipboard: xclip -selection clipboard
+  tp-manual: teleport
+  urlencode: 'python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
+  va: source ./venv/bin/activate
+  ve: python3 -m venv ./venv
+  venv: ve; va
+  vi-raw: vi -u NONE
+  waypoint: 'echo `pwd` >> ~/waypoint.txt; cat ~/waypoint.txt | sort | uniq >> /tmp/waypoint.txt; mv /tmp/waypoint.txt ~/waypoint.txt'
+  xnode: node -e
+  xpython: python -c
 commands:
   appletoast:
     include: scripts/misc/appletoast.yaml

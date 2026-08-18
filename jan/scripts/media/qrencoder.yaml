@@ -1,4 +1,5 @@
 about: A script for automated tasks.
+aliases: [qr]
 commands:
   help:
     about: Describe this script.

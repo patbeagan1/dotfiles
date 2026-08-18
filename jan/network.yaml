@@ -1,6 +1,33 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/network/.
 about: network utilities
+aliases:
+  cat-web: wget -O-
+  define: 'curl dict://dict.org/d:'
+  dict: 'curl dict://dict.org/d:'
+  dns_check: systemd-resolve --status
+  ip_local: ipconfig getifaddr en0
+  ip_remote: 'curl http://ipecho.net/plain; echo'
+  ips: 'ifconfig -a | grep -o ''inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)'' | awk ''{ sub(/inet6? (addr:)? ?/, ""); print }'''
+  lynx: lynx -accept_all_cookies
+  manif: 'lynx -accept_all_cookies http://tldp.org/LDP/abs/html/comparison-ops.html'
+  myip: 'echo Remote/Local; ip_remote; ip_local'
+  ports: netstat -vanp tcp
+  ps-port: 'lsof -nP -iTCP -sTCP:LISTEN | grep'
+  psport: 'netstat -vanp tcp | grep 127.0.0.1'
+  q-android: 'web-open ''https://developer.android.com/s/results?q='''
+  q-heb: 'web-open ''https://www.heb.com/search?Ns=product.salePrice%7C0&q='''
+  q-maven: 'web-open ''https://search.maven.org/search?q='''
+  ss-plant: 'ss -plnt | sed -e "s/ \+$//"'
+  vpn: 'nordvpn status; nordvpn'
+  vpnc: nordvpn connect
+  vpnd: nordvpn disconnect
+  vpnm: nordvpn mesh
+  weather: 'curl http://wttr.in/Boston'
+  wget: wget -c
+  wget-all: wget --recursive --no-parent
+  wget-local: wget -E -H -k -K -p
+  wget-site: wget -c -EHkKp -P sites -t 1
 commands:
   duck:
     include: scripts/network/duck.yaml

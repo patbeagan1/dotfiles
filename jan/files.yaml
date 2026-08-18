@@ -2,9 +2,20 @@
 # Each command is a YAML include under scripts/files/.
 about: files utilities
 aliases:
+  dirs: 'ls -al | grep ''^d'''
   l: ls -F
   la: ls -A
+  ldu: 'du -sh * | sort -h'
   ll: ls -lhA
+  lla: ls -la
+  lr: ls -ralt
+  lsd: ls --group-directories-first
+  lsg: 'ls | grep -i '
+  lsl: 'ls -lhFA | less'
+  lss: ls -harsS
+  lt: 'ls | rev | sort | rev'
+  ralt: ls -ralt
+  sl: ls
 commands:
   basename:
     include: scripts/files/basename.yaml

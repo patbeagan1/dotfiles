@@ -1,6 +1,47 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/android/.
 about: android utilities
+aliases:
+  adbt: adb-triage
+  android-app-info: adb shell dumpsys package
+  android-app-list: adb shell pm list packages
+  android-battery-info: adb shell dumpsys battery
+  android-clear-logs: adb logcat -c
+  android-emulator: ~/Library/Android/sdk/emulator/emulator
+  android-install: adb install
+  android-list-avds: emulator -list-avds
+  android-list-devices: adb devices -l
+  android-logs: adb logcat
+  android-pull: adb pull
+  android-push: adb push
+  android-reboot: adb reboot
+  android-reboot-bootloader: adb reboot bootloader
+  android-reboot-recovery: adb reboot recovery
+  android-record: 'scrcpy -m720 --max-fps=60 -d --record=file.mp4 && mv file.mp4 ~/Downloads'
+  android-screenrecord: adb shell screenrecord /sdcard/screenrecord.mp4
+  android-screenshot: 'adb exec-out screencap -p > screenshot.png'
+  android-shell: adb shell
+  android-start-emu-fzf: 'emulator -avd $(emulator -list-avds | fzf)'
+  android-start-emulator: 'em -avd $(em -list-avds | fzf)'
+  android-start-network-emu: 'emulator -netdelay none -netspeed full -avd $P_AVD_CURRENT -http-proxy $P_PROXY_CURRENT'
+  android-stop-screenrecord: adb shell pkill -SIGINT screenrecord
+  android-uninstall: adb uninstall
+  android-wifi-info: adb shell dumpsys wifi
+  destroy_gradle: 'rm -rf ~/.gradle/caches && rm -rf .gradle && ./gradlew clean'
+  disable_dont_keep_activities: adb shell settings put global always_finish_activities 0
+  dns_emu: 'for i in $(emulator -list-avds); do echo emulator -avd "$i" -netdelay none -netspeed full -dns-server 8.8.8.8; done'
+  enable_developer_options: adb shell settings put global development_settings_enabled 1
+  enable_dont_keep_activities: adb shell settings put global always_finish_activities 1
+  findgradle: '\ps aux | grep Gradle | grep -v grep | awk ''{print $2}'''
+  gradlekill: pkill -f gradle-launcher
+  gw: ./gradlew
+  gw17: 'javaSet17 && gw'
+  gw21: 'javaSet21 && gw'
+  gwt: 'gw "$(gw tasks | grep " - " | fzf -e | cut -d- -f 1 | xargs)"'
+  gww: './gradlew :app:assembleAlphaDebug :app:installAlphaDebug'
+  killgradle: 'findgradle | xargs kill -9'
+  kotlin_conversion: 'echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
+  lintBaseline: './gradlew :app:lintRelease -Dlint.baselines.continue=true'
 commands:
   android-dump:
     include: scripts/android/android-dump.yaml

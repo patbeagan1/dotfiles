@@ -1,6 +1,33 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/media/.
 about: media utilities
+aliases:
+  chafa-all: 'for i in *; do chafa "$i"; sleep 0.5; done'
+  convert-list: convert -list list
+  convert-list-channel: convert -list channel
+  convert-list-color: convert -list color
+  convert-list-colorspace: convert -list colorspace
+  convert-list-command: convert -list command
+  convert-list-compose: convert -list compose
+  convert-list-configure: convert -list configure
+  convert-list-decoration: convert -list decoration
+  convert-list-filter: convert -list filter
+  convert-list-font: convert -list font
+  convert-list-format: convert -list format
+  convert-list-functions: convert -list
+  convert-list-gravity: convert -list gravity
+  convert-list-primitive: convert -list primitive
+  convert-list-style: convert -list style
+  convert-list-threshold: convert -list threshold
+  convert-list-type: convert -list type
+  convert-list-virtual: convert -list virtual-pixel
+  img-identify: identify -verbose
+  img-jpgdir-to-gif: 'convert -delay 20 -loop 0 *.jpg myimage.gif'
+  img-resize-to-web: 'mogrify -resize 690\> *.png'
+  qr_address: 'qr "http://`pretty_ip -f0`"'
+  qr_compileAggregate: 'montage /tmp/qr-output* -geometry 120x120+1+1 montage.out.jpg'
+  record: asciinema rec
+  shrink_mov_from: ffmpeg -vcodec libx264 -crf 20 output.mp4 -i
 commands:
   accioImage:
     include: scripts/media/accioImage.yaml

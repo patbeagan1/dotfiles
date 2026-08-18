@@ -1,24 +1,22 @@
-alias is=is-test
-alias mkdir="mkdir -pv"
-alias cpv='rsync -ah --info=progress2' # use like cp, but with a progress bar
-alias findempty="find . -type f -empty "
-alias fhere="find . -name "
-alias herefile='cat << EOF >>'
-alias comment=': <<EOF'
-alias strictmode='set -euo pipefail'
-alias search=grep
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias psg="ps aux | grep -v grep | grep -i -e VSZ -e"
-alias num_users="who | wc -l"
-if is-test system os linux; then
-    alias ps="ps -aux"
-    alias qp="ps auxwww|more"
-    alias tulpn="netstat -tulpn"
-fi
+# True `alias` entries were moved to the jan spec and are emitted by `jan alias`.
+# Functions and conditional fallbacks stay here.
+# alias is=is-test
+# alias mkdir="mkdir -pv"
+# alias cpv='rsync -ah --info=progress2' # use like cp, but with a progress bar
+# alias findempty="find . -type f -empty "
+# alias fhere="find . -name "
+# alias herefile='cat << EOF >>'
+# alias comment=': <<EOF'
+# alias strictmode='set -euo pipefail'
+# alias search=grep
+# alias grep='grep --color=auto'
+# alias egrep='egrep --color=auto'
+# alias fgrep='fgrep --color=auto'
+# alias psg="ps aux | grep -v grep | grep -i -e VSZ -e"
+# alias num_users="who | wc -l"
+# Linux-only aliases live on jan/system.yaml (`linux-shell`, emitted by `jan alias`).
 
-alias ctl='sudo systemctl'
+# alias ctl='sudo systemctl'
 
 fileedit () { 
 	if ! command -v ag &> /dev/null; then

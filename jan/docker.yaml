@@ -1,6 +1,8 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/docker/.
 about: docker utilities
+aliases:
+  docker_check_vm: docker run -it --rm --privileged --pid=host justincormack/nsenter1
 commands:
   docker-inspect-running:
     include: scripts/docker/docker-inspect-running.yaml

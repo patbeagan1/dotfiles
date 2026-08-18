@@ -1,12 +1,14 @@
-alias gww='./gradlew :app:assembleAlphaDebug :app:installAlphaDebug'
-alias gw17='javaSet17 && gw'
-alias gw21='javaSet21 && gw'
-alias gwt='gw "$(gw tasks | grep " - " | fzf -e | cut -d- -f 1 | xargs)"'
-alias destroy_gradle='rm -rf ~/.gradle/caches && rm -rf .gradle && ./gradlew clean'
-alias findgradle='\ps aux | grep Gradle | grep -v grep | awk '\''{print $2}'\'''
-alias killgradle='findgradle | xargs kill -9'
-alias gradlekill='pkill -f gradle-launcher'
-alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
+# True `alias` entries were moved to the jan spec and are emitted by `jan alias`.
+# Functions and conditional fallbacks stay here.
+# alias gww='./gradlew :app:assembleAlphaDebug :app:installAlphaDebug'
+# alias gw17='javaSet17 && gw'
+# alias gw21='javaSet21 && gw'
+# alias gwt='gw "$(gw tasks | grep " - " | fzf -e | cut -d- -f 1 | xargs)"'
+# alias destroy_gradle='rm -rf ~/.gradle/caches && rm -rf .gradle && ./gradlew clean'
+# alias findgradle='\ps aux | grep Gradle | grep -v grep | awk '\''{print $2}'\'''
+# alias killgradle='findgradle | xargs kill -9'
+# alias gradlekill='pkill -f gradle-launcher'
+# alias lintBaseline='./gradlew :app:lintRelease -Dlint.baselines.continue=true'
 
 # fzf wrapper for Gradle with a project-specific, expiring cache.
 # Caches tasks for 1 week to speed up repeated use.

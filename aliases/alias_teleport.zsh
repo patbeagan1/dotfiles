@@ -1,5 +1,7 @@
-alias waypoint='echo `pwd` >> ~/waypoint.txt; cat ~/waypoint.txt | sort | uniq >> /tmp/waypoint.txt; mv /tmp/waypoint.txt ~/waypoint.txt'
+# True `alias` entries were moved to the jan spec and are emitted by `jan alias`.
+# Functions and conditional fallbacks stay here.
+# alias waypoint='echo `pwd` >> ~/waypoint.txt; cat ~/waypoint.txt | sort | uniq >> /tmp/waypoint.txt; mv /tmp/waypoint.txt ~/waypoint.txt'
 waypoint_go () { cd $(cat ~/waypoint.txt | fzf -1 -q "$1") ; }
-alias teleport=waypoint_go
-alias tp-manual=teleport
+# alias teleport=waypoint_go
+# alias tp-manual=teleport
 function tp () { cd $(z -l | cut -d'/' -f2-100 | sed 's:^:/:g' | fzf -1); }

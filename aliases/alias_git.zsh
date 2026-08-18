@@ -1,3 +1,5 @@
+# True `alias` entries were moved to the jan spec and are emitted by `jan alias`.
+# Functions and conditional fallbacks stay here.
 release-contains () { git branch -a --contains "$1" | grep release | grep remote | grep -E '\d+\.\d+\.\d+' | sed 's/^.*release/release/g' | sort -V | tail }
 
 release-contains () {
@@ -13,52 +15,52 @@ release-contains () {
         tail -n 10
 }
 
-alias find-release='release-contains "$(git log --oneline --color=always | fzf --ansi --preview "git show --stat {1}" | awk "{print \$1}")"'
+# alias find-release='release-contains "$(git log --oneline --color=always | fzf --ansi --preview "git show --stat {1}" | awk "{print \$1}")"'
 
-alias cdworktree='cd $(~/repo/incubator-agent/Incubator/monorepo agent-pipeline cd | tail -1)'
+# alias cdworktree='cd $(~/repo/incubator-agent/Incubator/monorepo agent-pipeline cd | tail -1)'
 
 save () { git commit -am "commit to save" } 
 switchoc () { git switch "$1" 2>/dev/null || git switch -c "$1"; git fetch "$1" 2>/dev/null; }
 # Alias for viewing the last commit in a concise format
-alias gitl='git last --oneline | cat'
+# alias gitl='git last --oneline | cat'
 # Alias for checking the status of the git repository
-alias gss='git status -sb'
+# alias gss='git status -sb'
 # Alias to revert a file to the version in the develop branch
-alias revert-file='git checkout origin/develop --'
+# alias revert-file='git checkout origin/develop --'
 # Alias to revert all files to the version in the develop branch
-alias revert-files='find . -exec git checkout origin/develop -- {} \;'
+# alias revert-files='find . -exec git checkout origin/develop -- {} \;'
 
 # Alias to list the last 10 branches
 # `lb` is an extra jan name on jan/scripts/misc/last_branch.yaml (`jan alias`).
 # Previously: last_branch.sh | tail -10
 # alias lb="last_branch.sh | tail -10"
 # Alias to list branches excluding those marked as old
-alias lbb="last_branch.sh | grep -v old"
+# alias lbb="last_branch.sh | grep -v old"
 # Alias to select and checkout a branch from the last 10 branches
-alias lbf="git branch --sort=committerdate | tail -10 | fzf --tac --no-sort | xargs git checkout"
+# alias lbf="git branch --sort=committerdate | tail -10 | fzf --tac --no-sort | xargs git checkout"
 
 # Alias to view the git log in a simplified format
-alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
+# alias git-view='git log --graph --simplify-by-decoration --pretty=format:%d --all'
 # Alias to view the git log with more details
-alias git-view2='git log --graph --oneline --decorate --all'
+# alias git-view2='git log --graph --oneline --decorate --all'
 # Alias to view the git log with detailed formatting
-alias git-view3="git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all"
+# alias git-view3="git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all"
 # Alias to view the git log with detailed formatting and author information
-alias git-view4="git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all"
+# alias git-view4="git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all"
 # Default alias for viewing git log
-alias gv='git-view3'
+# alias gv='git-view3'
 
 # Alias for git command
 # `g`, `gs`, `gb` are declared in jan/git.yaml and emitted by `jan alias`.
 # alias g="git"
 # Alias to push to the master branch
-alias gpom="git push origin master"
+# alias gpom="git push origin master"
 # Alias to check the status of the git repository
 # alias gs="git status"
 # Alias to list branches
 # alias gb="git branch"
 # Alias to checkout a branch
-alias gco="git checkout"
+# alias gco="git checkout"
 # Function to log commits over time
 git-over-time() {  git log --format=format:'%as,%ae';  }
 
@@ -82,7 +84,7 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 ###########################################################
 
 # Alias to get the current release version
-alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
+# alias getCurrentRelease="git branch -r | grep 'origin/release' | cut -d'/' -f 3-99 | grep -E '^\d+\.\d+\.\d+$' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1"
 
 git config --global alias.commit-ai 'git-commit-ai'
 git-commit-ai() {
@@ -195,7 +197,7 @@ git_tools_fzf() {
     *) echo "Exiting." ;;
   esac
 }
-alias gtools="git_tools_fzf"
+# alias gtools="git_tools_fzf"
 
 gh-prs-last-6-months-all() {
   if [ "$#" -eq 0 ]; then

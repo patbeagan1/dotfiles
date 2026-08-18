@@ -1,28 +1,30 @@
-alias chafa-all='for i in *; do chafa "$i"; sleep 0.5; done'
+# True `alias` entries were moved to the jan spec and are emitted by `jan alias`.
+# Functions and conditional fallbacks stay here.
+# alias chafa-all='for i in *; do chafa "$i"; sleep 0.5; done'
 
 
-alias convert-list-functions="convert -list"             # list of all functions
-alias convert-list="convert -list list"                  # list of all -list options
-alias convert-list-channel="convert -list channel"       # list of all image -channel options
-alias convert-list-command="convert -list command"       # list of all commands
-alias convert-list-color="convert -list color"           # list of all color names and values
-alias convert-list-colorspace="convert -list colorspace" # list of all -colorspace options
-alias convert-list-compose="convert -list compose"       # list of all -compose options
-alias convert-list-configure="convert -list configure"   # list of your IM version information
-alias convert-list-decoration="convert -list decoration" # list of all text decorations
-alias convert-list-filter="convert -list filter"         # list of all -filter options
-alias convert-list-font="convert -list font"             # list of all supported fonts (on your system)
-alias convert-list-format="convert -list format"         # list of all image formats
-alias convert-list-gravity="convert -list gravity"       # list of all -gravity positioning options
-alias convert-list-primitive="convert -list primitive"   # list of all -draw primitive shapes
-alias convert-list-style="convert -list style"           # list of all text styles
-alias convert-list-threshold="convert -list threshold"   # list of all dither/halftone options
-alias convert-list-type="convert -list type"             # list of all image types
-alias convert-list-virtual="convert -list virtual-pixel" # list of all -virtual-pixel options
+# alias convert-list-functions="convert -list"             # list of all functions
+# alias convert-list="convert -list list"                  # list of all -list options
+# alias convert-list-channel="convert -list channel"       # list of all image -channel options
+# alias convert-list-command="convert -list command"       # list of all commands
+# alias convert-list-color="convert -list color"           # list of all color names and values
+# alias convert-list-colorspace="convert -list colorspace" # list of all -colorspace options
+# alias convert-list-compose="convert -list compose"       # list of all -compose options
+# alias convert-list-configure="convert -list configure"   # list of your IM version information
+# alias convert-list-decoration="convert -list decoration" # list of all text decorations
+# alias convert-list-filter="convert -list filter"         # list of all -filter options
+# alias convert-list-font="convert -list font"             # list of all supported fonts (on your system)
+# alias convert-list-format="convert -list format"         # list of all image formats
+# alias convert-list-gravity="convert -list gravity"       # list of all -gravity positioning options
+# alias convert-list-primitive="convert -list primitive"   # list of all -draw primitive shapes
+# alias convert-list-style="convert -list style"           # list of all text styles
+# alias convert-list-threshold="convert -list threshold"   # list of all dither/halftone options
+# alias convert-list-type="convert -list type"             # list of all image types
+# alias convert-list-virtual="convert -list virtual-pixel" # list of all -virtual-pixel options
 
-alias img-resize-to-web="mogrify -resize 690\> *.png"
-alias img-identify='identify -verbose'
-alias img-jpgdir-to-gif="convert -delay 20 -loop 0 *.jpg myimage.gif"
+# alias img-resize-to-web="mogrify -resize 690\> *.png"
+# alias img-identify='identify -verbose'
+# alias img-jpgdir-to-gif="convert -delay 20 -loop 0 *.jpg myimage.gif"
 
 
 # Usage: imgresize "image.jpg" 400

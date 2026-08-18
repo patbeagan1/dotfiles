@@ -2,9 +2,29 @@
 # Each command is a YAML include under scripts/git/.
 about: git utilities
 aliases:
+  bcommit_hist: 'history | grep bcommit'
+  cdworktree: 'cd $(~/repo/incubator-agent/Incubator/monorepo agent-pipeline cd | tail -1)'
+  find-release: 'release-contains "$(git log --oneline --color=always | fzf --ansi --preview "git show --stat {1}" | awk "{print \$1}")"'
   g: git
-  gs: git status
+  g1: git log --pretty=oneline
   gb: git branch
+  gco: git checkout
+  getCurrentRelease: 'git branch -r | grep ''origin/release'' | cut -d''/'' -f 3-99 | grep -E ''^\d+\.\d+\.\d+$'' | sort -t . -k1,1n -k2,2n -k3,3n | tail -1'
+  git-view: 'git log --graph --simplify-by-decoration --pretty=format:%d --all'
+  git-view2: git log --graph --oneline --decorate --all
+  git-view3: 'git log --graph --abbrev-commit --decorate --format=format:''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'' --all'
+  git-view4: 'git log --graph --abbrev-commit --decorate --format=format:''%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'' --all'
+  gitl: 'git last --oneline | cat'
+  gpom: git push origin master
+  gs: git status
+  gss: git status -sb
+  gtools: git_tools_fzf
+  gv: git-view3
+  lbb: 'last_branch.sh | grep -v old'
+  lbf: 'git branch --sort=committerdate | tail -10 | fzf --tac --no-sort | xargs git checkout'
+  reset_branch: 'git diff --name-only origin/dev | cat | xargs -I % git checkout origin/dev -- %'
+  revert-file: git checkout origin/develop --
+  revert-files: 'find . -exec git checkout origin/develop -- {} \;'
 commands:
   add-submodule:
     include: scripts/git/add-submodule.yaml
