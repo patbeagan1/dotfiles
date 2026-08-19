@@ -10,6 +10,9 @@ commands:
 
   run:
     about: 'Run the linked script; forwards args.'
+    requires:
+      - parallel
+      - pretty_ip
     exec:
       zsh: |
         set -euo pipefail
