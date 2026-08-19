@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgtext`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgtext
+
+        Converted from aliases/alias_imagemagick.zsh (`imgtext`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgtext() {
+            convert "$1" -font Arial -pointsize 20 -fill white -annotate +30+30 "$2" "$1_with_text.jpg"
+        }
+
+        imgtext "$@"
+
+      passthrough: true

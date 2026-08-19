@@ -1,0 +1,56 @@
+about: Converted from aliases/alias_android.zsh (`emulator-fzf-help`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        emulator-fzf-help
+
+        Converted from aliases/alias_android.zsh (`emulator-fzf-help`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        emulator-fzf-help() {
+          # 1. Check for dependencies
+          if ! command -v fzf &>/dev/null || ! command -v emulator &>/dev/null; then
+            echo "Error: This function requires 'fzf' and 'emulator' to be installed." >&2
+            return 1
+          fi
+
+          # 2. Get the list of available AVDs
+          local avds
+          avds=$(emulator -list-avds)
+          if [[ -z "$avds" ]]; then
+            echo "No AVDs found. Create one with 'avdmanager create avd ...'" >&2
+            return 1
+          fi
+
+          # 3. Set up the fzf preview to show the AVD's configuration
+          local preview_cmd
+          if command -v bat &>/dev/null; then
+            preview_cmd="bat --color=always ~/.android/avd/{}.avd/config.ini"
+          else
+            preview_cmd="cat ~/.android/avd/{}.avd/config.ini"
+          fi
+
+          # 4. Run fzf to let the user select an AVD
+          local selected_avd
+          selected_avd=$(echo "$avds" | fzf --height 40% --prompt="Select AVD to launch > " \
+            --preview="$preview_cmd" \
+            --preview-window='right,60%,border-left')
+
+          # 5. Launch the selected AVD in the background
+          if [[ -n "$selected_avd" ]]; then
+            echo "Starting AVD: $selected_avd"
+            # Run in background and detach from the shell
+            emulator -avd "$selected_avd" &>/dev/null & disown
+          fi
+        }
+
+        emulator-fzf-help "$@"
+
+      passthrough: true

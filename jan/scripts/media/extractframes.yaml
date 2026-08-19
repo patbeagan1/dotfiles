@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`extractframes`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        extractframes
+
+        Converted from aliases/alias_imagemagick.zsh (`extractframes`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        extractframes() {
+            convert "$1" "$1_frame_%d.jpg"
+        }
+
+        extractframes "$@"
+
+      passthrough: true

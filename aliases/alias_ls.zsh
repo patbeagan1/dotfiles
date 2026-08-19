@@ -19,6 +19,6 @@ alias l.='ls -d .* --color=auto'
 # alias dirs="ls -al | grep '^d'"
 # alias peek="peek.sh"
 # alias lss='ls -harsS'
-function lk {
-  cd "$(walk "$@")"
-}
+# Moved to jan scripts/files/lk.yaml (`jan scripts files lk run`).
+unalias lk 2>/dev/null
+lk() { local d; d="$(jan --no-log scripts files lk run "$@")" && [[ -n "$d" ]] && cd "$d"; }

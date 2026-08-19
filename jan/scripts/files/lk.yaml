@@ -1,0 +1,17 @@
+about: Converted from aliases/alias_ls.zsh (`lk`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        lk
+
+        Converted from aliases/alias_ls.zsh (`lk`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        walk "$@"
+
+      passthrough: true

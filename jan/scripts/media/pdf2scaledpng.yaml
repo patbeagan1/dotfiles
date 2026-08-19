@@ -12,6 +12,10 @@ commands:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
+        shopt -s expand_aliases
+        alias pdf2png='jan --no-log scripts media pdf2png run'
+        alias pngresize='jan --no-log scripts media pngresize run'
+
         pdf2scaledpng "$@"
         #!/bin/bash
 

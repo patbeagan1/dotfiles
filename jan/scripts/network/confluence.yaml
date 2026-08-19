@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_network.zsh (`confluence`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        confluence
+
+        Converted from aliases/alias_network.zsh (`confluence`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        confluence() {
+            open 'https://alltrails.atlassian.net/wiki/search?text='"$1"
+        }
+
+        confluence "$@"
+
+      passthrough: true

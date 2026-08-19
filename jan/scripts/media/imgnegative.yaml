@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgnegative`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgnegative
+
+        Converted from aliases/alias_imagemagick.zsh (`imgnegative`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgnegative() {
+            convert "$1" -negate "$1_negative.jpg"
+        }
+
+        imgnegative "$@"
+
+      passthrough: true

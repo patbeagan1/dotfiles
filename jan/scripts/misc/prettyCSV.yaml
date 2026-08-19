@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`prettyCSV`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        prettyCSV
+
+        Converted from aliases/alias_misc.zsh (`prettyCSV`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function prettyCSV() { cat "$1" | column -t -s ","; }
+
+        prettyCSV "$@"
+
+      passthrough: true

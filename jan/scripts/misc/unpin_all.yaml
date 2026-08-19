@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`unpin_all`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        unpin_all
+
+        Converted from aliases/alias_misc.zsh (`unpin_all`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        unpin_all() { ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm ;}
+
+        unpin_all "$@"
+
+      passthrough: true

@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgsepia`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgsepia
+
+        Converted from aliases/alias_imagemagick.zsh (`imgsepia`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgsepia() {
+            convert "$1" -sepia-tone 80% "$1_sepia.jpg"
+        }
+
+        imgsepia "$@"
+
+      passthrough: true

@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgresize`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgresize
+
+        Converted from aliases/alias_imagemagick.zsh (`imgresize`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgresize() {
+            convert "$1" -resize $2x "$1_resized.jpg"
+        }
+
+        imgresize "$@"
+
+      passthrough: true

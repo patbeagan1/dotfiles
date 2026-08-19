@@ -70,14 +70,20 @@ commands:
     include: scripts/misc/binlink.yaml
   cache:
     include: scripts/misc/cache.yaml
+  caturl:
+    include: scripts/misc/caturl.yaml
   cbr-show:
     include: scripts/misc/cbr-show.yaml
+  check-alias-scope:
+    include: scripts/misc/check-alias-scope.yaml
   check_program:
     include: scripts/misc/check_program.yaml
   check_program_snippets:
     include: scripts/misc/check_program_snippets.yaml
   checkcrlf:
     include: scripts/misc/checkcrlf.yaml
+  color-describe:
+    include: scripts/misc/color-describe.yaml
   convert-date:
     include: scripts/misc/convert-date.yaml
   convert_date:
@@ -104,6 +110,8 @@ commands:
     include: scripts/misc/ebook-from.yaml
   editlast:
     include: scripts/misc/editlast.yaml
+  envsec:
+    include: scripts/misc/envsec.yaml
   example-stdin-script:
     include: scripts/misc/example-stdin-script.yaml
   fe:
@@ -126,8 +134,12 @@ commands:
     include: scripts/misc/hl.yaml
   improve-prompt:
     include: scripts/misc/improve-prompt.yaml
+  inspect:
+    include: scripts/misc/inspect.yaml
   intensify:
     include: scripts/misc/intensify.yaml
+  ipfs-upload:
+    include: scripts/misc/ipfs-upload.yaml
   isLinux:
     include: scripts/misc/isLinux.yaml
   isMac:
@@ -166,8 +178,12 @@ commands:
     include: scripts/misc/manbash.yaml
   manbook:
     include: scripts/misc/manbook.yaml
+  manu:
+    include: scripts/misc/manu.yaml
   math:
     include: scripts/misc/math.yaml
+  mdo:
+    include: scripts/misc/mdo.yaml
   mean:
     include: scripts/misc/mean.yaml
   median:
@@ -192,6 +208,8 @@ commands:
     include: scripts/misc/note.yaml
   note-aggron:
     include: scripts/misc/note-aggron.yaml
+  nv:
+    include: scripts/misc/nv.yaml
   nz:
     include: scripts/misc/nz.yaml
   oncron:
@@ -208,12 +226,20 @@ commands:
     include: scripts/misc/peek.yaml
   pretty-csv:
     include: scripts/misc/pretty-csv.yaml
+  prettyCSV:
+    include: scripts/misc/prettyCSV.yaml
   prev-command:
     include: scripts/misc/prev-command.yaml
   psp:
     include: scripts/misc/psp.yaml
   pystart_script:
     include: scripts/misc/pystart_script.yaml
+  qr_itty:
+    include: scripts/misc/qr_itty.yaml
+  qr_itty_cat:
+    include: scripts/misc/qr_itty_cat.yaml
+  quar:
+    include: scripts/misc/quar.yaml
   random:
     include: scripts/misc/random.yaml
   randomart-of:
@@ -234,8 +260,12 @@ commands:
     include: scripts/misc/revnum.yaml
   savealias:
     include: scripts/misc/savealias.yaml
+  script-edit:
+    include: scripts/misc/script-edit.yaml
   script_content:
     include: scripts/misc/script_content.yaml
+  scriptify:
+    include: scripts/misc/scriptify.yaml
   search-alltrails-from-file:
     include: scripts/misc/search-alltrails-from-file.yaml
   search-ddg-from-file:
@@ -262,13 +292,21 @@ commands:
     include: scripts/misc/tcommit.yaml
   test-libbeagan:
     include: scripts/misc/test-libbeagan.yaml
+  to_itty:
+    include: scripts/misc/to_itty.yaml
   tp:
     include: scripts/misc/tp.yaml
   trim:
     include: scripts/misc/trim.yaml
+  unpin_all:
+    include: scripts/misc/unpin_all.yaml
   variance:
     include: scripts/misc/variance.yaml
+  waypoint_go:
+    include: scripts/misc/waypoint_go.yaml
   wiki:
     include: scripts/misc/wiki.yaml
+  z-cd:
+    include: scripts/misc/z-cd.yaml
   zettelkasten:
     include: scripts/misc/zettelkasten.yaml

@@ -80,6 +80,8 @@ commands:
     include: scripts/system/cputemp-linux-track.yaml
   cputemp-mac:
     include: scripts/system/cputemp-mac.yaml
+  fileedit:
+    include: scripts/system/fileedit.yaml
   install-deb:
     include: scripts/system/install-deb.yaml
   lsdaemons:

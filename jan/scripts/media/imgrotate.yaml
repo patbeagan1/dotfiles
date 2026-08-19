@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgrotate`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgrotate
+
+        Converted from aliases/alias_imagemagick.zsh (`imgrotate`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgrotate() {
+            convert "$1" -rotate $2 "$1_rotated.jpg"
+        }
+
+        imgrotate "$@"
+
+      passthrough: true

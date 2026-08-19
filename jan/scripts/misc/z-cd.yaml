@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_teleport.zsh (`tp`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        z-cd
+
+        Converted from aliases/alias_teleport.zsh (`tp`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        z -l | cut -d'/' -f2-100 | sed 's:^:/:g' | fzf -1
+
+      passthrough: true

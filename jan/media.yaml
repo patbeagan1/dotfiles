@@ -39,6 +39,8 @@ commands:
     include: scripts/media/comicify.yaml
   dot2pdf:
     include: scripts/media/dot2pdf.yaml
+  extractframes:
+    include: scripts/media/extractframes.yaml
   image-stitch:
     include: scripts/media/image-stitch.yaml
   imagefix:
@@ -55,6 +57,42 @@ commands:
     include: scripts/media/img_to_qrcode_set.yaml
   img_wiggle_parallel:
     include: scripts/media/img_wiggle_parallel.yaml
+  imgautolevel:
+    include: scripts/media/imgautolevel.yaml
+  imgblur:
+    include: scripts/media/imgblur.yaml
+  imgborder:
+    include: scripts/media/imgborder.yaml
+  imgbrighten:
+    include: scripts/media/imgbrighten.yaml
+  imgconvert:
+    include: scripts/media/imgconvert.yaml
+  imgcrop:
+    include: scripts/media/imgcrop.yaml
+  imgdenoise:
+    include: scripts/media/imgdenoise.yaml
+  imggray:
+    include: scripts/media/imggray.yaml
+  imgmontage:
+    include: scripts/media/imgmontage.yaml
+  imgnegative:
+    include: scripts/media/imgnegative.yaml
+  imgopacity:
+    include: scripts/media/imgopacity.yaml
+  imgoverlay:
+    include: scripts/media/imgoverlay.yaml
+  imgresize:
+    include: scripts/media/imgresize.yaml
+  imgrotate:
+    include: scripts/media/imgrotate.yaml
+  imgsepia:
+    include: scripts/media/imgsepia.yaml
+  imgtext:
+    include: scripts/media/imgtext.yaml
+  imgthumb:
+    include: scripts/media/imgthumb.yaml
+  imgtogif:
+    include: scripts/media/imgtogif.yaml
   multi-qr:
     include: scripts/media/multi-qr.yaml
   pdf2png:

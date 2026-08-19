@@ -12,6 +12,9 @@ commands:
     about: 'Run the linked script; forwards args.'
     exec:
       bash: |
+        shopt -s expand_aliases
+        alias appletoast='jan --no-log scripts misc appletoast run'
+
         sleep 25m
         appletoast "Pomodoro" "Take a 5 minute break"
       passthrough: true

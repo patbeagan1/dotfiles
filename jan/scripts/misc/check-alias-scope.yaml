@@ -1,0 +1,299 @@
+about: |
+  Verify that `jan alias` names are not in scope inside jan `exec.zsh`/`bash`/`sh`,
+  and scan sibling scripts for command calls that would only work as aliases.
+requires:
+  - python3
+tests:
+  given_a_jan_process_when_canary_then_aliases_are_not_loaded:
+    when: |
+      run --canary
+    then: |
+      test "$JAN_STATUS" -eq 0
+      grep -q 'aliases are not in scope' "$JAN_STDOUT_FILE"
+  given_the_tree_when_scanned_then_prints_a_summary:
+    when: |
+      run --warn
+    then: |
+      test "$JAN_STATUS" -eq 0
+      grep -q 'checked ' "$JAN_STDOUT_FILE"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        check-alias-scope
+
+        jan runs exec.zsh / exec.bash / exec.sh in a non-interactive subprocess.
+        `jan alias` output is sourced only by the interactive shell, so those names
+        are not aliases here. A script that calls `pdf2png` or `appletoast` by
+        alias will fail; call `jan --no-log scripts … run` (or a real binary) instead.
+
+        Usage:
+          jan scripts misc check-alias-scope run
+          jan scripts misc check-alias-scope run --canary
+          jan scripts misc check-alias-scope run --warn
+
+        --canary     Only prove this jan process has no jan aliases (exit 0).
+        --warn       Scan and report, but always exit 0 (default is exit 1 on hits).
+
+  run:
+    about: Prove aliases are out of scope, then scan scripts for alias-only calls.
+    exec:
+      zsh: |
+        emulate -L zsh
+        setopt err_return
+        setopt nounset
+
+        canary_only=0
+        strict=1
+        for arg in "$@"; do
+          case "$arg" in
+            --canary) canary_only=1 ;;
+            --warn) strict=0 ;;
+            -h|--help)
+              jan --no-log scripts misc check-alias-scope help
+              exit 0
+              ;;
+            *)
+              print -u2 -- "unknown argument: $arg"
+              exit 2
+              ;;
+          esac
+        done
+
+        print -r -- "alias-scope: jan exec environment"
+        if [[ -o interactive ]]; then
+          print -u2 -- "error: this process is interactive; jan exec should not be"
+          exit 2
+        fi
+        print -r -- "  interactive: no"
+
+        probes=(peek lb fileedit last_branch prettyCSV appletoast pdf2png)
+        leaked=()
+        for n in "${probes[@]}"; do
+          if alias "$n" >/dev/null 2>&1; then
+            leaked+="$n"
+          fi
+        done
+        if (( ${#leaked} )); then
+          print -u2 -- "error: jan aliases are unexpectedly defined: ${leaked[*]}"
+          exit 2
+        fi
+        print -r -- "  jan aliases (${(j:, :)probes}): not in scope (expected)"
+        print -r -- "  aliases are not in scope inside jan scripts"
+
+        if (( canary_only )); then
+          exit 0
+        fi
+
+        python3 - "$strict" <<'PY'
+        import os
+        import re
+        import shutil
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        STRICT = sys.argv[1] == "1"
+        SKIP_FILES = {"check-alias-scope.yaml"}
+        SKIP_NAMES = {"help", "then", "do", "in", "if", "fi", "esac", "done", "else", "elif"}
+
+        def jan_argv(*args: str) -> list[str]:
+            cmd = ["jan"]
+            # jan test's PATH shim already injects --no-log; clap rejects duplicates.
+            if "JAN_NO_LOG" not in os.environ:
+                cmd.append("--no-log")
+            cmd.extend(args)
+            return cmd
+
+        def jan_dir() -> Path:
+            out = subprocess.check_output(jan_argv("use", "--show"), text=True)
+            for line in out.splitlines():
+                if line.startswith("jan-dir:"):
+                    return Path(line.split(":", 1)[1].strip())
+            raise SystemExit("error: could not parse `jan use --show`")
+
+        def alias_names() -> set[str]:
+            out = subprocess.check_output(
+                jan_argv("alias", "--shell", "zsh"), text=True
+            )
+            names = set()
+            for line in out.splitlines():
+                m = re.match(r"^alias ([A-Za-z_][A-Za-z0-9_-]*)=", line)
+                if m:
+                    names.add(m.group(1))
+            return names
+
+        FUNC_DEF = re.compile(
+            r"(?:^|\n)\s*(?:function\s+([A-Za-z_][A-Za-z0-9_-]*)(?:\s*\(\))?"
+            r"|([A-Za-z_][A-Za-z0-9_-]*)\s*\(\))\s*\{",
+        )
+
+        def extract_run_shell(text: str) -> list[str]:
+            lines = text.splitlines()
+            bodies: list[str] = []
+            in_run = False
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+                if re.match(r"^  (help|run):", line):
+                    in_run = line.startswith("  run:")
+                    i += 1
+                    continue
+                if in_run:
+                    m = re.match(r"^      (zsh|bash|sh): \|-?$", line)
+                    if m:
+                        chunk = []
+                        i += 1
+                        while i < len(lines):
+                            l = lines[i]
+                            if l.startswith("        "):
+                                chunk.append(l[8:])
+                            elif l == "":
+                                chunk.append("")
+                            else:
+                                break
+                            i += 1
+                        bodies.append("\n".join(chunk))
+                        continue
+                i += 1
+            return bodies
+
+        ALIAS_DEF = re.compile(
+            r"(?:^|\n)\s*alias\s+([A-Za-z_][A-Za-z0-9_-]*)="
+        )
+
+        def defined_funcs(body: str) -> set[str]:
+            names = set()
+            for m in FUNC_DEF.finditer(body):
+                names.add(m.group(1) or m.group(2))
+            names.update(ALIAS_DEF.findall(body))
+            return names
+
+        def strip_heredocs(body: str) -> str:
+            out = []
+            end = None
+            for line in body.splitlines():
+                if end is not None:
+                    if line.strip() == end:
+                        end = None
+                    continue
+                m = re.search(r"<<<", line)
+                h = re.search(r"<<[-]?\s*['\"]?(\w+)", line)
+                if h and not m:
+                    end = h.group(1)
+                out.append(line)
+            return "\n".join(out)
+
+        def drop_quoted(s: str) -> str:
+            out = []
+            i = 0
+            while i < len(s):
+                c = s[i]
+                if c in "'\"":
+                    q = c
+                    i += 1
+                    while i < len(s):
+                        if s[i] == "\\" and q == '"' and i + 1 < len(s):
+                            i += 2
+                            continue
+                        if s[i] == q:
+                            i += 1
+                            break
+                        i += 1
+                    out.append(" ")
+                    continue
+                out.append(c)
+                i += 1
+            return "".join(out)
+
+        def iter_commands(body: str):
+            body = drop_quoted(strip_heredocs(body))
+            for raw in body.splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if re.match(r"^[A-Za-z_][A-Za-z0-9_-]*\)$", line):
+                    continue
+                if re.search(r"<<['\"]?\w+", line):
+                    continue
+                for m in re.finditer(r"\$\(\s*([A-Za-z_][A-Za-z0-9_-]*)\b", line):
+                    name = m.group(1)
+                    after = line[m.end(1) :]
+                    if after.startswith(".") or after.startswith("("):
+                        continue
+                    yield name
+                parts = re.split(r"\s*(?:&&|\|\||;|\|)\s*", line)
+                for part in parts:
+                    part = part.strip()
+                    if not part:
+                        continue
+                    part = re.sub(
+                        r"^(?:sudo|command|exec|time|nohup|builtin|noglob|nocorrect)\s+",
+                        "",
+                        part,
+                    )
+                    while re.match(r"^[A-Za-z_][A-Za-z0-9_]*+=\S+\s+", part):
+                        part = re.sub(r"^[A-Za-z_][A-Za-z0-9_]*+=\S+\s+", "", part, count=1)
+                    m = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*)\b", part)
+                    if not m:
+                        continue
+                    name = m.group(1)
+                    rest = part[m.end() :]
+                    if rest.startswith(".") or rest.startswith("("):
+                        continue
+                    yield name
+
+        root = jan_dir()
+        scripts_root = root / "scripts"
+        names = alias_names()
+        alias_only = {n for n in names if not shutil.which(n) and len(n) > 1}
+        print(f"alias-scope: scanning {scripts_root}")
+        print(f"  jan alias names: {len(names)} ({len(alias_only)} alias-only, not on PATH)")
+
+        hits: list[tuple[str, list[str]]] = []
+        checked = 0
+        for path in sorted(scripts_root.rglob("*.yaml")):
+            if path.name in SKIP_FILES:
+                continue
+            text = path.read_text()
+            bodies = extract_run_shell(text)
+            if not bodies:
+                continue
+            checked += 1
+            local = {path.stem}
+            found: set[str] = set()
+            for body in bodies:
+                local |= defined_funcs(body)
+                for cmd in iter_commands(body):
+                    if cmd in SKIP_NAMES or cmd in local:
+                        continue
+                    if cmd in alias_only:
+                        found.add(cmd)
+            if found:
+                rel = path.relative_to(root).as_posix()
+                hits.append((rel, sorted(found)))
+
+        if hits:
+            print(f"  {len(hits)} script(s) call alias-only names:")
+            for rel, cmds in hits:
+                print(f"    {rel}")
+                for cmd in cmds:
+                    matches = list(scripts_root.glob(f"*/{cmd}.yaml"))
+                    if matches:
+                        cat = matches[0].parent.name
+                        suggest = f"jan --no-log scripts {cat} {cmd} run"
+                    else:
+                        suggest = "inlined command / `jan --no-log … run`, not the alias"
+                    print(f"      {cmd}  ->  {suggest}")
+            print(
+                "checked "
+                f"{checked} scripts, {len(hits)} with alias-only calls"
+            )
+            if STRICT:
+                sys.exit(1)
+            sys.exit(0)
+
+        print(f"checked {checked} scripts, 0 with alias-only calls")
+        PY
+      passthrough: true

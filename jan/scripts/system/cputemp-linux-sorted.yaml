@@ -13,6 +13,8 @@ commands:
     exec:
       zsh: |
         # (c) 2022 Pat Beagan: MIT License
+        setopt aliases
+        alias cputemp='jan --no-log scripts system cputemp run'
 
         cputemp |
             awk '{ 

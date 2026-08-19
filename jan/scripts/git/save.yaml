@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_git.zsh (`save`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        save
+
+        Converted from aliases/alias_git.zsh (`save`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        save () { git commit -am "commit to save" } 
+
+        save "$@"
+
+      passthrough: true

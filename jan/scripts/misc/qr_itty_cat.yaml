@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_misc.zsh (`qr_itty_cat`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        qr_itty_cat
+
+        Converted from aliases/alias_misc.zsh (`qr_itty_cat`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function qr_itty () { qr $(itty.sh "$1"); }
+
+        function qr_itty_cat () { qr_itty "`cat $1`"; }
+
+        qr_itty_cat "$@"
+
+      passthrough: true

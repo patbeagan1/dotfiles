@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgopacity`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgopacity
+
+        Converted from aliases/alias_imagemagick.zsh (`imgopacity`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgopacity() {
+            convert "$1" -alpha set -channel A -evaluate set $2% "$1_opacity.jpg"
+        }
+
+        imgopacity "$@"
+
+      passthrough: true

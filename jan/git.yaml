@@ -38,6 +38,22 @@ commands:
     include: scripts/git/create-ticket.yaml
   gd:
     include: scripts/git/gd.yaml
+  gfh:
+    include: scripts/git/gfh.yaml
+  gh-prs-awaiting-my-review:
+    include: scripts/git/gh-prs-awaiting-my-review.yaml
+  gh-prs-last-6-months:
+    include: scripts/git/gh-prs-last-6-months.yaml
+  gh-prs-last-6-months-all:
+    include: scripts/git/gh-prs-last-6-months-all.yaml
+  gh-stack:
+    include: scripts/git/gh-stack.yaml
+  ghf:
+    include: scripts/git/ghf.yaml
+  git-commit-ai:
+    include: scripts/git/git-commit-ai.yaml
+  git-over-time:
+    include: scripts/git/git-over-time.yaml
   gitfile:
     include: scripts/git/gitfile.yaml
   gitfilehistory:
@@ -46,15 +62,27 @@ commands:
     include: scripts/git/gitflux.yaml
   gitsync:
     include: scripts/git/gitsync.yaml
+  gwd:
+    include: scripts/git/gwd.yaml
+  jirabranch:
+    include: scripts/git/jirabranch.yaml
+  jirasprintmine:
+    include: scripts/git/jirasprintmine.yaml
   jj:
     include: scripts/git/jj.yaml
   merge-project:
     include: scripts/git/merge-project.yaml
   mergetest:
     include: scripts/git/mergetest.yaml
+  release-contains:
+    include: scripts/git/release-contains.yaml
   repick:
     include: scripts/git/repick.yaml
   resquash:
     include: scripts/git/resquash.yaml
   gh-audit:
     include: scripts/git/gh-audit.yaml
+  save:
+    include: scripts/git/save.yaml
+  switchoc:
+    include: scripts/git/switchoc.yaml

@@ -1,0 +1,22 @@
+about: Converted from aliases/alias_git.zsh (`jirasprintmine`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        jirasprintmine
+
+        Converted from aliases/alias_git.zsh (`jirasprintmine`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        jirasprintmine() {
+          # List your open-sprint issues.
+          gas jira list
+        }
+
+        jirasprintmine "$@"
+
+      passthrough: true

@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`ipfs-upload`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        ipfs-upload
+
+        Converted from aliases/alias_misc.zsh (`ipfs-upload`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
+
+        ipfs-upload "$@"
+
+      passthrough: true

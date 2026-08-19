@@ -18,19 +18,7 @@
 
 # alias ctl='sudo systemctl'
 
-fileedit () { 
-	if ! command -v ag &> /dev/null; then
-		echo "The 'ag' command is not installed. Please install it to use this function."
-		return
-	fi
-	local filename="$(ag -g "$1" | fzf)"; 
-	if [ -z "$filename" ] ; then 
-		echo "No files to edit."
-		return ; 
-	else 
-		vi "$filename"  ; 
-	fi
-}      
+# Moved to jan scripts/system/fileedit.yaml (`jan scripts system fileedit run`).
 
 function historyrun() {
 	local currCommand="$(

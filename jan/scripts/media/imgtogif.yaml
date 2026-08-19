@@ -1,0 +1,27 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgtogif`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgtogif
+
+        Converted from aliases/alias_imagemagick.zsh (`imgtogif`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgtogif() {
+            # Extract last argument for output file
+            output="${@: -1}"
+            
+            # Remove the last argument (output file)
+            inputs="${@:1:$(($#-1))}"
+            
+            convert -delay 100 -loop 0 $inputs $output
+        }
+
+        imgtogif "$@"
+
+      passthrough: true

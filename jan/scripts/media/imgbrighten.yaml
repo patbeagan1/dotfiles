@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgbrighten`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgbrighten
+
+        Converted from aliases/alias_imagemagick.zsh (`imgbrighten`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgbrighten() {
+            convert "$1" -modulate $2 "$1_brightened.jpg"
+        }
+
+        imgbrighten "$@"
+
+      passthrough: true

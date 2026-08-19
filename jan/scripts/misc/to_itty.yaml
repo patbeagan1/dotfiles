@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`to_itty`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        to_itty
+
+        Converted from aliases/alias_misc.zsh (`to_itty`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function to_itty() { cat /dev/stdin | lzma -9 | base64 -w0 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }    
+
+        to_itty "$@"
+
+      passthrough: true

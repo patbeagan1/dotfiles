@@ -1,0 +1,68 @@
+about: Converted from aliases/alias_git.zsh (`gh-prs-awaiting-my-review`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        gh-prs-awaiting-my-review
+
+        Converted from aliases/alias_git.zsh (`gh-prs-awaiting-my-review`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        gh-prs-awaiting-my-review() {
+          local reviewer
+          # Try to get GitHub username from cache or prompt
+          if [ -f ~/.gh_prs_author ]; then
+            reviewer=$(cat ~/.gh_prs_author)
+          fi
+          if [ -z "$reviewer" ]; then
+            read "reviewer?Enter your GitHub username: "
+            if [ -z "$reviewer" ]; then
+              echo "GitHub username is required."
+              return 1
+            fi
+            echo "$reviewer" > ~/.gh_prs_author
+          fi
+
+          echo "###########################################################"
+          echo "#   GitHub PRs awaiting your review (${reviewer})"
+          echo "###########################################################"
+
+          # Get PRs awaiting review, including headRefName and mergeable status
+          gh pr list --search "is:pr is:open review-requested:${reviewer} -author:${reviewer} sort:updated-desc" --limit 100 --json number,title,url,updatedAt,reviews,headRefName,mergeable | \
+            jq -r '
+              .[] |
+              # Collect reviewers who are not the current reviewer
+              .reviewers = ([.reviews[]?.author.login] | unique | map(select(. != "'"${reviewer}"'"))) |
+              # Calculate time since last update in days
+              .updated_days_ago = ((now - ( ( .updatedAt | sub("\\..*";"") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime ) )) / 86400 | floor) |
+              # Mark as important if not reviewed by anyone else or last updated > 7 days ago
+              .important = ( ( (.reviewers | length) == 0 ) or (.updated_days_ago > 7) ) |
+              # Compose output, with last updated as relative days and conflicts inline
+              (.important | if . then "‼️ " else "" end) + "\u001b[1;34m\(.number):\u001b[0m \u001b[1;37m\(.title)\u001b[0m\n" +
+              "\u001b[36m\(.url)\u001b[0m\n" +
+              "Reviewed by: \(.reviewers | if length == 0 then "\u001b[31mNo other reviewers\u001b[0m" else map("\u001b[38;5;30m" + . + "\u001b[0m") | join(", ") end)\n" +
+              (
+                "Last updated: " +
+                (
+                  if .updated_days_ago <= 1 then
+                    "\u001b[32m\(.updated_days_ago) days ago\u001b[0m" # green for 0-1 days
+                  elif .updated_days_ago <= 3 then
+                    "\u001b[33m\(.updated_days_ago) days ago\u001b[0m" # yellow for 2-3 days
+                  elif .updated_days_ago <= 7 then
+                    "\u001b[35m\(.updated_days_ago) days ago\u001b[0m" # magenta for 4-7 days
+                  else
+                    "\u001b[31m\(.updated_days_ago) days ago\u001b[0m" # red for >7 days
+                  end
+                )
+              ) +
+              (if .mergeable == "CONFLICTING" then " \u001b[31m⚠️ Has conflicts with develop\u001b[0m" else "" end) + "\n"
+            '
+        }
+
+        gh-prs-awaiting-my-review "$@"
+
+      passthrough: true

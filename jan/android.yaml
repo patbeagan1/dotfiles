@@ -43,13 +43,27 @@ aliases:
   kotlin_conversion: 'echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
   lintBaseline: './gradlew :app:lintRelease -Dlint.baselines.continue=true'
 commands:
+  adb-fzf-help:
+    include: scripts/android/adb-fzf-help.yaml
+  adevopts:
+    include: scripts/android/adevopts.yaml
   android-dump:
     include: scripts/android/android-dump.yaml
   android_dumpsys:
     include: scripts/android/android_dumpsys.yaml
   android_enable_developer:
     include: scripts/android/android_enable_developer.yaml
+  androidl:
+    include: scripts/android/androidl.yaml
+  avdmanager-fzf-help:
+    include: scripts/android/avdmanager-fzf-help.yaml
+  emulator-fzf-help:
+    include: scripts/android/emulator-fzf-help.yaml
   emulator-start-charles:
     include: scripts/android/emulator-start-charles.yaml
   gradle_by_module:
     include: scripts/android/gradle_by_module.yaml
+  javalarge:
+    include: scripts/android/javalarge.yaml
+  sdkmanager-fzf-help:
+    include: scripts/android/sdkmanager-fzf-help.yaml

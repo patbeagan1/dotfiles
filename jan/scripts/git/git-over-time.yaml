@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_git.zsh (`git-over-time`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        git-over-time
+
+        Converted from aliases/alias_git.zsh (`git-over-time`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        git-over-time() {  git log --format=format:'%as,%ae';  }
+
+        git-over-time "$@"
+
+      passthrough: true

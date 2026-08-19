@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_remove_empty.zsh (`remove_empty_lines`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        remove_empty_lines
+
+        Converted from aliases/alias_remove_empty.zsh (`remove_empty_lines`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function remove_empty_lines() { cat "$1" | sed '/^[\w]*$/d'; }
+
+        remove_empty_lines "$@"
+
+      passthrough: true

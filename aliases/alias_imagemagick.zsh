@@ -28,110 +28,58 @@
 
 
 # Usage: imgresize "image.jpg" 400
-imgresize() {
-    convert "$1" -resize $2x "$1_resized.jpg"
-}
+# Moved to jan scripts/media/imgresize.yaml (`jan scripts media imgresize run`).
 
 # Usage: imgconvert "image.jpg" png
-imgconvert() {
-    filename=$(basename -- "$1")
-    name="${filename%.*}"
-    convert "$1" "$name.$2"
-}
+# Moved to jan scripts/media/imgconvert.yaml (`jan scripts media imgconvert run`).
 
 # Usage: imgcrop "image.jpg" 400x400+10+5
-imgcrop() {
-    convert "$1" -crop $2 "$1_cropped.jpg"
-}
+# Moved to jan scripts/media/imgcrop.yaml (`jan scripts media imgcrop run`).
 
 # Usage: imgrotate "image.jpg" 90
-imgrotate() {
-    convert "$1" -rotate $2 "$1_rotated.jpg"
-}
+# Moved to jan scripts/media/imgrotate.yaml (`jan scripts media imgrotate run`).
 
 # Usage: imgtext "image.jpg" "Hello World" 
-imgtext() {
-    convert "$1" -font Arial -pointsize 20 -fill white -annotate +30+30 "$2" "$1_with_text.jpg"
-}
+# Moved to jan scripts/media/imgtext.yaml (`jan scripts media imgtext run`).
 
 # Usage: imgblur "image.jpg"
-imgblur() {
-    convert "$1" -blur 0x8 "$1_blurred.jpg"
-}
+# Moved to jan scripts/media/imgblur.yaml (`jan scripts media imgblur run`).
 
 # Usage: imgmontage "img1.jpg" "img2.jpg" ... "output.jpg"
-imgmontage() {
-    # Extract last argument for output file
-    output="${@: -1}"
-    
-    # Remove the last argument (output file)
-    inputs="${@:1:$(($#-1))}"
-    
-    montage -geometry +1+1 $inputs $output
-}
+# Moved to jan scripts/media/imgmontage.yaml (`jan scripts media imgmontage run`).
 
 # Usage: imgoverlay "background.jpg" "overlay.png"
-imgoverlay() {
-    composite -gravity center "$2" "$1" "$1_overlay.jpg"
-}
+# Moved to jan scripts/media/imgoverlay.yaml (`jan scripts media imgoverlay run`).
 
 # Usage: imgbrighten "image.jpg" 120%
-imgbrighten() {
-    convert "$1" -modulate $2 "$1_brightened.jpg"
-}
+# Moved to jan scripts/media/imgbrighten.yaml (`jan scripts media imgbrighten run`).
 
 # Usage: imgthumb "image.jpg" 150
-imgthumb() {
-    convert "$1" -thumbnail "$2x$2^" -gravity center -extent $2x$2 "$1_thumbnail.jpg"
-}
+# Moved to jan scripts/media/imgthumb.yaml (`jan scripts media imgthumb run`).
 
 # Usage: imgopacity "image.png" 70
-imgopacity() {
-    convert "$1" -alpha set -channel A -evaluate set $2% "$1_opacity.jpg"
-}
+# Moved to jan scripts/media/imgopacity.yaml (`jan scripts media imgopacity run`).
 
 # Usage: imgautolevel "image.jpg"
-imgautolevel() {
-    convert "$1" -auto-level "$1_leveled.jpg"
-}
+# Moved to jan scripts/media/imgautolevel.yaml (`jan scripts media imgautolevel run`).
 
 # Usage: imgnegative "image.jpg"
-imgnegative() {
-    convert "$1" -negate "$1_negative.jpg"
-}
+# Moved to jan scripts/media/imgnegative.yaml (`jan scripts media imgnegative run`).
 
 # Usage: imggray "image.jpg"
-imggray() {
-    convert "$1" -colorspace Gray "$1_gray.jpg"
-}
+# Moved to jan scripts/media/imggray.yaml (`jan scripts media imggray run`).
 
 # Usage: imgborder "image.jpg" 5
-imgborder() {
-    convert "$1" -bordercolor black -border $2x$2 "$1_border.jpg"
-}
+# Moved to jan scripts/media/imgborder.yaml (`jan scripts media imgborder run`).
 
 # Usage: imgsepia "image.jpg"
-imgsepia() {
-    convert "$1" -sepia-tone 80% "$1_sepia.jpg"
-}
+# Moved to jan scripts/media/imgsepia.yaml (`jan scripts media imgsepia run`).
 
 # Usage: imgdenoise "image.jpg"
-imgdenoise() {
-    convert "$1" -despeckle "$1_denoised.jpg"
-}
+# Moved to jan scripts/media/imgdenoise.yaml (`jan scripts media imgdenoise run`).
 
 # Usage: imgtogif "img1.jpg" "img2.jpg" ... "output.gif"
-imgtogif() {
-    # Extract last argument for output file
-    output="${@: -1}"
-    
-    # Remove the last argument (output file)
-    inputs="${@:1:$(($#-1))}"
-    
-    convert -delay 100 -loop 0 $inputs $output
-}
+# Moved to jan scripts/media/imgtogif.yaml (`jan scripts media imgtogif run`).
 
 # Usage: extractframes "animation.gif"
-extractframes() {
-    convert "$1" "$1_frame_%d.jpg"
-}
+# Moved to jan scripts/media/extractframes.yaml (`jan scripts media extractframes run`).

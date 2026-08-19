@@ -1,0 +1,30 @@
+about: Converted from aliases/alias_git.zsh (`release-contains`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        release-contains
+
+        Converted from aliases/alias_git.zsh (`release-contains`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        release-contains () {
+            # Ensure a hash is provided
+            if [ -z "$1" ]; then return; fi
+
+            git branch -a --contains "$1" | 
+                grep "remotes" | 
+                grep "release" | 
+                grep -E '[0-9]+\.[0-9]+\.[0-9]+' | 
+                sed 's/^.*release\//release\//g' | 
+                sort -V | 
+                tail -n 10
+        }
+
+        release-contains "$@"
+
+      passthrough: true

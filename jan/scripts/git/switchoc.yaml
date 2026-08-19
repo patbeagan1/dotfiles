@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_git.zsh (`switchoc`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        switchoc
+
+        Converted from aliases/alias_git.zsh (`switchoc`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        switchoc () { git switch "$1" 2>/dev/null || git switch -c "$1"; git fetch "$1" 2>/dev/null; }
+
+        switchoc "$@"
+
+      passthrough: true

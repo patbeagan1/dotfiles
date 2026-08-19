@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`quar`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        quar
+
+        Converted from aliases/alias_misc.zsh (`quar`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function quar { mv "$1" ~/.j/; }
+
+        quar "$@"
+
+      passthrough: true

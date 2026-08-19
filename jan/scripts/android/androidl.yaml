@@ -1,0 +1,74 @@
+about: Converted from aliases/alias_android.zsh (`androidl`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        androidl
+
+        Converted from aliases/alias_android.zsh (`androidl`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        androidl () {
+            local commands=(
+                "adb devices -l"
+                "adb reboot"
+                "adb reboot bootloader"
+                "adb reboot recovery"
+                "adb install"
+                "adb uninstall"
+                "adb pull"
+                "adb push"
+                "adb shell"
+                "adb logcat"
+                "adb logcat -c"
+                "adb exec-out screencap -p > screenshot.png"
+                "adb shell screenrecord /sdcard/screenrecord.mp4"
+                "adb shell pkill -SIGINT screenrecord"
+                "adb shell dumpsys battery"
+                "adb shell dumpsys wifi"
+                "adb shell pm list packages"
+                "adb shell dumpsys package"
+                # these are the aliases which are defined above
+                # putting them here so that they are easier to discover
+                "android-list-devices"
+                "android-list-avds"
+                "android-emulator"
+                "android-start-emulator"
+                "android-start-network-emu"
+                "android-reboot"
+                "android-reboot-bootloader"
+                "android-reboot-recovery"
+                "android-install"
+                "android-uninstall"
+                "android-pull"
+                "android-push"
+                "android-shell"
+                "android-logs"
+                "android-clear-logs"
+                "android-screenshot"
+                "android-screenrecord"
+                "android-stop-screenrecord"
+                "android-battery-info"
+                "android-wifi-info"
+                "android-app-list"
+                "android-app-info"
+                "android-start-emu-fzf"
+            )
+            
+            local selected=$(printf '%s\n' "${commands[@]}" | fzf --preview 'echo "Will execute: {}"')
+            
+            if [ -n "$selected" ]; then
+                echo "Executing: $selected"
+                eval "$selected"
+            fi
+        }
+
+        androidl "$@"
+
+      passthrough: true

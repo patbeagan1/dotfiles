@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`manu`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        manu
+
+        Converted from aliases/alias_misc.zsh (`manu`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function manu() { man -t "$1" | open -fa Preview; }
+
+        manu "$@"
+
+      passthrough: true

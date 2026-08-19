@@ -1,0 +1,27 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgmontage`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgmontage
+
+        Converted from aliases/alias_imagemagick.zsh (`imgmontage`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgmontage() {
+            # Extract last argument for output file
+            output="${@: -1}"
+            
+            # Remove the last argument (output file)
+            inputs="${@:1:$(($#-1))}"
+            
+            montage -geometry +1+1 $inputs $output
+        }
+
+        imgmontage "$@"
+
+      passthrough: true

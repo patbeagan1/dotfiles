@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`script-edit`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        script-edit
+
+        Converted from aliases/alias_misc.zsh (`script-edit`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        script-edit () { vi "$(which "$1")"; }
+
+        script-edit "$@"
+
+      passthrough: true

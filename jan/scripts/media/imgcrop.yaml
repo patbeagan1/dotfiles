@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgcrop`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgcrop
+
+        Converted from aliases/alias_imagemagick.zsh (`imgcrop`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgcrop() {
+            convert "$1" -crop $2 "$1_cropped.jpg"
+        }
+
+        imgcrop "$@"
+
+      passthrough: true

@@ -1,0 +1,22 @@
+about: Converted from aliases/alias_misc.zsh (`mdo`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        mdo
+
+        Converted from aliases/alias_misc.zsh (`mdo`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        mdo() {
+            local project_name="${PWD##*/}"
+            ../monorepo run "$project_name" "$@"
+        }
+
+        mdo "$@"
+
+      passthrough: true

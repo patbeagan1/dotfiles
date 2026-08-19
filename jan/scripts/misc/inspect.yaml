@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_misc.zsh (`inspect`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        inspect
+
+        Converted from aliases/alias_misc.zsh (`inspect`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        function inspect () { cat "$(which "$1")"; }
+
+        inspect "$@"
+
+      passthrough: true

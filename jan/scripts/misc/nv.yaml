@@ -1,0 +1,43 @@
+about: Converted from aliases/alias_misc.zsh (`nv`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        nv
+
+        Converted from aliases/alias_misc.zsh (`nv`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        nv() {
+          # Check for dependencies
+          if ! command -v fzf &>/dev/null || ! command -v nordvpn &>/dev/null; then
+            echo "Error: This function requires 'fzf' and 'nordvpn' to be installed." >&2
+            return 1
+          fi
+
+          # Extract subcommands from the help text.
+          # The awk command now handles aliases by taking the first field (e.g., "connect,")
+          # and removing the comma and any characters that follow it.
+          local selected_command
+          selected_command=$(nordvpn --help | grep -E '^\s+[a-z-]+' |
+            awk '{sub(/,.*/, "", $1); print $1}' |
+            fzf --height 80% --min-height 15 --border --prompt="NordVPN > " \
+                --preview='nordvpn {} --help' \
+                --preview-window='right,65%,border-left')
+
+          # If a command was selected (the user didn't cancel),
+          # place it in the command-line buffer for editing.
+          if [[ -n "$selected_command" ]]; then
+            print -r -- "nordvpn ${selected_command} "
+          fi
+        }
+
+        nv "$@"
+
+      passthrough: true

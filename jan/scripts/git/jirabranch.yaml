@@ -1,0 +1,22 @@
+about: Converted from aliases/alias_git.zsh (`jirabranch`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        jirabranch
+
+        Converted from aliases/alias_git.zsh (`jirabranch`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        jirabranch() {
+          # Pick a sprint ticket -> worktree window seeded with the ticket. Runs inside tmux.
+          gas jira
+        }
+
+        jirabranch "$@"
+
+      passthrough: true

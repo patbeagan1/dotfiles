@@ -1,0 +1,23 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgconvert`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgconvert
+
+        Converted from aliases/alias_imagemagick.zsh (`imgconvert`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgconvert() {
+            filename=$(basename -- "$1")
+            name="${filename%.*}"
+            convert "$1" "$name.$2"
+        }
+
+        imgconvert "$@"
+
+      passthrough: true

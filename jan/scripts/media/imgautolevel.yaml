@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgautolevel`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgautolevel
+
+        Converted from aliases/alias_imagemagick.zsh (`imgautolevel`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgautolevel() {
+            convert "$1" -auto-level "$1_leveled.jpg"
+        }
+
+        imgautolevel "$@"
+
+      passthrough: true

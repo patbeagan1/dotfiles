@@ -13,6 +13,9 @@ commands:
     exec:
       bash: |
         # (c) 2022 Pat Beagan: MIT License
+        shopt -s expand_aliases
+        alias math='jan --no-log scripts misc math run'
+        alias mean='jan --no-log scripts misc mean run'
 
         variance () 
         { 

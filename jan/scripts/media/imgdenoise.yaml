@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgdenoise`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgdenoise
+
+        Converted from aliases/alias_imagemagick.zsh (`imgdenoise`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgdenoise() {
+            convert "$1" -despeckle "$1_denoised.jpg"
+        }
+
+        imgdenoise "$@"
+
+      passthrough: true

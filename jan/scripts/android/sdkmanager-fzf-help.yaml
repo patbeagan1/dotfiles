@@ -1,0 +1,45 @@
+about: Converted from aliases/alias_android.zsh (`sdkmanager-fzf-help`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        sdkmanager-fzf-help
+
+        Converted from aliases/alias_android.zsh (`sdkmanager-fzf-help`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        sdkmanager-fzf-help() {
+          # 1. Check for dependencies
+          if ! command -v fzf &>/dev/null || ! command -v sdkmanager &>/dev/null; then
+            echo "Error: This function requires 'fzf' and 'sdkmanager' to be installed." >&2
+            return 1
+          fi
+
+          # 2. Get a list of all available and installed SDK packages
+          # We use --no_https to speed up the listing process significantly.
+          echo "Fetching SDK package list..."
+          local packages
+          packages=$(sdkmanager --list --no_https 2>/dev/null)
+
+          # 3. Run fzf with multi-select enabled
+          local selected_lines
+          selected_lines=$(echo "$packages" | fzf --multi --height 70% --prompt="SDK Manager Packages > ")
+
+          # 4. Build the install command from the selected packages
+          if [[ -n "$selected_lines" ]]; then
+            # Extract the first column (the package string) from each selected line
+            local packages_to_install
+            packages_to_install=$(echo "$selected_lines" | awk '{print $1}' | tr '\n' ' ')
+            print -r -- "sdkmanager \"$packages_to_install\""
+          fi
+        }
+
+        sdkmanager-fzf-help "$@"
+
+      passthrough: true

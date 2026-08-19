@@ -16,6 +16,9 @@ commands:
 
         set -euo pipefail
         IFS=$'\n\t'
+        setopt aliases
+        alias simplify-prose='jan --no-log scripts text simplify-prose run'
+        alias webringify='jan --no-log scripts network webringify run'
 
         scriptname="$(basename "$0")"
 

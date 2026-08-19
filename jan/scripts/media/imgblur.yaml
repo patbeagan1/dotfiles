@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgblur`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgblur
+
+        Converted from aliases/alias_imagemagick.zsh (`imgblur`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgblur() {
+            convert "$1" -blur 0x8 "$1_blurred.jpg"
+        }
+
+        imgblur "$@"
+
+      passthrough: true

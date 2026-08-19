@@ -1,0 +1,22 @@
+about: Converted from aliases/alias_network.zsh (`translate-japanese`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        translate-japanese
+
+        Converted from aliases/alias_network.zsh (`translate-japanese`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        translate-japanese() {
+            local query="$(echo "$1" | sed 's/ /%20/g')"
+            open -a Safari 'https://translate.google.com/?sl=en&tl=ja&op=translate&text='"$query"
+        }
+
+        translate-japanese "$@"
+
+      passthrough: true

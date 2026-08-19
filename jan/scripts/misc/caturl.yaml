@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_misc.zsh (`caturl`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        caturl
+
+        Converted from aliases/alias_misc.zsh (`caturl`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        caturl () {
+        	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
+        }
+
+        caturl "$@"
+
+      passthrough: true

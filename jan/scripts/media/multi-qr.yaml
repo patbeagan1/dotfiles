@@ -13,6 +13,8 @@ commands:
     exec:
       zsh: |
         set -euo pipefail
+        setopt aliases
+        alias itty='jan --no-log scripts misc itty run'
 
         scriptname="$(basename "$0")"
         help() {

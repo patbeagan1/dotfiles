@@ -1,0 +1,48 @@
+about: Converted from aliases/alias_android.zsh (`avdmanager-fzf-help`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        avdmanager-fzf-help
+
+        Converted from aliases/alias_android.zsh (`avdmanager-fzf-help`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        avdmanager-fzf-help() {
+          # 1. Check for dependencies
+          if ! command -v fzf &>/dev/null || ! command -v avdmanager &>/dev/null; then
+            echo "Error: This function requires 'fzf' and 'avdmanager' to be installed." >&2
+            return 1
+          fi
+
+          # 2. Define the main avdmanager commands
+          local commands="list\ncreate\ndelete\nmove"
+
+          # 3. Set up the fzf preview to show help for the selected action
+          local preview_cmd
+          if command -v bat &>/dev/null; then
+            preview_cmd="avdmanager {} help | bat -l help -p --color=always"
+          else
+            preview_cmd="avdmanager {} help"
+          fi
+
+          # 4. Run fzf to let the user select an action
+          local selected_cmd
+          selected_cmd=$(echo -e "$commands" | fzf --height 40% --prompt="AVD Manager Action > " \
+            --preview="$preview_cmd")
+
+          # 5. Place the selected command on the terminal for editing
+          if [[ -n "$selected_cmd" ]]; then
+            print -r -- "avdmanager $selected_cmd "
+          fi
+        }
+
+        avdmanager-fzf-help "$@"
+
+      passthrough: true

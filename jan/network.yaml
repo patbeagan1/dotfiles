@@ -29,6 +29,8 @@ aliases:
   wget-local: wget -E -H -k -K -p
   wget-site: wget -c -EHkKp -P sites -t 1
 commands:
+  confluence:
+    include: scripts/network/confluence.yaml
   duck:
     include: scripts/network/duck.yaml
   duckduckgo:
@@ -49,6 +51,10 @@ commands:
     include: scripts/network/scan-local-ports.yaml
   setupSshKeygen:
     include: scripts/network/setupSshKeygen.yaml
+  share:
+    include: scripts/network/share.yaml
+  translate-japanese:
+    include: scripts/network/translate-japanese.yaml
   url-to-file:
     include: scripts/network/url-to-file.yaml
   web-open:

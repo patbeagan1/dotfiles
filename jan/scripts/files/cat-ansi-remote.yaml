@@ -13,6 +13,8 @@ commands:
     exec:
       zsh: |
         set -euo pipefail
+        setopt aliases
+        alias cat-ansifile='jan --no-log scripts files cat-ansifile run'
 
         scriptname="$(basename "$0")"
         help() {

@@ -1,0 +1,19 @@
+about: Converted from aliases/alias_teleport.zsh (`waypoint_go`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        waypoint_go
+
+        Converted from aliases/alias_teleport.zsh (`waypoint_go`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        cat ~/waypoint.txt | fzf -1 -q "$1"
+
+      passthrough: true

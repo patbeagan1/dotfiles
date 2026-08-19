@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imggray`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imggray
+
+        Converted from aliases/alias_imagemagick.zsh (`imggray`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imggray() {
+            convert "$1" -colorspace Gray "$1_gray.jpg"
+        }
+
+        imggray "$@"
+
+      passthrough: true

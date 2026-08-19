@@ -1,0 +1,54 @@
+about: Converted from aliases/alias_git.zsh (`gfh`).
+requires:
+  - fzf
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        gfh
+
+        Converted from aliases/alias_git.zsh (`gfh`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        gfh() {
+          # 1. Check for dependencies
+          if ! command -v fzf &>/dev/null || ! command -v git &>/dev/null; then
+            echo "Error: This function requires 'fzf' and 'git' to be installed." >&2
+            return 1
+          fi
+
+          # 2. Get a reliable list of all git commands
+          local commands
+          commands=$(ls "$(git --exec-path)" | sed 's/^git-//')
+          if [[ -z "$commands" ]]; then
+            echo "Error: Could not list git commands from exec-path." >&2
+            return 1
+          fi
+
+          # 3. Set up the fzf preview command, using 'bat' for syntax highlighting if available
+          local preview_cmd
+          if command -v bat &> /dev/null; then
+            preview_cmd="git help {} | bat -l help -p --color=always"
+          else
+            preview_cmd="git help {}"
+          fi
+
+          # 4. Run fzf to let the user select a command
+          local selected_command
+          selected_command=$(echo "$commands" | fzf --height 60% --min-height 20 --border --prompt="Git > " \
+            --preview="$preview_cmd" \
+            --preview-window='right,70%,border-left')
+
+          # 5. If a command was selected, place it on the command line for editing
+          if [[ -n "$selected_command" ]]; then
+            print -z "git ${selected_command} "
+          fi
+        }
+
+        gfh "$@"
+
+      passthrough: true

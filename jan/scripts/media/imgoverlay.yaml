@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgoverlay`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgoverlay
+
+        Converted from aliases/alias_imagemagick.zsh (`imgoverlay`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgoverlay() {
+            composite -gravity center "$2" "$1" "$1_overlay.jpg"
+        }
+
+        imgoverlay "$@"
+
+      passthrough: true

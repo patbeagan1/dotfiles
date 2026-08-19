@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgborder`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgborder
+
+        Converted from aliases/alias_imagemagick.zsh (`imgborder`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgborder() {
+            convert "$1" -bordercolor black -border $2x$2 "$1_border.jpg"
+        }
+
+        imgborder "$@"
+
+      passthrough: true

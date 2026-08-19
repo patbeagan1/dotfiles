@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_imagemagick.zsh (`imgthumb`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        imgthumb
+
+        Converted from aliases/alias_imagemagick.zsh (`imgthumb`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        imgthumb() {
+            convert "$1" -thumbnail "$2x$2^" -gravity center -extent $2x$2 "$1_thumbnail.jpg"
+        }
+
+        imgthumb "$@"
+
+      passthrough: true

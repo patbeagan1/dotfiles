@@ -12,6 +12,9 @@ commands:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
+        setopt aliases
+        alias web-open='jan --no-log scripts network web-open run'
+
         function q-heb {
         web-open 'https://www.heb.com/search?Ns=product.salePrice%7C0&q='"$1"
 

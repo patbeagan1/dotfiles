@@ -5,23 +5,20 @@
 # mdo: Run monorepo commands for the current project directory
 # Usage: mdo <script_name> [args...]
 # Example: When in artrank directory, "mdo start" executes "../monorepo run artrank start"
-mdo() {
-    local project_name="${PWD##*/}"
-    ../monorepo run "$project_name" "$@"
-}
+# Moved to jan scripts/misc/mdo.yaml (`jan scripts misc mdo run`).
 # alias nvimg='alacritty --command nvim'
 
 
 # alias gemini-cli='npx https://github.com/google-gemini/gemini-cli'
 
-function prettyCSV() { cat "$1" | column -t -s ","; }
+# Moved to jan scripts/misc/prettyCSV.yaml (`jan scripts misc prettyCSV run`).
 # alias shrink_mov_from='ffmpeg -vcodec libx264 -crf 20 output.mp4 -i'
 
 # foreach-line; do echo "$line"; done < alias
 # alias foreach-line='while IFS= read -r line'
 
 # alias ls-files-by-size='ls -l | tr -s " " | cut -d" " -f 5-100 | sort -n | trim.sh'
-color-describe () { open "https://www.2020colours.com/$1"; }
+# Moved to jan scripts/misc/color-describe.yaml (`jan scripts misc color-describe run`).
 # alias nix-install='nix-env -iA nixpkgs.'
 
 # alias ntagas='tagger.py -s n tagas'
@@ -34,7 +31,7 @@ color-describe () { open "https://www.2020colours.com/$1"; }
 # alias docker_check_vm='docker run -it --rm --privileged --pid=host justincormack/nsenter1'
 
 # alias kotlin_conversion='echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
-script-edit () { vi "$(which "$1")"; }
+# Moved to jan scripts/misc/script-edit.yaml (`jan scripts misc script-edit run`).
 # alias server='python3 -m http.server'
 
 
@@ -45,38 +42,18 @@ script-edit () { vi "$(which "$1")"; }
 # alias vpnd='nordvpn disconnect'
 # fzf launcher for the nordvpn CLI.
 # Usage: Type 'nv' and press Enter.
-nv() {
-  # Check for dependencies
-  if ! command -v fzf &>/dev/null || ! command -v nordvpn &>/dev/null; then
-    echo "Error: This function requires 'fzf' and 'nordvpn' to be installed." >&2
-    return 1
-  fi
-
-  # Extract subcommands from the help text.
-  # The awk command now handles aliases by taking the first field (e.g., "connect,")
-  # and removing the comma and any characters that follow it.
-  local selected_command
-  selected_command=$(nordvpn --help | grep -E '^\s+[a-z-]+' |
-    awk '{sub(/,.*/, "", $1); print $1}' |
-    fzf --height 80% --min-height 15 --border --prompt="NordVPN > " \
-        --preview='nordvpn {} --help' \
-        --preview-window='right,65%,border-left')
-
-  # If a command was selected (the user didn't cancel),
-  # place it in the command-line buffer for editing.
-  if [[ -n "$selected_command" ]]; then
-    print -z "nordvpn ${selected_command} "
-  fi
-}
+# Moved to jan scripts/misc/nv.yaml (`jan scripts misc nv run`).
+unalias nv 2>/dev/null
+nv() { local cmd; cmd="$(jan --no-log scripts misc nv run "$@")" && [[ -n "$cmd" ]] && print -z "$cmd"; }
 
 # alias verify-hash='is-test system os linux && sha256sum || shasum -a 256'
 # alias verify-directory-contents='rsync -rvcn'
 
 # alias show-hardware-displays='sudo lshw -numeric -C display'
-ipfs-upload () { ipfs files cp /ipfs/$(ipfs add -Q "$1") /"$1"; }
-unpin_all() { ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm ;}
+# Moved to jan scripts/misc/ipfs-upload.yaml (`jan scripts misc ipfs-upload run`).
+# Moved to jan scripts/misc/unpin_all.yaml (`jan scripts misc unpin_all run`).
 
-function manu() { man -t "$1" | open -fa Preview; }
+# Moved to jan scripts/misc/manu.yaml (`jan scripts misc manu run`).
 
 # Simple encryption and decryption
 # alias encrypt='gpg -c'
@@ -97,9 +74,7 @@ function manu() { man -t "$1" | open -fa Preview; }
 
 # alias gw='./gradlew'
 
-caturl () {
-	local filename="/tmp/caturl.html"  && echo "<pre>" > "$filename" && cat "$1" >> "$filename" && echo "</pre>" >> "$filename" && open /tmp/caturl.html
-}
+# Moved to jan scripts/misc/caturl.yaml (`jan scripts misc caturl run`).
 
 # alias jslint='npm run lint --silent -- --frail'
 
@@ -166,15 +141,15 @@ caturl () {
 
 #==========================================
 # Itty
-function qr_itty () { qr $(itty.sh "$1"); }
-function qr_itty_cat () { qr_itty "`cat $1`"; }
-function to_itty() { cat /dev/stdin | lzma -9 | base64 -w0 | xargs -0 printf "https://itty.bitty.site/#/%s\n"; }    
+# Moved to jan scripts/misc/qr_itty.yaml (`jan scripts misc qr_itty run`).
+# Moved to jan scripts/misc/qr_itty_cat.yaml (`jan scripts misc qr_itty_cat run`).
+# Moved to jan scripts/misc/to_itty.yaml (`jan scripts misc to_itty run`).
 
 #==========================================
 
 # alias to_clipboard="xclip -selection clipboard" 
 
-function wiki () { open $(wiki.js "$*") }
+# `wiki` is `jan scripts misc wiki run` (existing jan script).
 # alias record='asciinema rec'
 
 # alias sequence_diagram='open http://www.plantuml.com/plantuml/uml/'
@@ -207,111 +182,13 @@ function wiki () { open $(wiki.js "$*") }
 #     find ~/cache -name getlist -exec dirname {} \; | xargs -I % command wget -P ~/cache/% -nc -i ~/cache/%/getlist
 # } 
 
-function quar { mv "$1" ~/.j/; }
+# Moved to jan scripts/misc/quar.yaml (`jan scripts misc quar run`).
 # alias tagcheck='tagger.py tagcheck'
 
 # alias g1='git log --pretty=oneline'
 
-function inspect () { cat "$(which "$1")"; }
+# Moved to jan scripts/misc/inspect.yaml (`jan scripts misc inspect run`).
 # alias i='inspect'
 
 
-function gwd() {
-    # Usage: gwd <new-branch-name>
-    if [ -z "$1" ]; then
-        echo "Error: Please provide a name for the new worktree/branch."
-        return 1
-    fi
-
-    local branch_name="$1"
-    local new_dir="../$branch_name"
-
-    # Early safety: check for uncommitted changes in the current repo
-    if [[ -n "$(git status --porcelain)" ]]; then
-        echo "⚠️  Warning: You have uncommitted changes in the current repository. Please commit, stash, or discard them before proceeding."
-        return 1
-    fi
-
-    # Early safety: refuse to proceed if destination dir already exists
-    if [[ -e "$new_dir" ]]; then
-        echo "⚠️  Directory '$new_dir' already exists. Please remove it or choose a different branch name."
-        return 1
-    fi
-
-    # 1. Update remote refs to ensure origin/develop is fresh
-    echo "🔄 Fetching latest from origin..."
-    git fetch origin develop
-    if [[ $? -ne 0 ]]; then
-        echo "❌ Error: 'git fetch origin develop' failed."
-        return 1
-    fi
-
-    # Early return if the branch already exists
-    if git show-ref --verify --quiet "refs/heads/$branch_name"; then
-        echo "⚠️  Branch '$branch_name' already exists. Please choose a different name."
-        return 1
-    fi
-
-    # 2. Create worktree based explicitly on origin/develop
-    #    (This creates the folder and the branch simultaneously)
-    if ! git worktree add -b "$branch_name" "$new_dir" origin/develop; then
-        echo "❌ Error: Failed to create worktree for branch '$branch_name'."
-        return 1
-    fi
-
-    # 3. Enter the new directory
-    if ! pushd "$new_dir" > /dev/null; then
-        echo "❌ Error: Failed to enter new worktree directory '$new_dir'."
-        return 1
-    fi
-
-    # 4. Push the new branch and set the upstream to origin
-    echo "🚀 Setting upstream origin/$branch_name..."
-    if ! git push --set-upstream origin "$branch_name"; then
-        echo "❌ Error: Failed to push and set upstream for branch '$branch_name'."
-        popd > /dev/null
-        return 1
-    fi
-
-    # Extract the second component from the branch name (assuming "user/JIRA_ID/rest" structure)
-    local branch_parts
-    IFS='/' read -ra branch_parts <<< "$branch_name"
-    second_part="${branch_parts[1]}"
-    # Only treat as a Jira ticket key if it matches the "ABC-123" pattern and is not "chore"
-    if [[ "$second_part" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]]; then
-        ticket_key="$second_part"
-        echo "🔗 Found Jira ticket key: $ticket_key"
-
-        # Get Jira instance subdomain from cache or prompt (reuse infrastructure)
-        jira_subdomain_file="$HOME/.jira_instance_subdomain"
-        JIRA_INSTANCE_SUBDOMAIN=""
-        if [[ -f "$jira_subdomain_file" ]]; then
-            JIRA_INSTANCE_SUBDOMAIN=$(<"$jira_subdomain_file")
-        fi
-        if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-            read "JIRA_INSTANCE_SUBDOMAIN?Enter your Jira instance subdomain (the part before .atlassian.net): "
-            if [[ -z "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-                echo "⚠️  Jira instance subdomain is required. Skipping ticket metadata prompt."
-            else
-                echo "$JIRA_INSTANCE_SUBDOMAIN" > "$jira_subdomain_file"
-            fi
-        fi
-
-        # Fetch ticket details using acli (accepts JIRA_INSTANCE_SUBDOMAIN in env)
-        if [[ -n "$JIRA_INSTANCE_SUBDOMAIN" ]]; then
-            jira_json=$(JIRA_INSTANCE_SUBDOMAIN="$JIRA_INSTANCE_SUBDOMAIN" acli jira workitem view "$ticket_key" -f 'summary,description' 2>/dev/null)
-            ticket_description=$(echo "$jira_json")
-
-            if [[ -n "$ticket_description" ]]; then
-                # Run cursor-agent with the ticket content as a prompt
-                echo -e "Jira Ticket Description:\n$ticket_description\n" | cursor-agent -p
-            fi
-        fi
-    fi
-
-    # 5. Open Cursor in the current directory
-    cursor .
-
-    # 6. Return to the original directory
-    popd > /dev/null
-}
+# Moved to jan scripts/git/gwd.yaml (`jan scripts git gwd run`).

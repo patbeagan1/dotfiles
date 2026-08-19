@@ -35,6 +35,8 @@ commands:
     include: scripts/files/compare_directories.yaml
   csv-summary:
     include: scripts/files/csv-summary.yaml
+  extract:
+    include: scripts/files/extract.yaml
   json-keys:
     include: scripts/files/json-keys.yaml
   json-summary:
@@ -51,12 +53,18 @@ commands:
     include: scripts/files/folder_checksum.yaml
   fullpath:
     include: scripts/files/fullpath.yaml
+  lk:
+    include: scripts/files/lk.yaml
   nospaces:
     include: scripts/files/nospaces.yaml
   notabs:
     include: scripts/files/notabs.yaml
   remove_empty_dirs:
     include: scripts/files/remove_empty_dirs.yaml
+  remove_empty_lines:
+    include: scripts/files/remove_empty_lines.yaml
+  remove_empty_lines_force:
+    include: scripts/files/remove_empty_lines_force.yaml
   rm_empty_dirs:
     include: scripts/files/rm_empty_dirs.yaml
   rm_empty_files:

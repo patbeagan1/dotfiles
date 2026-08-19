@@ -1,0 +1,21 @@
+about: Converted from aliases/alias_network.zsh (`share`).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        share
+
+        Converted from aliases/alias_network.zsh (`share`).
+
+  run:
+    about: 'Run the linked script; forwards args.'
+    exec:
+      zsh: |
+        share() {
+            ssh -R 80:localhost:$1 nokey@localhost.run
+        }
+
+        share "$@"
+
+      passthrough: true

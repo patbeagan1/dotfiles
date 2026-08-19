@@ -13,6 +13,8 @@ commands:
     exec:
       bash: |
         # (c) 2022 Pat Beagan: MIT License
+        shopt -s expand_aliases
+        alias loop='jan --no-log scripts misc loop run'
 
         report () 
         { 
