@@ -1,0 +1,79 @@
+# Host configuration for `jan config` (emit / link / apply).
+# Fragments live under config/ relative to this preferred jan directory.
+about: host configuration (emit / link / apply)
+commands:
+  zsh:
+    about: zsh history, setopt, completions, PATH for libbeagan bin
+    config:
+      shell:
+        path: config/zsh.zsh
+  omzsh:
+    about: Oh My Zsh theme and plugins
+    config:
+      shell:
+        path: config/omzsh.zsh
+  golang:
+    about: GOPATH and Go toolchain PATH
+    config:
+      shell:
+        path: config/golang.zsh
+  android:
+    about: Android SDK / Flutter PATH exports
+    config:
+      shell:
+        path: config/android.zsh
+  ios:
+    about: iOS / Xcode related PATH and env
+    config:
+      shell:
+        path: config/ios.zsh
+  emacs-path:
+    about: emacs binary PATH (~/.config/emacs/bin)
+    config:
+      shell:
+        path: config/emacs-path.zsh
+  emacs:
+    about: symlink init.el into ~/.emacs.d
+    config:
+      link:
+        ~/.emacs.d/init.el: config/init.el
+  nvim:
+    about: symlink init.vim into ~/.config/nvim
+    config:
+      link:
+        ~/.config/nvim/init.vim: config/init.vim
+  git:
+    about: global git aliases (imperative apply)
+    config:
+      apply:
+        - [git, config, --global, alias.co, checkout]
+        - [git, config, --global, alias.revert-file, "checkout origin/develop --"]
+        - [git, config, --global, alias.br, branch]
+        - [git, config, --global, alias.ci, commit]
+        - [git, config, --global, alias.st, status]
+        - [git, config, --global, alias.unstage, "reset HEAD --"]
+        - [git, config, --global, alias.last, "log -1 HEAD"]
+        - [git, config, --global, alias.visual, "!gitk"]
+        - [git, config, --global, alias.mergetest, "!f(){ git merge --no-commit --no-ff \"$1\"; git merge --abort; echo \"Merge aborted\"; };f"]
+        - [git, config, --global, alias.work, "log --pretty=format:%h%x09%an%x09%ad%x09%s"]
+        - [git, config, --global, alias.commit-ai, git-commit-ai]
+  machine-framework:
+    about: Framework laptop fragment (guards on CURRENT_COMPUTER)
+    config:
+      shell:
+        path: config/machines/framework.zsh
+  machine-mac2025:
+    about: mac2025 machine fragment
+    config:
+      shell:
+        path: config/machines/mac2025.zsh
+  machine-mac_2022:
+    about: mac_2022 machine fragment
+    config:
+      shell:
+        path: config/machines/mac_2022.zsh
+  machine-mac_2017:
+    about: mac_2017 machine fragment
+    config:
+      shell:
+        path: config/machines/mac_2017.zsh

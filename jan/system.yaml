@@ -72,6 +72,129 @@ commands:
       ps: ps -aux
       qp: 'ps auxwww|more'
       tulpn: netstat -tulpn
+      # --- identity / overview ---
+      sys-os: 'cat /etc/os-release'
+      sys-uname: uname -a
+      sys-host: hostnamectl
+      sys-time: timedatectl
+      sys-locale: localectl
+      sys-uptime: 'uptime; echo; cat /proc/uptime'
+      sys-who: 'who -a; echo; w'
+      sys-last: 'last -a | head -40'
+      sys-sessions: loginctl list-sessions
+      sys-machine-id: 'cat /etc/machine-id; echo; cat /proc/sys/kernel/hostname'
+      # --- hardware ---
+      sys-cpu: lscpu
+      sys-cpuinfo: 'cat /proc/cpuinfo'
+      sys-hw: 'sudo lshw -short'
+      sys-hw-full: 'sudo lshw -numeric'
+      sys-pci: 'lspci -nnvv'
+      sys-usb: 'lsusb -v'
+      sys-block: 'lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,UUID,MODEL,SERIAL,ROTA,TRAN,STATE'
+      sys-disks: 'ls -la /dev/disk/by-id /dev/disk/by-path /dev/disk/by-uuid /dev/disk/by-label 2>/dev/null'
+      sys-blkid: 'sudo blkid'
+      sys-dmi: 'sudo dmidecode'
+      sys-dmi-sys: 'sudo dmidecode -t system'
+      sys-dmi-bios: 'sudo dmidecode -t bios'
+      sys-dmi-mem: 'sudo dmidecode -t memory'
+      sys-dmi-cpu: 'sudo dmidecode -t processor'
+      sys-dmi-board: 'sudo dmidecode -t baseboard'
+      sys-sensors: 'sensors -A 2>/dev/null || echo "sensors not installed (lm-sensors)"'
+      sys-numa: 'numactl --hardware 2>/dev/null || cat /proc/buddyinfo'
+      sys-smart: 'sudo smartctl --scan 2>/dev/null; echo; for d in /dev/sd[a-z] /dev/nvme[0-9]n[0-9]; do [ -e "$d" ] && echo "=== $d ===" && sudo smartctl -a "$d" 2>/dev/null; done'
+      sys-gpu: 'sudo lshw -numeric -C display; echo; lspci | grep -iE ''vga|3d|display'''
+      sys-audio: 'aplay -l 2>/dev/null; echo; cat /proc/asound/cards 2>/dev/null'
+      sys-input: 'cat /proc/bus/input/devices'
+      # --- memory ---
+      sys-mem: free -h
+      sys-mem-m: free -m
+      sys-meminfo: 'cat /proc/meminfo'
+      sys-mem-top: 'ps -eo pid,user,pmem,rss,comm --sort=-rss | head -25'
+      sys-swap: 'cat /proc/swaps; echo; free -h | grep -i swap'
+      sys-slab: 'cat /proc/slabinfo 2>/dev/null | head -60'
+      sys-buddy: 'cat /proc/buddyinfo'
+      sys-pagetype: 'cat /proc/pagetypeinfo'
+      sys-vmstat: 'vmstat -s; echo; vmstat 1 5'
+      sys-psi: 'echo "=== memory ==="; cat /proc/pressure/memory 2>/dev/null; echo "=== cpu ==="; cat /proc/pressure/cpu 2>/dev/null; echo "=== io ==="; cat /proc/pressure/io 2>/dev/null'
+      sys-oom: 'dmesg -T 2>/dev/null | grep -iE ''oom|killed process'' | tail -40; echo; journalctl -k -b --no-pager 2>/dev/null | grep -iE ''oom|killed process'' | tail -20'
+      # --- /proc ---
+      sys-proc-version: 'cat /proc/version'
+      sys-proc-cmdline: 'cat /proc/cmdline'
+      sys-proc-load: 'cat /proc/loadavg'
+      sys-proc-mounts: 'cat /proc/mounts'
+      sys-proc-fs: 'cat /proc/filesystems'
+      sys-proc-parts: 'cat /proc/partitions'
+      sys-proc-diskstats: 'cat /proc/diskstats'
+      sys-proc-interrupts: 'cat /proc/interrupts'
+      sys-proc-softirqs: 'cat /proc/softirqs'
+      sys-proc-modules: 'cat /proc/modules'
+      sys-proc-devices: 'cat /proc/devices'
+      sys-proc-ioports: 'cat /proc/ioports'
+      sys-proc-iomem: 'cat /proc/iomem'
+      sys-proc-dma: 'cat /proc/dma'
+      sys-proc-netdev: 'cat /proc/net/dev'
+      sys-proc-netstat: 'cat /proc/net/netstat'
+      sys-proc-sockstat: 'cat /proc/net/sockstat; echo; cat /proc/net/sockstat6 2>/dev/null'
+      sys-proc-route: 'cat /proc/net/route; echo; cat /proc/net/ipv6_route 2>/dev/null | head -40'
+      sys-proc-cgroups: 'cat /proc/cgroups; echo; cat /proc/self/cgroup'
+      sys-proc-limits: 'cat /proc/self/limits'
+      sys-proc-status: 'cat /proc/self/status'
+      sys-proc-stat: 'cat /proc/stat'
+      sys-proc-zoneinfo: 'cat /proc/zoneinfo | head -80'
+      sys-proc-vmalloc: 'cat /proc/vmallocinfo 2>/dev/null | head -40'
+      sys-proc-crypto: 'cat /proc/crypto | head -80'
+      sys-proc-key-users: 'cat /proc/key-users 2>/dev/null'
+      sys-proc-sysrq: 'cat /proc/sys/kernel/sysrq'
+      # --- /dev ---
+      sys-dev: 'ls -la /dev'
+      sys-dev-block: 'ls -la /dev/block /dev/disk 2>/dev/null; echo; lsblk -f'
+      sys-dev-char: 'ls -la /dev/char 2>/dev/null | head -80'
+      sys-dev-mapper: 'ls -la /dev/mapper 2>/dev/null; echo; sudo dmsetup ls 2>/dev/null'
+      sys-dev-shm: 'df -h /dev/shm; echo; ls -la /dev/shm'
+      sys-dev-pts: 'ls -la /dev/pts'
+      sys-dev-net: 'ls -la /dev/net 2>/dev/null; echo; ip -br link'
+      # --- storage / mounts ---
+      sys-df: 'df -hT'
+      sys-df-i: 'df -hi'
+      sys-mount: 'mount | column -t'
+      sys-findmnt: 'findmnt -A'
+      sys-fstab: 'cat /etc/fstab'
+      sys-lvm: 'sudo pvs; echo; sudo vgs; echo; sudo lvs'
+      sys-md: 'cat /proc/mdstat 2>/dev/null; echo; sudo mdadm --detail --scan 2>/dev/null'
+      # --- kernel / modules / boot ---
+      sys-kernel: 'uname -r; echo; cat /proc/version; echo; ls -la /boot/vmlinuz* /boot/initrd* /boot/initramfs* 2>/dev/null'
+      sys-modules: 'lsmod'
+      sys-dmesg: 'dmesg -T | tail -100'
+      sys-dmesg-err: 'dmesg -T -l err,crit,alert,emerg | tail -50'
+      sys-sysctl: 'sysctl -a 2>/dev/null | head -200'
+      sys-sysctl-vm: 'sysctl -a 2>/dev/null | grep -E ''^vm\.'''
+      sys-sysctl-net: 'sysctl -a 2>/dev/null | grep -E ''^net\.'' | head -80'
+      sys-cmdline: 'cat /proc/cmdline'
+      # --- processes / load ---
+      sys-top-cpu: 'ps -eo pid,user,pcpu,pmem,comm --sort=-pcpu | head -25'
+      sys-top-mem: 'ps -eo pid,user,pcpu,pmem,rss,comm --sort=-rss | head -25'
+      sys-load: 'uptime; echo; cat /proc/loadavg; echo; nproc; echo; grep -c ^processor /proc/cpuinfo'
+      sys-iostat: 'iostat -xz 1 3 2>/dev/null || vmstat 1 3'
+      sys-iotop: 'sudo iotop -oP -n 3 2>/dev/null || echo "iotop not installed"'
+      # --- network state ---
+      sys-ip: 'ip -br addr; echo; ip -br link; echo; ip route'
+      sys-ss: 'ss -tulnp'
+      sys-ss-all: 'ss -tanp'
+      sys-neigh: 'ip neigh'
+      sys-resolv: 'cat /etc/resolv.conf; echo; resolvectl status 2>/dev/null || systemd-resolve --status 2>/dev/null'
+      # --- systemd / services ---
+      sys-failed: systemctl --failed
+      sys-timers: 'systemctl list-timers --all'
+      sys-units: 'systemctl list-units --type=service --state=running'
+      sys-boot: 'systemd-analyze; echo; systemd-analyze blame | head -30'
+      sys-journal: 'journalctl -b -n 50 --no-pager'
+      # --- power / thermal ---
+      sys-power: 'upower -d 2>/dev/null; echo; cat /sys/class/power_supply/*/uevent 2>/dev/null'
+      sys-thermal: 'paste <(cat /sys/class/thermal/thermal_zone*/type 2>/dev/null) <(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null) 2>/dev/null; echo; sensors -A 2>/dev/null'
+      sys-freq: 'cat /proc/cpuinfo | grep -E ''model name|MHz''; echo; cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null'
+      # --- dump many sources at once ---
+      sys-info: 'echo "=== host ==="; hostnamectl 2>/dev/null; echo; echo "=== os ==="; cat /etc/os-release; echo; echo "=== uname ==="; uname -a; echo; echo "=== uptime ==="; uptime; echo; echo "=== cpu ==="; lscpu | head -40; echo; echo "=== mem ==="; free -h; echo; echo "=== disks ==="; lsblk; echo; echo "=== mounts ==="; df -hT; echo; echo "=== net ==="; ip -br addr'
+      sys-proc-dump: 'echo "=== version ==="; cat /proc/version; echo; echo "=== cmdline ==="; cat /proc/cmdline; echo; echo "=== loadavg ==="; cat /proc/loadavg; echo; echo "=== meminfo ==="; cat /proc/meminfo; echo; echo "=== swaps ==="; cat /proc/swaps; echo; echo "=== partitions ==="; cat /proc/partitions; echo; echo "=== modules ==="; cat /proc/modules | head -40'
   cputemp:
     include: scripts/system/cputemp.yaml
   cputemp-linux-sorted:

@@ -33,19 +33,8 @@
 # Moved to jan scripts/git/git-over-time.yaml (`jan scripts git git-over-time run`).
 
 ###########################################################
-# Git Configuration
+# Git Configuration — applied by `jan config apply` (config.git)
 ###########################################################
-
-git config --global alias.co checkout
-git config --global alias.revert-file 'checkout origin/develop --'
-git config --global alias.br branch
-git config --global alias.ci commit
-git config --global alias.st status
-git config --global alias.unstage 'reset HEAD --'
-git config --global alias.last 'log -1 HEAD'
-git config --global alias.visual '!gitk'
-git config --global alias.mergetest '!f(){ git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted"; };f'
-git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 
 ###########################################################
 # Development
@@ -53,7 +42,7 @@ git config --global alias.work 'log --pretty=format:"%h%x09%an%x09%ad%x09%s"'
 
 # Alias to get the current release version
 
-git config --global alias.commit-ai 'git-commit-ai'
+# git config --global alias.commit-ai is applied via jan config apply
 # Moved to jan scripts/git/git-commit-ai.yaml (`jan scripts git git-commit-ai run`).
 
 # fzf wrapper to group useful git/jira/gh functions for quick access

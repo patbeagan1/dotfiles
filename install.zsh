@@ -73,29 +73,30 @@ validate_env() {
 }
 
 load_configurations() {
-    print_info "📁 Loading configurations..."
+    # Preferred path: emitted by `jan config emit` in setup_scripts.
+    local emitted="${XDG_CONFIG_HOME:-$HOME/.config}/jan/config.zsh"
+    if [[ -f "$emitted" ]]; then
+        print_info "📁 Loading jan-emitted configuration: $emitted"
+        # shellcheck disable=SC1090
+        source "$emitted"
+        return 0
+    fi
+
+    print_info "📁 Loading configurations (legacy configs/*.zsh; run install with jan for emit)..."
     safe_source "$LIBBEAGAN_HOME/configs/config-zsh.zsh" "ZSH configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-omzsh.zsh" "Oh My Zsh configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-golang.zsh" "Go configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-android.zsh" "Android configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-ios.zsh" "iOS configuration"
     safe_source "$LIBBEAGAN_HOME/configs/config-emacs.zsh" "emacs configuration"
-}
 
-load_machine_specific_config() {
-    print_info "🖥️  Loading machine-specific configuration..."
-    
-    # Loop through all machine-specific configuration files
     local machines_dir="$LIBBEAGAN_HOME/configs/machines"
     if [[ -d "$machines_dir" ]]; then
-        for machine_file in "$machines_dir"/*.zsh; do
-            if [[ -f "$machine_file" ]]; then
-                local machine_name=$(basename "$machine_file" .zsh)
-                safe_source "$machine_file" "$machine_name configuration"
-            fi
+        for machine_file in "$machines_dir"/*.zsh(N); do
+            [[ -f "$machine_file" ]] || continue
+            local machine_name="${machine_file:t:r}"
+            safe_source "$machine_file" "$machine_name configuration"
         done
-    else
-        print_info "ℹ️  No machines directory found at: $machines_dir"
     fi
 }
 
@@ -221,6 +222,33 @@ setup_scripts() {
         echo "⚠️  Warning: jan alias generation failed (continuing)"
         print_info "   You can retry later with: jan alias --shell zsh -o \"$alias_out\""
     fi
+
+    local config_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/config.zsh"
+    print_info "   Writing host configuration to: $config_out"
+    mkdir -p "$(dirname "$config_out")"
+    if jan --no-log config emit --shell zsh -o "$config_out"; then
+        print_info "✅ Emitted jan config shell fragments"
+        # shellcheck disable=SC1090
+        source "$config_out"
+        print_info "✅ Sourced jan config into current shell"
+    else
+        echo "⚠️  Warning: jan config emit failed (continuing)"
+        print_info "   You can retry later with: jan config emit --shell zsh -o \"$config_out\""
+    fi
+
+    print_info "   Running: jan config link"
+    if jan --no-log config link; then
+        print_info "✅ Linked config files into \$HOME"
+    else
+        echo "⚠️  Warning: jan config link failed (continuing; try --force if destinations exist)"
+    fi
+
+    print_info "   Running: jan config apply"
+    if jan --no-log config apply; then
+        print_info "✅ Applied imperative config (e.g. git config)"
+    else
+        echo "⚠️  Warning: jan config apply failed (continuing)"
+    fi
 }
 
 check_dependencies() {
@@ -230,9 +258,10 @@ check_dependencies() {
 
 main() {
     validate_env || return 1
-    load_configurations || return 1
-    load_machine_specific_config || return 1
+    # jan use / alias / config emit+link+apply first so load_configurations can
+    # source the emitted ~/.config/jan/config.zsh (machine fragments included).
     setup_scripts || return 1
+    load_configurations || return 1
     load_aliases || return 1
     setup_completions || return 1
     check_dependencies || return 1
