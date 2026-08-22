@@ -1,4 +1,3 @@
-
 # Moved to jan scripts/misc/envsec.yaml (`jan scripts misc envsec run`).
 unalias envsec 2>/dev/null
 envsec() {

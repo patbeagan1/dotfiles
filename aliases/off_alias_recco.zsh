@@ -46,7 +46,6 @@ alias tnew='tmux new-session -s'
 alias tf='terraform'
 alias grep='grep --color=auto'  # Color output for grep
 
-
 # Terraform
 alias tfp='terraform plan'
 alias tfa='terraform apply'

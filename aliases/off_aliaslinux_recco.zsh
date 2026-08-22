@@ -173,4 +173,3 @@ alias listening="sudo ss -tulnp"
 
 # Display all network connections
 alias allconnections="sudo ss -tuln"
-

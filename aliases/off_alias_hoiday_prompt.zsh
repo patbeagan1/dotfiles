@@ -29,7 +29,6 @@ set_holiday_prompt() {
 
 set_holiday_prompt
 
-
 function holiday_st_patricks () {
   echo "
 🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀
