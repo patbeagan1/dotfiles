@@ -238,9 +238,9 @@ setup_scripts() {
 
     print_info "   Running: jan config link"
     if jan --no-log config link; then
-        print_info "✅ Linked config files into \$HOME"
+        print_info "✅ Linked config files into \$HOME (existing paths are skipped with a warning)"
     else
-        echo "⚠️  Warning: jan config link failed (continuing; try --force if destinations exist)"
+        echo "⚠️  Warning: jan config link failed (continuing)"
     fi
 
     print_info "   Running: jan config apply"
