@@ -1,150 +1,40 @@
-# Host tool checklist for `jan config deps` (migrated from dependencies.sh).
-# Binary name → optional package / install hint (empty = name only).
+# Host configuration for `jan config` (emit / link / apply / deps).
+# Each child is a YAML include under config/; shell fragments are inlined.
 about: host configuration (emit / link / apply / deps)
 commands:
   zsh:
-    about: zsh history, setopt, completions, PATH for libbeagan bin
-    config:
-      shell:
-        path: config/zsh.zsh
+    include: config/zsh.yaml
   omzsh:
-    about: Oh My Zsh theme and plugins
-    config:
-      shell:
-        path: config/omzsh.zsh
+    include: config/omzsh.yaml
   golang:
-    about: GOPATH and Go toolchain PATH
-    config:
-      shell:
-        path: config/golang.zsh
+    include: config/golang.yaml
   android:
-    about: Android SDK / Flutter PATH exports
-    config:
-      shell:
-        path: config/android.zsh
+    include: config/android.yaml
   ios:
-    about: iOS / Xcode related PATH and env
-    config:
-      shell:
-        path: config/ios.zsh
+    include: config/ios.yaml
   emacs-path:
-    about: emacs binary PATH (~/.config/emacs/bin)
-    config:
-      shell:
-        path: config/emacs-path.zsh
+    include: config/emacs-path.yaml
   emacs:
-    about: symlink init.el into ~/.emacs.d
-    config:
-      link:
-        ~/.emacs.d/init.el: config/init.el
+    include: config/emacs.yaml
   nvim:
-    about: symlink init.vim into ~/.config/nvim
-    config:
-      link:
-        ~/.config/nvim/init.vim: config/init.vim
+    include: config/nvim.yaml
   git:
-    about: global git aliases (imperative apply)
-    config:
-      apply:
-        - [git, config, --global, alias.co, checkout]
-        - [git, config, --global, alias.revert-file, "checkout origin/develop --"]
-        - [git, config, --global, alias.br, branch]
-        - [git, config, --global, alias.ci, commit]
-        - [git, config, --global, alias.st, status]
-        - [git, config, --global, alias.unstage, "reset HEAD --"]
-        - [git, config, --global, alias.last, "log -1 HEAD"]
-        - [git, config, --global, alias.visual, "!gitk"]
-        - [git, config, --global, alias.mergetest, "!f(){ git merge --no-commit --no-ff \"$1\"; git merge --abort; echo \"Merge aborted\"; };f"]
-        - [git, config, --global, alias.work, "log --pretty=format:%h%x09%an%x09%ad%x09%s"]
-        - [git, config, --global, alias.commit-ai, git-commit-ai]
+    include: config/git.yaml
   deps-shim:
-    about: interactive libbeagan_dependencies wrapper
-    config:
-      shell:
-        path: config/deps-shim.zsh
+    include: config/deps-shim.yaml
   deps-required:
-    about: required for full use of scripts
-    config:
-      deps:
-        ag: the_silver_searcher
-        deno: ""
-        dot: graphviz
-        fzf: ""
-        gpg: gnupg
-        java: ""
-        magick: imagemagick
-        npm: ""
-        parallel: ""
-        python3: python
-        qrencode: ""
-        tree: ""
-        wget: ""
+    include: config/deps-required.yaml
   deps-general:
-    about: general purpose
-    config:
-      deps:
-        docker: ""
-        jq: ""
-        exiftool: ""
-        ffmpeg: ""
-        nmap: ""
-        rename: ""
-        sqlite3: ""
-        sshfs: ""
-        yarn: ""
+    include: config/deps-general.yaml
   deps-languages:
-    about: other languages
-    config:
-      deps:
-        dart: ""
-        rust: ""
-        go: ""
-        lua: ""
+    include: config/deps-languages.yaml
   deps-optional:
-    about: optional / could be replaced
-    config:
-      deps:
-        recode: ""
-        gitup: ""
-        ktlint: ""
-        mednafen: ""
-        nu: nushell
-        fish: ""
-        pngcrush: ""
-        rbenv: ""
-        restic: ""
-        tiddlywiki: ""
-        timewarrior: ""
-        gimp: ""
-        tldr: ""
-        htop: ""
-        ncdu: ""
-        gh: ""
-        poetry: ""
-        newfetch: ""
-        adr: adr-tools
-        rg: ripgrep
-        iStats: gem install iStats
-        pandoc: ""
-        direnv: ""
-        jid: ""
+    include: config/deps-optional.yaml
   machine-framework:
-    about: Framework laptop fragment (guards on CURRENT_COMPUTER)
-    config:
-      shell:
-        path: config/machines/framework.zsh
+    include: config/machines/framework.yaml
   machine-mac2025:
-    about: mac2025 machine fragment
-    config:
-      shell:
-        path: config/machines/mac2025.zsh
+    include: config/machines/mac2025.yaml
   machine-mac_2022:
-    about: mac_2022 machine fragment
-    config:
-      shell:
-        path: config/machines/mac_2022.zsh
+    include: config/machines/mac_2022.yaml
   machine-mac_2017:
-    about: mac_2017 machine fragment
-    config:
-      shell:
-        path: config/machines/mac_2017.zsh
+    include: config/machines/mac_2017.yaml

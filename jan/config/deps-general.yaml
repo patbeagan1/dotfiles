@@ -1,0 +1,12 @@
+about: general purpose
+config:
+  deps:
+    docker: ""
+    jq: ""
+    exiftool: ""
+    ffmpeg: ""
+    nmap: ""
+    rename: ""
+    sqlite3: ""
+    sshfs: ""
+    yarn: ""

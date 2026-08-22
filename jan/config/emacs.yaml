@@ -1,0 +1,4 @@
+about: symlink init.el into ~/.emacs.d
+config:
+  link:
+    ~/.emacs.d/init.el: config/init.el

@@ -1,0 +1,4 @@
+about: symlink init.vim into ~/.config/nvim
+config:
+  link:
+    ~/.config/nvim/init.vim: config/init.vim

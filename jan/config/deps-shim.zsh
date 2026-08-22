@@ -1,9 +1,0 @@
-# Interactive checklist (same as `jan config deps`).
-# Sourced via `jan config emit` during install.
-libbeagan_dependencies() {
-  if ! command -v jan >/dev/null 2>&1; then
-    echo "jan not on PATH; install jan-cli and run: jan use \"\${LIBBEAGAN_HOME}/jan\"" >&2
-    return 1
-  fi
-  command jan --no-log config deps "$@"
-}

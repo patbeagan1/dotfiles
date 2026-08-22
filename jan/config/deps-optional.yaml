@@ -1,0 +1,27 @@
+about: optional / could be replaced
+config:
+  deps:
+    recode: ""
+    gitup: ""
+    ktlint: ""
+    mednafen: ""
+    nu: nushell
+    fish: ""
+    pngcrush: ""
+    rbenv: ""
+    restic: ""
+    tiddlywiki: ""
+    timewarrior: ""
+    gimp: ""
+    tldr: ""
+    htop: ""
+    ncdu: ""
+    gh: ""
+    poetry: ""
+    newfetch: ""
+    adr: adr-tools
+    rg: ripgrep
+    iStats: gem install iStats
+    pandoc: ""
+    direnv: ""
+    jid: ""

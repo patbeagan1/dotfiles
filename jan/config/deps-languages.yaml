@@ -1,0 +1,7 @@
+about: other languages
+config:
+  deps:
+    dart: ""
+    rust: ""
+    go: ""
+    lua: ""

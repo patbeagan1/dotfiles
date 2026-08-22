@@ -1,0 +1,16 @@
+about: required for full use of scripts
+config:
+  deps:
+    ag: the_silver_searcher
+    deno: ""
+    dot: graphviz
+    fzf: ""
+    gpg: gnupg
+    java: ""
+    magick: imagemagick
+    npm: ""
+    parallel: ""
+    python3: python
+    qrencode: ""
+    tree: ""
+    wget: ""

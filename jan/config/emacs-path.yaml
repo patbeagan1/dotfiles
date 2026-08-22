@@ -1,0 +1,5 @@
+about: emacs binary PATH (~/.config/emacs/bin)
+config:
+  shell: |
+    
+    export PATH=~/.config/emacs/bin:$PATH
