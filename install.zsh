@@ -253,7 +253,16 @@ setup_scripts() {
 
 check_dependencies() {
     print_info "📦 Checking dependencies..."
-    safe_source "$LIBBEAGAN_HOME/dependencies.sh" "Dependencies"
+    if command -v jan >/dev/null 2>&1; then
+        if jan --no-log config deps; then
+            print_info "✅ Dependency check finished (missing tools listed above if any)"
+        else
+            echo "⚠️  Warning: jan config deps failed (continuing)"
+        fi
+    else
+        print_info "ℹ️  jan not on PATH — falling back to legacy dependencies.sh"
+        safe_source "$LIBBEAGAN_HOME/dependencies.sh" "Dependencies"
+    fi
 }
 
 main() {
@@ -267,7 +276,7 @@ main() {
     check_dependencies || return 1
 
     print_info "🎉 libbeagan installation complete!"
-    print_info "   Type 'libbeagan_dependencies' to check for missing tools."
+    print_info "   Type 'libbeagan_dependencies' or 'jan config deps' to check for missing tools."
     print_info "   Tab completion is available for supported commands."
 }
 

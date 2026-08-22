@@ -11,14 +11,15 @@ metadata:
     `fzf` that must exist before `run`), `env` (`public` assignments,
     `private` host secret names, and `pass` store ids), `inputs` (typed `--flags` / `${{ inputs.x }}`),
     and `cron` (schedules for `jan cron`).
-    Host shell fragments, rc symlinks, and imperative settings use `config:`
-    (`jan config emit|link|apply`).
+    Host shell fragments, rc symlinks, imperative settings, and host tool checklists use `config:`
+    (`jan config emit|link|apply|deps`).
     Prefer this tree once, then invoke commands:
       jan use /path/to/dotfiles/jan
       jan scripts git gd help
       jan scripts system lsof-port run --port 443
       jan scripts network api-get run --url 'https://api.example.com/v1/me'
       jan config emit --shell zsh -o ~/.config/jan/config.zsh
+      jan config deps
 commands:
   scripts:
     about: 'Personal utilities (categorized; each command is a YAML include).'

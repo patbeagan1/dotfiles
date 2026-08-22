@@ -1,6 +1,6 @@
-# Host configuration for `jan config` (emit / link / apply).
-# Fragments live under config/ relative to this preferred jan directory.
-about: host configuration (emit / link / apply)
+# Host tool checklist for `jan config deps` (migrated from dependencies.sh).
+# Binary name → optional package / install hint (empty = name only).
+about: host configuration (emit / link / apply / deps)
 commands:
   zsh:
     about: zsh history, setopt, completions, PATH for libbeagan bin
@@ -57,6 +57,77 @@ commands:
         - [git, config, --global, alias.mergetest, "!f(){ git merge --no-commit --no-ff \"$1\"; git merge --abort; echo \"Merge aborted\"; };f"]
         - [git, config, --global, alias.work, "log --pretty=format:%h%x09%an%x09%ad%x09%s"]
         - [git, config, --global, alias.commit-ai, git-commit-ai]
+  deps-shim:
+    about: interactive libbeagan_dependencies wrapper
+    config:
+      shell:
+        path: config/deps-shim.zsh
+  deps-required:
+    about: required for full use of scripts
+    config:
+      deps:
+        ag: the_silver_searcher
+        deno: ""
+        dot: graphviz
+        fzf: ""
+        gpg: gnupg
+        java: ""
+        magick: imagemagick
+        npm: ""
+        parallel: ""
+        python3: python
+        qrencode: ""
+        tree: ""
+        wget: ""
+  deps-general:
+    about: general purpose
+    config:
+      deps:
+        docker: ""
+        jq: ""
+        exiftool: ""
+        ffmpeg: ""
+        nmap: ""
+        rename: ""
+        sqlite3: ""
+        sshfs: ""
+        yarn: ""
+  deps-languages:
+    about: other languages
+    config:
+      deps:
+        dart: ""
+        rust: ""
+        go: ""
+        lua: ""
+  deps-optional:
+    about: optional / could be replaced
+    config:
+      deps:
+        recode: ""
+        gitup: ""
+        ktlint: ""
+        mednafen: ""
+        nu: nushell
+        fish: ""
+        pngcrush: ""
+        rbenv: ""
+        restic: ""
+        tiddlywiki: ""
+        timewarrior: ""
+        gimp: ""
+        tldr: ""
+        htop: ""
+        ncdu: ""
+        gh: ""
+        poetry: ""
+        newfetch: ""
+        adr: adr-tools
+        rg: ripgrep
+        iStats: gem install iStats
+        pandoc: ""
+        direnv: ""
+        jid: ""
   machine-framework:
     about: Framework laptop fragment (guards on CURRENT_COMPUTER)
     config:
