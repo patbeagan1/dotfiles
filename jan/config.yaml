@@ -1,5 +1,5 @@
 # Host configuration for `jan config` (emit / link / apply / deps).
-# Each child is a YAML include under config/; shell fragments are inlined.
+# Each child is a YAML include under config/; shell and link file bodies are inlined.
 about: host configuration (emit / link / apply / deps)
 commands:
   zsh:
