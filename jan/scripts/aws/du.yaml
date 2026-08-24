@@ -1,0 +1,51 @@
+about: >
+  Summarize object count and total size for one S3 bucket (optional prefix).
+  Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  prefix:
+    description: Optional key prefix
+    default: ""
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws du
+
+        Disk-usage style summarize for one bucket.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws du run --bucket my-bucket
+        jan scripts aws du run --bucket my-bucket --prefix logs/
+  run:
+    about: Summarize one bucket
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        prefix="${2-}"
+        uri="s3://${bucket}"
+        if [[ -n "$prefix" ]]; then
+          uri="s3://${bucket}/${prefix#/}"
+        fi
+        aws s3 ls "$uri" --recursive --human-readable --summarize
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.prefix }}"

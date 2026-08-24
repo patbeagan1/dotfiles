@@ -1,0 +1,34 @@
+about: >
+  List all S3 buckets visible to the AWS credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws ls-buckets
+
+        List S3 buckets for credentials from pass.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws ls-buckets run
+  run:
+    about: aws s3 ls
+    exec:
+      bash: |
+        set -euo pipefail
+        aws s3 ls

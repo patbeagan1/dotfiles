@@ -1,0 +1,45 @@
+about: >
+  Report total size of every S3 bucket (recursive summarize).
+  Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws bucket-sizes
+
+        For each bucket, print a recursive summarize (total objects + size).
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws bucket-sizes run
+  run:
+    about: Summarize size of all buckets
+    exec:
+      bash: |
+        set -euo pipefail
+        buckets="$(aws s3 ls | awk '{print $3}')"
+        if [[ -z "$buckets" ]]; then
+          echo "No buckets found." >&2
+          exit 0
+        fi
+        while IFS= read -r bucket; do
+          [[ -z "$bucket" ]] && continue
+          echo "=== s3://${bucket} ==="
+          aws s3 ls "s3://${bucket}" --recursive --human-readable --summarize
+          echo
+        done <<< "$buckets"

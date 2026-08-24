@@ -6,6 +6,8 @@ commands:
     include: git.yaml
   android:
     include: android.yaml
+  aws:
+    include: aws.yaml
   docker:
     include: docker.yaml
   network:

@@ -1,0 +1,88 @@
+about: >
+  Upload / sync a local directory to an S3 bucket (or prefix) via `aws s3 sync`.
+  Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  source:
+    description: Local source directory
+    required: true
+    type: dir
+  prefix:
+    description: Optional destination key prefix
+    default: ""
+  delete:
+    description: "Also delete remote objects not present locally (true|false)"
+    default: "false"
+    choices: ["true", "false"]
+  dry-run:
+    description: "Show what would transfer without writing (true|false)"
+    default: "false"
+    choices: ["true", "false"]
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws upload
+
+        Sync a local directory up to s3://BUCKET[/PREFIX].
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws upload run --bucket my-bucket --source ~/data
+        jan scripts aws upload run --bucket my-bucket --source ./photos --prefix photos/
+        jan scripts aws upload run --bucket my-bucket --source ./data --dry-run true
+  run:
+    about: aws s3 sync from local to bucket
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        source="${2-}"
+        prefix="${3-}"
+        delete="${4-}"
+        dry_run="${5-}"
+
+        if [[ -z "$bucket" || -z "$source" ]]; then
+          echo "bucket and source are required" >&2
+          exit 2
+        fi
+        if [[ ! -d "$source" ]]; then
+          echo "source directory does not exist: ${source}" >&2
+          exit 2
+        fi
+
+        source="$(cd "$source" && pwd)"
+        uri="s3://${bucket}"
+        if [[ -n "$prefix" ]]; then
+          uri="s3://${bucket}/${prefix#/}"
+        fi
+
+        args=(--only-show-errors)
+        [[ "$delete" == "true" ]] && args+=(--delete)
+        [[ "$dry_run" == "true" ]] && args+=(--dryrun)
+
+        echo "sync ${source} -> ${uri}" >&2
+        aws s3 sync "$source" "$uri" "${args[@]}"
+        echo "done" >&2
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.source }}"
+        - "${{ inputs.prefix }}"
+        - "${{ inputs.delete }}"
+        - "${{ inputs.dry-run }}"

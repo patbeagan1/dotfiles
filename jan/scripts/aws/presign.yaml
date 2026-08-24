@@ -1,0 +1,56 @@
+about: >
+  Generate a presigned URL for an S3 object. Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  key:
+    description: Object key
+    required: true
+  expires:
+    description: URL lifetime in seconds (default 3600)
+    default: "3600"
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws presign
+
+        Print a time-limited HTTPS URL for an object.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws presign run --bucket my-bucket --key path/file.bin
+        jan scripts aws presign run --bucket my-bucket --key path/file.bin --expires 86400
+  run:
+    about: aws s3 presign
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        key="${2-}"
+        expires="${3-}"
+        if [[ -z "$bucket" || -z "$key" ]]; then
+          echo "bucket and key are required" >&2
+          exit 2
+        fi
+        uri="s3://${bucket}/${key#/}"
+        aws s3 presign "$uri" --expires-in "$expires"
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.key }}"
+        - "${{ inputs.expires }}"

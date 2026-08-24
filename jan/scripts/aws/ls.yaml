@@ -1,0 +1,68 @@
+about: >
+  List objects in an S3 bucket (optional prefix). Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  prefix:
+    description: Optional key prefix to filter
+    default: ""
+  recursive:
+    description: "List recursively (true|false)"
+    default: "true"
+    choices: ["true", "false"]
+  human:
+    description: "Human-readable sizes (true|false)"
+    default: "true"
+    choices: ["true", "false"]
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws ls
+
+        List objects under s3://BUCKET[/PREFIX].
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws ls run --bucket my-bucket
+        jan scripts aws ls run --bucket my-bucket --prefix backups/
+        jan scripts aws ls run --bucket my-bucket --recursive false
+  run:
+    about: List bucket objects
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        prefix="${2-}"
+        recursive="${3-}"
+        human="${4-}"
+
+        uri="s3://${bucket}"
+        if [[ -n "$prefix" ]]; then
+          uri="s3://${bucket}/${prefix#/}"
+        fi
+
+        args=()
+        [[ "$recursive" == "true" ]] && args+=(--recursive)
+        [[ "$human" == "true" ]] && args+=(--human-readable)
+        aws s3 ls "$uri" "${args[@]+"${args[@]}"}"
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.prefix }}"
+        - "${{ inputs.recursive }}"
+        - "${{ inputs.human }}"

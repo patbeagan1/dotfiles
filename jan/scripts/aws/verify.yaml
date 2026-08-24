@@ -1,0 +1,234 @@
+about: >
+  Verify that a local directory matches an S3 bucket (or prefix): object set,
+  sizes, and MD5 where the S3 ETag is a single-part checksum. Credentials from
+  pass.
+requires: [aws, pass, jq]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  local:
+    description: Local directory that should mirror the bucket/prefix
+    required: true
+    type: dir
+  prefix:
+    description: Optional key prefix that was synced (must match download)
+    default: ""
+  checksums:
+    description: "Compare MD5 against ETag for single-part objects (true|false)"
+    default: "true"
+    choices: ["true", "false"]
+  extras:
+    description: "Fail if local has files not present in the bucket (true|false)"
+    default: "true"
+    choices: ["true", "false"]
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws verify
+
+        Compare a local tree to s3://BUCKET[/PREFIX].
+
+        Checks:
+        - every remote object exists locally under the same relative key
+        - sizes match
+        - for single-part uploads, local MD5 matches the S3 ETag
+        - optionally, no extra local files (default on)
+
+        Multipart ETags (contain '-') are size-checked only.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws verify run --bucket my-bucket --local ~/Backups/my-bucket
+        jan scripts aws verify run --bucket my-bucket --local ./data --prefix photos/
+        jan scripts aws verify run --bucket my-bucket --local ./data --checksums false
+  run:
+    about: Verify local directory against bucket
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        local_dir="${2-}"
+        prefix="${3-}"
+        do_checksums="${4-}"
+        check_extras="${5-}"
+
+        if [[ -z "$bucket" || -z "$local_dir" ]]; then
+          echo "bucket and local are required" >&2
+          exit 2
+        fi
+        if [[ ! -d "$local_dir" ]]; then
+          echo "local directory does not exist: ${local_dir}" >&2
+          exit 2
+        fi
+
+        local_dir="$(cd "$local_dir" && pwd)"
+        prefix="${prefix#/}"
+        list_prefix="$prefix"
+
+        file_md5() {
+          local f="$1"
+          if command -v md5sum >/dev/null 2>&1; then
+            md5sum "$f" | awk '{print $1}'
+          elif command -v md5 >/dev/null 2>&1; then
+            md5 -q "$f"
+          else
+            echo "need md5sum or md5 on PATH for checksum verification" >&2
+            exit 3
+          fi
+        }
+
+        key_to_rel() {
+          local key="$1"
+          if [[ -z "$prefix" ]]; then
+            printf '%s' "$key"
+            return
+          fi
+          if [[ "$key" == "${prefix}/"* ]]; then
+            printf '%s' "${key#${prefix}/}"
+          elif [[ "$key" == "$prefix" ]]; then
+            printf ''
+          elif [[ "$key" == "${prefix}"* ]]; then
+            local rest="${key#${prefix}}"
+            printf '%s' "${rest#/}"
+          else
+            printf '%s' "$key"
+          fi
+        }
+
+        remote_tmp="$(mktemp)"
+        remote_keys="$(mktemp)"
+        local_keys="$(mktemp)"
+        trap 'rm -f "$remote_tmp" "$remote_keys" "$local_keys"' EXIT
+
+        echo "listing s3://${bucket}/${list_prefix} ..." >&2
+        token=""
+        while true; do
+          if [[ -n "$token" ]]; then
+            resp="$(aws s3api list-objects-v2 \
+              --bucket "$bucket" \
+              --prefix "$list_prefix" \
+              --continuation-token "$token" \
+              --output json)"
+          else
+            resp="$(aws s3api list-objects-v2 \
+              --bucket "$bucket" \
+              --prefix "$list_prefix" \
+              --output json)"
+          fi
+
+          jq -r '
+            (.Contents // [])[]
+            | select((.Key | endswith("/")) | not)
+            | [.Key, (.Size|tostring), (.ETag|gsub("\"";""))]
+            | @tsv
+          ' <<<"$resp" >>"$remote_tmp"
+
+          token="$(jq -r '.NextContinuationToken // empty' <<<"$resp")"
+          [[ -z "$token" ]] && break
+        done
+
+        sort -o "$remote_tmp" "$remote_tmp"
+        cut -f1 "$remote_tmp" >"$remote_keys"
+
+        remote_count="$(wc -l <"$remote_keys" | tr -d ' ')"
+        echo "remote objects: ${remote_count}" >&2
+
+        : >"$local_keys"
+        while IFS= read -r -d '' rel; do
+          rel="${rel#./}"
+          [[ -z "$rel" ]] && continue
+          if [[ -n "$prefix" ]]; then
+            printf '%s\n' "${prefix%/}/${rel}"
+          else
+            printf '%s\n' "$rel"
+          fi
+        done < <(cd "$local_dir" && find . -type f -print0) | sort >"$local_keys"
+
+        local_count="$(wc -l <"$local_keys" | tr -d ' ')"
+        echo "local files: ${local_count}" >&2
+
+        missing=0
+        size_mismatch=0
+        checksum_mismatch=0
+        checksum_skipped=0
+        ok=0
+
+        while IFS=$'\t' read -r key size etag; do
+          [[ -z "${key:-}" ]] && continue
+          rel="$(key_to_rel "$key")"
+          local_path="${local_dir}/${rel}"
+
+          if [[ -z "$rel" || ! -f "$local_path" ]]; then
+            echo "MISSING  ${key}"
+            missing=$((missing + 1))
+            continue
+          fi
+
+          actual_size="$(wc -c <"$local_path" | tr -d ' ')"
+          if [[ "$actual_size" != "$size" ]]; then
+            echo "SIZE     ${key}  remote=${size} local=${actual_size}"
+            size_mismatch=$((size_mismatch + 1))
+            continue
+          fi
+
+          if [[ "$do_checksums" == "true" ]]; then
+            if [[ "$etag" == *-* ]]; then
+              checksum_skipped=$((checksum_skipped + 1))
+            else
+              got="$(file_md5 "$local_path")"
+              # case-insensitive compare
+              if [[ "$(printf '%s' "$got" | tr 'A-F' 'a-f')" != "$(printf '%s' "$etag" | tr 'A-F' 'a-f')" ]]; then
+                echo "CHECKSUM ${key}  etag=${etag} md5=${got}"
+                checksum_mismatch=$((checksum_mismatch + 1))
+                continue
+              fi
+            fi
+          fi
+
+          ok=$((ok + 1))
+        done <"$remote_tmp"
+
+        extras=0
+        if [[ "$check_extras" == "true" ]]; then
+          while IFS= read -r key; do
+            [[ -z "$key" ]] && continue
+            echo "EXTRA    ${key}"
+            extras=$((extras + 1))
+          done < <(comm -23 "$local_keys" "$remote_keys")
+        fi
+
+        echo
+        echo "summary:"
+        echo "  matched:             ${ok}"
+        echo "  missing locally:     ${missing}"
+        echo "  size mismatches:     ${size_mismatch}"
+        echo "  checksum mismatches: ${checksum_mismatch}"
+        echo "  checksum skipped:    ${checksum_skipped} (multipart ETags)"
+        echo "  extras locally:      ${extras}"
+
+        if (( missing + size_mismatch + checksum_mismatch + extras > 0 )); then
+          echo "VERIFY FAILED" >&2
+          exit 1
+        fi
+        echo "VERIFY OK"
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.local }}"
+        - "${{ inputs.prefix }}"
+        - "${{ inputs.checksums }}"
+        - "${{ inputs.extras }}"

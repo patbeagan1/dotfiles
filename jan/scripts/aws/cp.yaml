@@ -1,0 +1,60 @@
+about: >
+  Copy an object between S3 URIs or between local paths and S3
+  (`aws s3 cp`). Credentials from pass.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  source:
+    description: Source path (s3://... or local)
+    required: true
+  dest:
+    description: Destination path (s3://... or local)
+    required: true
+  recursive:
+    description: "Recursive copy (true|false)"
+    default: "false"
+    choices: ["true", "false"]
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws cp
+
+        Thin wrapper around `aws s3 cp` with pass-injected credentials.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws cp run --source ./file.bin --dest s3://my-bucket/file.bin
+        jan scripts aws cp run --source s3://my-bucket/a --dest s3://my-bucket/b
+        jan scripts aws cp run --source s3://my-bucket/dir/ --dest ./dir/ --recursive true
+  run:
+    about: aws s3 cp
+    exec:
+      bash: |
+        set -euo pipefail
+        source="${1-}"
+        dest="${2-}"
+        recursive="${3-}"
+        if [[ -z "$source" || -z "$dest" ]]; then
+          echo "source and dest are required" >&2
+          exit 2
+        fi
+        args=()
+        [[ "$recursive" == "true" ]] && args+=(--recursive)
+        aws s3 cp "$source" "$dest" "${args[@]+"${args[@]}"}"
+      argv:
+        - "${{ inputs.source }}"
+        - "${{ inputs.dest }}"
+        - "${{ inputs.recursive }}"

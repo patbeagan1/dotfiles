@@ -1,0 +1,92 @@
+about: >
+  Download the full contents of an S3 bucket (or prefix) to a local directory
+  via `aws s3 sync`. Credentials from pass. Pair with `aws verify` afterward.
+requires: [aws, pass]
+env:
+  pass:
+    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
+  public:
+    AWS_DEFAULT_REGION: ${{ inputs.region }}
+inputs:
+  bucket:
+    description: S3 bucket name
+    required: true
+  dest:
+    description: Local destination directory (created if missing)
+    required: true
+  prefix:
+    description: Optional key prefix to download (default entire bucket)
+    default: ""
+  delete:
+    description: "Also delete local files not in the bucket (true|false)"
+    default: "false"
+    choices: ["true", "false"]
+  dry-run:
+    description: "Show what would transfer without writing (true|false)"
+    default: "false"
+    choices: ["true", "false"]
+  region:
+    description: AWS region (default us-east-1)
+    default: us-east-1
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        aws download
+
+        Sync an entire S3 bucket (or prefix) down to a local directory.
+
+        Setup:
+        pass insert AWS/ACCESS_KEY_ID
+        pass insert AWS/SECRET_ACCESS_KEY
+
+        Usage:
+        jan scripts aws download run --bucket my-bucket --dest ~/Backups/my-bucket
+        jan scripts aws download run --bucket my-bucket --dest ./data --prefix photos/
+        jan scripts aws download run --bucket my-bucket --dest ./data --dry-run true
+
+        After download, verify integrity:
+        jan scripts aws verify run --bucket my-bucket --local ~/Backups/my-bucket
+  run:
+    about: aws s3 sync from bucket to local
+    exec:
+      bash: |
+        set -euo pipefail
+        bucket="${1-}"
+        dest="${2-}"
+        prefix="${3-}"
+        delete="${4-}"
+        dry_run="${5-}"
+
+        if [[ -z "$bucket" || -z "$dest" ]]; then
+          echo "bucket and dest are required" >&2
+          exit 2
+        fi
+
+        uri="s3://${bucket}"
+        if [[ -n "$prefix" ]]; then
+          uri="s3://${bucket}/${prefix#/}"
+        fi
+
+        mkdir -p "$dest"
+        dest="$(cd "$dest" && pwd)"
+
+        args=(--only-show-errors)
+        [[ "$delete" == "true" ]] && args+=(--delete)
+        [[ "$dry_run" == "true" ]] && args+=(--dryrun)
+
+        echo "sync ${uri} -> ${dest}" >&2
+        aws s3 sync "$uri" "$dest" "${args[@]}"
+        echo "done: ${dest}" >&2
+
+        if [[ "$dry_run" != "true" ]]; then
+          echo "tip: jan scripts aws verify run --bucket ${bucket} --local ${dest}${prefix:+ --prefix ${prefix}}" >&2
+        fi
+      argv:
+        - "${{ inputs.bucket }}"
+        - "${{ inputs.dest }}"
+        - "${{ inputs.prefix }}"
+        - "${{ inputs.delete }}"
+        - "${{ inputs.dry-run }}"
