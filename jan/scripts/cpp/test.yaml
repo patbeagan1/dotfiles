@@ -1,0 +1,102 @@
+about: >
+  Run C++ tests. Prefers ctest (CMake) or `make test`, otherwise compiles and
+  runs `*_test.cpp` / `test_*.cpp` in the current tree.
+requires: [g++]
+inputs:
+  mode:
+    description: "Build mode for ad-hoc test binaries: debug | asan"
+    default: debug
+    choices: ["debug", "asan"]
+  std:
+    description: C++ language standard (default c++17)
+    default: c++17
+  dir:
+    description: Project directory (default cwd)
+    default: "."
+    type: dir
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        cpp-test
+
+        Run project or file-based C++ tests.
+
+          cpp-test
+          cpp-test --mode asan
+          cpp-test --dir ./myproj
+
+        Detection order:
+          1. CMake + CTest → ctest --test-dir build
+          2. Makefile `test` target → make test
+          3. Compile+run each *_test.cpp / test_*.cpp
+  run:
+    about: Discover and run C++ tests.
+    exec:
+      bash: |
+        set -euo pipefail
+        mode="${1-debug}"
+        std="${2-c++17}"
+        dir="${3-.}"
+        cd "$dir"
+
+        flags=(-Wall -Wextra -Wpedantic "-std=${std}" -g -O0)
+        if [[ "$mode" == asan ]]; then
+          flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        fi
+
+        if [[ -f CMakeLists.txt ]]; then
+          if [[ ! -d build ]]; then
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          fi
+          cmake --build build -j
+          if [[ -f build/CTestTestfile.cmake ]] || grep -qE 'enable_testing|add_test' CMakeLists.txt 2>/dev/null; then
+            echo "+ ctest --test-dir build --output-on-failure" >&2
+            exec ctest --test-dir build --output-on-failure
+          fi
+        fi
+
+        if [[ -f Makefile || -f makefile ]]; then
+          if make -n test >/dev/null 2>&1; then
+            echo "+ make test" >&2
+            exec make test
+          fi
+        fi
+
+        tests=()
+        while IFS= read -r t; do
+          [[ -n "$t" ]] && tests+=("$t")
+        done < <(find . -maxdepth 3 -type f \( -name '*_test.cpp' -o -name 'test_*.cpp' -o -name '*_test.cc' -o -name 'test_*.cc' \) ! -path './build/*' ! -path './.git/*' | sort)
+        if [[ ${#tests[@]} -eq 0 ]]; then
+          echo "cpp-test: no ctest/make test target and no *_test.cpp / test_*.cpp found" >&2
+          exit 1
+        fi
+
+        lib_sources=()
+        while IFS= read -r s; do
+          [[ -n "$s" ]] && lib_sources+=("$s")
+        done < <(find . -maxdepth 3 -type f \( -name '*.cpp' -o -name '*.cc' \) ! -name '*_test.cpp' ! -name 'test_*.cpp' ! -name '*_test.cc' ! -name 'test_*.cc' ! -name 'main.cpp' ! -name 'main.cc' ! -path './build/*' ! -path './.git/*' | sort)
+
+        failed=0
+        for t in "${tests[@]}"; do
+          base="$(basename "$t")"
+          out="/tmp/jan-cpp-test-$$-${base%.*}"
+          echo "+ g++ ${flags[*]} ${t} ${lib_sources[*]} -o ${out}" >&2
+          if ! g++ "${flags[@]}" "$t" "${lib_sources[@]}" -o "$out"; then
+            failed=1
+            continue
+          fi
+          echo "+ ${out}" >&2
+          if ! "$out"; then
+            echo "FAIL: ${t}" >&2
+            failed=1
+          else
+            echo "PASS: ${t}" >&2
+          fi
+        done
+        exit "$failed"
+      argv:
+        - "${{ inputs.mode }}"
+        - "${{ inputs.std }}"
+        - "${{ inputs.dir }}"

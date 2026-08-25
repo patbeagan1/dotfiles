@@ -1,0 +1,132 @@
+about: >
+  Compile C with debug symbols and launch gdb (or lldb). Same source/project
+  conventions as c-run; program args go after `--`.
+requires: [gcc]
+inputs:
+  mode:
+    description: "Sanitizer mode: debug | asan"
+    default: debug
+    choices: ["debug", "asan"]
+  std:
+    description: C language standard (default c17)
+    default: c17
+  out:
+    description: Output binary path (default under /tmp)
+    default: ""
+  debugger:
+    description: "Debugger: gdb | lldb"
+    default: gdb
+    choices: ["gdb", "lldb"]
+  bin:
+    description: Executable name/path when building a CMake/Make project
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        c-dbg
+
+        Build a debug binary and drop into a debugger.
+
+          c-dbg main.c
+          c-dbg --mode asan main.c -- arg1
+          c-dbg --debugger lldb main.c
+          c-dbg   # in a CMake/Make project
+
+        Program args after `--` are passed through to the inferior.
+  run:
+    about: Compile with -g and start gdb/lldb.
+    exec:
+      bash: |
+        set -euo pipefail
+        mode="${1-debug}"
+        std="${2-c17}"
+        out="${3-}"
+        debugger="${4-gdb}"
+        bin="${5-}"
+        shift 5 || true
+
+        sources=()
+        extra=()
+        prog_args=()
+        seen_dd=0
+        for a in "$@"; do
+          if [[ "$seen_dd" -eq 1 ]]; then
+            prog_args+=("$a")
+          elif [[ "$a" == "--" ]]; then
+            seen_dd=1
+          elif [[ "$a" == *.c ]]; then
+            sources+=("$a")
+          else
+            extra+=("$a")
+          fi
+        done
+
+        flags=(-Wall -Wextra -Wpedantic "-std=${std}" -g -O0)
+        if [[ "$mode" == asan ]]; then
+          flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        fi
+
+        resolve_project_bin() {
+          if [[ -n "$bin" && -x "$bin" ]]; then
+            echo "$bin"
+            return
+          fi
+          if [[ -n "$bin" ]]; then
+            find build -type f -executable -name "$bin" 2>/dev/null | head -1
+            return
+          fi
+          local cand
+          cand="$(find build -type f -executable ! -name '*.o' ! -name '*.so*' ! -name '*_test*' ! -name 'test_*' 2>/dev/null | head -1 || true)"
+          if [[ -z "$cand" ]]; then
+            cand="$(find build -type f -executable ! -name '*.o' ! -name '*.so*' 2>/dev/null | head -1 || true)"
+          fi
+          echo "$cand"
+        }
+
+        if [[ ${#sources[@]} -gt 0 ]]; then
+          [[ -n "$out" ]] || out="/tmp/jan-c-dbg-$$"
+          mkdir -p "$(dirname "$out")"
+          echo "+ gcc ${flags[*]} ${sources[*]} ${extra[*]} -o ${out}" >&2
+          gcc "${flags[@]}" "${sources[@]}" "${extra[@]}" -o "$out"
+        elif [[ -f CMakeLists.txt ]]; then
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build -j
+          out="$(resolve_project_bin)"
+          [[ -n "$out" ]] || { echo "c-dbg: no executable found; pass --bin NAME" >&2; exit 1; }
+        elif [[ -f Makefile || -f makefile ]]; then
+          make -j
+          if [[ -n "$bin" ]]; then
+            out="$bin"
+          else
+            echo "c-dbg: pass --bin PATH for Make projects" >&2
+            exit 1
+          fi
+        else
+          echo "c-dbg: pass .c sources, or run inside a CMake/Make project" >&2
+          exit 2
+        fi
+
+        if [[ "$debugger" == lldb ]]; then
+          if [[ ${#prog_args[@]} -gt 0 ]]; then
+            echo "+ lldb -- ${out} ${prog_args[*]}" >&2
+            exec lldb -- "$out" "${prog_args[@]}"
+          fi
+          echo "+ lldb ${out}" >&2
+          exec lldb "$out"
+        fi
+
+        if [[ ${#prog_args[@]} -gt 0 ]]; then
+          echo "+ gdb -q --args ${out} ${prog_args[*]}" >&2
+          exec gdb -q --args "$out" "${prog_args[@]}"
+        fi
+        echo "+ gdb -q ${out}" >&2
+        exec gdb -q "$out"
+      argv:
+        - "${{ inputs.mode }}"
+        - "${{ inputs.std }}"
+        - "${{ inputs.out }}"
+        - "${{ inputs.debugger }}"
+        - "${{ inputs.bin }}"
+      passthrough: true

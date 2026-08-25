@@ -1,6 +1,6 @@
 about: >
   Download the full contents of an S3 bucket (or prefix) to a local directory
-  via `aws s3 sync`. Credentials from pass. Pair with `aws verify` afterward.
+  via `aws s3 sync`. Credentials from pass. Pair with `aws-verify` afterward.
 requires: [aws, pass]
 env:
   pass:
@@ -34,7 +34,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws download
+        aws-download
 
         Sync an entire S3 bucket (or prefix) down to a local directory.
 
@@ -43,12 +43,12 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws download run --bucket my-bucket --dest ~/Backups/my-bucket
-        jan scripts aws download run --bucket my-bucket --dest ./data --prefix photos/
-        jan scripts aws download run --bucket my-bucket --dest ./data --dry-run true
+        jan scripts aws aws-download run --bucket my-bucket --dest ~/Backups/my-bucket
+        jan scripts aws aws-download run --bucket my-bucket --dest ./data --prefix photos/
+        jan scripts aws aws-download run --bucket my-bucket --dest ./data --dry-run true
 
         After download, verify integrity:
-        jan scripts aws verify run --bucket my-bucket --local ~/Backups/my-bucket
+        jan scripts aws aws-verify run --bucket my-bucket --local ~/Backups/my-bucket
   run:
     about: aws s3 sync from bucket to local
     exec:
@@ -82,7 +82,7 @@ commands:
         echo "done: ${dest}" >&2
 
         if [[ "$dry_run" != "true" ]]; then
-          echo "tip: jan scripts aws verify run --bucket ${bucket} --local ${dest}${prefix:+ --prefix ${prefix}}" >&2
+          echo "tip: jan scripts aws aws-verify run --bucket ${bucket} --local ${dest}${prefix:+ --prefix ${prefix}}" >&2
         fi
       argv:
         - "${{ inputs.bucket }}"

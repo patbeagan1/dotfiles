@@ -26,7 +26,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws get
+        aws-get
 
         Download one object: s3://BUCKET/KEY -> DEST.
 
@@ -35,7 +35,7 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws get run --bucket my-bucket --key path/to/file.bin --dest ./file.bin
+        jan scripts aws aws-get run --bucket my-bucket --key path/to/file.bin --dest ./file.bin
   run:
     about: aws s3 cp object to local
     exec:

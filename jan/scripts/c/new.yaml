@@ -1,0 +1,368 @@
+about: >
+  Scaffold a new C project from a template (single file, Makefile, or CMake
+  with a sample test). Refuses to overwrite existing paths.
+requires: []
+inputs:
+  name:
+    description: Project / binary name
+    required: true
+  template:
+    description: "Template: single | make | cmake"
+    default: cmake
+    choices: ["single", "make", "cmake"]
+  dir:
+    description: Parent directory for the project (default cwd)
+    default: "."
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        c-new
+
+        Start a C project from a template.
+
+          c-new --name hello
+          c-new --name hello --template make
+          c-new --name scratch --template single --dir ~/code
+
+        Templates:
+          single  one main.c (quick experiment)
+          make    src/ + include/ + Makefile (build / run / test)
+          cmake   CMake + src/main.c + tests/ (ctest-ready)
+
+        Every template also writes AGENT.md (modern C engineering guide).
+
+        Afterward:
+          cd <name> && c-run
+          cd <name> && c-test
+  run:
+    about: Create project files from the chosen template.
+    exec:
+      bash: |
+        set -euo pipefail
+        name="${1-}"
+        template="${2-cmake}"
+        parent="${3-.}"
+
+        if [[ -z "$name" || ! "$name" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]; then
+          echo "c-new: --name must match [A-Za-z_][A-Za-z0-9_-]*" >&2
+          exit 2
+        fi
+
+        # C identifiers cannot contain '-'; keep display/dir name, sanitize id.
+        id="${name//-/_}"
+
+        root="${parent%/}/${name}"
+        if [[ -e "$root" ]]; then
+          echo "c-new: refusing to overwrite ${root}" >&2
+          exit 1
+        fi
+
+        mkdir -p "$root"
+
+        write_gitignore() {
+          cat >"$root/.gitignore" <<'EOF'
+        build/
+        bin/
+        obj/
+        *.o
+        *.out
+        .jan-out/
+        EOF
+        }
+
+        write_agent_md() {
+          cat >"$root/AGENT.md" <<'EOF'
+        # AGENT.md — C engineering guide
+
+        Instructions for humans and coding agents working in this repository.
+        Prefer **modern C (C17, or C23 when the toolchain allows)**, clarity first,
+        measured performance second, and zero undefined behavior.
+
+        ## Goals
+
+        - Correct, readable, maintainable C
+        - Explicit ownership and lifetimes
+        - Fail loudly and early; never ignore errors
+        - Fast enough by design (data layout, algorithms), then profile
+
+        ## Language & toolchain
+
+        - Target **C17** (`-std=c17`) unless the project documents C23.
+        - Compile with warnings as part of the contract:
+          `-Wall -Wextra -Wpedantic` (add `-Wconversion -Wshadow` when tightening).
+        - Debug builds: `-g -O0`. Release: `-O2` or `-O3` plus `-DNDEBUG`.
+        - Use ASan/UBSan while developing (`c-run --mode asan` / `-fsanitize=address,undefined`).
+        - Prefer `clang-format` for style; do not bikeshed formatting in review.
+
+        ## Project shape
+
+        - Public API in `include/*.h`; implementation in `src/*.c`; tests in `tests/`.
+        - One clear module responsibility per `.c` / `.h` pair.
+        - Headers: include guards (or `#pragma once` if the project standard allows),
+          minimal includes, forward declarations when enough.
+        - Never put non-`static`/`inline` definitions in headers unless intentional
+          and documented (e.g. small `static inline` helpers).
+
+        ## Naming & style
+
+        - `snake_case` for functions and variables; `TYPE_NAME` or `TypeName` for
+          typedefs — pick one convention and stick to it.
+        - Prefix exported symbols with the module/project name to avoid collisions.
+        - `static` for file-local functions and objects.
+        - Prefer `size_t` for sizes/counts; fixed-width types (`stdint.h`) for ABI
+          and on-wire layouts; `bool` from `stdbool.h` for booleans.
+        - `const` by default for pointers/data that are not mutated.
+        - Declare variables near first use; initialize on declaration when practical.
+
+        ## Memory & ownership
+
+        - Every `malloc`/`calloc`/`realloc` has a single clear owner and a matching
+          `free` on every path (including errors).
+        - Document who frees returned pointers (caller vs callee).
+        - Prefer length + pointer pairs over sentinel-only buffers for binary data.
+        - Check allocation failure; do not assume heap growth succeeds.
+        - Avoid recursive ownership graphs unless reference rules are explicit.
+        - Prefer arena/pool allocators for short-lived request or parse lifetimes
+          when it simplifies cleanup and improves locality.
+
+        ## Error handling
+
+        - Return status codes (or `errno`-compatible values) from fallible APIs;
+          reserve out-parameters for results.
+        - Do not use assertions as the only check for expected runtime failures
+          (I/O, parse errors, user input). Use `assert` for internal invariants.
+        - Propagate errors; do not swallow them. Log at the boundary that can act.
+        - Clean up with `goto out;` (or early returns with disciplined cleanup)
+          rather than deeply nested `if` towers.
+
+        ## Safety & correctness
+
+        - No buffer overflows: bounds-check every index and copy (`memcpy` with known sizes).
+        - Prefer bounded string APIs; know the size of every buffer.
+        - Do not rely on undefined behavior (signed overflow, strict aliasing traps,
+          uninitialized reads, invalid casts).
+        - Be careful with integer overflow when computing sizes (`nmemb * size`).
+        - Treat compiler warnings as defects until justified and silenced narrowly.
+
+        ## Performance (practical)
+
+        - Choose the right algorithm and data structure first; micro-optimize later.
+        - Favor contiguous data (`struct` arrays) over pointer-chasing object graphs.
+        - Keep hot structs small and cache-friendly; pack fields with intent, not cargo-cult.
+        - Avoid allocations on hot paths; reuse buffers where lifetimes allow.
+        - Measure with a profiler (`perf`, Instruments, etc.) before claiming wins.
+        - Do not defeat the compiler with premature `volatile` or opaque indirection.
+        - Enable link-time optimization only when you can still debug and test reliably.
+
+        ## APIs & modularity
+
+        - Keep headers the contract; implementations may change freely behind them.
+        - Prefer opaque pointers (`typedef struct Foo Foo;`) for non-trivial types.
+        - Minimize global mutable state; if needed, document thread/ownership rules.
+        - I/O and policy sit at the edges; core logic stays testable without a filesystem.
+
+        ## Testing & tooling
+
+        - Add a failing test before fixing a bug when feasible.
+        - Run `c-test` (or `ctest` / `make test`) before considering work done.
+        - Use sanitizers regularly; Valgrind when investigating leaks on unsupported platforms.
+        - Keep functions small enough to unit-test without heavy scaffolding.
+
+        ## What to avoid
+
+        - Clever macros that obscure control flow or evaluate arguments twice
+          (unless carefully written and tested).
+        - Copy-paste modules instead of shared helpers.
+        - Silent truncation, ignored `fwrite`/`fread` return values, unchecked `close`.
+        - Mixing unrelated concerns in `main.c` — keep it as a thin entrypoint.
+
+        ## Workflow for agents
+
+        1. Read existing headers and tests before writing new code.
+        2. Match local style; do not reformat unrelated files.
+        3. Implement the smallest correct change; add tests for new behavior.
+        4. Build with warnings enabled; fix new warnings you introduce.
+        5. Run tests (`c-test`) and, for memory-touching changes, an asan build.
+        6. Summarize ownership and error paths when touching non-obvious APIs.
+
+        ## Quick commands
+
+        ```bash
+        c-run                  # build & run project or sources
+        c-run --mode asan ...  # address + undefined sanitizers
+        c-test                 # project or *_test.c suite
+        c-dbg ...              # debug build + gdb/lldb
+        ```
+        EOF
+        }
+
+        case "$template" in
+          single)
+            cat >"$root/main.c" <<EOF
+        #include <stdio.h>
+
+        int main(void) {
+            printf("hello from ${name}\\n");
+            return 0;
+        }
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created ${root}/main.c" >&2
+            echo "next: cd ${root} && c-run main.c" >&2
+            ;;
+          make)
+            mkdir -p "$root/src" "$root/include" "$root/tests"
+            cat >"$root/include/${id}.h" <<EOF
+        #ifndef $(echo "$name" | tr 'a-z-' 'A-Z_')_H
+        #define $(echo "$name" | tr 'a-z-' 'A-Z_')_H
+
+        int ${id}_add(int a, int b);
+
+        #endif
+        EOF
+            cat >"$root/src/${id}.c" <<EOF
+        #include "${id}.h"
+
+        int ${id}_add(int a, int b) {
+            return a + b;
+        }
+        EOF
+            cat >"$root/src/main.c" <<EOF
+        #include <stdio.h>
+        #include "${id}.h"
+
+        int main(void) {
+            printf("${name}: 2+3=%d\\n", ${id}_add(2, 3));
+            return 0;
+        }
+        EOF
+            cat >"$root/tests/test_add.c" <<EOF
+        #include <stdio.h>
+        #include "${id}.h"
+
+        int main(void) {
+            if (${id}_add(2, 3) != 5) {
+                fprintf(stderr, "expected 5\\n");
+                return 1;
+            }
+            printf("ok\\n");
+            return 0;
+        }
+        EOF
+            cat >"$root/Makefile" <<EOF
+        CC = gcc
+        CFLAGS = -std=c17 -Wall -Wextra -Wpedantic -Iinclude
+        DEBUGFLAGS = -g -O0
+        SRCDIR = src
+        OBJDIR = obj
+        BINDIR = bin
+        TARGET = ${name}
+        LIB_SOURCES = \$(SRCDIR)/${id}.c
+        APP_SOURCES = \$(LIB_SOURCES) \$(SRCDIR)/main.c
+        OBJECTS = \$(APP_SOURCES:\$(SRCDIR)/%.c=\$(OBJDIR)/%.o)
+
+        .PHONY: all debug release clean run test
+
+        all: debug
+
+        debug: CFLAGS += \$(DEBUGFLAGS)
+        debug: \$(BINDIR)/\$(TARGET)
+
+        release: CFLAGS += -O2 -DNDEBUG
+        release: \$(BINDIR)/\$(TARGET)
+
+        \$(BINDIR)/\$(TARGET): \$(OBJECTS) | \$(BINDIR)
+        	\$(CC) \$(OBJECTS) -o \$@
+
+        \$(OBJDIR)/%.o: \$(SRCDIR)/%.c | \$(OBJDIR)
+        	\$(CC) \$(CFLAGS) -c \$< -o \$@
+
+        \$(OBJDIR) \$(BINDIR):
+        	mkdir -p \$@
+
+        run: debug
+        	./\$(BINDIR)/\$(TARGET)
+
+        test: debug
+        	\$(CC) \$(CFLAGS) \$(DEBUGFLAGS) tests/test_add.c \$(LIB_SOURCES) -o \$(BINDIR)/test_add
+        	./\$(BINDIR)/test_add
+
+        clean:
+        	rm -rf \$(OBJDIR) \$(BINDIR)
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created Makefile project at ${root}" >&2
+            echo "next: cd ${root} && c-run   # or: make && make test" >&2
+            ;;
+          cmake)
+            mkdir -p "$root/src" "$root/include" "$root/tests"
+            cat >"$root/include/${id}.h" <<EOF
+        #ifndef $(echo "$name" | tr 'a-z-' 'A-Z_')_H
+        #define $(echo "$name" | tr 'a-z-' 'A-Z_')_H
+
+        int ${id}_add(int a, int b);
+
+        #endif
+        EOF
+            cat >"$root/src/${id}.c" <<EOF
+        #include "${id}.h"
+
+        int ${id}_add(int a, int b) {
+            return a + b;
+        }
+        EOF
+            cat >"$root/src/main.c" <<EOF
+        #include <stdio.h>
+        #include "${id}.h"
+
+        int main(void) {
+            printf("${name}: 2+3=%d\\n", ${id}_add(2, 3));
+            return 0;
+        }
+        EOF
+            cat >"$root/tests/test_add.c" <<EOF
+        #include <stdio.h>
+        #include "${id}.h"
+
+        int main(void) {
+            if (${id}_add(2, 3) != 5) {
+                fprintf(stderr, "expected 5\\n");
+                return 1;
+            }
+            printf("ok\\n");
+            return 0;
+        }
+        EOF
+            cat >"$root/CMakeLists.txt" <<EOF
+        cmake_minimum_required(VERSION 3.16)
+        project(${name} LANGUAGES C)
+
+        set(CMAKE_C_STANDARD 17)
+        set(CMAKE_C_STANDARD_REQUIRED ON)
+        add_compile_options(-Wall -Wextra -Wpedantic)
+
+        add_library(${name}_lib src/${id}.c)
+        target_include_directories(${name}_lib PUBLIC include)
+
+        add_executable(${name} src/main.c)
+        target_link_libraries(${name} PRIVATE ${name}_lib)
+
+        enable_testing()
+        add_executable(${name}_test_add tests/test_add.c)
+        target_link_libraries(${name}_test_add PRIVATE ${name}_lib)
+        add_test(NAME add COMMAND ${name}_test_add)
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created CMake project at ${root}" >&2
+            echo "next: cd ${root} && c-run && c-test" >&2
+            ;;
+        esac
+      argv:
+        - "${{ inputs.name }}"
+        - "${{ inputs.template }}"
+        - "${{ inputs.dir }}"

@@ -17,7 +17,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws whoami
+        aws-whoami
 
         Show the STS caller identity for credentials from pass.
 
@@ -26,8 +26,8 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws whoami run
-        jan scripts aws whoami run --region us-west-2
+        jan scripts aws aws-whoami run
+        jan scripts aws aws-whoami run --region us-west-2
   run:
     about: aws sts get-caller-identity
     exec:

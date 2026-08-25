@@ -1,0 +1,534 @@
+about: >
+  Scaffold a new C++ project from a template (single file, Makefile, CMake,
+  or Qt6 Widgets app). Writes AGENT.md with modern C++ engineering guidance.
+  Refuses to overwrite existing paths.
+requires: []
+inputs:
+  name:
+    description: Project / binary name
+    required: true
+  template:
+    description: "Template: single | make | cmake | qt"
+    default: cmake
+    choices: ["single", "make", "cmake", "qt"]
+  dir:
+    description: Parent directory for the project (default cwd)
+    default: "."
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        cpp-new
+
+        Start a C++ project from a template.
+
+          cpp-new --name hello
+          cpp-new --name hello --template make
+          cpp-new --name scratch --template single --dir ~/code
+          cpp-new --name deskapp --template qt
+
+        Templates:
+          single  one main.cpp (quick experiment)
+          make    src/ + include/ + Makefile (build / run / test)
+          cmake   CMake + src/main.cpp + tests/ (ctest-ready)
+          qt      Qt6 Widgets app (CMake + MainWindow + AUTOMOC)
+
+        Every template also writes AGENT.md (modern C++ engineering guide).
+
+        Afterward:
+          cd <name> && cpp-run
+          cd <name> && cpp-test
+          # qt: requires Qt6 (Core, Widgets); then cpp-run
+  run:
+    about: Create project files from the chosen template.
+    exec:
+      bash: |
+        set -euo pipefail
+        name="${1-}"
+        template="${2-cmake}"
+        parent="${3-.}"
+
+        if [[ -z "$name" || ! "$name" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]; then
+          echo "cpp-new: --name must match [A-Za-z_][A-Za-z0-9_-]*" >&2
+          exit 2
+        fi
+
+        # C++ identifiers cannot contain '-'; keep display/dir name, sanitize id.
+        id="${name//-/_}"
+
+        root="${parent%/}/${name}"
+        if [[ -e "$root" ]]; then
+          echo "cpp-new: refusing to overwrite ${root}" >&2
+          exit 1
+        fi
+
+        mkdir -p "$root"
+
+        write_gitignore() {
+          cat >"$root/.gitignore" <<'EOF'
+        build/
+        bin/
+        obj/
+        *.o
+        *.out
+        .jan-out/
+        CMakeLists.txt.user
+        *.user
+        moc_*.cpp
+        ui_*.h
+        qrc_*.cpp
+        EOF
+        }
+
+        write_agent_md() {
+          cat >"$root/AGENT.md" <<'EOF'
+        # AGENT.md — C++ engineering guide
+
+        Instructions for humans and coding agents working in this repository.
+        Prefer **modern C++ (C++17 minimum; C++20/23 when the toolchain allows)**,
+        clarity first, measured performance second, and RAII everywhere ownership
+        matters.
+
+        ## Goals
+
+        - Correct, readable, maintainable C++
+        - Clear ownership (RAII, smart pointers, spans/views)
+        - Fail loudly and early; never ignore errors
+        - Fast enough by design (algorithms + data layout), then profile
+
+        ## Language & toolchain
+
+        - Target **C++17** unless the project documents C++20/23.
+        - Compile with warnings as part of the contract:
+          `-Wall -Wextra -Wpedantic` (add `-Wconversion -Wshadow` when tightening).
+        - Debug builds: `-g -O0`. Release: `-O2`/`-O3` plus `-DNDEBUG`.
+        - Use ASan/UBSan while developing (`cpp-run --mode asan`).
+        - Prefer `clang-format` / `clang-tidy` for style and bug-prone patterns.
+        - Do not enable exceptions/RTTI policy changes silently — match the project.
+
+        ## Project shape
+
+        - Public API in `include/*.hpp`; implementation in `src/*.cpp`; tests in `tests/`.
+        - One clear module responsibility per translation unit.
+        - Prefer `#pragma once` or include guards; keep headers minimal.
+        - Put non-template implementations in `.cpp` files; headers stay declarative
+          (templates and small `inline`/`constexpr` helpers excepted).
+
+        ## Naming & style
+
+        - `snake_case` for functions/variables; `PascalCase` for types; `kConst` or
+          `UPPER_SNAKE` for constants — pick one style and stay consistent.
+        - Qt code may follow Qt conventions (`camelCase` methods, `m_` members) in
+          UI types; keep non-Qt core logic in project style.
+        - Prefer `enum class`, `nullptr`, `override`, `= delete`, structured bindings.
+        - Use `constexpr` / `consteval` / `std::string_view` where they clarify intent.
+        - Mark unreachable API with `[[nodiscard]]` when ignoring the result is a bug.
+
+        ## Ownership & resource management
+
+        - Prefer values and RAII wrappers over raw `new`/`delete`.
+        - `std::unique_ptr` for exclusive ownership; `std::shared_ptr` only when
+          shared lifetime is required and documented.
+        - Non-owning views: references, `std::span`, `std::string_view` — never free
+          through a view.
+        - Rule of 0/3/5: prefer rule of 0; if you define one special member, consider all.
+        - Avoid owning raw pointers in APIs; if unavoidable, document who deletes.
+
+        ## Error handling
+
+        - Prefer return types that make failure obvious (`std::optional`,
+          `std::expected` (C++23), status codes, or well-bounded exceptions).
+        - Do not use exceptions for routine control flow unless the project already does.
+        - Never swallow exceptions or ignore `[[nodiscard]]` results without a reason.
+        - Validate inputs at API boundaries; use contracts/asserts for internal invariants.
+
+        ## Safety & correctness
+
+        - Bound every index and copy; prefer standard containers over manual buffers.
+        - Avoid undefined behavior (dangling refs, iterator invalidation, data races,
+          strict-aliasing violations, signed overflow in constant expressions carelessly).
+        - Prefer the standard library and well-tested libraries over hand-rolled
+          containers/parsers unless there is a measured reason.
+        - Treat compiler warnings as defects until justified and narrowly silenced.
+
+        ## Performance (practical)
+
+        - Right algorithm and structure first; measure before micro-optimizing.
+        - Prefer contiguous storage (`std::vector`, arrays of values) over pointer graphs.
+        - Avoid allocations on hot paths; reserve capacity when sizes are known.
+        - Pass large objects by `const&` or view; pass small types by value.
+        - Move instead of copy when transferring ownership (`std::move` with intent).
+        - Profile (`perf`, Instruments, Tracy, etc.) before claiming improvements.
+        - Do not pessimize with premature `volatile`, virtuals, or abstraction walls
+          on hot paths without evidence.
+
+        ## APIs & modularity
+
+        - Headers are the contract; keep implementation details out of them.
+        - Prefer opaque types / PIMPL for heavy or ABI-sensitive classes when useful.
+        - Keep I/O, UI, and policy at the edges; core logic should be unit-testable.
+        - Minimize global mutable state; document thread-safety on shared objects.
+
+        ## Testing & tooling
+
+        - Add a failing test before fixing a bug when feasible.
+        - Run `cpp-test` (or `ctest` / `make test`) before considering work done.
+        - Use sanitizers regularly for memory and concurrency issues.
+        - Keep pure logic free of GUI toolkits so tests stay headless.
+
+        ## Qt applications (when using the `qt` template)
+
+        - Use **Qt6** with CMake (`find_package(Qt6 REQUIRED COMPONENTS ...)`) and
+          `CMAKE_AUTOMOC` / `AUTOUIC` / `AUTORCC` as needed.
+        - UI types that declare signals/slots need `Q_OBJECT` and live in headers
+          visible to moc.
+        - Keep widgets thin: business logic in plain C++ types, not in `*Window.cpp`.
+        - Parent `QObject` trees correctly; prefer Qt parent ownership for QObjects.
+        - Do not block the GUI thread; use signals/slots, `QtConcurrent`, or workers
+          for long work.
+        - Prefer layouts over fixed geometry; make windows usable at multiple sizes.
+        - Resource files (`.qrc`) for icons/assets; avoid absolute machine paths.
+        - Test non-UI logic with normal ctest binaries; UI tests are optional/extra.
+
+        ## What to avoid
+
+        - `using namespace std;` in headers.
+        - Macros for constants/inline functions when `constexpr`/`inline` suffice.
+        - Copy-paste modules instead of shared helpers.
+        - Silent truncation and unchecked I/O results.
+        - Growing `main.cpp` into an application — keep it a thin entrypoint.
+
+        ## Workflow for agents
+
+        1. Read existing headers and tests before writing new code.
+        2. Match local style; do not reformat unrelated files.
+        3. Implement the smallest correct change; add tests for new behavior.
+        4. Build with warnings enabled; fix new warnings you introduce.
+        5. Run tests (`cpp-test`) and, for memory-touching changes, an asan build.
+        6. For Qt changes: keep moc-friendly headers clean; don't break AUTOMOC.
+        7. Summarize ownership and thread/UI constraints when touching non-obvious APIs.
+
+        ## Quick commands
+
+        ```bash
+        cpp-run                  # build & run project or sources
+        cpp-run --mode asan ...  # address + undefined sanitizers
+        cpp-test                 # project or *_test.cpp suite
+        cpp-dbg ...              # debug build + gdb/lldb
+        ```
+        EOF
+        }
+
+        case "$template" in
+          single)
+            cat >"$root/main.cpp" <<EOF
+        #include <iostream>
+
+        int main() {
+            std::cout << "hello from ${name}\\n";
+            return 0;
+        }
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created ${root}/main.cpp" >&2
+            echo "next: cd ${root} && cpp-run main.cpp" >&2
+            ;;
+          make)
+            mkdir -p "$root/src" "$root/include" "$root/tests"
+            cat >"$root/include/${id}.hpp" <<EOF
+        #pragma once
+
+        int ${id}_add(int a, int b);
+        EOF
+            cat >"$root/src/${id}.cpp" <<EOF
+        #include "${id}.hpp"
+
+        int ${id}_add(int a, int b) {
+            return a + b;
+        }
+        EOF
+            cat >"$root/src/main.cpp" <<EOF
+        #include <iostream>
+        #include "${id}.hpp"
+
+        int main() {
+            std::cout << "${name}: 2+3=" << ${id}_add(2, 3) << '\\n';
+            return 0;
+        }
+        EOF
+            cat >"$root/tests/test_add.cpp" <<EOF
+        #include <iostream>
+        #include "${id}.hpp"
+
+        int main() {
+            if (${id}_add(2, 3) != 5) {
+                std::cerr << "expected 5\\n";
+                return 1;
+            }
+            std::cout << "ok\\n";
+            return 0;
+        }
+        EOF
+            cat >"$root/Makefile" <<EOF
+        CXX = g++
+        CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -Iinclude
+        DEBUGFLAGS = -g -O0
+        SRCDIR = src
+        OBJDIR = obj
+        BINDIR = bin
+        TARGET = ${name}
+        LIB_SOURCES = \$(SRCDIR)/${id}.cpp
+        APP_SOURCES = \$(LIB_SOURCES) \$(SRCDIR)/main.cpp
+        OBJECTS = \$(APP_SOURCES:\$(SRCDIR)/%.cpp=\$(OBJDIR)/%.o)
+
+        .PHONY: all debug release clean run test
+
+        all: debug
+
+        debug: CXXFLAGS += \$(DEBUGFLAGS)
+        debug: \$(BINDIR)/\$(TARGET)
+
+        release: CXXFLAGS += -O2 -DNDEBUG
+        release: \$(BINDIR)/\$(TARGET)
+
+        \$(BINDIR)/\$(TARGET): \$(OBJECTS) | \$(BINDIR)
+        	\$(CXX) \$(OBJECTS) -o \$@
+
+        \$(OBJDIR)/%.o: \$(SRCDIR)/%.cpp | \$(OBJDIR)
+        	\$(CXX) \$(CXXFLAGS) -c \$< -o \$@
+
+        \$(OBJDIR) \$(BINDIR):
+        	mkdir -p \$@
+
+        run: debug
+        	./\$(BINDIR)/\$(TARGET)
+
+        test: debug
+        	\$(CXX) \$(CXXFLAGS) \$(DEBUGFLAGS) tests/test_add.cpp \$(LIB_SOURCES) -o \$(BINDIR)/test_add
+        	./\$(BINDIR)/test_add
+
+        clean:
+        	rm -rf \$(OBJDIR) \$(BINDIR)
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created Makefile project at ${root}" >&2
+            echo "next: cd ${root} && cpp-run   # or: make && make test" >&2
+            ;;
+          cmake)
+            mkdir -p "$root/src" "$root/include" "$root/tests"
+            cat >"$root/include/${id}.hpp" <<EOF
+        #pragma once
+
+        int ${id}_add(int a, int b);
+        EOF
+            cat >"$root/src/${id}.cpp" <<EOF
+        #include "${id}.hpp"
+
+        int ${id}_add(int a, int b) {
+            return a + b;
+        }
+        EOF
+            cat >"$root/src/main.cpp" <<EOF
+        #include <iostream>
+        #include "${id}.hpp"
+
+        int main() {
+            std::cout << "${name}: 2+3=" << ${id}_add(2, 3) << '\\n';
+            return 0;
+        }
+        EOF
+            cat >"$root/tests/test_add.cpp" <<EOF
+        #include <iostream>
+        #include "${id}.hpp"
+
+        int main() {
+            if (${id}_add(2, 3) != 5) {
+                std::cerr << "expected 5\\n";
+                return 1;
+            }
+            std::cout << "ok\\n";
+            return 0;
+        }
+        EOF
+            cat >"$root/CMakeLists.txt" <<EOF
+        cmake_minimum_required(VERSION 3.16)
+        project(${name} LANGUAGES CXX)
+
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+        add_compile_options(-Wall -Wextra -Wpedantic)
+
+        add_library(${name}_lib src/${id}.cpp)
+        target_include_directories(${name}_lib PUBLIC include)
+
+        add_executable(${name} src/main.cpp)
+        target_link_libraries(${name} PRIVATE ${name}_lib)
+
+        enable_testing()
+        add_executable(${name}_test_add tests/test_add.cpp)
+        target_link_libraries(${name}_test_add PRIVATE ${name}_lib)
+        add_test(NAME add COMMAND ${name}_test_add)
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created CMake project at ${root}" >&2
+            echo "next: cd ${root} && cpp-run && cpp-test" >&2
+            ;;
+          qt)
+            mkdir -p "$root/src" "$root/include" "$root/tests"
+            cat >"$root/include/${id}.hpp" <<EOF
+        #pragma once
+
+        // Non-UI logic (keep testable without QApplication).
+        int ${id}_add(int a, int b);
+        EOF
+            cat >"$root/src/${id}.cpp" <<EOF
+        #include "${id}.hpp"
+
+        int ${id}_add(int a, int b) {
+            return a + b;
+        }
+        EOF
+            cat >"$root/include/mainwindow.hpp" <<EOF
+        #pragma once
+
+        #include <QMainWindow>
+
+        class QLabel;
+
+        class MainWindow : public QMainWindow {
+            Q_OBJECT
+        public:
+            explicit MainWindow(QWidget *parent = nullptr);
+
+        private:
+            QLabel *m_label = nullptr;
+        };
+        EOF
+            cat >"$root/src/mainwindow.cpp" <<EOF
+        #include "mainwindow.hpp"
+
+        #include <QLabel>
+        #include <QVBoxLayout>
+        #include <QWidget>
+
+        #include "${id}.hpp"
+
+        MainWindow::MainWindow(QWidget *parent)
+            : QMainWindow(parent) {
+            setWindowTitle(QStringLiteral("${name}"));
+            resize(480, 320);
+
+            auto *central = new QWidget(this);
+            auto *layout = new QVBoxLayout(central);
+            m_label = new QLabel(
+                QStringLiteral("${name}: 2+3=%1").arg(${id}_add(2, 3)),
+                central);
+            m_label->setAlignment(Qt::AlignCenter);
+            layout->addWidget(m_label);
+            setCentralWidget(central);
+        }
+        EOF
+            cat >"$root/src/main.cpp" <<EOF
+        #include <QApplication>
+
+        #include "mainwindow.hpp"
+
+        int main(int argc, char *argv[]) {
+            QApplication app(argc, argv);
+            MainWindow window;
+            window.show();
+            return app.exec();
+        }
+        EOF
+            cat >"$root/tests/test_add.cpp" <<EOF
+        #include <iostream>
+        #include "${id}.hpp"
+
+        int main() {
+            if (${id}_add(2, 3) != 5) {
+                std::cerr << "expected 5\\n";
+                return 1;
+            }
+            std::cout << "ok\\n";
+            return 0;
+        }
+        EOF
+            cat >"$root/CMakeLists.txt" <<EOF
+        cmake_minimum_required(VERSION 3.16)
+        project(${name} VERSION 0.1.0 LANGUAGES CXX)
+
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+        set(CMAKE_AUTOMOC ON)
+        set(CMAKE_AUTOUIC ON)
+        set(CMAKE_AUTORCC ON)
+
+        add_compile_options(-Wall -Wextra -Wpedantic)
+
+        find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
+        add_library(${name}_lib src/${id}.cpp)
+        target_include_directories(${name}_lib PUBLIC include)
+
+        add_executable(${name}
+            src/main.cpp
+            src/mainwindow.cpp
+            include/mainwindow.hpp
+        )
+        target_include_directories(${name} PRIVATE include)
+        target_link_libraries(${name} PRIVATE
+            ${name}_lib
+            Qt6::Core
+            Qt6::Widgets
+        )
+
+        enable_testing()
+        add_executable(${name}_test_add tests/test_add.cpp)
+        target_link_libraries(${name}_test_add PRIVATE ${name}_lib)
+        add_test(NAME add COMMAND ${name}_test_add)
+        EOF
+            cat >"$root/README.md" <<EOF
+        # ${name}
+
+        Qt6 Widgets application scaffolded by \`cpp-new --template qt\`.
+
+        ## Dependencies
+
+        - CMake ≥ 3.16
+        - C++17 compiler
+        - Qt6 (Core, Widgets)
+
+        ## Build & run
+
+        \`\`\`bash
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+        cmake --build build -j
+        ./build/${name}
+        # or: cpp-run
+        \`\`\`
+
+        ## Test (headless logic)
+
+        \`\`\`bash
+        ctest --test-dir build --output-on-failure
+        # or: cpp-test
+        \`\`\`
+
+        Keep business logic in plain C++ (\`${id}.hpp\`); keep widgets thin.
+        See \`AGENT.md\` for engineering guidance.
+        EOF
+            write_gitignore
+            write_agent_md
+            echo "created Qt6 Widgets project at ${root}" >&2
+            echo "requires: Qt6 Core + Widgets" >&2
+            echo "next: cd ${root} && cpp-run && cpp-test" >&2
+            ;;
+        esac
+      argv:
+        - "${{ inputs.name }}"
+        - "${{ inputs.template }}"
+        - "${{ inputs.dir }}"

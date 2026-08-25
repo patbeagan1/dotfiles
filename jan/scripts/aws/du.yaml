@@ -23,7 +23,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws du
+        aws-du
 
         Disk-usage style summarize for one bucket.
 
@@ -32,8 +32,8 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws du run --bucket my-bucket
-        jan scripts aws du run --bucket my-bucket --prefix logs/
+        jan scripts aws aws-du run --bucket my-bucket
+        jan scripts aws aws-du run --bucket my-bucket --prefix logs/
   run:
     about: Summarize one bucket
     exec:

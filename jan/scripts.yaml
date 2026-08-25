@@ -8,10 +8,16 @@ commands:
     include: android.yaml
   aws:
     include: aws.yaml
+  c:
+    include: c.yaml
+  cpp:
+    include: cpp.yaml
   docker:
     include: docker.yaml
   network:
     include: network.yaml
+  nordvpn:
+    include: nordvpn.yaml
   media:
     include: media.yaml
   files:

@@ -1,0 +1,35 @@
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Shell shortcuts + scripts for writing and debugging C++.
+# Flow: cpp-new → cpp-run / cpp-test → cpp-dbg (aliases via `jan alias`).
+# Names use a `cpp-` prefix so `jan alias` does not shadow the `cpp` preprocessor.
+about: C++ writing and debugging
+commands:
+  write:
+    about: compile, format, and lint C++
+    aliases:
+      cpp-cc: g++ -Wall -Wextra -Wpedantic -std=c++17
+      cpp-cc20: g++ -Wall -Wextra -Wpedantic -std=c++20
+      cpp-cc23: g++ -Wall -Wextra -Wpedantic -std=c++23
+      cpp-clang: clang++ -Wall -Wextra -Wpedantic -std=c++17
+      cpp-fmt: clang-format -i
+      cpp-check: cppcheck --enable=all --inconclusive --std=c++17
+      cpp-cmake: cmake -S . -B build
+      cpp-build: cmake --build build -j
+      cpp-make: make -j
+  debug:
+    about: debug builds and debuggers for C++
+    aliases:
+      cpp-debug: g++ -g -O0 -Wall -Wextra -Wpedantic -std=c++17
+      cpp-asan: g++ -g -O0 -Wall -Wextra -Wpedantic -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer
+      cpp-tsan: g++ -g -O0 -Wall -Wextra -Wpedantic -std=c++17 -fsanitize=thread
+      cpp-gdb: gdb -q
+      cpp-lldb: lldb
+      cpp-valgrind: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
+  cpp-run:
+    include: scripts/cpp/run.yaml
+  cpp-dbg:
+    include: scripts/cpp/dbg.yaml
+  cpp-test:
+    include: scripts/cpp/test.yaml
+  cpp-new:
+    include: scripts/cpp/new.yaml

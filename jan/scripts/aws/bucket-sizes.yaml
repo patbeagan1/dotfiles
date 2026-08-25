@@ -17,7 +17,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws bucket-sizes
+        aws-bucket-sizes
 
         For each bucket, print a recursive summarize (total objects + size).
 
@@ -26,7 +26,7 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws bucket-sizes run
+        jan scripts aws aws-bucket-sizes run
   run:
     about: Summarize size of all buckets
     exec:

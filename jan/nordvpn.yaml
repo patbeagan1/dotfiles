@@ -1,0 +1,6 @@
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each command is a YAML include under scripts/nordvpn/.
+about: NordVPN utilities
+commands:
+  fileshare-accept:
+    include: scripts/nordvpn/fileshare-accept.yaml

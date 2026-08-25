@@ -1,0 +1,26 @@
+about: >
+  Continuously accept pending NordVPN meshnet fileshare transfers that are
+  waiting. Polls `nordvpn fileshare list` every second.
+requires: [nordvpn]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        nordvpn fileshare-accept
+
+        Loop forever: find fileshare transfers in the "waiting" state and
+        accept them.
+
+        Usage:
+        jan scripts nordvpn fileshare-accept run
+
+        Stop with Ctrl-C.
+  run:
+    about: Auto-accept waiting fileshare transfers
+    exec:
+      bash: |
+        while true; do
+          nordvpn fileshare list | awk '/waiting/ {print $1}' | xargs -r nordvpn fileshare accept
+          sleep 1
+        done

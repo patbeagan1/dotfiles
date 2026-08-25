@@ -1,0 +1,131 @@
+about: >
+  Compile C++ source(s) and run immediately. Pass sources (and extra -I/-l
+  flags) before `--`; program args after `--`. With no sources, builds via
+  CMake or Make in the current directory when present.
+requires: [g++]
+inputs:
+  mode:
+    description: "Build mode: release | debug | asan"
+    default: debug
+    choices: ["release", "debug", "asan"]
+  std:
+    description: C++ language standard (default c++17)
+    default: c++17
+  out:
+    description: Output binary path (default under /tmp)
+    default: ""
+  bin:
+    description: Executable name/path when building a CMake/Make project
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        cpp-run
+
+        Compile C++ and run in one step.
+
+        Single file / multi-file:
+          cpp-run main.cpp
+          cpp-run main.cpp util.cpp -lpthread
+          cpp-run --mode asan main.cpp -- arg1 arg2
+          cpp-run --std c++20 main.cpp
+
+        Project (cwd has CMakeLists.txt or Makefile, no sources given):
+          cpp-run
+          cpp-run --bin myapp -- --help
+
+        Modes: release (-O2), debug (-g -O0), asan (-g + ASan/UBSan).
+  run:
+    about: Compile (or project-build) and execute.
+    exec:
+      bash: |
+        set -euo pipefail
+        mode="${1-debug}"
+        std="${2-c++17}"
+        out="${3-}"
+        bin="${4-}"
+        shift 4 || true
+
+        sources=()
+        extra=()
+        prog_args=()
+        seen_dd=0
+        for a in "$@"; do
+          if [[ "$seen_dd" -eq 1 ]]; then
+            prog_args+=("$a")
+          elif [[ "$a" == "--" ]]; then
+            seen_dd=1
+          elif [[ "$a" == *.cpp || "$a" == *.cc || "$a" == *.cxx || "$a" == *.C ]]; then
+            sources+=("$a")
+          elif [[ "$a" == *.h || "$a" == *.hpp || "$a" == *.hh ]]; then
+            :
+          else
+            extra+=("$a")
+          fi
+        done
+
+        flags=(-Wall -Wextra -Wpedantic "-std=${std}")
+        case "$mode" in
+          release) flags+=(-O2 -DNDEBUG) ;;
+          debug) flags+=(-g -O0) ;;
+          asan) flags+=(-g -O0 -fsanitize=address,undefined -fno-omit-frame-pointer) ;;
+        esac
+
+        run_bin() {
+          local path="$1"
+          shift
+          echo "+ ${path} $*" >&2
+          exec "$path" "$@"
+        }
+
+        if [[ ${#sources[@]} -gt 0 ]]; then
+          if [[ -z "$out" ]]; then
+            out="/tmp/jan-cpp-run-$$"
+          fi
+          mkdir -p "$(dirname "$out")"
+          echo "+ g++ ${flags[*]} ${sources[*]} ${extra[*]} -o ${out}" >&2
+          g++ "${flags[@]}" "${sources[@]}" "${extra[@]}" -o "$out"
+          run_bin "$out" "${prog_args[@]}"
+        fi
+
+        if [[ -f CMakeLists.txt ]]; then
+          cmake -S . -B build -DCMAKE_BUILD_TYPE="$([[ "$mode" == release ]] && echo Release || echo Debug)"
+          cmake --build build -j
+          if [[ -n "$bin" ]]; then
+            [[ -x "$bin" ]] || bin="$(find build -type f -executable -name "$bin" | head -1)"
+            run_bin "$bin" "${prog_args[@]}"
+          fi
+          cand="$(find build -type f -executable ! -name '*.o' ! -name '*.so*' ! -name '*_test*' ! -name 'test_*' 2>/dev/null | head -1 || true)"
+          if [[ -z "$cand" ]]; then
+            cand="$(find build -type f -executable ! -name '*.o' ! -name '*.so*' 2>/dev/null | head -1 || true)"
+          fi
+          if [[ -z "$cand" ]]; then
+            echo "cpp-run: cmake build ok but no executable found; pass --bin NAME" >&2
+            exit 1
+          fi
+          run_bin "$cand" "${prog_args[@]}"
+        fi
+
+        if [[ -f Makefile || -f makefile ]]; then
+          make -j
+          if [[ -n "$bin" ]]; then
+            run_bin "$bin" "${prog_args[@]}"
+          fi
+          if make -n run >/dev/null 2>&1; then
+            echo "+ make run" >&2
+            exec make run
+          fi
+          echo "cpp-run: make ok; pass --bin PATH or add a 'run' target" >&2
+          exit 1
+        fi
+
+        echo "cpp-run: pass .cpp sources, or run inside a CMake/Make project" >&2
+        exit 2
+      argv:
+        - "${{ inputs.mode }}"
+        - "${{ inputs.std }}"
+        - "${{ inputs.out }}"
+        - "${{ inputs.bin }}"
+      passthrough: true

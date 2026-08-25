@@ -25,7 +25,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws presign
+        aws-presign
 
         Print a time-limited HTTPS URL for an object.
 
@@ -34,8 +34,8 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws presign run --bucket my-bucket --key path/file.bin
-        jan scripts aws presign run --bucket my-bucket --key path/file.bin --expires 86400
+        jan scripts aws aws-presign run --bucket my-bucket --key path/file.bin
+        jan scripts aws aws-presign run --bucket my-bucket --key path/file.bin --expires 86400
   run:
     about: aws s3 presign
     exec:

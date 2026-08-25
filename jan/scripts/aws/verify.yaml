@@ -36,7 +36,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws verify
+        aws-verify
 
         Compare a local tree to s3://BUCKET[/PREFIX].
 
@@ -53,9 +53,9 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws verify run --bucket my-bucket --local ~/Backups/my-bucket
-        jan scripts aws verify run --bucket my-bucket --local ./data --prefix photos/
-        jan scripts aws verify run --bucket my-bucket --local ./data --checksums false
+        jan scripts aws aws-verify run --bucket my-bucket --local ~/Backups/my-bucket
+        jan scripts aws aws-verify run --bucket my-bucket --local ./data --prefix photos/
+        jan scripts aws aws-verify run --bucket my-bucket --local ./data --checksums false
   run:
     about: Verify local directory against bucket
     exec:

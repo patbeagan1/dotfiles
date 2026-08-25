@@ -27,7 +27,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws cp
+        aws-cp
 
         Thin wrapper around `aws s3 cp` with pass-injected credentials.
 
@@ -36,9 +36,9 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws cp run --source ./file.bin --dest s3://my-bucket/file.bin
-        jan scripts aws cp run --source s3://my-bucket/a --dest s3://my-bucket/b
-        jan scripts aws cp run --source s3://my-bucket/dir/ --dest ./dir/ --recursive true
+        jan scripts aws aws-cp run --source ./file.bin --dest s3://my-bucket/file.bin
+        jan scripts aws aws-cp run --source s3://my-bucket/a --dest s3://my-bucket/b
+        jan scripts aws aws-cp run --source s3://my-bucket/dir/ --dest ./dir/ --recursive true
   run:
     about: aws s3 cp
     exec:

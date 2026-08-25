@@ -1,27 +1,29 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/aws/.
 # Credentials come from `pass` (see each script's help / env.pass).
+# Command names use an `aws-` prefix so `jan alias` does not shadow
+# common tools (ls, cp, du, get, …).
 about: AWS utilities (credentials via pass)
 commands:
-  whoami:
+  aws-whoami:
     include: scripts/aws/whoami.yaml
-  ls-buckets:
+  aws-ls-buckets:
     include: scripts/aws/ls-buckets.yaml
-  ls:
+  aws-ls:
     include: scripts/aws/ls.yaml
-  bucket-sizes:
+  aws-bucket-sizes:
     include: scripts/aws/bucket-sizes.yaml
-  du:
+  aws-du:
     include: scripts/aws/du.yaml
-  download:
+  aws-download:
     include: scripts/aws/download.yaml
-  verify:
+  aws-verify:
     include: scripts/aws/verify.yaml
-  upload:
+  aws-upload:
     include: scripts/aws/upload.yaml
-  get:
+  aws-get:
     include: scripts/aws/get.yaml
-  cp:
+  aws-cp:
     include: scripts/aws/cp.yaml
-  presign:
+  aws-presign:
     include: scripts/aws/presign.yaml

@@ -35,7 +35,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws upload
+        aws-upload
 
         Sync a local directory up to s3://BUCKET[/PREFIX].
 
@@ -44,9 +44,9 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws upload run --bucket my-bucket --source ~/data
-        jan scripts aws upload run --bucket my-bucket --source ./photos --prefix photos/
-        jan scripts aws upload run --bucket my-bucket --source ./data --dry-run true
+        jan scripts aws aws-upload run --bucket my-bucket --source ~/data
+        jan scripts aws aws-upload run --bucket my-bucket --source ./photos --prefix photos/
+        jan scripts aws aws-upload run --bucket my-bucket --source ./data --dry-run true
   run:
     about: aws s3 sync from local to bucket
     exec:

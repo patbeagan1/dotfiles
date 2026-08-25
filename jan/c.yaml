@@ -1,0 +1,33 @@
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Shell shortcuts + scripts for writing and debugging C.
+# Flow: c-new → c-run / c-test → c-dbg (aliases via `jan alias`).
+about: C writing and debugging
+commands:
+  write:
+    about: compile, format, and lint C
+    aliases:
+      c-cc: gcc -Wall -Wextra -Wpedantic -std=c17
+      c-c89: gcc -Wall -Wextra -Wpedantic -std=c89
+      c-c99: gcc -Wall -Wextra -Wpedantic -std=c99
+      c-c11: gcc -Wall -Wextra -Wpedantic -std=c11
+      c-clang: clang -Wall -Wextra -Wpedantic -std=c17
+      c-fmt: clang-format -i
+      c-check: cppcheck --enable=all --inconclusive --std=c17
+      c-make: make -j
+  debug:
+    about: debug builds and debuggers for C
+    aliases:
+      c-debug: gcc -g -O0 -Wall -Wextra -Wpedantic -std=c17
+      c-asan: gcc -g -O0 -Wall -Wextra -Wpedantic -std=c17 -fsanitize=address,undefined -fno-omit-frame-pointer
+      c-tsan: gcc -g -O0 -Wall -Wextra -Wpedantic -std=c17 -fsanitize=thread
+      c-gdb: gdb -q
+      c-lldb: lldb
+      c-valgrind: valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
+  c-run:
+    include: scripts/c/run.yaml
+  c-dbg:
+    include: scripts/c/dbg.yaml
+  c-test:
+    include: scripts/c/test.yaml
+  c-new:
+    include: scripts/c/new.yaml

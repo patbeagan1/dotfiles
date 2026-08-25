@@ -30,7 +30,7 @@ commands:
     about: Describe this script.
     exec:
       text: |
-        aws ls
+        aws-ls
 
         List objects under s3://BUCKET[/PREFIX].
 
@@ -39,9 +39,9 @@ commands:
         pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
-        jan scripts aws ls run --bucket my-bucket
-        jan scripts aws ls run --bucket my-bucket --prefix backups/
-        jan scripts aws ls run --bucket my-bucket --recursive false
+        jan scripts aws aws-ls run --bucket my-bucket
+        jan scripts aws aws-ls run --bucket my-bucket --prefix backups/
+        jan scripts aws aws-ls run --bucket my-bucket --recursive false
   run:
     about: List bucket objects
     exec:
