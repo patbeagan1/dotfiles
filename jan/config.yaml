@@ -7,8 +7,17 @@ commands:
     include: config/computer.yaml
   zsh:
     include: config/zsh.yaml
+  # Late inits: keys after `zsh` so they run after OMZ + zsh fragments.
+  zsh-atuin:
+    include: config/atuin.yaml
+  zsh-sdkman:
+    include: config/sdkman.yaml
   omzsh:
     include: config/omzsh.yaml
+  pnpm:
+    include: config/pnpm.yaml
+  ssh-agent:
+    include: config/ssh-agent.yaml
   golang:
     include: config/golang.yaml
   android:

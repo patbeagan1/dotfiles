@@ -152,9 +152,11 @@ _libbeagan_load_aliases() {
 load_aliases() {
     print_info "📝 Loading aliases..."
 
-    # Jan-generated aliases (once)
+    # Jan-generated aliases (once). Prefer bytecode (.zwc) when present — zsh
+    # loads it automatically if newer than the .zsh source.
     local jan_aliases="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
     if [[ -z "${LIBBEAGAN_JAN_ALIASES_LOADED:-}" && -f "$jan_aliases" ]]; then
+        _libbeagan_ensure_alias_zwc "$jan_aliases"
         # shellcheck disable=SC1090
         source "$jan_aliases"
         LIBBEAGAN_JAN_ALIASES_LOADED=1
@@ -162,6 +164,21 @@ load_aliases() {
 
     safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
     _libbeagan_load_aliases
+}
+
+# Compile jan aliases.zsh → aliases.zsh.zwc when missing or stale (fast; no jan spawn).
+_libbeagan_ensure_alias_zwc() {
+    local src="$1"
+    local zwc="${src}.zwc"
+    [[ -f "$src" ]] || return 0
+    if [[ -f "$zwc" && ! "$src" -nt "$zwc" ]]; then
+        return 0
+    fi
+    if ! zcompile -U "$src" 2>/dev/null; then
+        print_info "   (zcompile aliases skipped — sourcing plain .zsh)"
+        return 0
+    fi
+    print_info "   Cached jan aliases bytecode: $zwc"
 }
 
 setup_completions() {
@@ -254,6 +271,9 @@ setup_scripts() {
         local alias_count
         alias_count="$(grep -c '^alias ' "$alias_out" 2>/dev/null || echo 0)"
         print_info "✅ Generated $alias_count alias(es) in $alias_out"
+        # Drop stale bytecode then rebuild so the next (and this) source is cheap
+        rm -f "${alias_out}.zwc"
+        _libbeagan_ensure_alias_zwc "$alias_out"
     else
         echo "⚠️  Warning: jan alias generation failed (continuing)"
         print_info "   You can retry later with: jan alias --shell zsh -o \"$alias_out\""

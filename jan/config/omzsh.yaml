@@ -16,7 +16,8 @@ config:
     # ZSH_THEME="pygmalion"
     # ZSH_THEME="lukerandall"
     # ZSH_THEME="robbyrussell"
-    ZSH_THEME="re5et"
+    # Prefer theme already set (e.g. `omz theme set` → ~/.zshrc); default re5et.
+    ZSH_THEME="${ZSH_THEME:-re5et}"
     # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
     
     

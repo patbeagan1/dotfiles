@@ -48,6 +48,8 @@ commands:
     include: scripts/git/gh-prs-last-6-months-all.yaml
   gh-stack:
     include: scripts/git/gh-stack.yaml
+  gh-status:
+    include: scripts/git/gh-status.yaml
   ghf:
     include: scripts/git/ghf.yaml
   git-commit-ai:
