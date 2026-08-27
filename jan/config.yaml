@@ -2,6 +2,9 @@
 # Each child is a YAML include under config/; shell and link file bodies are inlined.
 about: host configuration (emit / link / apply / deps)
 commands:
+  # `computer` sorts before `machine-*` in emit (BTreeMap key order).
+  computer:
+    include: config/computer.yaml
   zsh:
     include: config/zsh.yaml
   omzsh:

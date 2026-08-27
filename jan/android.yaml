@@ -7,7 +7,7 @@ aliases:
   android-app-list: adb shell pm list packages
   android-battery-info: adb shell dumpsys battery
   android-clear-logs: adb logcat -c
-  android-emulator: ~/Library/Android/sdk/emulator/emulator
+  android-emulator: emulator
   android-install: adb install
   android-list-avds: emulator -list-avds
   android-list-devices: adb devices -l

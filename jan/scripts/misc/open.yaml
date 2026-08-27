@@ -1,4 +1,6 @@
-about: A script for automated tasks.
+about: >
+  Open a file or URL with the platform default handler. Uses `open` on macOS
+  and `xdg-open` on Linux.
 commands:
   help:
     about: Describe this script.
@@ -6,26 +8,37 @@ commands:
       text: |
         open
 
-        A script for automated tasks.
+        Open files or URLs with the OS default application.
 
+        Usage:
+          jan scripts misc open run ./file.pdf
+          jan scripts misc open run https://example.com
+
+        macOS: open
+        Linux: xdg-open
   run:
-    about: 'Run the linked script; forwards args.'
+    about: Open path/URL with the OS default handler
     exec:
       bash: |
-        # (c) 2022 Pat Beagan: MIT License
-
-        open () 
-        { 
-            if [ "$(uname)" == "Linux" ]; then
-                gnome-open "$@";
-            else
-                if [ "$(uname)" == "Darwin" ]; then
-                    command open "$@";
-                else
-                    echo "This command is not supported.";
-                fi;
+        set -euo pipefail
+        if [[ $# -lt 1 ]]; then
+          echo "open: missing path or URL" >&2
+          exit 2
+        fi
+        case "$(uname -s)" in
+          Darwin)
+            command open "$@"
+            ;;
+          Linux)
+            if ! command -v xdg-open >/dev/null 2>&1; then
+              echo "open: xdg-open not found (install xdg-utils)" >&2
+              exit 127
             fi
-        }
-
-        open "$@"
+            xdg-open "$@"
+            ;;
+          *)
+            echo "open: unsupported OS $(uname -s) (need macOS open or Linux xdg-open)" >&2
+            exit 1
+            ;;
+        esac
       passthrough: true

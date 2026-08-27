@@ -43,7 +43,7 @@ aliases:
   tagas: tagger.py tagas
   tagcheck: tagger.py tagcheck
   teleport: waypoint_go
-  to_clipboard: xclip -selection clipboard
+  to_clipboard: clipcopy
   tp-manual: teleport
   urlencode: 'python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
   va: source ./venv/bin/activate
@@ -82,6 +82,8 @@ commands:
     include: scripts/misc/check_program_snippets.yaml
   checkcrlf:
     include: scripts/misc/checkcrlf.yaml
+  clipcopy:
+    include: scripts/misc/clipcopy.yaml
   color-describe:
     include: scripts/misc/color-describe.yaml
   convert-date:

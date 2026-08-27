@@ -9,6 +9,15 @@ config:
     echo '|__| |__  |    |    /  \    |__  |__)  /\   |\/| |__  |  | /  \ |__) |__/ '
     echo '|  | |___ |___ |___ \__/    |    |  \ /~~\  |  | |___ |/\| \__/ |  \ |  \ '
     echo
+
+    # Linux SDK lives at ~/Android/Sdk (capital S); avoid duplicating if android config already set it
+    if [ -d "$HOME/Android/Sdk/platform-tools" ]; then
+      case ":$PATH:" in
+        *":$HOME/Android/Sdk/platform-tools:"*) ;;
+        *) PATH="$PATH:$HOME/Android/Sdk/platform-tools" ;;
+      esac
+    fi
+
     
     # Framework-specific functions
     restic_backup() { 

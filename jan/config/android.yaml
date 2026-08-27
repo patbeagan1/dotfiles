@@ -2,9 +2,23 @@ about: Android SDK / Flutter PATH exports
 config:
   shell: |
     
-    # Android
-    export ANDROID_SDK=$HOME/Library/Android/sdk
-    export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH
-    export PATH=$ANDROID_SDK/platform-tools:$PATH
-    export PATH=$PATH:/Users/pbeagan/repo/flutter/bin
-    export PATH=$PATH:~/.local/bin
+    # Android — prefer existing ANDROID_SDK / ANDROID_HOME, else detect macOS vs Linux layout
+    if [ -z "${ANDROID_SDK:-}" ]; then
+      if [ -n "${ANDROID_HOME:-}" ]; then
+        export ANDROID_SDK="$ANDROID_HOME"
+      elif [ -d "$HOME/Library/Android/sdk" ]; then
+        export ANDROID_SDK="$HOME/Library/Android/sdk"
+      elif [ -d "$HOME/Android/Sdk" ]; then
+        export ANDROID_SDK="$HOME/Android/Sdk"
+      elif [ -d "$HOME/Android/sdk" ]; then
+        export ANDROID_SDK="$HOME/Android/sdk"
+      fi
+    fi
+    if [ -n "${ANDROID_SDK:-}" ]; then
+      export ANDROID_HOME="$ANDROID_SDK"
+      export PATH="$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$PATH"
+      export PATH="$ANDROID_SDK/platform-tools:$PATH"
+    fi
+    # Flutter (optional; mac path kept for that host, linux may already have flutter elsewhere)
+    [ -d /Users/pbeagan/repo/flutter/bin ] && export PATH="$PATH:/Users/pbeagan/repo/flutter/bin"
+    export PATH="$PATH:$HOME/.local/bin"
