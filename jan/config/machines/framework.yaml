@@ -2,7 +2,8 @@ about: Framework laptop fragment (guards on CURRENT_COMPUTER)
 config:
   shell: |
     # Framework laptop specific configuration
-    if [ "$CURRENT_COMPUTER" = "framework" ]; then
+    if [ "$CURRENT_COMPUTER" = "framework" ] && [ -z "${LIBBEAGAN_FRAMEWORK_LOADED:-}" ]; then
+    LIBBEAGAN_FRAMEWORK_LOADED=1
     
     # ASCII art banner
     echo '      ___            __      ___  __              ___       __   __       '
@@ -33,22 +34,25 @@ config:
     alias monorepo='/home/patrick/repo/incubator/__monorepo/tools/monorepo'
     alias m='monorepo'
     
-    # Swift environment
-    source "/home/patrick/.local/share/swiftly/env.sh"
+    # Swift environment (optional; swiftly may not be installed)
+    if [[ -r "$HOME/.local/share/swiftly/env.sh" ]]; then
+        source "$HOME/.local/share/swiftly/env.sh"
+    fi
     
-    # Holiday tracking
-    typeset -A holidays=(
-        ["2023-12-25"]="Xmas 2023"
-        ["2024-02-14"]="Valentine's"
-        ["2024-03-17"]="St. Patrick's Day 🍀"
-        ["2024-08-04"]="The Day"
-        ["2024-12-25"]="Xmas 2024"
-        ["2025-02-15"]="Moving day"
-    )
-    
-    for date in ${(k)holidays}; do
-        days_until.py "$date" "${holidays[$date]}" 2>/dev/null
-    done
+    # Holiday tracking (skip in non-interactive shells)
+    if [[ -o interactive ]] && command -v days_until.py >/dev/null 2>&1; then
+      typeset -A holidays=(
+          ["2023-12-25"]="Xmas 2023"
+          ["2024-02-14"]="Valentine's"
+          ["2024-03-17"]="St. Patrick's Day 🍀"
+          ["2024-08-04"]="The Day"
+          ["2024-12-25"]="Xmas 2024"
+          ["2025-02-15"]="Moving day"
+      )
+      for date in ${(k)holidays}; do
+          days_until.py "$date" "${holidays[$date]}" 2>/dev/null
+      done
+    fi
     
     # Framework-specific PATH additions
     export PATH=$PATH:/home/patrick/.local/share/JetBrains/Toolbox/scripts

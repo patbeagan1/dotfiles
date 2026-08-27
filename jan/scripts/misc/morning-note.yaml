@@ -1,0 +1,33 @@
+about: >
+  Append a dated morning diary stub to ~/notes.txt. Scheduled for 09:00 local
+  via `jan cron` (same timestamp style as `nn`).
+cron: "0 9 * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        morning-note
+
+        Append a dated morning diary stub to ~/notes.txt so the day has a
+        place to land. Intended to run from `jan cron` at 09:00.
+
+        Usage:
+          jan scripts misc morning-note run
+          jan cron --list
+          jan cron --dry-run --at "2026-08-26 09:00"
+
+        Output line (same stamp style as nn):
+          YY.MM.DD.HH.MM.SS diary: — Weekday, YYYY-MM-DD
+  run:
+    about: Append today's morning stub to ~/notes.txt
+    exec:
+      bash: |
+        set -euo pipefail
+        note="${HOME}/notes.txt"
+        stamp=$(date "+%y.%m.%d.%H.%M.%S")
+        day=$(date "+%A, %Y-%m-%d")
+        line="${stamp} diary: — ${day}"
+        printf '%s\n' "$line" >> "$note"
+        echo "morning-note: ${line} → ${note}"
+      passthrough: true

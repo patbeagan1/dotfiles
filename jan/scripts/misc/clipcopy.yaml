@@ -1,0 +1,45 @@
+about: >
+  Copy stdin or a file to the system clipboard. Uses pbcopy on macOS and
+  xclip on Linux.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        clipcopy
+
+        Copy data to the system clipboard.
+
+        Usage:
+          some-command | jan scripts misc clipcopy run
+          jan scripts misc clipcopy run path/to/file
+
+        macOS: pbcopy
+        Linux: xclip -selection clipboard
+  run:
+    about: Copy stdin or file to clipboard
+    exec:
+      bash: |
+        set -euo pipefail
+        src="${1:-/dev/stdin}"
+        case "$(uname -s)" in
+          Darwin)
+            if ! command -v pbcopy >/dev/null 2>&1; then
+              echo "clipcopy: pbcopy not found" >&2
+              exit 127
+            fi
+            cat -- "$src" | pbcopy
+            ;;
+          Linux)
+            if ! command -v xclip >/dev/null 2>&1; then
+              echo "clipcopy: xclip not found (install xclip)" >&2
+              exit 127
+            fi
+            cat -- "$src" | xclip -selection clipboard
+            ;;
+          *)
+            echo "clipcopy: unsupported OS $(uname -s) (need macOS pbcopy or Linux xclip)" >&2
+            exit 1
+            ;;
+        esac
+      passthrough: true

@@ -4,10 +4,17 @@
 # Verbose mode - quiet by default, enable with VERBOSE=true or --verbose
 VERBOSE_MODE=${VERBOSE_MODE:-false}
 
-# Check for --verbose flag
-if [[ "$1" == "--verbose" ]]; then
-    VERBOSE_MODE=true
-fi
+# Full jan refresh (re-emit aliases/config, link, apply, deps). Also enabled by --refresh.
+LIBBEAGAN_REFRESH=${LIBBEAGAN_REFRESH:-false}
+
+# Check for flags (order-independent among known flags)
+for _libbeagan_arg in "$@"; do
+    case "$_libbeagan_arg" in
+        --verbose) VERBOSE_MODE=true ;;
+        --refresh|--install) LIBBEAGAN_REFRESH=true ;;
+    esac
+done
+unset _libbeagan_arg
 
 # Function to print messages only if in verbose mode
 print_info() {
@@ -72,13 +79,19 @@ validate_env() {
     return 0
 }
 
+# Source emitted jan config exactly once per shell.
 load_configurations() {
-    # Preferred path: emitted by `jan config emit` in setup_scripts.
+    if [[ -n "${LIBBEAGAN_CONFIG_LOADED:-}" ]]; then
+        print_info "📁 Jan config already loaded — skipping"
+        return 0
+    fi
+
     local emitted="${XDG_CONFIG_HOME:-$HOME/.config}/jan/config.zsh"
     if [[ -f "$emitted" ]]; then
         print_info "📁 Loading jan-emitted configuration: $emitted"
         # shellcheck disable=SC1090
         source "$emitted"
+        LIBBEAGAN_CONFIG_LOADED=1
         return 0
     fi
 
@@ -98,6 +111,7 @@ load_configurations() {
             safe_source "$machine_file" "$machine_name configuration"
         done
     fi
+    LIBBEAGAN_CONFIG_LOADED=1
 }
 
 
@@ -137,6 +151,15 @@ _libbeagan_load_aliases() {
 
 load_aliases() {
     print_info "📝 Loading aliases..."
+
+    # Jan-generated aliases (once)
+    local jan_aliases="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
+    if [[ -z "${LIBBEAGAN_JAN_ALIASES_LOADED:-}" && -f "$jan_aliases" ]]; then
+        # shellcheck disable=SC1090
+        source "$jan_aliases"
+        LIBBEAGAN_JAN_ALIASES_LOADED=1
+    fi
+
     safe_source "$LIBBEAGAN_HOME/alias" "Main alias file"
     _libbeagan_load_aliases
 }
@@ -169,6 +192,8 @@ setup_completions() {
     fi
 }
 
+# Prefer jan tree + (optionally) regenerate alias/config artifacts.
+# Heavy work runs only when LIBBEAGAN_REFRESH=true or outputs are missing.
 setup_scripts() {
     print_info "🔧 Setting up scripts / jan utilities..."
     export PATH=$PATH:$LIBBEAGAN_HOME/bin:$LIBBEAGAN_HOME/bin_local
@@ -191,6 +216,21 @@ setup_scripts() {
     fi
     print_info "   jan binary: $(command -v jan)"
 
+    local alias_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
+    local config_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/config.zsh"
+    local need_refresh=false
+    if [[ "$LIBBEAGAN_REFRESH" == "true" ]]; then
+        need_refresh=true
+    elif [[ ! -f "$alias_out" || ! -f "$config_out" ]]; then
+        need_refresh=true
+        print_info "   Emitted jan files missing — running a one-time refresh"
+    fi
+
+    if [[ "$need_refresh" != "true" ]]; then
+        print_info "   Using existing jan emit/aliases (run \`refresh\` or set LIBBEAGAN_REFRESH=1 to regenerate)"
+        return 0
+    fi
+
     print_info "   Running: jan use \"$jan_dir\" --root scripts.spec.yaml"
     if jan use "$jan_dir" --root scripts.spec.yaml; then
         print_info "✅ Preferred jan directory saved"
@@ -208,29 +248,22 @@ setup_scripts() {
         echo "⚠️  Warning: jan use failed for $jan_dir (continuing)"
     fi
 
-    local alias_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/scripts/aliases.zsh"
     print_info "   Writing shell aliases to: $alias_out"
     mkdir -p "$(dirname "$alias_out")"
     if jan --no-log alias --shell zsh -o "$alias_out"; then
         local alias_count
         alias_count="$(grep -c '^alias ' "$alias_out" 2>/dev/null || echo 0)"
         print_info "✅ Generated $alias_count alias(es) in $alias_out"
-        # shellcheck disable=SC1090
-        source "$alias_out"
-        print_info "✅ Sourced jan aliases into current shell"
     else
         echo "⚠️  Warning: jan alias generation failed (continuing)"
         print_info "   You can retry later with: jan alias --shell zsh -o \"$alias_out\""
     fi
 
-    local config_out="${XDG_CONFIG_HOME:-$HOME/.config}/jan/config.zsh"
     print_info "   Writing host configuration to: $config_out"
     mkdir -p "$(dirname "$config_out")"
     if jan --no-log config emit --shell zsh -o "$config_out"; then
         print_info "✅ Emitted jan config shell fragments"
-        # shellcheck disable=SC1090
-        source "$config_out"
-        print_info "✅ Sourced jan config into current shell"
+        # Do not source here — load_configurations sources once.
     else
         echo "⚠️  Warning: jan config emit failed (continuing)"
         print_info "   You can retry later with: jan config emit --shell zsh -o \"$config_out\""
@@ -252,6 +285,12 @@ setup_scripts() {
 }
 
 check_dependencies() {
+    # Expensive inventory — only on explicit refresh, or when LIBBEAGAN_CHECK_DEPS=1.
+    if [[ "$LIBBEAGAN_REFRESH" != "true" && "${LIBBEAGAN_CHECK_DEPS:-}" != "1" ]]; then
+        print_info "📦 Skipping dependency check (pass --refresh or set LIBBEAGAN_CHECK_DEPS=1)"
+        return 0
+    fi
+
     print_info "📦 Checking dependencies..."
     if command -v jan >/dev/null 2>&1; then
         if jan --no-log config deps; then
@@ -267,8 +306,15 @@ check_dependencies() {
 
 main() {
     validate_env || return 1
-    # jan use / alias / config emit+link+apply first so load_configurations can
-    # source the emitted ~/.config/jan/config.zsh (machine fragments included).
+
+    # Explicit refresh must re-source into the current shell (clear one-shot guards).
+    if [[ "$LIBBEAGAN_REFRESH" == "true" ]]; then
+        unset LIBBEAGAN_CONFIG_LOADED
+        unset LIBBEAGAN_JAN_ALIASES_LOADED
+        unset LIBBEAGAN_FRAMEWORK_LOADED
+    fi
+
+    # Refresh (optional) writes ~/.config/jan/{config,aliases}.zsh; then load once.
     setup_scripts || return 1
     load_configurations || return 1
     load_aliases || return 1
@@ -276,7 +322,12 @@ main() {
     check_dependencies || return 1
 
     print_info "🎉 libbeagan installation complete!"
-    print_info "   Type 'libbeagan_dependencies' or 'jan config deps' to check for missing tools."
+    if [[ "$LIBBEAGAN_REFRESH" == "true" ]]; then
+        print_info "   Type 'libbeagan_dependencies' or 'jan config deps' to check for missing tools."
+        print_info "   Or run: refresh"
+    else
+        print_info "   Fast start (cached jan emit). Refresh with: refresh"
+    fi
     print_info "   Tab completion is available for supported commands."
 }
 

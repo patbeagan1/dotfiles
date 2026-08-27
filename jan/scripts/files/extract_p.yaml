@@ -1,18 +1,23 @@
-about: Converted from aliases/alias_extract.zsh (`extract`).
+about: Archive extractor (extract_p). Avoids clashing with the OMZ extract plugin.
 commands:
   help:
     about: Describe this script.
     exec:
       text: |
-        extract
+        extract_p
 
-        Converted from aliases/alias_extract.zsh (`extract`).
+        Extract common archive formats (zip, tar, rar, 7z, ...).
+        Named extract_p so it does not shadow Oh My Zsh's extract plugin.
+
+        Usage:
+          jan scripts files extract_p run archive.tar.gz
+          extract_p archive.zip
 
   run:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-        function extract {
+        function extract_p {
             # function Extract for common file formats
             # https://github.com/xvoland/Extract
 
@@ -20,8 +25,8 @@ commands:
             IFS="$(printf '\n\t')"
             if [ -z "$1" ]; then
                 # display usage if no parameters given
-                echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
-                echo "       extract <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
+                echo "Usage: extract_p <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
+                echo "       extract_p <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
             else
                 for n in "$@"
                 do
@@ -71,10 +76,10 @@ commands:
                             ;;
                             *.cso)
                                 ciso 0 ./"$n" ./"$n.iso" && \
-                                extract $n.iso && \rm -f $n
+                                extract_p $n.iso && \rm -f $n
                             ;;
                             *)
-                                echo "extract: '$n' - unknown archive method"
+                                echo "extract_p: '$n' - unknown archive method"
                                 return 1
                             ;;
                         esac
@@ -87,6 +92,6 @@ commands:
             IFS=$SAVEIFS
         }
 
-        extract "$@"
+        extract_p "$@"
 
       passthrough: true

@@ -196,6 +196,8 @@ commands:
     include: scripts/misc/minecraft-photopack.yaml
   module-dependencies:
     include: scripts/misc/module-dependencies.yaml
+  morning-note:
+    include: scripts/misc/morning-note.yaml
   mountcd:
     include: scripts/misc/mountcd.yaml
   mtg-booster:

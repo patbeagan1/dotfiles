@@ -1,3 +1,44 @@
 # Core aliases for reloading. All other aliases are loaded automatically from aliases/*.zsh
+#
+# savedalias — light reload of aliases/*.zsh only (no jan re-emit)
+# refresh    — full LIBBEAGAN_REFRESH: jan use/alias/config emit+link+apply+deps, then re-source
+#
+# Loaded after jan-generated aliases.zsh; unalias so this function wins over any
+# stale `alias refresh=…` from an older jan emit.
+
 alias savedalias='_libbeagan_load_aliases'
-alias refresh='savedalias; hash -r'
+
+unalias refresh 2>/dev/null
+refresh() {
+    if [[ -z "${LIBBEAGAN_HOME:-}" ]]; then
+        echo "refresh: LIBBEAGAN_HOME is not set" >&2
+        return 1
+    fi
+    if [[ ! -f "$LIBBEAGAN_HOME/install.zsh" ]]; then
+        echo "refresh: missing $LIBBEAGAN_HOME/install.zsh" >&2
+        return 1
+    fi
+
+    # Allow install.zsh to re-source emit/aliases into this shell
+    unset LIBBEAGAN_CONFIG_LOADED
+    unset LIBBEAGAN_JAN_ALIASES_LOADED
+    unset LIBBEAGAN_FRAMEWORK_LOADED
+
+    local _prev_refresh="${LIBBEAGAN_REFRESH:-false}"
+    local _prev_verbose="${VERBOSE_MODE:-false}"
+    LIBBEAGAN_REFRESH=true
+    # Show progress during an intentional refresh unless caller forced quiet
+    if [[ "${VERBOSE_MODE:-false}" != "true" ]]; then
+        VERBOSE_MODE=true
+    fi
+
+    # Prefer env flag over `source … --refresh` so we do not clobber positional params
+    # shellcheck disable=SC1090
+    source "$LIBBEAGAN_HOME/install.zsh"
+    local _rc=$?
+
+    LIBBEAGAN_REFRESH="$_prev_refresh"
+    VERBOSE_MODE="$_prev_verbose"
+    hash -r
+    return $_rc
+}

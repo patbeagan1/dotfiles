@@ -35,8 +35,8 @@ commands:
     include: scripts/files/compare_directories.yaml
   csv-summary:
     include: scripts/files/csv-summary.yaml
-  extract:
-    include: scripts/files/extract.yaml
+  extract_p:
+    include: scripts/files/extract_p.yaml
   json-keys:
     include: scripts/files/json-keys.yaml
   json-summary:
