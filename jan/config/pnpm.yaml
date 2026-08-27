@@ -1,0 +1,10 @@
+about: pnpm home and PATH
+config:
+  shell: |
+    export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+    if [ -d "$PNPM_HOME/bin" ]; then
+      case ":$PATH:" in
+        *":$PNPM_HOME/bin:"*) ;;
+        *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+      esac
+    fi

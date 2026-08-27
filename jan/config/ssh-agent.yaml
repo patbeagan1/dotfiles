@@ -1,0 +1,10 @@
+about: Start ssh-agent and add default ed25519 key when needed
+config:
+  shell: |
+    # Start ssh-agent if it's not already running
+    if [ -z "${SSH_AUTH_SOCK:-}" ] && command -v ssh-agent >/dev/null 2>&1; then
+      eval "$(ssh-agent -s)" > /dev/null
+      if [ -f "$HOME/.ssh/id_ed25519" ]; then
+        ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null
+      fi
+    fi

@@ -1,0 +1,185 @@
+about: >
+  Check GitHub platform status from https://www.githubstatus.com — overall
+  indicator plus every published service component, open incidents, and active
+  maintenances.
+requires: [curl, python3]
+inputs:
+  problems:
+    description: If 1, only print non-operational components / open issues
+    default: "0"
+  json:
+    description: If 1, print the raw summary JSON and exit
+    default: "0"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        gh-status
+
+        Report GitHub's public status page for every listed service
+        (Git Operations, API, Actions, Copilot, Codespaces, …), plus any
+        unresolved incidents and active scheduled maintenances.
+
+        Source: https://www.githubstatus.com/api/v2/summary.json
+
+        Usage:
+          jan scripts git gh-status run
+          jan scripts git gh-status run --problems 1
+          jan scripts git gh-status run --json 1
+
+        Exit status:
+          0  all components operational and no unresolved incidents
+          1  degraded / outage / open incident / active maintenance impact
+          2  could not fetch the status API
+  run:
+    about: Print GitHub status for all services
+    exec:
+      bash: |
+        set -euo pipefail
+        PROBLEMS_ONLY="${1:-0}"
+        AS_JSON="${2:-0}"
+        URL="https://www.githubstatus.com/api/v2/summary.json"
+
+        if ! raw=$(curl -fsSL --max-time 20 "$URL"); then
+          echo "gh-status: failed to fetch $URL" >&2
+          exit 2
+        fi
+
+        if [[ "$AS_JSON" == "1" ]]; then
+          printf '%s\n' "$raw"
+          exit 0
+        fi
+
+        PROBLEMS_ONLY="$PROBLEMS_ONLY" python3 - "$raw" <<'PY'
+        import json
+        import os
+        import sys
+        from datetime import datetime
+        from typing import Optional
+
+        problems_only = os.environ.get("PROBLEMS_ONLY", "0") == "1"
+        data = json.loads(sys.argv[1])
+
+        SKIP_NAMES = {
+            "Visit www.githubstatus.com for more information",
+        }
+        SEVERITY = {
+            "operational": 0,
+            "degraded_performance": 1,
+            "partial_outage": 2,
+            "major_outage": 3,
+        }
+        MARK = {
+            "operational": "ok",
+            "degraded_performance": "degraded",
+            "partial_outage": "partial",
+            "major_outage": "major",
+        }
+
+        def fmt_time(iso: Optional[str]) -> str:
+            if not iso:
+                return ""
+            try:
+                dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+                return dt.astimezone().strftime("%Y-%m-%d %H:%M %Z")
+            except ValueError:
+                return iso
+
+        status = data.get("status") or {}
+        page = data.get("page") or {}
+        indicator = status.get("indicator") or "unknown"
+        description = status.get("description") or ""
+        updated = fmt_time(page.get("updated_at"))
+
+        components = [
+            c
+            for c in data.get("components") or []
+            if not c.get("group")
+            and c.get("name") not in SKIP_NAMES
+        ]
+        components.sort(key=lambda c: (c.get("position") is None, c.get("position") or 0, c.get("name") or ""))
+
+        incidents = data.get("incidents") or []
+        maintenances = data.get("scheduled_maintenances") or []
+
+        worst = 0
+        if indicator in ("minor", "major", "critical"):
+            worst = max(worst, {"minor": 1, "major": 2, "critical": 3}[indicator])
+
+        bad_components = []
+        for c in components:
+            sev = SEVERITY.get(c.get("status") or "", 1)
+            if sev > 0:
+                bad_components.append(c)
+            worst = max(worst, sev)
+
+        if incidents:
+            worst = max(worst, 1)
+        # Active maintenance is informational unless already impacting.
+        active_maint = [m for m in maintenances if (m.get("status") or "") in ("in_progress", "verifying")]
+        if active_maint and worst == 0:
+            # still exit 0 for planned maintenance with all green components,
+            # but surface them in the report.
+            pass
+
+        print(f"GitHub status: {description} ({indicator})")
+        if updated:
+            print(f"Updated:       {updated}")
+        print(f"Status page:   {page.get('url') or 'https://www.githubstatus.com'}")
+        print()
+
+        shown = bad_components if problems_only else components
+        if problems_only and not shown and not incidents and not active_maint:
+            print("(all listed services operational; no open incidents)")
+        else:
+            print("Services:")
+            if not shown:
+                print("  (none)")
+            for c in shown:
+                name = c.get("name") or "?"
+                st = c.get("status") or "unknown"
+                mark = MARK.get(st, st)
+                desc = (c.get("description") or "").strip()
+                line = f"  [{mark:8}] {name}"
+                if desc and not problems_only:
+                    line = f"{line} — {desc}"
+                print(line)
+
+        if incidents:
+            print()
+            print("Unresolved incidents:")
+            for inc in incidents:
+                name = inc.get("name") or "(untitled)"
+                impact = inc.get("impact") or "unknown"
+                st = inc.get("status") or "unknown"
+                print(f"  • {name} [{st}, impact={impact}]")
+                updates = inc.get("incident_updates") or []
+                if updates:
+                    body = (updates[0].get("body") or "").strip().replace("\n", " ")
+                    if len(body) > 160:
+                        body = body[:157] + "…"
+                    if body:
+                        print(f"      {body}")
+        elif not problems_only:
+            print()
+            print("Unresolved incidents: (none)")
+
+        if active_maint or (maintenances and not problems_only):
+            print()
+            label = "Active scheduled maintenances:" if problems_only else "Scheduled maintenances:"
+            print(label)
+            show_m = active_maint if problems_only else maintenances
+            if not show_m:
+                print("  (none)")
+            for m in show_m:
+                name = m.get("name") or "(untitled)"
+                st = m.get("status") or "unknown"
+                impact = m.get("impact") or "none"
+                print(f"  • {name} [{st}, impact={impact}]")
+
+        sys.exit(1 if worst > 0 else 0)
+        PY
+      argv:
+        - "${{ inputs.problems }}"
+        - "${{ inputs.json }}"
