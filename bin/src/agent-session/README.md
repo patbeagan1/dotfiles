@@ -241,7 +241,7 @@ Pipeline:
 1. **Agentic code review** *(advisory)* — runs your `/code-review` skill headless (read-only tool allowlist) over the diff vs the base branch, **streaming its progress live** (tool activity + findings as they happen, via `stream-json` rendered with `jq`), then asks whether to proceed.
 2. **Build / lint / tests** *(gating)* — runs this repo's commands and aborts on the first failure. The commands are **remembered per repo**: the first time you run `gas pr` in a repo it prompts you for the build, test, and lint commands (with AllTrails gradle defaults as suggestions) and stores them in the gas config; a blank answer skips that check. To change them later, edit/delete the `pr_checks_*_<repo>` keys in `$AGENT_SESSION_CONFIG` (default `~/.config/agent-session/config`).
 3. **Ticket** — uses the JIRA key encoded in the branch name if present (confirmed), otherwise fzf-picks from your open-sprint assigned tickets (same picker as `gas jira`).
-4. **Branch rename** — renames the auto `agent-*` branch to the convention `{initials}/{TICKET}/{slug}` (idempotent).
+4. **Branch rename** — renames the auto `agent/*` branch to the convention `{initials}/{TICKET}/{slug}` (idempotent).
 5. **Title + description** — reads the repo PR template (`.github/pull_request_template.md`), then a headless `claude` (read-only allowlist) fills it from the diff + ticket: the JIRA link, a Technical Description, and an AI-usage disclosure — leaving screenshots/a11y checkboxes for you.
 6. **Edit + publish** — opens the description in your `$EDITOR` (nvim) for final edits, then `git push` + `gh pr create --draft`. If a PR already exists for the branch it offers to update it instead.
 
