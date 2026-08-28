@@ -205,6 +205,9 @@ commands:
     include: scripts/system/cputemp-mac.yaml
   fileedit:
     include: scripts/system/fileedit.yaml
+  fetch:
+    os: [linux]
+    include: scripts/system/fetch.yaml
   install-deb:
     include: scripts/system/install-deb.yaml
   lsdaemons:

@@ -1,0 +1,153 @@
+about: >
+  Print neofetch-style system stats for the current Linux host (OS, kernel,
+  uptime, shell, CPU, memory, disk, GPU, local IP). No neofetch required.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        fetch
+
+        Neofetch-style system overview for Linux.
+
+        Usage:
+          jan scripts system fetch run
+          fetch
+
+        Reads /etc/os-release, /proc, standard tools (free, df, lscpu, ip).
+        Honors NO_COLOR; uses ANSI labels when stdout is a TTY.
+  run:
+    about: Print Linux system stats
+    exec:
+      bash: |
+        set -euo pipefail
+
+        use_color=false
+        if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+          use_color=true
+        fi
+
+        c_label='' c_value='' c_title='' c_reset=''
+        if [[ "$use_color" == true ]]; then
+          c_label=$'\033[1;36m'
+          c_value=$'\033[0m'
+          c_title=$'\033[1;32m'
+          c_reset=$'\033[0m'
+        fi
+
+        row() {
+          local label="$1" value="$2"
+          printf '%s%-10s%s %s%s%s\n' "$c_label" "${label}:" "$c_reset" "$c_value" "$value" "$c_reset"
+        }
+
+        # --- gather ---
+        host="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo unknown)"
+        user="${USER:-${LOGNAME:-unknown}}"
+
+        os_line="Linux"
+        if [[ -r /etc/os-release ]]; then
+          # shellcheck disable=SC1091
+          . /etc/os-release
+          os_line="${PRETTY_NAME:-${NAME:-Linux}}${VERSION_ID:+ ${VERSION_ID}}"
+          [[ -n "${ARCH:-}" ]] && os_line+=" (${ARCH})" || true
+        fi
+        arch="$(uname -m 2>/dev/null || echo unknown)"
+        os_line="${os_line} ${arch}"
+
+        kernel="$(uname -sr 2>/dev/null || uname -a)"
+
+        uptime_pretty=""
+        if [[ -r /proc/uptime ]]; then
+          read -r up _ </proc/uptime
+          up=${up%%.*}
+          d=$((up / 86400)); h=$(((up % 86400) / 3600)); m=$(((up % 3600) / 60))
+          uptime_pretty=""
+          (( d > 0 )) && uptime_pretty="${d} day(s), "
+          (( h > 0 )) && uptime_pretty+="${h} hour(s), "
+          uptime_pretty+="${m} min(s)"
+        fi
+        if [[ -z "$uptime_pretty" ]]; then
+          uptime_pretty="$(uptime -p 2>/dev/null | sed 's/^up //' || uptime | sed 's/.*up/up/; s/,.*//')"
+        fi
+
+        shell_name="${SHELL:-unknown}"
+        shell_name="${shell_name##*/}"
+
+        term="${TERM:-unknown}"
+        if [[ -n "${WT_SESSION:-}" ]]; then
+          term="Windows Terminal"
+        elif [[ -n "${ALACRITTY_WINDOW_ID:-}" ]]; then
+          term="Alacritty"
+        elif [[ -n "${KITTY_WINDOW_ID:-}" ]]; then
+          term="Kitty"
+        elif [[ -n "${GNOME_TERMINAL_SERVICE:-}" ]]; then
+          term="GNOME Terminal"
+        fi
+
+        de="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-unknown}}"
+
+        pkg_count=""
+        if command -v dpkg >/dev/null 2>&1; then
+          pkg_count="$(dpkg -l 2>/dev/null | awk '/^ii/ {c++} END {print c+0}')"
+          pkg_count="${pkg_count} (dpkg)"
+        elif command -v rpm >/dev/null 2>&1; then
+          pkg_count="$(rpm -qa 2>/dev/null | wc -l | tr -d ' ')"
+          pkg_count="${pkg_count} (rpm)"
+        elif command -v pacman >/dev/null 2>&1; then
+          pkg_count="$(pacman -Q 2>/dev/null | wc -l | tr -d ' ')"
+          pkg_count="${pkg_count} (pacman)"
+        fi
+
+        cpu=""
+        if command -v lscpu >/dev/null 2>&1; then
+          cpu="$(lscpu 2>/dev/null | awk -F: '/Model name/ {gsub(/^ +| +$/,"",$2); print $2; exit}')"
+        fi
+        if [[ -z "$cpu" && -r /proc/cpuinfo ]]; then
+          cpu="$(awk -F: '/model name/ {gsub(/^ +| +$/,"",$2); print $2; exit}' /proc/cpuinfo)"
+        fi
+        cpu="${cpu:-unknown}"
+        cores="$(nproc 2>/dev/null || echo ?)"
+        cpu="${cpu} (${cores} cores)"
+
+        mem=""
+        if command -v free >/dev/null 2>&1; then
+          mem="$(free -h 2>/dev/null | awk '/^Mem:/ {printf "%s / %s (avail %s)", $3, $2, $7}')"
+        fi
+
+        disk=""
+        if command -v df >/dev/null 2>&1; then
+          read -r size used avail pct mount < <(df -h / 2>/dev/null | awk 'NR==2 {print $2,$3,$4,$5,$6}')
+          disk="${used} / ${size} (${pct}) on ${mount:-/}"
+        fi
+
+        gpu=""
+        if command -v lspci >/dev/null 2>&1; then
+          gpu="$(lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | sed 's/^[0-9a-f:\. ]* //')"
+        fi
+
+        local_ip=""
+        if command -v ip >/dev/null 2>&1; then
+          local_ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')"
+        fi
+        local_ip="${local_ip:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
+
+        loadavg=""
+        [[ -r /proc/loadavg ]] && read -r loadavg _ _ _ </proc/loadavg
+
+        # --- output (neofetch-like) ---
+        printf '%s%s@%s%s\n' "$c_title" "$user" "$host" "$c_reset"
+        echo
+        row OS "$os_line"
+        row Host "$host"
+        row Kernel "$kernel"
+        row Uptime "$uptime_pretty"
+        [[ -n "$pkg_count" ]] && row Packages "$pkg_count"
+        row Shell "$shell_name"
+        row Terminal "$term"
+        [[ "$de" != unknown ]] && row DE "$de"
+        row CPU "$cpu"
+        [[ -n "$gpu" ]] && row GPU "$gpu"
+        [[ -n "$mem" ]] && row Memory "$mem"
+        [[ -n "$disk" ]] && row Disk "$disk"
+        [[ -n "$local_ip" ]] && row LocalIP "$local_ip"
+        [[ -n "$loadavg" ]] && row Load "$loadavg"

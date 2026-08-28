@@ -38,7 +38,6 @@ aliases:
   gw17: 'javaSet17 && gw'
   gw21: 'javaSet21 && gw'
   gwt: 'gw "$(gw tasks | grep " - " | fzf -e | cut -d- -f 1 | xargs)"'
-  gww: './gradlew :app:assembleAlphaDebug :app:installAlphaDebug'
   killgradle: 'findgradle | xargs kill -9'
   kotlin_conversion: 'echo $((100-(100*$(ag -g ".*.java$" | wc -l)/$(ag -g ".*.kt$" | wc -l))))%'
   lintBaseline: './gradlew :app:lintRelease -Dlint.baselines.continue=true'
@@ -63,6 +62,8 @@ commands:
     include: scripts/android/emulator-start-charles.yaml
   gradle_by_module:
     include: scripts/android/gradle_by_module.yaml
+  gww:
+    include: scripts/android/gww.yaml
   javalarge:
     include: scripts/android/javalarge.yaml
   sdkmanager-fzf-help:

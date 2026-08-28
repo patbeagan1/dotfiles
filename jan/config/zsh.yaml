@@ -30,6 +30,12 @@ config:
     fi
     
     # Use modern completion system
+    #
+    # BOTTLENECK (~360ms on framework / LIBBEAGAN_TRACE): `compinit` here re-runs
+    # after Oh My Zsh already initialized completions in config/omzsh.yaml.
+    # Together OMZ + this block are ~90% of fast-start time. Prefer skipping
+    # this second `compinit` (keep the zstyles below) or gate with a dump file
+    # (`compinit -C` / once-per-day) if profiles still need these zstyles.
     autoload -Uz compinit
     compinit
     

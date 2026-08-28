@@ -1,0 +1,219 @@
+about: >
+  Build and install a detected Android Debug "main" configuration (assemble +
+  install). Picks among install*Debug tasks on application modules; caches the
+  last successful choice per project in .jan/gww-last.
+inputs:
+  mode:
+    description: "Optional flag: --pick, --list, or --refresh (default empty = use last if valid)"
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        gww
+
+        Detect installable Debug configurations for the current Android project
+        (application modules → install*Debug tasks), then assemble + install.
+
+        Usage:
+          gww              Use last successful config if still valid; else pick
+          gww --pick      Always pick with fzf (last successful listed first)
+          gww --list      List detected configs and exit
+          gww --refresh   Re-query Gradle for configs (ignore .jan/gww-configs)
+
+        Cache (project-local):
+          .jan/gww-last     last successful install task (e.g. :app:installAlphaDebug)
+          .jan/gww-configs  detected install*Debug tasks (from Gradle)
+
+        Requires: ./gradlew, fzf, an Android application module.
+  run:
+    about: Assemble + install a main Debug configuration
+    exec:
+      bash: |
+        set -euo pipefail
+
+        pick=false
+        list_only=false
+        refresh_detect=false
+        for arg in "$@"; do
+          [[ -z "$arg" ]] && continue
+          case "$arg" in
+            -p|--pick) pick=true ;;
+            -l|--list) list_only=true ;;
+            -r|--refresh) refresh_detect=true ;;
+            -h|--help)
+              echo "Usage: gww [--pick] [--list] [--refresh]"
+              exit 0
+              ;;
+            *)
+              echo "gww: unknown option: $arg" >&2
+              exit 2
+              ;;
+          esac
+        done
+
+        find_root() {
+          local d="$PWD"
+          while [[ "$d" != "/" ]]; do
+            if [[ -f "$d/gradlew" ]]; then
+              printf '%s\n' "$d"
+              return 0
+            fi
+            d="$(dirname "$d")"
+          done
+          return 1
+        }
+
+        root="$(find_root)" || {
+          echo "gww: no gradlew found upward from $PWD" >&2
+          exit 1
+        }
+        cd "$root"
+        mkdir -p .jan
+        cache_last=".jan/gww-last"
+        cache_configs=".jan/gww-configs"
+
+        detect_app_modules() {
+          local f dir
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            case "$f" in
+              */build/*|*/.gradle/*) continue ;;
+            esac
+            dir="$(dirname "$f")"
+            if [[ "$dir" == "." ]]; then
+              printf ':\n'
+            else
+              printf ':%s\n' "${dir//\//:}"
+            fi
+          done < <(
+            find . -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) \
+              ! -path '*/build/*' ! -path '*/.gradle/*' 2>/dev/null \
+            | while IFS= read -r f; do
+                if grep -Eq \
+                  'com\.android\.application|id[[:space:]]*\([[:space:]]*["'\'']com\.android\.application["'\'']' \
+                  "$f" 2>/dev/null
+                then
+                  printf '%s\n' "${f#./}"
+                fi
+              done
+          ) | sort -u
+        }
+
+        detect_configs() {
+          local -a mods=()
+          local m task line
+          mapfile -t mods < <(detect_app_modules)
+          if [[ ${#mods[@]} -eq 0 ]]; then
+            mods=(":app")
+          fi
+
+          echo "gww: detecting install*Debug tasks via Gradle (${#mods[@]} app module(s))…" >&2
+          for m in "${mods[@]}"; do
+            while IFS= read -r line; do
+              task="${line%% *}"
+              [[ "$task" == install*Debug ]] || continue
+              printf '%s:%s\n' "$m" "$task"
+            done < <(./gradlew "${m}:tasks" --group=install 2>/dev/null || true)
+          done | sort -u
+        }
+
+        load_or_detect_configs() {
+          if [[ "$refresh_detect" != true && -f "$cache_configs" && -s "$cache_configs" ]]; then
+            cat "$cache_configs"
+            return 0
+          fi
+          local tmp
+          tmp="$(mktemp)"
+          detect_configs >"$tmp"
+          if [[ ! -s "$tmp" ]]; then
+            rm -f "$tmp"
+            echo "gww: no install*Debug tasks found" >&2
+            exit 1
+          fi
+          mv "$tmp" "$cache_configs"
+          cat "$cache_configs"
+        }
+
+        mapfile -t configs < <(load_or_detect_configs)
+        if [[ ${#configs[@]} -eq 0 ]]; then
+          echo "gww: no configurations detected" >&2
+          exit 1
+        fi
+
+        if [[ "$list_only" == true ]]; then
+          last=""
+          [[ -f "$cache_last" ]] && last="$(tr -d '[:space:]' <"$cache_last")"
+          for c in "${configs[@]}"; do
+            if [[ -n "$last" && "$c" == "$last" ]]; then
+              printf '%s  (last)\n' "$c"
+            else
+              printf '%s\n' "$c"
+            fi
+          done
+          exit 0
+        fi
+
+        last=""
+        if [[ -f "$cache_last" ]]; then
+          last="$(tr -d '[:space:]' <"$cache_last")"
+        fi
+        last_valid=false
+        if [[ -n "$last" ]]; then
+          for c in "${configs[@]}"; do
+            if [[ "$c" == "$last" ]]; then
+              last_valid=true
+              break
+            fi
+          done
+        fi
+
+        selected=""
+        if [[ "$pick" != true && "$last_valid" == true ]]; then
+          selected="$last"
+          echo "gww: using last successful config: $selected" >&2
+        elif [[ ${#configs[@]} -eq 1 ]]; then
+          selected="${configs[0]}"
+          echo "gww: only one config: $selected" >&2
+        else
+          if ! command -v fzf >/dev/null 2>&1; then
+            echo "gww: multiple configs found; install fzf or pass a known last via a prior successful run" >&2
+            printf 'gww: candidates:\n' >&2
+            printf '  %s\n' "${configs[@]}" >&2
+            exit 1
+          fi
+          fzf_in="$(mktemp)"
+          if [[ "$last_valid" == true ]]; then
+            printf '%s\n' "$last" >"$fzf_in"
+            for c in "${configs[@]}"; do
+              [[ "$c" == "$last" ]] && continue
+              printf '%s\n' "$c" >>"$fzf_in"
+            done
+          else
+            printf '%s\n' "${configs[@]}" >"$fzf_in"
+          fi
+          selected="$(
+            fzf --height 40% --prompt="gww config > " \
+              --header="assemble + install  (last: ${last:-none})" \
+              <"$fzf_in"
+          )" || true
+          rm -f "$fzf_in"
+          if [[ -z "${selected:-}" ]]; then
+            echo "gww: cancelled" >&2
+            exit 130
+          fi
+        fi
+
+        assemble="${selected/install/assemble}"
+        echo "gww: ./gradlew $assemble $selected" >&2
+        if ./gradlew "$assemble" "$selected"; then
+          printf '%s\n' "$selected" >"$cache_last"
+          echo "gww: cached last config → $cache_last" >&2
+        else
+          echo "gww: gradle failed (cache unchanged)" >&2
+          exit 1
+        fi
+      argv:
+        - "${{ inputs.mode }}"
+      passthrough: true

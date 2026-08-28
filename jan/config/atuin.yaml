@@ -1,6 +1,7 @@
 about: Atuin shell history (load after OMZ / zsh so it wraps the prompt)
 config:
   shell: |
+    # BOTTLENECK (small, ~7ms / LIBBEAGAN_TRACE): atuin init forks `atuin`.
     if [ -r "$HOME/.atuin/bin/env" ]; then
       . "$HOME/.atuin/bin/env"
     fi

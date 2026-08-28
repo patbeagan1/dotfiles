@@ -1,0 +1,174 @@
+about: >
+  Restic backup to a local hard drive. Prefers the Incubator restic-framework-backup
+  tool (ignore rules, encrypted config, retention, dry-run estimate). Falls back to
+  a direct restic invocation when that project is unavailable.
+requires: [restic]
+inputs:
+  target:
+    description: "Profile: hourly or monthly (restic-framework-backup --target)"
+    default: hourly
+    choices: [hourly, monthly]
+  mode:
+    description: "Run mode: backup (default), estimate, or init"
+    default: backup
+    choices: [backup, estimate, init]
+  repo:
+    description: "Override repository path (fallback mode only; else uses config or auto-detect)"
+    default: ""
+  source:
+    description: "Override source directory (fallback mode only)"
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-backup
+
+        Back up to a restic repository on a mounted hard drive (Linux).
+
+        Preferred path (when Incubator/restic-framework-backup is set up):
+          uv run restic-framework-backup --config config.yaml --target hourly
+        Uses encrypted passwords (~/.restic.key), ignore patterns, retention.
+
+        Fallback: direct `restic backup` to a repo under /run/media/* or RESTIC_REPOSITORY.
+
+        Usage:
+          restic-backup run
+          restic-backup run --mode estimate
+          restic-backup run --mode init --target hourly
+          restic-backup run --repo /run/media/patrick/1TB/restic-documents --source ~/Documents
+
+        Environment:
+          RESTIC_FRAMEWORK_BACKUP_DIR  path to Incubator/restic-framework-backup
+          RESTIC_REPOSITORY            repo for fallback mode
+          RESTIC_PASSWORD              repo password for fallback mode (or use pass)
+        pass (fallback): RESTIC_PASSWORD from pass restic/repo-password
+  run:
+    about: Run restic backup to hard drive
+    exec:
+      bash: |
+        set -euo pipefail
+
+        target="${1:-hourly}"
+        mode="${2:-backup}"
+        repo_override="${3:-}"
+        source_override="${4:-}"
+
+        rfb_dir="${RESTIC_FRAMEWORK_BACKUP_DIR:-$HOME/Documents/Github/Incubator/restic-framework-backup}"
+        rfb_config="${RESTIC_FRAMEWORK_CONFIG:-$rfb_dir/config.yaml}"
+
+        use_framework=false
+        if [[ -d "$rfb_dir" && -f "$rfb_config" && -f "$rfb_dir/pyproject.toml" ]]; then
+          if command -v uv >/dev/null 2>&1; then
+            use_framework=true
+          fi
+        fi
+
+        if [[ "$use_framework" == true ]]; then
+          echo "restic-backup: using restic-framework-backup ($rfb_dir)" >&2
+          cd "$rfb_dir"
+          case "$mode" in
+            init)
+              exec uv run restic-framework-backup --config "$rfb_config" --target "$target" --init
+              ;;
+            estimate)
+              exec uv run restic-framework-backup --config "$rfb_config" --target "$target" --estimate
+              ;;
+            backup)
+              exec uv run restic-framework-backup --config "$rfb_config" --target "$target"
+              ;;
+            *)
+              echo "restic-backup: unknown mode: $mode" >&2
+              exit 2
+              ;;
+          esac
+        fi
+
+        echo "restic-backup: restic-framework-backup not available; using direct restic" >&2
+
+        if ! command -v restic >/dev/null 2>&1; then
+          echo "restic-backup: restic not on PATH" >&2
+          exit 127
+        fi
+
+        # Resolve repository
+        repo="${repo_override:-${RESTIC_REPOSITORY:-}}"
+        if [[ -z "$repo" ]]; then
+          for candidate in /run/media/*/*/restic-* /run/media/*/restic-* /media/*/*/restic-* /media/*/restic-*; do
+            [[ -d "$candidate" ]] || continue
+            repo="$candidate"
+            break
+          done
+        fi
+        if [[ -z "$repo" ]]; then
+          echo "restic-backup: no repository found (set --repo or RESTIC_REPOSITORY)" >&2
+          exit 1
+        fi
+        export RESTIC_REPOSITORY="$repo"
+
+        # Resolve password
+        if [[ -z "${RESTIC_PASSWORD:-}" ]]; then
+          if command -v pass >/dev/null 2>&1 && pass show restic/repo-password >/dev/null 2>&1; then
+            RESTIC_PASSWORD="$(pass show restic/repo-password)"
+            export RESTIC_PASSWORD
+          fi
+        fi
+        if [[ -z "${RESTIC_PASSWORD:-}" ]]; then
+          echo "restic-backup: set RESTIC_PASSWORD or: pass insert restic/repo-password" >&2
+          exit 1
+        fi
+
+        mount_point="$(df -P "$repo" 2>/dev/null | awk 'NR==2 {print $6}')"
+        if [[ -n "$mount_point" && "$mount_point" != / ]]; then
+          if ! mountpoint -q "$mount_point" 2>/dev/null; then
+            echo "restic-backup: warning: $mount_point does not look mounted" >&2
+          fi
+          avail_kb="$(df -P "$mount_point" | awk 'NR==2 {print $4}')"
+          if [[ -n "$avail_kb" && "$avail_kb" -lt 1048576 ]]; then
+            echo "restic-backup: warning: less than 1 GiB free on $mount_point" >&2
+          fi
+        fi
+
+        source_dir="${source_override:-${RESTIC_SOURCE:-$HOME/Documents}}"
+        if [[ ! -d "$source_dir" ]]; then
+          echo "restic-backup: source does not exist: $source_dir" >&2
+          exit 1
+        fi
+
+        exclude_args=(
+          --exclude-caches
+          --exclude node_modules --exclude .git --exclude __pycache__
+          --exclude .venv --exclude venv --exclude target --exclude .gradle
+          --exclude build --exclude dist --exclude .cache
+        )
+
+        case "$mode" in
+          init)
+            mkdir -p "$repo"
+            restic init
+            ;;
+          estimate)
+            restic backup --one-file-system --dry-run "${exclude_args[@]}" "$source_dir"
+            ;;
+          backup)
+            restic backup --one-file-system --verbose "${exclude_args[@]}" "$source_dir"
+            # Light retention if configured via env
+            if [[ -n "${RESTIC_FORGET_POLICY:-}" ]]; then
+              # e.g. RESTIC_FORGET_POLICY="--keep-hourly 24 --keep-daily 7"
+              # shellcheck disable=SC2086
+              restic forget --prune $RESTIC_FORGET_POLICY
+            fi
+            restic snapshots | tail -5
+            ;;
+          *)
+            echo "restic-backup: unknown mode: $mode" >&2
+            exit 2
+            ;;
+        esac
+      argv:
+        - "${{ inputs.target }}"
+        - "${{ inputs.mode }}"
+        - "${{ inputs.repo }}"
+        - "${{ inputs.source }}"
+      passthrough: true

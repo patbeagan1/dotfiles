@@ -2,6 +2,7 @@ about: SDKMAN init (must run late so candidate bins win on PATH)
 config:
   shell: |
     # SDKMAN must load after other PATH mutations.
+    # BOTTLENECK (small, ~11ms / LIBBEAGAN_TRACE): sdkman-init.sh on every shell.
     export SDKMAN_DIR="${SDKMAN_DIR:-$HOME/.sdkman}"
     if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
       # shellcheck disable=SC1090

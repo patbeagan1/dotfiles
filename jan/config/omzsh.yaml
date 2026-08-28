@@ -99,6 +99,11 @@ config:
     )
     
     # Load Oh My Zsh (theme + plugins). Must come after ZSH / ZSH_THEME / plugins.
+    #
+    # BOTTLENECK (~560ms on framework / LIBBEAGAN_TRACE): sourcing oh-my-zsh.sh is
+    # the dominant shell-startup cost (~55% of ~1s fast start). It loads plugins,
+    # theme, and runs its own completion init. Trim `plugins=(…)` or defer OMZ
+    # if startup time matters more than interactive OMZ features.
     if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
         source "$ZSH/oh-my-zsh.sh"
     else
