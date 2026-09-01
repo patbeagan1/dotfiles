@@ -1,0 +1,49 @@
+about: |
+  Inspect restic repositories (1TB hourly and Framework Backups archive).
+  Uses the same config and credentials as restic-backup.
+requires: [restic, uv]
+aliases: [rr]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-repo (alias: rr)
+
+        Inspect what's in your restic backup repositories.
+
+        Repositories (from restic-backup config):
+          hourly  → /run/media/patrick/1TB/restic-documents
+          monthly → /run/media/patrick/Framework Backups/restic-documents
+
+        Aliases (from `jan alias`):
+          restic-repo, rr              → snapshots (default)
+          restic-snapshots, restic-ls, restic-stats, restic-find, restic-check
+
+        Examples:
+          restic-repo
+          restic-repo snapshots
+          restic-repo ls latest
+          restic-repo ls latest /home/patrick/Documents/Github
+          restic-repo stats
+          restic-repo find --name '*.pdf'
+          restic-repo check
+          restic-repo --target monthly snapshots
+
+        Default profile is hourly (1TB drive). Use --target monthly for the archive drive.
+  run:
+    about: Run a restic inspect subcommand (default snapshots)
+    exec:
+      bash: scripts/misc/restic-backup/restic-cmd.sh
+      argv:
+        - "${{ inputs.target }}"
+      passthrough: true

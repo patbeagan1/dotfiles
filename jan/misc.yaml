@@ -39,6 +39,11 @@ aliases:
   nvimg: alacritty --command nvim
   pn: pnpm
   random_temp_file: '/tmp/$(date +%s)_$(random 1000)'
+  restic-check: jan scripts misc restic-repo run check
+  restic-find: jan scripts misc restic-repo run find
+  restic-ls: jan scripts misc restic-repo run ls latest
+  restic-snapshots: jan scripts misc restic-repo run snapshots
+  restic-stats: jan scripts misc restic-repo run stats
   sequence_diagram: 'open http://www.plantuml.com/plantuml/uml/'
   tagas: tagger.py tagas
   tagcheck: tagger.py tagcheck
@@ -256,6 +261,8 @@ commands:
     include: scripts/misc/restic-backup.yaml
   restic-backup-archive:
     include: scripts/misc/restic-backup-archive.yaml
+  restic-repo:
+    include: scripts/misc/restic-repo.yaml
   rederr:
     include: scripts/misc/rederr.yaml
   remindme:
