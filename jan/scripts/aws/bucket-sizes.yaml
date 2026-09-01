@@ -1,11 +1,7 @@
 about: >
   Report total size of every S3 bucket (recursive summarize).
-  Credentials from pass.
-requires: [aws, pass]
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -20,10 +16,6 @@ commands:
         aws-bucket-sizes
 
         For each bucket, print a recursive summarize (total objects + size).
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
         jan scripts aws aws-bucket-sizes run

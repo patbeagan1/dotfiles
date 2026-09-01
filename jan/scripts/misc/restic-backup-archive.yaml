@@ -1,0 +1,47 @@
+about: |
+  Monthly restic archive of ~/Documents to the Framework Backups drive (more storage).
+  Scheduled via jan cron on the 1st of each month.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+cron: "0 4 1 * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-backup-archive
+
+        Monthly archive of ~/Documents to the Framework Backups drive:
+          /run/media/patrick/Framework Backups/restic-documents
+
+        Skips quietly when the drive is not mounted.
+
+        Scheduled: 04:00 on the 1st of each month (`cron: 0 4 1 * *`).
+
+        Examples:
+          restic-backup-archive run
+          restic-backup-archive estimate
+          restic-backup-archive init
+
+        Hourly backup (1TB drive): restic-backup run
+  run:
+    about: Run monthly archive to Framework Backups drive
+    exec:
+      bash: scripts/misc/restic-backup/run.sh
+      argv:
+        - monthly
+  estimate:
+    about: Dry-run monthly archive estimate
+    exec:
+      bash: scripts/misc/restic-backup/estimate.sh
+      argv:
+        - monthly
+  init:
+    about: Initialize the Framework Backups restic repository
+    exec:
+      bash: scripts/misc/restic-backup/init.sh
+      argv:
+        - monthly

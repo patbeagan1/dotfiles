@@ -1,11 +1,7 @@
 about: >
-  Download a single S3 object (or prefix via sync of one key path) to a local
-  path. Credentials from pass.
-requires: [aws, pass]
+  Download a single S3 object to a local path.
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -29,10 +25,6 @@ commands:
         aws-get
 
         Download one object: s3://BUCKET/KEY -> DEST.
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
         jan scripts aws aws-get run --bucket my-bucket --key path/to/file.bin --dest ./file.bin

@@ -1,0 +1,39 @@
+global:
+  restic_path: /usr/bin/restic
+
+ignore:
+  use_defaults: true
+  patterns:
+    - "node_modules"
+    - ".git"
+    - "__pycache__"
+    - ".venv"
+    - "venv"
+    - "build"
+    - "dist"
+    - "target"
+    - ".gradle"
+    - ".mypy_cache"
+    - ".pytest_cache"
+    - ".tox"
+    - ".next"
+    - ".nuxt"
+    - "coverage"
+    - "*.pyc"
+    - "*.class"
+    - "*.jar"
+
+hourly_backup:
+  repository: /run/media/patrick/1TB/restic-documents
+  source_dir: /home/patrick/Documents
+  encrypted_password: "<run: uv run restic-framework-backup --encrypt>"
+  forget_policy:
+    keep-hourly: 24
+    keep-daily: 7
+
+monthly_backup:
+  repository: /run/media/patrick/Framework Backups/restic-documents
+  source_dir: /home/patrick/Documents
+  encrypted_password: "<run: uv run restic-framework-backup --encrypt>"
+  forget_policy:
+    keep-monthly: 12

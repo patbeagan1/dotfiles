@@ -2,9 +2,6 @@
 # Each child is a YAML include under config/; shell and link file bodies are inlined.
 about: host configuration (emit / link / apply / deps)
 commands:
-  # `computer` sorts before `machine-*` in emit (BTreeMap key order).
-  computer:
-    include: config/computer.yaml
   zsh:
     include: config/zsh.yaml
   # Late inits: keys after `zsh` so they run after OMZ + zsh fragments.
@@ -42,11 +39,11 @@ commands:
     include: config/deps-languages.yaml
   deps-optional:
     include: config/deps-optional.yaml
-  machine-framework:
+  framework:
     include: config/machines/framework.yaml
-  machine-mac2025:
+  mac2025:
     include: config/machines/mac2025.yaml
-  machine-mac_2022:
+  mac_2022:
     include: config/machines/mac_2022.yaml
-  machine-mac_2017:
+  mac_2017:
     include: config/machines/mac_2017.yaml

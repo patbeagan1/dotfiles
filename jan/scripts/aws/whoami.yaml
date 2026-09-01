@@ -1,11 +1,7 @@
 about: >
-  Print the caller identity for the AWS credentials stored in pass
-  (`AWS/ACCESS_KEY_ID`, `AWS/SECRET_ACCESS_KEY`).
-requires: [aws, pass]
+  Print the caller identity for the active AWS CLI credentials.
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -19,11 +15,9 @@ commands:
       text: |
         aws-whoami
 
-        Show the STS caller identity for credentials from pass.
+        Show the STS caller identity using the AWS CLI.
 
-        Setup (once):
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
+        Uses configured credentials (default profile, AWS_PROFILE, or env vars).
 
         Usage:
         jan scripts aws aws-whoami run

@@ -1,10 +1,7 @@
 about: >
-  List all S3 buckets visible to the AWS credentials from pass.
-requires: [aws, pass]
+  List all S3 buckets visible to the active AWS CLI credentials.
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -18,11 +15,7 @@ commands:
       text: |
         aws-ls-buckets
 
-        List S3 buckets for credentials from pass.
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
+        List S3 buckets using the AWS CLI.
 
         Usage:
         jan scripts aws aws-ls-buckets run

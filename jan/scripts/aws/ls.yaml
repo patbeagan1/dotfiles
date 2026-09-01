@@ -1,10 +1,7 @@
 about: >
-  List objects in an S3 bucket (optional prefix). Credentials from pass.
-requires: [aws, pass]
+  List objects in an S3 bucket (optional prefix).
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -33,10 +30,6 @@ commands:
         aws-ls
 
         List objects under s3://BUCKET[/PREFIX].
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
         jan scripts aws aws-ls run --bucket my-bucket

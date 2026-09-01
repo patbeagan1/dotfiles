@@ -1,0 +1,31 @@
+name: restic-framework-backup
+description: |
+  Encrypted wrapper for Restic backups. Supports YAML profiles, ignore rules
+  for build artifacts and dependency directories, dry-run estimation, and
+  retention policies.
+language: python
+tags:
+- python
+- cli
+- restic
+- backup
+- utility
+scripts:
+  install:
+    command: uv venv && uv pip install -e .
+  install-dev:
+    command: uv venv && uv pip install -e ".[dev]"
+  test:
+    command: uv run pytest
+  setup:
+    command: uv run restic-framework-backup --setup
+  encrypt:
+    command: uv run restic-framework-backup --encrypt
+  setup:
+    command: uv run restic-framework-backup --setup
+  init:
+    command: uv run restic-framework-backup --config config.yaml --target hourly --init
+  estimate:
+    command: uv run restic-framework-backup --config config.yaml --target hourly --estimate
+  backup:
+    command: uv run restic-framework-backup --config config.yaml --target hourly

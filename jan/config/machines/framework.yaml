@@ -1,9 +1,8 @@
-about: Framework laptop fragment (guards on CURRENT_COMPUTER)
+about: Framework laptop configuration
+computer: [framework]
 config:
   shell: |
     # Framework laptop specific configuration
-    if [ "$CURRENT_COMPUTER" = "framework" ] && [ -z "${LIBBEAGAN_FRAMEWORK_LOADED:-}" ]; then
-    LIBBEAGAN_FRAMEWORK_LOADED=1
     
     # ASCII art banner
     echo '      ___            __      ___  __              ___       __   __       '
@@ -19,7 +18,6 @@ config:
       esac
     fi
 
-    
     # Framework-specific functions
     restic_backup() { 
         restic -r sftp:restic@nas:/home/restic-repo --verbose backup ~
@@ -60,16 +58,10 @@ config:
     export PATH="$DENO_INSTALL/bin:$PATH"
     
     # NVM setup
-    # BOTTLENECK (minor, ~tens of ms / LIBBEAGAN_TRACE under machine-framework):
-    # loading nvm.sh on every shell. Consider lazy-loading nvm if this grows.
     export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     
     # Homebrew setup
-    # BOTTLENECK (minor, part of machine-framework ~29ms): `brew shellenv` forks
-    # brew on every shell. Usually cheap once; watch if brew itself is slow.
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     export GEM_HOME=$HOME/.gem
-    
-    fi

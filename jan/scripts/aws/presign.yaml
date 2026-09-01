@@ -1,10 +1,7 @@
 about: >
-  Generate a presigned URL for an S3 object. Credentials from pass.
-requires: [aws, pass]
+  Generate a presigned URL for an S3 object.
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -28,10 +25,6 @@ commands:
         aws-presign
 
         Print a time-limited HTTPS URL for an object.
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
         jan scripts aws aws-presign run --bucket my-bucket --key path/file.bin

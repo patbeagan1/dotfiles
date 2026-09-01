@@ -1,9 +1,9 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/aws/.
-# Credentials come from `pass` (see each script's help / env.pass).
+# Uses AWS CLI credentials (profile, env vars, or ~/.aws/credentials).
 # Command names use an `aws-` prefix so `jan alias` does not shadow
 # common tools (ls, cp, du, get, …).
-about: AWS utilities (credentials via pass)
+about: AWS utilities (AWS CLI)
 commands:
   aws-whoami:
     include: scripts/aws/whoami.yaml

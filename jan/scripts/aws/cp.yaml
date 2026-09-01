@@ -1,11 +1,7 @@
 about: >
-  Copy an object between S3 URIs or between local paths and S3
-  (`aws s3 cp`). Credentials from pass.
-requires: [aws, pass]
+  Copy an object between S3 URIs or between local paths and S3 (`aws s3 cp`).
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -29,11 +25,7 @@ commands:
       text: |
         aws-cp
 
-        Thin wrapper around `aws s3 cp` with pass-injected credentials.
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
+        Thin wrapper around `aws s3 cp`.
 
         Usage:
         jan scripts aws aws-cp run --source ./file.bin --dest s3://my-bucket/file.bin

@@ -254,6 +254,8 @@ commands:
     include: scripts/misc/rec.yaml
   restic-backup:
     include: scripts/misc/restic-backup.yaml
+  restic-backup-archive:
+    include: scripts/misc/restic-backup-archive.yaml
   rederr:
     include: scripts/misc/rederr.yaml
   remindme:

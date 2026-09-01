@@ -1,8 +1,8 @@
-about: mac_2022 machine fragment
+about: mac_2022 machine configuration
+computer: [mac_2022]
 config:
   shell: |
     # Mac 2022 specific configuration
-    if [ "$CURRENT_COMPUTER" = "mac_2022" ]; then
     
     # ASCII art banner
     echo '  __  __              ____   ___ ____  ____   '
@@ -17,5 +17,3 @@ config:
     
     # Set Java 17
     javaSet17
-    
-    fi

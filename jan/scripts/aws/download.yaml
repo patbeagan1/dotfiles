@@ -1,11 +1,8 @@
 about: >
   Download the full contents of an S3 bucket (or prefix) to a local directory
-  via `aws s3 sync`. Credentials from pass. Pair with `aws-verify` afterward.
-requires: [aws, pass]
+  via `aws s3 sync`. Pair with `aws-verify` afterward.
+requires: [aws]
 env:
-  pass:
-    AWS_ACCESS_KEY_ID: AWS/ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY: AWS/SECRET_ACCESS_KEY
   public:
     AWS_DEFAULT_REGION: ${{ inputs.region }}
 inputs:
@@ -37,10 +34,6 @@ commands:
         aws-download
 
         Sync an entire S3 bucket (or prefix) down to a local directory.
-
-        Setup:
-        pass insert AWS/ACCESS_KEY_ID
-        pass insert AWS/SECRET_ACCESS_KEY
 
         Usage:
         jan scripts aws aws-download run --bucket my-bucket --dest ~/Backups/my-bucket
