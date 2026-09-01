@@ -28,7 +28,7 @@ worktree=false
 agent=""
 worktree_base=""
 open_worktree=""
-# Explicit new-branch name for --worktree (else an auto agent-<repo>-<slug> name).
+# Explicit new-branch name for --worktree (else an auto agent/<repo>-<slug> name).
 branch_name=""
 # Force Claude's interactive `--resume` picker instead of the default continue/new.
 claude_resume=false
@@ -92,7 +92,7 @@ Options (create session, i.e. '${prog} new [OPTIONS] [NAME] [PROMPT]'):
                    Mutually exclusive with --from.
   --branch BRANCH  Branch to use (with --worktree: base branch for the new worktree)
   --branch-name NAME  With --worktree: use NAME as the new branch (may contain '/')
-                   instead of the auto agent-<repo>-<slug> name (used by 'jira')
+                   instead of the auto agent/<repo>-<slug> name (used by 'jira')
   --worktree       Create a new worktree under the durable base with a unique branch,
                    freshly fetched + branched off origin/<branch>; use it as cwd for panes
   --agent AGENT    Agent/harness to start: 'cursor' (=> cursor-agent), 'claude', or any
@@ -4621,7 +4621,7 @@ if [[ "$worktree" == true ]]; then
     fi
     # If source_repo is itself a linked worktree (e.g. running `gas dev` from inside
     # another gas worktree), --show-toplevel returns the worktree dir, whose basename
-    # is a long `agent-…` name. Resolve to the OWNING repo via --git-common-dir so the
+    # is a long `agent/…` (or legacy `agent-…`) name. Resolve to the OWNING repo via --git-common-dir so the
     # new branch/dir aren't built from (and compounded onto) that worktree's name.
     src_common=$(git -C "$source_repo" rev-parse --git-common-dir 2>/dev/null || true)
     if [[ "$src_common" == */.git ]]; then
@@ -4658,14 +4658,21 @@ if [[ "$worktree" == true ]]; then
         window_slug=$(printf '%s' "$window_label" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
 
         # Guaranteed-unique branch name ($$ avoids same-second collisions in create-batch).
-        branch_prefix="agent-${repo_name}${window_slug:+-${window_slug}}"
+        # Namespace under agent/ so these sit with other hierarchical branches (jira, etc.).
+        branch_prefix="agent/${repo_name}${window_slug:+-${window_slug}}"
         unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$"
         n=0
         while git -C "$source_repo" show-ref --verify --quiet "refs/heads/${unique_branch}"; do
             n=$((n + 1))
             unique_branch="${branch_prefix}-$(date +%Y%m%d-%H%M%S)-$$-$n"
         done
-        worktree_path="${base_dir}/${unique_branch}"
+        # Branch may contain '/'; derive a filesystem-safe dir leaf (same as --branch-name).
+        wt_leaf=$(printf '%s' "$unique_branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+        worktree_path="${base_dir}/${wt_leaf}"
+        n=0
+        while [[ -e "$worktree_path" ]]; do
+            n=$((n + 1)); worktree_path="${base_dir}/${wt_leaf}-$n"
+        done
     fi
 
     # Always branch a fresh branch (-b) so we never get blocked by a branch checked out
