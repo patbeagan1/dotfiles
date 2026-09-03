@@ -1,0 +1,34 @@
+about: >
+  POC sender agent. Every second, posts a unifier mailbox message to
+  pong-agent so Jan's events.sock listener can wake the receiver.
+requires: [python3, unifier]
+cron: "* * * * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        ping-agent
+
+        Proof-of-concept event-driven pair (with pong-agent):
+
+          1. This agent runs every second via jan cron.
+          2. It calls `unifier message --from ping-agent pong-agent '…'`.
+          3. Unifier broadcasts a mailbox notice on `.daemon/events.sock`.
+          4. Jan wakes `pong-agent` with `--message-id <uuid>`.
+
+        Requires:
+          unifier daemon start
+          jan cron start && jan cron refresh
+
+        Inspect:
+          unifier get agents/ping-agent/last_id
+          unifier get agents/pong-agent/last
+          jan cron status   # should show events=connected
+
+        Usage:
+          jan scripts agents ping-agent run
+  run:
+    about: Send one mailbox message to pong-agent
+    exec:
+      python: scripts/agents/ping_agent.py

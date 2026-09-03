@@ -1,0 +1,33 @@
+about: >
+  Watch the Rust blog for new posts. Diffs go to unifier under
+  agents/watch/rust-blog/. Scheduled every 6 hours via jan cron.
+requires: [python3, unifier]
+cron: "20 */6 * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        watch-rust-blog
+
+        Poll https://blog.rust-lang.org/ and store a unifier diff when
+        the page text changes.
+
+          unifier get agents/watch/rust-blog/diff
+          unifier get agents/watch/rust-blog/history
+
+        Scheduled: 20 past every 6th hour (`cron: 20 */6 * * *`).
+        Start the daemon: jan cron start && jan cron refresh
+
+        Usage:
+          jan scripts agents watch-rust-blog run
+          jan cron --dry-run --at "2026-09-02 12:20"
+  run:
+    about: Fetch the Rust blog and store a unifier diff on change
+    exec:
+      python: scripts/agents/watch.py
+      argv:
+        - --slug
+        - rust-blog
+        - --url
+        - https://blog.rust-lang.org/

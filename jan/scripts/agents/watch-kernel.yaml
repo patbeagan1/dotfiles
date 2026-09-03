@@ -1,0 +1,33 @@
+about: >
+  Watch kernel.org for version/news changes. Diffs go to unifier under
+  agents/watch/kernel/. Scheduled every 6 hours via jan cron.
+requires: [python3, unifier]
+cron: "5 */6 * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        watch-kernel
+
+        Poll https://www.kernel.org/ and store a unifier diff when the
+        page text changes.
+
+          unifier get agents/watch/kernel/diff
+          unifier get agents/watch/kernel/history
+
+        Scheduled: 05 past every 6th hour (`cron: 5 */6 * * *`).
+        Start the daemon: jan cron start && jan cron refresh
+
+        Usage:
+          jan scripts agents watch-kernel run
+          jan cron --dry-run --at "2026-09-02 12:05"
+  run:
+    about: Fetch kernel.org and store a unifier diff on change
+    exec:
+      python: scripts/agents/watch.py
+      argv:
+        - --slug
+        - kernel
+        - --url
+        - https://www.kernel.org/

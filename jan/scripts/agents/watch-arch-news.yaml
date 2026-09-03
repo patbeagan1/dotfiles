@@ -1,0 +1,33 @@
+about: >
+  Watch Arch Linux news. Diffs go to unifier under agents/watch/arch-news/.
+  Scheduled every 4 hours via jan cron.
+requires: [python3, unifier]
+cron: "35 */4 * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        watch-arch-news
+
+        Poll https://archlinux.org/news/ and store a unifier diff when
+        the page text changes.
+
+          unifier get agents/watch/arch-news/diff
+          unifier get agents/watch/arch-news/history
+
+        Scheduled: 35 past every 4th hour (`cron: 35 */4 * * *`).
+        Start the daemon: jan cron start && jan cron refresh
+
+        Usage:
+          jan scripts agents watch-arch-news run
+          jan cron --dry-run --at "2026-09-02 12:35"
+  run:
+    about: Fetch Arch Linux news and store a unifier diff on change
+    exec:
+      python: scripts/agents/watch.py
+      argv:
+        - --slug
+        - arch-news
+        - --url
+        - https://archlinux.org/news/

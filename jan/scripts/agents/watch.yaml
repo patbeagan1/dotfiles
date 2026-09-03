@@ -1,0 +1,40 @@
+about: >
+  Fetch an HTTPS page, diff it against the last snapshot, and store the diff
+  in unifier. Manual/ad-hoc; scheduled watchers hardcode slug and URL.
+requires: [python3, unifier]
+inputs:
+  slug:
+    description: Unifier key segment (lowercase, hyphens)
+    required: true
+  url:
+    description: HTTPS URL to fetch
+    required: true
+    type: https
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        watch
+
+        Fetch a page, normalize it to text, and compare it to the previous
+        snapshot in unifier. On change, store a unified diff:
+
+          unifier get agents/watch/<slug>/diff
+
+        Snapshots and metadata live under the same prefix. The reporter agent
+        reads them later.
+
+        Usage:
+          jan scripts agents watch run --slug example --url 'https://example.com/'
+          unifier get agents/watch/example/diff
+          unifier get agents/watch/example/status
+  run:
+    about: Fetch URL, diff against last snapshot, put the diff in unifier
+    exec:
+      python: scripts/agents/watch.py
+      argv:
+        - --slug
+        - "${{ inputs.slug }}"
+        - --url
+        - "${{ inputs.url }}"

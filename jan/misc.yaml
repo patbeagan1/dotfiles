@@ -207,6 +207,8 @@ commands:
     include: scripts/misc/mountcd.yaml
   mtg-booster:
     include: scripts/misc/mtg-booster.yaml
+  mute-tracker:
+    include: scripts/misc/mute-tracker.yaml
   multiline:
     include: scripts/misc/multiline.yaml
   new-module:

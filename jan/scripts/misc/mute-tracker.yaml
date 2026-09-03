@@ -1,0 +1,35 @@
+about: >
+  Append 0 or 1 to ~/mute.log every second depending on whether the default audio
+  sink is muted. Scheduled via the jan cron daemon at second granularity.
+cron: "* * * * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        mute-tracker
+
+        Every second, append a single character to ~/mute.log:
+          0 — default sink is not muted
+          1 — default sink is muted
+
+        Requires `pactl` (PipeWire/PulseAudio). Start the daemon:
+          jan cron start
+          jan cron status
+
+        Usage:
+          jan scripts misc mute-tracker run
+          jan cron --list
+          tail -c 20 ~/mute.log
+  run:
+    about: Append mute state (0/1) to ~/mute.log
+    exec:
+      bash: |
+        set -euo pipefail
+        log="${HOME}/mute.log"
+        if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'yes'; then
+          bit=1
+        else
+          bit=0
+        fi
+        printf '%s' "$bit" >> "$log"

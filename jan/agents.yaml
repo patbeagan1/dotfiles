@@ -1,0 +1,22 @@
+# Personal utilities tree for jan (canonical under dotfiles/jan).
+# Each command is a YAML include under scripts/agents/.
+about: jan-cron agents that watch sites and report via unifier
+commands:
+  ping-agent:
+    include: scripts/agents/ping-agent.yaml
+  pong-agent:
+    include: scripts/agents/pong-agent.yaml
+  report:
+    include: scripts/agents/report.yaml
+  show:
+    include: scripts/agents/show.yaml
+  watch:
+    include: scripts/agents/watch.yaml
+  watch-arch-news:
+    include: scripts/agents/watch-arch-news.yaml
+  watch-debian-security:
+    include: scripts/agents/watch-debian-security.yaml
+  watch-kernel:
+    include: scripts/agents/watch-kernel.yaml
+  watch-rust-blog:
+    include: scripts/agents/watch-rust-blog.yaml

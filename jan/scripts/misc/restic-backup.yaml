@@ -19,8 +19,8 @@ commands:
 
         Skips quietly when the drive is not mounted (safe for jan cron).
 
-        Scheduled: every hour (`cron: 0 * * * *`). Install the jan cron runner:
-          jan cron install
+        Scheduled: every hour (`cron: 0 * * * *`). Start the jan cron daemon:
+          jan cron start
 
         Examples:
           restic-backup run

@@ -4,6 +4,11 @@ scripts/util/my-video.webm
 *node_modules
 *.vscode
 
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Local bin scripts (not tracked)
 binlocal/*
 !binlocal/.gitkeep

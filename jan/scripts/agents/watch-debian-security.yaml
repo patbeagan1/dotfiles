@@ -1,0 +1,33 @@
+about: >
+  Watch Debian security announcements. Diffs go to unifier under
+  agents/watch/debian-security/. Scheduled daily via jan cron.
+requires: [python3, unifier]
+cron: "10 8 * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        watch-debian-security
+
+        Poll https://www.debian.org/security/ and store a unifier diff
+        when the page text changes.
+
+          unifier get agents/watch/debian-security/diff
+          unifier get agents/watch/debian-security/history
+
+        Scheduled: 08:10 local (`cron: 10 8 * * *`).
+        Start the daemon: jan cron start && jan cron refresh
+
+        Usage:
+          jan scripts agents watch-debian-security run
+          jan cron --dry-run --at "2026-09-02 08:10"
+  run:
+    about: Fetch Debian security news and store a unifier diff on change
+    exec:
+      python: scripts/agents/watch.py
+      argv:
+        - --slug
+        - debian-security
+        - --url
+        - https://www.debian.org/security/

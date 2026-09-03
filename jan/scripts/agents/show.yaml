@@ -1,0 +1,26 @@
+about: Print the latest agent status report from unifier.
+requires: [unifier]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        show
+
+        Print the reporter's latest status report (what changed when).
+
+        Usage:
+          jan scripts agents show run
+          unifier get agents/status/report
+          unifier get agents/status/timeline
+  run:
+    about: Print agents/status/report from unifier
+    exec:
+      bash: |
+        set -euo pipefail
+        if ! unifier get -- agents/status/report 2>/dev/null; then
+          echo "no status report yet" >&2
+          echo "run: jan scripts agents report run" >&2
+          echo "watchers: jan cron start && jan cron refresh" >&2
+          exit 1
+        fi

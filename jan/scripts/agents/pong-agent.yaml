@@ -1,0 +1,39 @@
+about: >
+  POC receiver agent. Has no cron schedule — Jan wakes it from Unifier
+  mailbox notices (to=pong-agent) and passes --message-id.
+requires: [python3, unifier]
+inputs:
+  message-id:
+    description: Unifier mailbox message UUID (set by jan event wakeup)
+    required: false
+    default: ""
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        pong-agent
+
+        Event-driven counterpart to ping-agent. Jan's cron daemon listens on
+        Unifier `.daemon/events.sock` and, on a mailbox notice with
+        to=pong-agent, runs:
+
+          jan scripts agents pong-agent run --message-id <uuid>
+
+        This script loads `mailbox/pong-agent/<uuid>.txt` via `unifier list`,
+        records the payload under `agents/pong-agent/last`, then acks.
+
+        Manual test (with daemons running):
+          unifier message --from ping-agent pong-agent '{"hello":1}'
+          # wait ≤100ms for jan tick, then:
+          unifier get agents/pong-agent/last
+
+        Or invoke directly:
+          jan scripts agents pong-agent run --message-id <uuid>
+  run:
+    about: Load a mailbox message by id and record it in unifier
+    exec:
+      python: scripts/agents/pong_agent.py
+      argv:
+        - --message-id
+        - "${{ inputs.message-id }}"
