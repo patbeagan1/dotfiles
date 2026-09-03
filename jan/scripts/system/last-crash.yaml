@@ -1,0 +1,187 @@
+about: >
+  Investigate why Linux crashed or rebooted unexpectedly. Collects journal
+  logs from the previous boot, kernel panics, OOM events, hardware errors,
+  thermal events, SMART status, and recent system state.
+os: [linux]
+requires: [journalctl]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        last-crash
+
+        Pulls together multiple sources to explain an unexpected Linux
+        shutdown / crash / kernel panic. Examines the previous boot (-b -1)
+        unless --boot is given.
+
+        Sources checked:
+          journalctl -b -1 (errors + criticals first, then full tail)
+          dmesg from previous boot (panic / BUG / hardware error)
+          OOM killer events
+          MCE (machine check exceptions)
+          ACPI / thermal / battery events
+          Suspend/resume failures
+          Filesystem / storage errors (disk IO errors, EXT4, BTRFS, XFS)
+          GPU / firmware errors
+          last --time-format iso (shutdown / reboot timeline)
+          /var/log/syslog or /var/log/messages if present
+          SMART disk health summary
+          systemd-analyze critical-chain (optional, current boot)
+
+        Usage:
+          jan scripts system last-crash run
+          jan scripts system last-crash run --boot -2    # two boots ago
+          jan scripts system last-crash run --no-smart   # skip SMART scan
+          jan scripts system last-crash run --full       # full journal tail
+
+  run:
+    about: Collect crash/reboot evidence from the previous boot.
+    exec:
+      bash: |
+        set -euo pipefail
+
+        BOOT_ARG="-1"
+        SMART=1
+        FULL=0
+
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            --boot) shift; BOOT_ARG="$1" ;;
+            --no-smart) SMART=0 ;;
+            --full) FULL=1 ;;
+            --help|-h)
+              jan --no-log scripts system last-crash help
+              exit 0
+              ;;
+            *) echo "unknown flag: $1" >&2; exit 1 ;;
+          esac
+          shift
+        done
+
+        BOOT="-b $BOOT_ARG"
+        SEP="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+        header() { echo; echo "$SEP"; echo "  $*"; echo "$SEP"; }
+
+        # ── Reboot timeline ────────────────────────────────────────────────────────
+        header "REBOOT / SHUTDOWN TIMELINE (last -x)"
+        last -x --time-format iso 2>/dev/null \
+          | grep -Ei 'reboot|shutdown|runlevel|crash|power' \
+          | head -30 \
+          || last -x 2>/dev/null | head -30 || true
+
+        # ── Boot list ──────────────────────────────────────────────────────────────
+        header "BOOT LIST (journalctl --list-boots)"
+        journalctl --list-boots --no-pager 2>/dev/null | head -20 || true
+
+        # ── Previous-boot reason / shutdown cause ──────────────────────────────────
+        header "PREVIOUS BOOT: ERRORS & CRITICALS (journalctl $BOOT -p err)"
+        journalctl $BOOT -p err --no-pager 2>/dev/null | head -120 || true
+
+        # ── Kernel panic / BUG / Oops ─────────────────────────────────────────────
+        header "KERNEL PANIC / BUG / OOPS"
+        journalctl $BOOT -k --no-pager 2>/dev/null \
+          | grep -iE 'panic|BUG|oops|kernel BUG at|general protection fault|segfault|trap|double fault|soft lockup|hard lockup|rcu_sched detected|hung_task' \
+          | head -60 || true
+
+        # ── OOM killer ────────────────────────────────────────────────────────────
+        header "OOM KILLER EVENTS"
+        journalctl $BOOT -k --no-pager 2>/dev/null \
+          | grep -iE 'oom.kill|out of memory|killed process|memory cgroup|oom-killer' \
+          | head -40 || true
+
+        # ── Machine Check Exceptions ──────────────────────────────────────────────
+        header "MACHINE CHECK EXCEPTIONS (MCE / hardware errors)"
+        journalctl $BOOT -k --no-pager 2>/dev/null \
+          | grep -iE 'mce|machine check|hardware error|corrected error|uncorrected error|IERR|MCERR|CMCI|memory error' \
+          | head -40 || true
+        if command -v mcelog &>/dev/null; then
+          echo "--- mcelog ---"
+          sudo mcelog --client 2>/dev/null | head -40 || true
+        fi
+
+        # ── Thermal / ACPI / Power ────────────────────────────────────────────────
+        header "THERMAL / ACPI / POWER EVENTS"
+        journalctl $BOOT --no-pager 2>/dev/null \
+          | grep -iE 'thermal|overheat|temperature|acpi|battery|power off|power-off|ACPI Error|EC:' \
+          | grep -viE 'thermal_zone|therm.*policy' \
+          | head -40 || true
+
+        # ── Suspend / resume failures ─────────────────────────────────────────────
+        header "SUSPEND / RESUME FAILURES"
+        journalctl $BOOT --no-pager 2>/dev/null \
+          | grep -iE 'suspend|resume|hibernate|wake|sleep.*fail|pm_suspend|failed to suspend|resume failed' \
+          | head -30 || true
+
+        # ── Storage / filesystem errors ───────────────────────────────────────────
+        header "STORAGE / FILESYSTEM ERRORS"
+        journalctl $BOOT -k --no-pager 2>/dev/null \
+          | grep -iE 'I/O error|blk_update_request|ata[0-9]|sata|nvme.*error|scsi.*error|EXT4-fs error|BTRFS.*error|XFS.*error|DM-[0-9]|md/raid|bad sector|reallocated sector|uncorrectable read' \
+          | head -50 || true
+
+        # ── GPU / firmware ────────────────────────────────────────────────────────
+        header "GPU / DRM / FIRMWARE ERRORS"
+        journalctl $BOOT --no-pager 2>/dev/null \
+          | grep -iE 'drm|gpu|nvidia|amdgpu|radeon|i915|firmware.*error|microcode|EDAC' \
+          | grep -iE 'error|fail|reset|crash|hang|timeout|lockup' \
+          | head -40 || true
+
+        # ── Network / USB hardware errors ─────────────────────────────────────────
+        header "NETWORK / USB HARDWARE ERRORS"
+        journalctl $BOOT -k --no-pager 2>/dev/null \
+          | grep -iE 'usb.*error|usb.*disconnect.*unexpect|eth[0-9].*error|wlan.*error|link.*down|NETDEV.*WATCHDOG|tx_timeout' \
+          | head -30 || true
+
+        # ── Full journal tail ──────────────────────────────────────────────────────
+        if [[ $FULL -eq 1 ]]; then
+          header "FULL JOURNAL: PREVIOUS BOOT (last 300 lines)"
+          journalctl $BOOT --no-pager 2>/dev/null | tail -300 || true
+        else
+          header "JOURNAL TAIL: PREVIOUS BOOT (last 80 lines — use --full for more)"
+          journalctl $BOOT --no-pager 2>/dev/null | tail -80 || true
+        fi
+
+        # ── /var/log/syslog or messages ───────────────────────────────────────────
+        for LOG in /var/log/syslog /var/log/messages; do
+          if [[ -r "$LOG" ]]; then
+            header "SYSTEM LOG: $LOG (errors, last 60 lines)"
+            grep -iE 'error|crit|alert|emerg|panic|oom|killed|fail' "$LOG" 2>/dev/null \
+              | tail -60 || true
+            break
+          fi
+        done
+
+        # ── dmesg on current boot ─────────────────────────────────────────────────
+        header "CURRENT BOOT: DMESG ERRORS (for comparison)"
+        dmesg -T -l err,crit,alert,emerg 2>/dev/null | tail -30 || true
+
+        # ── SMART disk health ─────────────────────────────────────────────────────
+        if [[ $SMART -eq 1 ]] && command -v smartctl &>/dev/null; then
+          header "SMART DISK HEALTH (short summary)"
+          for dev in /dev/sd[a-z] /dev/nvme[0-9]n[0-9]; do
+            [[ -e "$dev" ]] || continue
+            echo "--- $dev ---"
+            sudo smartctl -H "$dev" 2>/dev/null \
+              | grep -iE 'overall|health|result|failed|reallocated|pending|uncorrectable' \
+              || true
+            sudo smartctl -A "$dev" 2>/dev/null \
+              | awk '/Reallocated_Sector|Pending_Sector|Uncorrectable_Sector|Reported_Uncorrect|Command_Timeout|Seek_Error|Spin_Retry/{print $0}' \
+              || true
+          done
+        else
+          [[ $SMART -eq 0 ]] && echo "(SMART skipped via --no-smart)" \
+            || echo "(smartctl not found; install smartmontools for disk health)"
+        fi
+
+        # ── systemd critical-chain (current boot) ─────────────────────────────────
+        header "SYSTEMD: FAILED UNITS (current boot)"
+        systemctl --failed --no-pager 2>/dev/null || true
+
+        header "SYSTEMD-ANALYZE: SLOW UNITS (current boot top 15)"
+        systemd-analyze blame 2>/dev/null | head -15 || true
+
+        echo
+        echo "Done. Re-run with --full for the complete previous-boot journal,"
+        echo "or pass --boot -2 to examine an earlier boot."
+      passthrough: true

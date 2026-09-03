@@ -210,6 +210,8 @@ commands:
     include: scripts/system/fetch.yaml
   install-deb:
     include: scripts/system/install-deb.yaml
+  last-crash:
+    include: scripts/system/last-crash.yaml
   lsdaemons:
     include: scripts/system/lsdaemons.yaml
   machinetype:
