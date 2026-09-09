@@ -18,6 +18,8 @@ metadata:
       jan scripts git gd help
       jan scripts system lsof-port run --port 443
       jan scripts network api-get run --url 'https://api.example.com/v1/me'
+      jan jobs help
+      jan jobs interact run --to job-analyst --message '{"job_id":"…"}'
       jan config emit --shell zsh -o ~/.config/jan/config.zsh
       jan config deps
 commands:
@@ -27,3 +29,6 @@ commands:
   config:
     about: host configuration (emit / link / apply)
     include: config.yaml
+  jobs:
+    about: Job pipeline agents over Unifier (scout → analyst → responder → digest)
+    include: jobs.yaml

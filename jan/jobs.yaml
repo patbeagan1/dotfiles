@@ -1,0 +1,628 @@
+# Job pipeline agents (scout → analyst → responder → digest) over Unifier.
+# Canonical home: dotfiles/jan (moved from Incubator/unifier/examples/job-pipeline.yaml).
+#
+# Setup:
+#   unifier daemon start
+#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan jobs init
+#   jan cron start && jan cron refresh
+#
+# Do not run under --chroot: a chroot gets its own .daemon/events.sock, which
+# the jan cron daemon is not listening to. Scope with the jobs/ key prefix instead.
+
+about: Job pipeline — scout, analyst, and responder agents over Unifier
+requires: [unifier, jq]
+commands:
+  help:
+    about: How the pipeline fits together
+    exec:
+      text: |
+        jobs — three-agent job pipeline over Unifier
+
+        Flow
+          job-scout  --(unifier message)-->  job-analyst
+          job-analyst --(unifier message)--> job-responder   (signal >= min)
+          job-responder --(unifier event)--> job-digest
+
+        State
+          keys   jobs/postings/<id>   posting JSON from the feed
+                 jobs/analysis/<id>   {summary, category, seniority, remote, signal, reasons}
+                 jobs/drafts/<id>     drafted outreach text
+                 jobs/digest/url      last served digest URL
+          sqlite jobs                 postings / analyses / drafts index
+
+        Commands
+          jan jobs init                    create the sqlite schema
+          jan jobs job-scout run           fetch + filter + fan out (also cron */30)
+          jan jobs job-analyst run         drain mailbox, summarize + classify
+          jan jobs job-responder run       drain mailbox, draft replies
+          jan jobs job-digest run          render + serve the HTML digest
+          jan jobs status                  row counts and last digest URL
+          jan jobs demo                    seed one fixture posting and kick the chain
+          jan jobs interact run            manually message/event a running agent
+
+        The analyst and responder drain their whole mailbox on each wake, so
+        coalesced or duplicated wakeups are harmless. jan passes
+        --message-id / --event-id on wakeups; they are recorded for tracing
+        but the drain is what drives the work.
+
+        Manual drive (with jan cron listening):
+          jan jobs interact run --to job-analyst --message '{"job_id":"demo-rust-platform"}'
+          jan jobs interact run --event true --message '{"name":"job-digest","drafted":1}'
+          echo '{"job_id":"..."}' | jan jobs interact run --to job-responder
+    tests:
+      given_no_args_when_help_then_describes_flow:
+        then: |
+          test "$JAN_STATUS" -eq 0
+          printf '%s\n' "$JAN_STDOUT" | grep -q "job-analyst"
+
+  init:
+    about: Create the sqlite schema used by every agent
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            unifier sql exec jobs "
+              CREATE TABLE IF NOT EXISTS postings (
+                id TEXT PRIMARY KEY,
+                title TEXT, company TEXT, location TEXT,
+                url TEXT, source TEXT, found_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS analyses (
+                id TEXT PRIMARY KEY,
+                signal INTEGER, category TEXT, seniority TEXT, remote TEXT,
+                analyzed_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS drafts (
+                id TEXT PRIMARY KEY,
+                drafted_at TEXT
+              );
+            " >/dev/null
+            echo "jobs: schema ready in sqlite/jobs.sqlite"
+
+  # ---------------------------------------------------------------- scout
+  job-scout:
+    about: Pull postings matching the criteria and mail new ids to job-analyst
+    cron: "*/30 * * * *"
+    requires: [curl]
+    inputs:
+      query:
+        description: Case-insensitive regex matched against title, company, tags, and body
+        default: "rust|golang|distributed systems"
+      limit:
+        description: Maximum postings to consider per run
+        type: uint
+        default: "25"
+      feed:
+        description: JSON job feed (array of postings)
+        type: url
+        default: "https://remoteok.com/api"
+      feed-file:
+        description: Read the feed from this file instead of the network (offline runs)
+        default: ""
+    commands:
+      run:
+        about: Fetch, filter, dedupe, store, and fan out
+        exec:
+          argv:
+            - "${{ inputs.query }}"
+            - "${{ inputs.limit }}"
+            - "${{ inputs.feed }}"
+            - "${{ inputs.feed-file }}"
+          bash: |
+            set -euo pipefail
+            QUERY="$1"; LIMIT="$2"; FEED="$3"; FEED_FILE="${4:-}"
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+            slug() { printf '%s' "$1" | tr -c 'A-Za-z0-9_-' '-'; }
+
+            span="$(unifier log start job-scout -f query="$QUERY" 2>/dev/null || true)"
+            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
+            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+
+            if [ -n "$FEED_FILE" ]; then
+              raw="$(cat "$FEED_FILE")"
+            else
+              raw="$(curl -fsSL --max-time 30 -H 'User-Agent: unifier-job-pipeline' "$FEED" || true)"
+            fi
+
+            if [ -z "$raw" ] || ! printf '%s' "$raw" | jq -e 'type == "array"' >/dev/null 2>&1; then
+              note "feed unavailable or not a JSON array"
+              finish
+              echo "job-scout: no usable feed data from ${FEED_FILE:-$FEED}" >&2
+              exit 0
+            fi
+
+            matches="$(printf '%s' "$raw" | jq -c --arg q "$QUERY" --argjson lim "$LIMIT" '
+              [ .[]?
+                | select(type == "object")
+                | select(has("position") or has("title"))
+                | { id:          ((.id // .slug // .url // .position) | tostring),
+                    title:       ((.position // .title // "") | tostring),
+                    company:     ((.company // "") | tostring),
+                    location:    ((.location // "Remote") | tostring),
+                    url:         ((.url // .apply_url // "") | tostring),
+                    tags:        (.tags // []),
+                    description: ((.description // "") | tostring) }
+                | select(([.title, .company, .description, (.tags | join(" "))]
+                          | join(" ") | ascii_downcase) | test($q; "i"))
+              ] | .[:$lim] | .[]' || true)"
+
+            found=0; new=0
+            while IFS= read -r posting; do
+              [ -n "$posting" ] || continue
+              found=$((found + 1))
+              id="$(slug "$(printf '%s' "$posting" | jq -r '.id')")"
+              [ -n "$id" ] || continue
+
+              seen="$(unifier sql exec jobs \
+                "SELECT 1 FROM postings WHERE id='$(sqlq "$id")' LIMIT 1" | tail -n +2)"
+              [ -n "$seen" ] && continue
+
+              title="$(printf '%s' "$posting" | jq -r '.title')"
+              company="$(printf '%s' "$posting" | jq -r '.company')"
+              location="$(printf '%s' "$posting" | jq -r '.location')"
+              url="$(printf '%s' "$posting" | jq -r '.url')"
+
+              unifier put "jobs/postings/$id" "$posting" >/dev/null
+              unifier sql exec jobs "
+                INSERT OR IGNORE INTO postings(id,title,company,location,url,source,found_at)
+                VALUES('$(sqlq "$id")','$(sqlq "$title")','$(sqlq "$company")',
+                       '$(sqlq "$location")','$(sqlq "$url")','$(sqlq "${FEED_FILE:-$FEED}")',
+                       '$(date -Is)')" >/dev/null
+
+              unifier message --from job-scout job-analyst \
+                "$(jq -nc --arg id "$id" '{job_id: $id}')" >/dev/null
+              new=$((new + 1))
+              echo "job-scout: queued $id — $title @ $company"
+            done < <(printf '%s\n' "$matches")
+
+            note "matched=$found new=$new"
+            finish
+            echo "job-scout: $found matched, $new new posting(s) sent to job-analyst"
+
+  # -------------------------------------------------------------- analyst
+  job-analyst:
+    about: Summarize and classify queued postings; forward the high-signal ones
+    requires: [cursor-agent]
+    inputs:
+      min-signal:
+        description: Forward to job-responder at or above this score (0-100)
+        type: uint
+        default: "70"
+      profile:
+        description: Candidate profile the posting is scored against
+        default: >-
+          Senior backend engineer: Rust, Go, distributed systems, CLI and
+          developer tooling. Wants remote-first, high autonomy, small teams.
+      model:
+        description: cursor-agent model (empty uses the account default)
+        default: ""
+      message-id:
+        description: Wakeup message id supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Drain the job-analyst mailbox and analyze each posting
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.min-signal }}"
+            - "${{ inputs.profile }}"
+            - "${{ inputs.model }}"
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            MIN_SIGNAL="$1"; PROFILE="$2"; MODEL="${3:-}"; WAKE_ID="${4:-}"
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+            llm() {
+              if [ -n "$MODEL" ]; then
+                cursor-agent -p --trust --output-format text --model "$MODEL"
+              else
+                cursor-agent -p --trust --output-format text
+              fi
+            }
+            # Models like to wrap JSON in prose or fences; keep the object only.
+            json_only() { sed -e 's/```json//g' -e 's/```//g' | sed -n '/[{]/,$p' | jq -c '.' 2>/dev/null || true; }
+
+            span="$(unifier log start job-analyst -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
+            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
+            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+
+            analyzed=0; forwarded=0
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              id="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              [ -n "$id" ] || continue
+
+              posting="$(unifier get "jobs/postings/$id" 2>/dev/null || true)"
+              if [ -z "$posting" ]; then
+                note "posting missing for $id"
+                continue
+              fi
+
+              prompt="$(printf '%s\n' \
+                "You are a job-posting analyst. Score one posting against a candidate profile." \
+                "" \
+                "CANDIDATE PROFILE:" \
+                "$PROFILE" \
+                "" \
+                "POSTING (JSON):" \
+                "$posting" \
+                "" \
+                "Reply with ONLY a compact JSON object, no prose and no code fences:" \
+                '{"summary":"2-3 sentences on the role","category":"short role category","seniority":"junior|mid|senior|staff|unknown","remote":"remote|hybrid|onsite|unknown","signal":0,"reasons":["why it does or does not fit"]}' \
+                "" \
+                'Set "signal" 0-100: 0 is irrelevant, 100 is an ideal match.')"
+              verdict="$(printf '%s' "$prompt" | llm | json_only)"
+
+              if [ -z "$verdict" ]; then
+                note "unparseable analysis for $id"
+                echo "job-analyst: could not parse a verdict for $id" >&2
+                continue
+              fi
+
+              signal="$(printf '%s' "$verdict" | jq -r '.signal // 0 | floor')"
+              category="$(printf '%s' "$verdict" | jq -r '.category // "unknown"')"
+              seniority="$(printf '%s' "$verdict" | jq -r '.seniority // "unknown"')"
+              remote="$(printf '%s' "$verdict" | jq -r '.remote // "unknown"')"
+
+              unifier put "jobs/analysis/$id" "$verdict" >/dev/null
+              unifier sql exec jobs "
+                INSERT OR REPLACE INTO analyses(id,signal,category,seniority,remote,analyzed_at)
+                VALUES('$(sqlq "$id")',$signal,'$(sqlq "$category")','$(sqlq "$seniority")',
+                       '$(sqlq "$remote")','$(date -Is)')" >/dev/null
+              analyzed=$((analyzed + 1))
+              echo "job-analyst: $id signal=$signal ($category, $seniority, $remote)"
+
+              if [ "$signal" -ge "$MIN_SIGNAL" ]; then
+                unifier message --from job-analyst job-responder \
+                  "$(jq -nc --arg id "$id" --argjson s "$signal" '{job_id: $id, signal: $s}')" >/dev/null
+                forwarded=$((forwarded + 1))
+              fi
+            done < <(unifier poll job-analyst --ack | grep '^{' || true)
+
+            note "analyzed=$analyzed forwarded=$forwarded"
+            finish
+            echo "job-analyst: analyzed $analyzed, forwarded $forwarded to job-responder"
+
+  # ------------------------------------------------------------ responder
+  job-responder:
+    about: Draft outreach for high-signal postings, then announce a digest
+    requires: [cursor-agent]
+    inputs:
+      persona:
+        description: Who the draft is written as
+        default: >-
+          Patrick, a senior backend engineer who builds Rust CLIs and
+          distributed tooling. Direct, concrete, allergic to filler.
+      model:
+        description: cursor-agent model (empty uses the account default)
+        default: ""
+      message-id:
+        description: Wakeup message id supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Drain the job-responder mailbox and draft a reply per posting
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.persona }}"
+            - "${{ inputs.model }}"
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            PERSONA="$1"; MODEL="${2:-}"; WAKE_ID="${3:-}"
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+            llm() {
+              if [ -n "$MODEL" ]; then
+                cursor-agent -p --trust --output-format text --model "$MODEL"
+              else
+                cursor-agent -p --trust --output-format text
+              fi
+            }
+
+            span="$(unifier log start job-responder -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
+            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
+            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+
+            drafted=0
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              id="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              [ -n "$id" ] || continue
+
+              posting="$(unifier get "jobs/postings/$id" 2>/dev/null || true)"
+              analysis="$(unifier get "jobs/analysis/$id" 2>/dev/null || true)"
+              if [ -z "$posting" ]; then
+                note "posting missing for $id"
+                continue
+              fi
+
+              prompt="$(printf '%s\n' \
+                "Draft a short outreach message applying for this role." \
+                "" \
+                "WRITING AS:" \
+                "$PERSONA" \
+                "" \
+                "POSTING (JSON):" \
+                "$posting" \
+                "" \
+                "ANALYST NOTES (JSON):" \
+                "${analysis:-none}" \
+                "" \
+                "Rules: at most 150 words. Open with the single most relevant piece of" \
+                "evidence, name two specifics from the posting, close with one concrete" \
+                'next step. No filler greetings, no "I am excited to", no bullet lists.' \
+                "Output only the message body as plain text.")"
+              draft="$(printf '%s' "$prompt" | llm)"
+
+              if [ -z "$draft" ]; then
+                note "empty draft for $id"
+                echo "job-responder: LLM returned nothing for $id" >&2
+                continue
+              fi
+
+              unifier put "jobs/drafts/$id" "$draft" >/dev/null
+              unifier sql exec jobs "
+                INSERT OR REPLACE INTO drafts(id,drafted_at)
+                VALUES('$(sqlq "$id")','$(date -Is)')" >/dev/null
+              drafted=$((drafted + 1))
+              echo "job-responder: drafted reply for $id"
+            done < <(unifier poll job-responder --ack | grep '^{' || true)
+
+            if [ "$drafted" -gt 0 ]; then
+              unifier event "$(jq -nc --argjson n "$drafted" \
+                '{name: "job-digest", drafted: $n}')" >/dev/null
+            fi
+
+            note "drafted=$drafted"
+            finish
+            echo "job-responder: drafted $drafted reply/replies"
+
+  # ------------------------------------------------------------- digest
+  job-digest:
+    about: Render the drafted postings as HTML and serve them from the daemon
+    cron: "0 8 * * *"
+    inputs:
+      min-signal:
+        description: Only include postings at or above this score
+        type: uint
+        default: "70"
+      event-id:
+        description: Wakeup event id supplied by the jan cron daemon
+        default: ""
+      event-name:
+        description: Wakeup event name supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Build the digest and print its URL
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.min-signal }}"
+            - "${{ inputs.event-id }}"
+          bash: |
+            set -euo pipefail
+            MIN_SIGNAL="$1"; WAKE_ID="${2:-}"
+
+            esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+
+            rows="$(unifier sql exec jobs "
+              SELECT p.id, p.title, p.company, p.location, p.url, a.signal, a.category
+              FROM postings p
+              JOIN analyses a ON a.id = p.id
+              JOIN drafts   d ON d.id = p.id
+              WHERE a.signal >= $MIN_SIGNAL
+              ORDER BY a.signal DESC" | tail -n +2)"
+
+            if [ -z "$rows" ]; then
+              echo "job-digest: nothing at or above signal $MIN_SIGNAL yet"
+              exit 0
+            fi
+
+            body="$(mktemp)"
+            trap 'rm -f "$body"' EXIT
+            count=0
+            while IFS=$'\t' read -r id title company location url signal category; do
+              [ -n "$id" ] || continue
+              count=$((count + 1))
+              summary="$(unifier get "jobs/analysis/$id" 2>/dev/null | jq -r '.summary // ""' 2>/dev/null || true)"
+              draft="$(unifier get "jobs/drafts/$id" 2>/dev/null || true)"
+              {
+                printf '<article>\n'
+                printf '<h2>%s <span class="score">%s</span></h2>\n' \
+                  "$(printf '%s' "$title" | esc)" "$signal"
+                printf '<p class="meta">%s · %s · %s</p>\n' \
+                  "$(printf '%s' "$company" | esc)" \
+                  "$(printf '%s' "$location" | esc)" \
+                  "$(printf '%s' "$category" | esc)"
+                if [ -n "$url" ]; then
+                  printf '<p><a href="%s">%s</a></p>\n' \
+                    "$(printf '%s' "$url" | esc)" "$(printf '%s' "$url" | esc)"
+                fi
+                if [ -n "$summary" ]; then
+                  printf '<p>%s</p>\n' "$(printf '%s' "$summary" | esc)"
+                fi
+                printf '<pre class="draft">%s</pre>\n' "$(printf '%s' "$draft" | esc)"
+                printf '</article>\n'
+              } >> "$body"
+            done <<< "$rows"
+
+            {
+              printf '<style>\n'
+              printf 'article{border-bottom:1px solid #d5ddd7;padding:1rem 0}\n'
+              printf 'h2{margin:0 0 .25rem;font-size:1.1rem}\n'
+              printf '.score{color:#2f6f4e;font-variant-numeric:tabular-nums}\n'
+              printf '.meta{color:#5c6b63;font-size:.9rem;margin:.15rem 0 .5rem}\n'
+              printf '.draft{white-space:pre-wrap;background:#f3f6f2;padding:.75rem;border-radius:6px}\n'
+              printf '</style>\n'
+              printf '<p>%s posting(s) at signal >= %s</p>\n' "$count" "$MIN_SIGNAL"
+              cat "$body"
+            } | unifier serve job-digest --wrap --title "Job digest" > /tmp/job-digest-url.$$
+
+            url="$(cat /tmp/job-digest-url.$$)"; rm -f /tmp/job-digest-url.$$
+            unifier put jobs/digest/url "$url" >/dev/null
+            echo "job-digest: $count posting(s) — $url"
+
+  # ------------------------------------------------------------- utility
+  status:
+    about: Row counts per stage and the last digest URL
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            for t in postings analyses drafts; do
+              n="$(unifier sql exec jobs "SELECT COUNT(*) FROM $t" 2>/dev/null | tail -n +2)"
+              printf '%-10s %s\n' "$t" "${n:-0}"
+            done
+            printf '%-10s %s\n' "pending" \
+              "$(unifier list mailbox/job-analyst 2>/dev/null | grep -c '^{' || true)"
+            printf '%-10s %s\n' "digest" \
+              "$(unifier get jobs/digest/url 2>/dev/null || echo '(none yet)')"
+
+  demo:
+    about: Seed one fixture posting and kick the chain without touching the network
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            id="demo-rust-platform"
+            posting="$(jq -nc --arg id "$id" '{
+              id: $id,
+              title: "Senior Rust Platform Engineer",
+              company: "Foundry Systems",
+              location: "Remote (EU/US)",
+              url: "https://example.com/jobs/rust-platform",
+              tags: ["rust", "distributed-systems", "cli"],
+              description: "Own the internal developer platform: a Rust CLI, a scheduling daemon, and the storage layer behind them. Small team, high autonomy, remote-first."
+            }')"
+            unifier put "jobs/postings/$id" "$posting" >/dev/null
+            unifier sql exec jobs "
+              INSERT OR IGNORE INTO postings(id,title,company,location,url,source,found_at)
+              VALUES('$id','Senior Rust Platform Engineer','Foundry Systems',
+                     'Remote (EU/US)','https://example.com/jobs/rust-platform','demo','$(date -Is)')" >/dev/null
+            unifier message --from job-scout job-analyst \
+              "$(jq -nc --arg id "$id" '{job_id: $id}')" >/dev/null
+            echo "demo: seeded $id and mailed job-analyst"
+            echo "demo: with 'jan cron start' the chain runs itself; otherwise:"
+            echo "      jan jobs job-analyst run && jan jobs job-responder run && jan jobs job-digest run"
+
+  interact:
+    about: Manually send a unifier mailbox message or event to a running job agent
+    inputs:
+      to:
+        description: >
+          Recipient leaf name (job-analyst, job-responder, …). Required for
+          mailbox mode; ignored with --event.
+        default: ""
+      from:
+        description: Sender label recorded on the mailbox envelope
+        default: "manual"
+      message:
+        description: >
+          JSON payload. Empty reads stdin (one JSON value). For mailbox mode
+          this is the message body; for event mode it is the event JSON
+          (must include "name" matching the leaf to wake, e.g. job-digest).
+        default: ""
+      event:
+        description: If true, post a unifier event instead of a mailbox message
+        type: bool
+        default: "false"
+      ttl:
+        description: Event TTL in seconds (event mode only; 0 = never expire)
+        default: ""
+    commands:
+      help:
+        about: How to poke a running agent by hand
+        exec:
+          text: |
+            jobs interact — manual unifier messages/events for the job pipeline
+
+            With `jan cron` listening on events.sock, a message to a leaf name
+            wakes that agent. Use this when you want to inject work without
+            waiting for job-scout or re-running the whole chain.
+
+            Mailbox (wakes --to):
+              jan jobs interact run --to job-analyst \
+                --message '{"job_id":"demo-rust-platform"}'
+              jan jobs interact run --to job-responder \
+                --from job-analyst --message '{"job_id":"…","signal":85}'
+              echo '{"job_id":"…"}' | jan jobs interact run --to job-analyst
+
+                Event (wakes payload "name"):
+                  jan jobs interact run --event true \
+                    --message '{"name":"job-digest","drafted":1}'
+
+            Useful leaves: job-analyst, job-responder, job-digest (event).
+            Inspect: jan jobs status run
+      run:
+        about: Deliver one manual message or event
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.to }}"
+            - "${{ inputs.from }}"
+            - "${{ inputs.message }}"
+            - "${{ inputs.event }}"
+            - "${{ inputs.ttl }}"
+          bash: |
+            set -euo pipefail
+            TO="${1:-}"; FROM="${2:-manual}"; MESSAGE="${3:-}"
+            EVENT="${4:-false}"; TTL="${5:-}"
+
+            read_payload() {
+              if [ -n "$MESSAGE" ]; then
+                printf '%s' "$MESSAGE"
+                return
+              fi
+              if [ -t 0 ]; then
+                echo "jobs interact: paste JSON payload, then Ctrl-D:" >&2
+              fi
+              cat
+            }
+
+            payload="$(read_payload)"
+            payload="$(printf '%s' "$payload" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [ -z "$payload" ]; then
+              echo "jobs interact: empty payload (pass --message or stdin JSON)" >&2
+              exit 2
+            fi
+            if ! printf '%s' "$payload" | jq -e . >/dev/null 2>&1; then
+              echo "jobs interact: payload is not valid JSON" >&2
+              exit 2
+            fi
+            payload="$(printf '%s' "$payload" | jq -c .)"
+
+            case "$EVENT" in
+              1|true|TRUE|yes|YES|on|ON)
+                name="$(printf '%s' "$payload" | jq -r '.name // empty')"
+                if [ -z "$name" ]; then
+                  echo "jobs interact: event JSON must include \"name\" (leaf to wake)" >&2
+                  exit 2
+                fi
+                args=(event "$payload")
+                if [ -n "$TTL" ]; then
+                  args+=(--ttl "$TTL")
+                fi
+                id="$(unifier "${args[@]}")"
+                echo "jobs interact: event id=$id name=$name"
+                ;;
+              *)
+                if [ -z "$TO" ]; then
+                  echo "jobs interact: --to <leaf> is required for mailbox messages" >&2
+                  echo "  try: job-analyst | job-responder" >&2
+                  exit 2
+                fi
+                id="$(unifier message --from "$FROM" "$TO" "$payload")"
+                echo "jobs interact: message id=$id  $FROM → $TO"
+                echo "jobs interact: payload $payload"
+                ;;
+            esac
