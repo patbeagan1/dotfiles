@@ -1,0 +1,630 @@
+# Birthday gift planner over Unifier + Google Calendar iCal.
+#
+# Daily setup:
+#   pass insert jan-ical          # secret Google Calendar .ics URL (first line)
+#   unifier daemon start
+#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan gifts init
+#   jan cron start && jan cron refresh
+#
+# Isolated try (does not touch daily jan use / systemd):
+#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   jan gifts init && jan gifts demo run
+#   jan lab stop
+
+about: Birthday gift planner — iCal sync, curator, planner, and digest over Unifier
+requires: [unifier, jq]
+commands:
+  help:
+    about: How the gift pipeline fits together
+    exec:
+      text: |
+        gifts — birthday gift planner over Unifier + Google Calendar
+
+        Flow
+          gift-sync     --(unifier message)-->  gift-curator
+          gift-curator  --(unifier message)-->  gift-planner   (signal >= min)
+          gift-planner  --(unifier event)---->  gift-digest
+
+        Calendar intake
+          `gift-sync` loads the iCal URL from `pass jan-ical` (env ICAL_URL),
+          expands recurring events, UPSERTs into sqlite/gifts, and mails
+          gift-curator for birthday-like events in the look-ahead window.
+
+        State
+          keys   gifts/events/<uid>      event JSON from the feed
+                 gifts/upcoming/<slug>   next birthday for a person
+                 gifts/notes/<slug>      freeform notes you keep about them
+                 gifts/ideas/<slug>      curator JSON (ideas + signal)
+                 gifts/plans/<slug>      planner draft text
+                 gifts/digest/url        last served digest URL
+                 gifts/sync/last         last sync summary
+          sqlite gifts                   events / ideas / plans index
+
+        Commands
+          jan gifts init run                 create the sqlite schema
+          jan gifts gift-sync run            fetch iCal + queue upcoming birthdays
+          jan gifts gift-curator run         drain mailbox, brainstorm gift ideas
+          jan gifts gift-planner run         drain mailbox, draft a gift plan
+          jan gifts gift-digest run          render + serve the HTML digest
+          jan gifts notes run --person …     save notes for a person
+          jan gifts status run               row counts and last digest URL
+          jan gifts demo run                 seed a fixture birthday and kick the chain
+          jan gifts interact run             manually message/event a running agent
+
+        Isolated lab:
+          eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+          jan gifts init run && jan gifts demo run
+    tests:
+      given_no_args_when_help_then_describes_flow:
+        then: |
+          test "$JAN_STATUS" -eq 0
+          printf '%s\n' "$JAN_STDOUT" | grep -q "gift-curator"
+
+  init:
+    about: Create the sqlite schema used by every gifts agent
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            unifier sql exec gifts "
+              CREATE TABLE IF NOT EXISTS events (
+                uid TEXT PRIMARY KEY,
+                summary TEXT,
+                description TEXT,
+                location TEXT,
+                start_time TEXT,
+                end_time TEXT,
+                is_all_day INTEGER DEFAULT 0,
+                person TEXT,
+                is_birthday INTEGER DEFAULT 0,
+                updated_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS ideas (
+                person TEXT PRIMARY KEY,
+                signal INTEGER,
+                drafted_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS plans (
+                person TEXT PRIMARY KEY,
+                planned_at TEXT
+              );
+            " >/dev/null
+            echo "gifts: schema ready in sqlite/gifts.sqlite"
+
+  # ---------------------------------------------------------------- sync
+  gift-sync:
+    about: Fetch Google Calendar iCal, UPSERT events, queue upcoming birthdays
+    cron: "0 7 * * *"
+    requires: [pass, unifier]
+    env:
+      pass:
+        ICAL_URL: jan-ical
+    packages:
+      uv:
+        python: ">=3.11"
+        packages:
+          - requests==2.34.2
+          - ical==14.1.1
+    inputs:
+      horizon-days:
+        description: Look-ahead window for upcoming birthdays
+        type: uint
+        default: "45"
+      match:
+        description: >
+          Case-insensitive regex matched against event summaries. Use `.` to
+          treat every event in the window as a birthday (typical for a dedicated
+          Google Birthday calendar where SUMMARY is just the person's name).
+        default: "."
+      feed-file:
+        description: Read .ics from this file instead of ICAL_URL (offline runs)
+        default: ""
+    commands:
+      run:
+        about: Sync the feed and mail gift-curator for each upcoming birthday
+        exec:
+          python: scripts/gifts/sync_ical.py
+          argv:
+            - "${{ inputs.horizon-days }}"
+            - "${{ inputs.match }}"
+            - "${{ inputs.feed-file }}"
+
+  # -------------------------------------------------------------- curator
+  gift-curator:
+    about: Brainstorm gift ideas for a queued birthday person
+    requires: [cursor-agent, unifier, jq]
+    inputs:
+      min-signal:
+        description: Forward to gift-planner at or above this score (0-100)
+        type: uint
+        default: "55"
+      budget:
+        description: Soft gift budget hint for the LLM
+        default: "$40-80"
+      model:
+        description: cursor-agent model (empty uses the account default)
+        default: ""
+      message-id:
+        description: Wakeup message id supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Drain the gift-curator mailbox and score gift ideas
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.min-signal }}"
+            - "${{ inputs.budget }}"
+            - "${{ inputs.model }}"
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            MIN_SIGNAL="$1"; BUDGET="$2"; MODEL="${3:-}"; WAKE_ID="${4:-}"
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+            llm() {
+              if [ -n "$MODEL" ]; then
+                cursor-agent -p --trust --output-format text --model "$MODEL"
+              else
+                cursor-agent -p --trust --output-format text
+              fi
+            }
+            json_only() { sed -e 's/```json//g' -e 's/```//g' | sed -n '/[{]/,$p' | jq -c '.' 2>/dev/null || true; }
+
+            span="$(unifier log start gift-curator -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
+            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
+            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+
+            curated=0; forwarded=0
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              slug="$(printf '%s' "$envelope" | jq -r '.payload.person_slug // empty')"
+              person="$(printf '%s' "$envelope" | jq -r '.payload.person // empty')"
+              days="$(printf '%s' "$envelope" | jq -r '.payload.days_until // empty')"
+              start="$(printf '%s' "$envelope" | jq -r '.payload.start_time // empty')"
+              [ -n "$slug" ] || continue
+
+              upcoming="$(unifier get "gifts/upcoming/$slug" 2>/dev/null || true)"
+              notes="$(unifier get "gifts/notes/$slug" 2>/dev/null || true)"
+              event_uid="$(printf '%s' "$envelope" | jq -r '.payload.uid // empty')"
+              event=""
+              if [ -n "$event_uid" ]; then
+                event="$(unifier get "gifts/events/$(printf '%s' "$event_uid" | tr -c 'A-Za-z0-9_-' '-')" 2>/dev/null || true)"
+              fi
+
+              prompt="$(printf '%s\n' \
+                "You are a thoughtful birthday gift curator." \
+                "" \
+                "PERSON: ${person:-$slug}" \
+                "BIRTHDAY: ${start:-unknown} (in ${days:-?} days)" \
+                "BUDGET HINT: $BUDGET" \
+                "" \
+                "NOTES (may be empty):" \
+                "${notes:-none}" \
+                "" \
+                "CALENDAR EVENT (JSON, may be empty):" \
+                "${event:-none}" \
+                "" \
+                "Reply with ONLY a compact JSON object, no prose and no code fences:" \
+                '{"summary":"1-2 sentences on the person/occasion","ideas":[{"title":"gift","why":"reason","approx_cost":"$X"}],"signal":0,"reasons":["why these ideas fit"]}' \
+                "" \
+                'Set "signal" 0-100: confidence that these ideas are worth buying soon.' \
+                "Give 3-5 concrete ideas. Prefer experiences or small durable goods over generic gift cards.")"
+              verdict="$(printf '%s' "$prompt" | llm | json_only)"
+
+              if [ -z "$verdict" ]; then
+                note "unparseable ideas for $slug"
+                echo "gift-curator: could not parse ideas for $slug" >&2
+                continue
+              fi
+
+              signal="$(printf '%s' "$verdict" | jq -r '.signal // 0 | floor')"
+              unifier put "gifts/ideas/$slug" "$verdict" >/dev/null
+              unifier sql exec gifts "
+                INSERT OR REPLACE INTO ideas(person,signal,drafted_at)
+                VALUES('$(sqlq "$slug")',$signal,'$(date -Is)')" >/dev/null
+              curated=$((curated + 1))
+              echo "gift-curator: $slug signal=$signal (${person:-$slug})"
+
+              if [ "$signal" -ge "$MIN_SIGNAL" ]; then
+                unifier message --from gift-curator gift-planner \
+                  "$(jq -nc --arg s "$slug" --arg p "${person:-$slug}" --argjson n "$signal" \
+                    '{person_slug: $s, person: $p, signal: $n}')" >/dev/null
+                forwarded=$((forwarded + 1))
+              fi
+            done < <(unifier poll gift-curator --ack | grep '^{' || true)
+
+            note "curated=$curated forwarded=$forwarded"
+            finish
+            echo "gift-curator: curated $curated, forwarded $forwarded to gift-planner"
+
+  # -------------------------------------------------------------- planner
+  gift-planner:
+    about: Draft a concrete gift plan for high-signal birthdays
+    requires: [cursor-agent, unifier, jq]
+    inputs:
+      budget:
+        description: Soft gift budget hint for the LLM
+        default: "$40-80"
+      model:
+        description: cursor-agent model (empty uses the account default)
+        default: ""
+      message-id:
+        description: Wakeup message id supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Drain the gift-planner mailbox and write a plan per person
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.budget }}"
+            - "${{ inputs.model }}"
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            BUDGET="$1"; MODEL="${2:-}"; WAKE_ID="${3:-}"
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+            llm() {
+              if [ -n "$MODEL" ]; then
+                cursor-agent -p --trust --output-format text --model "$MODEL"
+              else
+                cursor-agent -p --trust --output-format text
+              fi
+            }
+
+            span="$(unifier log start gift-planner -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
+            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
+            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+
+            planned=0
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              slug="$(printf '%s' "$envelope" | jq -r '.payload.person_slug // empty')"
+              person="$(printf '%s' "$envelope" | jq -r '.payload.person // empty')"
+              [ -n "$slug" ] || continue
+
+              upcoming="$(unifier get "gifts/upcoming/$slug" 2>/dev/null || true)"
+              ideas="$(unifier get "gifts/ideas/$slug" 2>/dev/null || true)"
+              notes="$(unifier get "gifts/notes/$slug" 2>/dev/null || true)"
+
+              prompt="$(printf '%s\n' \
+                "Draft a short birthday gift plan." \
+                "" \
+                "PERSON: ${person:-$slug}" \
+                "BUDGET HINT: $BUDGET" \
+                "" \
+                "UPCOMING (JSON):" \
+                "${upcoming:-none}" \
+                "" \
+                "CURATOR IDEAS (JSON):" \
+                "${ideas:-none}" \
+                "" \
+                "NOTES:" \
+                "${notes:-none}" \
+                "" \
+                "Rules: at most 180 words. Pick ONE primary gift and ONE backup." \
+                "Include: when to order, wrap/ship reminder, and a one-line card message." \
+                "No filler. Output plain text only.")"
+              draft="$(printf '%s' "$prompt" | llm)"
+
+              if [ -z "$draft" ]; then
+                note "empty plan for $slug"
+                echo "gift-planner: LLM returned nothing for $slug" >&2
+                continue
+              fi
+
+              unifier put "gifts/plans/$slug" "$draft" >/dev/null
+              unifier sql exec gifts "
+                INSERT OR REPLACE INTO plans(person,planned_at)
+                VALUES('$(sqlq "$slug")','$(date -Is)')" >/dev/null
+              planned=$((planned + 1))
+              echo "gift-planner: plan ready for ${person:-$slug}"
+            done < <(unifier poll gift-planner --ack | grep '^{' || true)
+
+            if [ "$planned" -gt 0 ]; then
+              unifier event "$(jq -nc --argjson n "$planned" \
+                '{name: "gift-digest", planned: $n}')" >/dev/null
+            fi
+
+            note "planned=$planned"
+            finish
+            echo "gift-planner: drafted $planned plan(s)"
+
+  # --------------------------------------------------------------- digest
+  gift-digest:
+    about: Render upcoming birthdays and gift plans as HTML
+    cron: "0 8 * * 1"
+    inputs:
+      horizon-days:
+        description: Only include birthdays within this many days
+        type: uint
+        default: "45"
+      event-id:
+        description: Wakeup event id supplied by the jan cron daemon
+        default: ""
+      event-name:
+        description: Wakeup event name supplied by the jan cron daemon
+        default: ""
+    commands:
+      run:
+        about: Build the digest and print its URL
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.horizon-days }}"
+            - "${{ inputs.event-id }}"
+          bash: |
+            set -euo pipefail
+            HORIZON="$1"; WAKE_ID="${2:-}"
+
+            esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+
+            # Prefer people who already have a plan; fall back to upcoming list.
+            slugs="$( {
+              unifier list gifts/plans 2>/dev/null || true
+              unifier list gifts/upcoming 2>/dev/null || true
+            } | awk -F/ '/gifts\/(plans|upcoming)\// {print $NF}' | sed 's/\.txt$//' | sort -u )"
+
+            if [ -z "$slugs" ]; then
+              echo "gift-digest: nothing upcoming yet"
+              exit 0
+            fi
+
+            body="$(mktemp)"
+            trap 'rm -f "$body"' EXIT
+            count=0
+            today="$(date +%F)"
+            while IFS= read -r slug; do
+              [ -n "$slug" ] || continue
+              upcoming="$(unifier get "gifts/upcoming/$slug" 2>/dev/null || true)"
+              [ -n "$upcoming" ] || continue
+              days="$(printf '%s' "$upcoming" | jq -r '.days_until // 9999')"
+              if [ "$days" -gt "$HORIZON" ]; then
+                continue
+              fi
+              count=$((count + 1))
+              person="$(printf '%s' "$upcoming" | jq -r '.person // empty')"
+              start="$(printf '%s' "$upcoming" | jq -r '.start_time // empty')"
+              ideas="$(unifier get "gifts/ideas/$slug" 2>/dev/null || true)"
+              plan="$(unifier get "gifts/plans/$slug" 2>/dev/null || true)"
+              summary="$(printf '%s' "$ideas" | jq -r '.summary // ""' 2>/dev/null || true)"
+              {
+                printf '<article>\n'
+                printf '<h2>%s <span class="when">in %sd</span></h2>\n' \
+                  "$(printf '%s' "${person:-$slug}" | esc)" "$days"
+                printf '<p class="meta">%s</p>\n' "$(printf '%s' "$start" | esc)"
+                if [ -n "$summary" ]; then
+                  printf '<p>%s</p>\n' "$(printf '%s' "$summary" | esc)"
+                fi
+                if [ -n "$ideas" ]; then
+                  printf '<ul>\n'
+                  printf '%s' "$ideas" | jq -r '.ideas[]? | "<li><strong>\(.title // "")</strong> — \(.why // "") (\(.approx_cost // "?"))</li>"' 2>/dev/null \
+                    | while IFS= read -r li; do printf '%s\n' "$li"; done
+                  printf '</ul>\n'
+                fi
+                if [ -n "$plan" ]; then
+                  printf '<pre class="plan">%s</pre>\n' "$(printf '%s' "$plan" | esc)"
+                fi
+                printf '</article>\n'
+              } >> "$body"
+            done <<< "$slugs"
+
+            if [ "$count" -eq 0 ]; then
+              echo "gift-digest: no birthdays within $HORIZON days"
+              exit 0
+            fi
+
+            {
+              printf '<style>\n'
+              printf 'article{border-bottom:1px solid #e2d6c6;padding:1rem 0}\n'
+              printf 'h2{margin:0 0 .25rem;font-size:1.1rem}\n'
+              printf '.when{color:#9a5b2f;font-variant-numeric:tabular-nums}\n'
+              printf '.meta{color:#6b5c4c;font-size:.9rem;margin:.15rem 0 .5rem}\n'
+              printf '.plan{white-space:pre-wrap;background:#faf6f0;padding:.75rem;border-radius:6px}\n'
+              printf '</style>\n'
+              printf '<p>%s birthday plan(s) as of %s (horizon %s days)</p>\n' \
+                "$count" "$today" "$HORIZON"
+              cat "$body"
+            } | unifier serve gift-digest --wrap --title "Birthday gift plans" > /tmp/gift-digest-url.$$
+
+            url="$(cat /tmp/gift-digest-url.$$)"; rm -f /tmp/gift-digest-url.$$
+            unifier put gifts/digest/url "$url" >/dev/null
+            echo "gift-digest: $count plan(s) — $url"
+
+  # ---------------------------------------------------------------- notes
+  notes:
+    about: Save freeform notes about a person for the curator
+    inputs:
+      person:
+        description: Person name or slug
+        required: true
+      text:
+        description: Notes to store (or read stdin if empty)
+        default: ""
+    commands:
+      run:
+        about: Write gifts/notes/<slug>
+        exec:
+          argv:
+            - "${{ inputs.person }}"
+            - "${{ inputs.text }}"
+          bash: |
+            set -euo pipefail
+            PERSON="$1"; TEXT="${2:-}"
+            slug="$(printf '%s' "$PERSON" | tr '[:upper:]' '[:lower:]' | tr -c 'A-Za-z0-9_-' '-' | sed 's/^-*//;s/-*$//')"
+            if [ -z "$TEXT" ]; then
+              if [ -t 0 ]; then
+                echo "gifts notes: paste notes, then Ctrl-D:" >&2
+              fi
+              TEXT="$(cat)"
+            fi
+            unifier put "gifts/notes/$slug" "$TEXT" >/dev/null
+            echo "gifts notes: saved gifts/notes/$slug"
+
+  # ------------------------------------------------------------- utility
+  status:
+    about: Row counts per stage and the last digest URL
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            for t in events ideas plans; do
+              n="$(unifier sql exec gifts "SELECT COUNT(*) FROM $t" 2>/dev/null | tail -n +2)"
+              printf '%-10s %s\n' "$t" "${n:-0}"
+            done
+            printf '%-10s %s\n' "birthdays" \
+              "$(unifier sql exec gifts "SELECT COUNT(*) FROM events WHERE is_birthday=1" 2>/dev/null | tail -n +2 || echo 0)"
+            printf '%-10s %s\n' "pending" \
+              "$(unifier list mailbox/gift-curator 2>/dev/null | grep -c '^{' || true)"
+            printf '%-10s %s\n' "sync" \
+              "$(unifier get gifts/sync/last 2>/dev/null || echo '(none yet)')"
+            printf '%-10s %s\n' "digest" \
+              "$(unifier get gifts/digest/url 2>/dev/null || echo '(none yet)')"
+
+  demo:
+    about: Seed one fixture birthday and kick the chain without touching the network
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            # schema
+            unifier sql exec gifts "
+              CREATE TABLE IF NOT EXISTS events (
+                uid TEXT PRIMARY KEY,
+                summary TEXT, description TEXT, location TEXT,
+                start_time TEXT, end_time TEXT,
+                is_all_day INTEGER DEFAULT 0,
+                person TEXT, is_birthday INTEGER DEFAULT 0,
+                updated_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS ideas (
+                person TEXT PRIMARY KEY, signal INTEGER, drafted_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS plans (
+                person TEXT PRIMARY KEY, planned_at TEXT
+              );
+            " >/dev/null
+            slug="ada-lovelace"
+            start="$(date -d '+12 days' +%Y-%m-%dT00:00:00 2>/dev/null || date -v+12d +%Y-%m-%dT00:00:00)"
+            upcoming="$(jq -nc --arg s "$slug" --arg p "Ada Lovelace" --arg t "$start" '{
+              uid: "demo-ada-birthday",
+              person: $p,
+              person_slug: $s,
+              summary: "Ada Lovelace Birthday",
+              start_time: $t,
+              days_until: 12
+            }')"
+            unifier put "gifts/upcoming/$slug" "$upcoming" >/dev/null
+            unifier put "gifts/notes/$slug" \
+              "Loves analytical engines, punched cards, and strong tea. Prefer experiences over clutter." >/dev/null
+            unifier sql exec gifts "
+              INSERT OR REPLACE INTO events(uid,summary,description,location,start_time,end_time,is_all_day,person,is_birthday,updated_at)
+              VALUES('demo-ada-birthday','Ada Lovelace Birthday','demo','',
+                     '$start','',1,'Ada Lovelace',1,'$(date -Is)')" >/dev/null
+            unifier message --from gift-sync gift-curator \
+              "$(jq -nc --arg s "$slug" --arg p "Ada Lovelace" --arg t "$start" \
+                '{person_slug: $s, person: $p, uid: "demo-ada-birthday", start_time: $t, days_until: 12}')" >/dev/null
+            echo "demo: seeded Ada Lovelace and mailed gift-curator"
+            echo "demo: with jan cron listening the chain runs itself; otherwise:"
+            echo "      jan gifts gift-curator run && jan gifts gift-planner run && jan gifts gift-digest run"
+
+  interact:
+    about: Manually send a unifier mailbox message or event to a gifts agent
+    inputs:
+      to:
+        description: Recipient leaf (gift-curator, gift-planner, …)
+        default: ""
+      from:
+        description: Sender label on the mailbox envelope
+        default: "manual"
+      message:
+        description: JSON payload (or stdin). For --event true must include "name".
+        default: ""
+      event:
+        description: If true, post a unifier event instead of a mailbox message
+        type: bool
+        default: "false"
+      ttl:
+        description: Event TTL in seconds (event mode only; 0 = never expire)
+        default: ""
+    commands:
+      help:
+        about: How to poke a gifts agent by hand
+        exec:
+          text: |
+            gifts interact — manual unifier messages/events for the gift pipeline
+
+            Mailbox:
+              jan gifts interact run --to gift-curator \
+                --message '{"person_slug":"ada-lovelace","person":"Ada Lovelace","days_until":12}'
+
+            Event:
+              jan gifts interact run --event true \
+                --message '{"name":"gift-digest","planned":1}'
+      run:
+        about: Deliver one manual message or event
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.to }}"
+            - "${{ inputs.from }}"
+            - "${{ inputs.message }}"
+            - "${{ inputs.event }}"
+            - "${{ inputs.ttl }}"
+          bash: |
+            set -euo pipefail
+            TO="${1:-}"; FROM="${2:-manual}"; MESSAGE="${3:-}"
+            EVENT="${4:-false}"; TTL="${5:-}"
+
+            read_payload() {
+              if [ -n "$MESSAGE" ]; then
+                printf '%s' "$MESSAGE"
+                return
+              fi
+              if [ -t 0 ]; then
+                echo "gifts interact: paste JSON payload, then Ctrl-D:" >&2
+              fi
+              cat
+            }
+
+            payload="$(read_payload)"
+            payload="$(printf '%s' "$payload" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [ -z "$payload" ]; then
+              echo "gifts interact: empty payload" >&2
+              exit 2
+            fi
+            if ! printf '%s' "$payload" | jq -e . >/dev/null 2>&1; then
+              echo "gifts interact: payload is not valid JSON" >&2
+              exit 2
+            fi
+            payload="$(printf '%s' "$payload" | jq -c .)"
+
+            case "$EVENT" in
+              1|true|TRUE|yes|YES|on|ON)
+                name="$(printf '%s' "$payload" | jq -r '.name // empty')"
+                if [ -z "$name" ]; then
+                  echo "gifts interact: event JSON must include \"name\"" >&2
+                  exit 2
+                fi
+                args=(event "$payload")
+                if [ -n "$TTL" ]; then
+                  args+=(--ttl "$TTL")
+                fi
+                id="$(unifier "${args[@]}")"
+                echo "gifts interact: event id=$id name=$name"
+                ;;
+              *)
+                if [ -z "$TO" ]; then
+                  echo "gifts interact: --to <leaf> is required" >&2
+                  exit 2
+                fi
+                id="$(unifier message --from "$FROM" "$TO" "$payload")"
+                echo "gifts interact: message id=$id  $FROM → $TO"
+                ;;
+            esac

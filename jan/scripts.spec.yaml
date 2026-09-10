@@ -20,6 +20,7 @@ metadata:
       jan scripts network api-get run --url 'https://api.example.com/v1/me'
       jan jobs help
       jan jobs interact run --to job-analyst --message '{"job_id":"…"}'
+      jan gifts help
       jan config emit --shell zsh -o ~/.config/jan/config.zsh
       jan config deps
 commands:
@@ -32,3 +33,6 @@ commands:
   jobs:
     about: Job pipeline agents over Unifier (scout → analyst → responder → digest)
     include: jobs.yaml
+  gifts:
+    about: Birthday gift planner over Unifier + Google Calendar iCal
+    include: gifts.yaml

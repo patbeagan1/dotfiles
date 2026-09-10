@@ -1,11 +1,16 @@
 # Job pipeline agents (scout → analyst → responder → digest) over Unifier.
 # Canonical home: dotfiles/jan (moved from Incubator/unifier/examples/job-pipeline.yaml).
 #
-# Setup:
+# Setup (daily):
 #   unifier daemon start
 #   jan use <dotfiles/jan> --root scripts.spec.yaml
 #   jan jobs init
 #   jan cron start && jan cron refresh
+#
+# Isolated try (does not touch daily jan use / systemd):
+#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   jan jobs demo run
+#   jan lab stop
 #
 # Do not run under --chroot: a chroot gets its own .daemon/events.sock, which
 # the jan cron daemon is not listening to. Scope with the jobs/ key prefix instead.
