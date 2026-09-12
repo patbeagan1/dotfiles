@@ -1,0 +1,27 @@
+about: Run Incubator scripts/s with forwarded arguments.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        incubator-s
+
+        Runs Incubator/scripts/s with all arguments forwarded.
+        Resolves INCUBATOR from $INCUBATOR, or defaults to
+        ~/Documents/Github/Incubator.
+
+  run:
+    about: 'Run Incubator scripts/s; forwards args.'
+    exec:
+      zsh: |
+        set -euo pipefail
+        INCUBATOR_ROOT="${INCUBATOR:-$HOME/Documents/Github/Incubator}"
+        S_SCRIPT="$INCUBATOR_ROOT/scripts/s"
+        if [[ ! -x "$S_SCRIPT" && ! -f "$S_SCRIPT" ]]; then
+          echo "Error: s script not found at $S_SCRIPT" >&2
+          echo "Set INCUBATOR or ensure scripts submodule is initialized." >&2
+          exit 1
+        fi
+        chmod +x "$S_SCRIPT" 2>/dev/null || true
+        exec "$S_SCRIPT" "$@"
+      passthrough: true

@@ -1,6 +1,7 @@
 # Personal utilities tree for jan (canonical under dotfiles/jan).
 # Each command is a YAML include under scripts/agents/.
 about: jan-cron agents that watch sites and report via unifier
+system: agents
 commands:
   ping-agent:
     include: scripts/agents/ping-agent.yaml
@@ -9,6 +10,7 @@ commands:
   report:
     include: scripts/agents/report.yaml
   show:
+    system: ""
     include: scripts/agents/show.yaml
   watch:
     include: scripts/agents/watch.yaml

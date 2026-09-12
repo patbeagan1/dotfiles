@@ -1,0 +1,28 @@
+about: Manage forks of open source projects via Incubator fork CLI.
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        incubator-fork
+
+        Runs __monorepo/tools/scripts/fork against the Incubator monorepo.
+        Examples:
+          jan scripts misc incubator-fork add owner/repo
+          jan scripts misc incubator-fork list
+          jan scripts misc incubator-fork sync my-repo
+
+  run:
+    about: 'Run incubator fork CLI; forwards args.'
+    exec:
+      zsh: |
+        set -euo pipefail
+        INCUBATOR_ROOT="${INCUBATOR:-$HOME/Documents/Github/Incubator}"
+        FORK="$INCUBATOR_ROOT/__monorepo/tools/scripts/fork"
+        if [[ ! -f "$FORK" ]]; then
+          echo "Error: fork script not found at $FORK" >&2
+          exit 1
+        fi
+        chmod +x "$FORK" 2>/dev/null || true
+        exec "$FORK" --root "$INCUBATOR_ROOT" "$@"
+      passthrough: true

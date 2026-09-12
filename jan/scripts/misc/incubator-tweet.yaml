@@ -1,0 +1,27 @@
+about: Add a tweet to the Incubator twtxt feed (standalone CLI).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        incubator-tweet
+
+        Runs __monorepo/tools/scripts/tweet against the Incubator monorepo.
+        Examples:
+          jan scripts misc incubator-tweet "hello"
+          jan scripts misc incubator-tweet --list
+
+  run:
+    about: 'Run incubator tweet CLI; forwards args.'
+    exec:
+      zsh: |
+        set -euo pipefail
+        INCUBATOR_ROOT="${INCUBATOR:-$HOME/Documents/Github/Incubator}"
+        TWEET="$INCUBATOR_ROOT/__monorepo/tools/scripts/tweet"
+        if [[ ! -f "$TWEET" ]]; then
+          echo "Error: tweet script not found at $TWEET" >&2
+          exit 1
+        fi
+        chmod +x "$TWEET" 2>/dev/null || true
+        exec "$TWEET" --root "$INCUBATOR_ROOT" "$@"
+      passthrough: true

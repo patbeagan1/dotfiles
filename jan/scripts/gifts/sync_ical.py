@@ -22,6 +22,25 @@ from pathlib import Path
 import requests
 from ical.calendar_stream import IcsCalendarStream
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+try:
+    from flow_obs import span_end, span_note, span_start, status_touch, timeline_append
+except ImportError:
+    def span_start(name: str, **fields: str) -> str:
+        return ""
+
+    def span_note(span: str, message: str) -> None:
+        return None
+
+    def span_end(span: str) -> None:
+        return None
+
+    def timeline_append(prefix: str, line: str, cap: int = 200) -> None:
+        return None
+
+    def status_touch(prefix: str, summary: str) -> None:
+        return None
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -137,6 +156,14 @@ def main() -> int:
     match_regex = (sys.argv[2] if len(sys.argv) > 2 else ".") or "."
     feed_file = (sys.argv[3] if len(sys.argv) > 3 else "") or ""
 
+    span = span_start("gift-sync", trigger="cron", horizon=str(horizon_days))
+    try:
+        return _run_sync(horizon_days, match_regex, feed_file, span)
+    finally:
+        span_end(span)
+
+
+def _run_sync(horizon_days: int, match_regex: str, feed_file: str, span: str) -> int:
     init_schema()
     raw = load_ics(feed_file)
     calendar = IcsCalendarStream.calendar_from_ics(raw)
@@ -248,6 +275,7 @@ def main() -> int:
         )
         unifier("message", "--from", "gift-sync", "gift-curator", msg)
         queued += 1
+        timeline_append("gifts", f"sync queued {slug} (in {row['days_until']}d)")
         print(
             f"gift-sync: queued {row['person']} "
             f"(in {row['days_until']}d, {row['start_time']})"
@@ -265,6 +293,9 @@ def main() -> int:
             }
         ),
     )
+    span_note(span, f"synced={synced} queued={queued}")
+    timeline_append("gifts", f"sync done synced={synced} queued={queued}")
+    status_touch("gifts", f"sync synced={synced} queued={queued}")
     print(f"gift-sync: upserted {synced} event(s), queued {queued} birthday(s)")
     return 0
 

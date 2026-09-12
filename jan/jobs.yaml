@@ -16,6 +16,7 @@
 # the jan cron daemon is not listening to. Scope with the jobs/ key prefix instead.
 
 about: Job pipeline — scout, analyst, and responder agents over Unifier
+system: jobs
 requires: [unifier, jq]
 commands:
   help:
@@ -42,7 +43,8 @@ commands:
           jan jobs job-analyst run         drain mailbox, summarize + classify
           jan jobs job-responder run       drain mailbox, draft replies
           jan jobs job-digest run          render + serve the HTML digest
-          jan jobs status                  row counts and last digest URL
+          jan jobs status                  health, wakeups, stage counts
+          jan jobs status --json 1         same as JSON
           jan jobs demo                    seed one fixture posting and kick the chain
           jan jobs interact run            manually message/event a running agent
 
@@ -63,6 +65,7 @@ commands:
 
   init:
     about: Create the sqlite schema used by every agent
+    system: ""
     commands:
       run:
         exec:
@@ -477,23 +480,83 @@ commands:
 
   # ------------------------------------------------------------- utility
   status:
-    about: Row counts per stage and the last digest URL
+    about: Health, wakeups, stage counts, and digest URL
+    system: ""
+    requires: [unifier, jq]
+    inputs:
+      json:
+        description: If true, emit machine-readable JSON
+        type: bool
+        default: "false"
     commands:
       run:
         exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.json }}"
           bash: |
             set -euo pipefail
-            for t in postings analyses drafts; do
-              n="$(unifier sql exec jobs "SELECT COUNT(*) FROM $t" 2>/dev/null | tail -n +2)"
-              printf '%-10s %s\n' "$t" "${n:-0}"
-            done
-            printf '%-10s %s\n' "pending" \
-              "$(unifier list mailbox/job-analyst 2>/dev/null | grep -c '^{' || true)"
-            printf '%-10s %s\n' "digest" \
-              "$(unifier get jobs/digest/url 2>/dev/null || echo '(none yet)')"
+            JSON="${1:-false}"
+            count() {
+              unifier sql exec jobs "SELECT COUNT(*) FROM $1" 2>/dev/null | tail -n +2 || echo 0
+            }
+            pending_analyst="$(unifier list mailbox/job-analyst 2>/dev/null | grep -c '^{' || true)"
+            pending_responder="$(unifier list mailbox/job-responder 2>/dev/null | grep -c '^{' || true)"
+            postings="$(count postings)"; analyses="$(count analyses)"; drafts="$(count drafts)"
+            digest="$(unifier get jobs/digest/url 2>/dev/null || echo '(none yet)')"
+            cron="$(jan --no-log cron status --compact 2>/dev/null | head -n1 || echo '(jan cron unavailable)')"
+            sync_next="$(jan --no-log cron --list 2>/dev/null | awk -F'|' '$1 ~ /job-scout$/ {print $3; exit}' || echo '(unknown)')"
+            digest_next="$(jan --no-log cron --list 2>/dev/null | awk -F'|' '$1 ~ /job-digest$/ {print $3; exit}' || echo '(unknown)')"
+            timeline="$(unifier get jobs/status/timeline 2>/dev/null || true)"
+            case "$JSON" in
+              1|true|TRUE|yes|YES|on|ON)
+                jq -nc \
+                  --arg cron "$cron" \
+                  --argjson postings "${postings:-0}" \
+                  --argjson analyses "${analyses:-0}" \
+                  --argjson drafts "${drafts:-0}" \
+                  --argjson pending_analyst "${pending_analyst:-0}" \
+                  --argjson pending_responder "${pending_responder:-0}" \
+                  --arg digest "$digest" \
+                  --arg scout_next "$sync_next" \
+                  --arg digest_next "$digest_next" \
+                  --arg timeline "$timeline" \
+                  '{
+                    health:{cron:$cron,postings:$postings,analyses:$analyses,drafts:$drafts,
+                            pending_analyst:$pending_analyst,pending_responder:$pending_responder,
+                            digest_url:$digest},
+                    wakeups:{"job-scout":$scout_next,"job-digest":$digest_next,
+                             "job-analyst":"mailbox","job-responder":"mailbox"},
+                    timeline:($timeline|split("\n")|map(select(length>0))[-15:])
+                  }'
+                ;;
+              *)
+                echo "== health =="
+                printf '%-12s %s\n' cron "$cron"
+                printf '%-12s %s\n' postings "$postings"
+                printf '%-12s %s\n' analyses "$analyses"
+                printf '%-12s %s\n' drafts "$drafts"
+                printf '%-12s analyst=%s responder=%s\n' pending "$pending_analyst" "$pending_responder"
+                printf '%-12s %s\n' digest "$digest"
+                echo
+                echo "== wakeups =="
+                printf '%-14s %s\n' job-scout "$sync_next"
+                printf '%-14s %s\n' job-digest "$digest_next"
+                printf '%-14s %s\n' job-analyst "mailbox (from job-scout)"
+                printf '%-14s %s\n' job-responder "mailbox (from job-analyst)"
+                echo
+                echo "== timeline =="
+                if [ -n "$timeline" ]; then
+                  printf '%s\n' "$timeline" | tail -n 15
+                else
+                  echo "(empty — agents append via flow_obs when instrumented)"
+                fi
+                ;;
+            esac
 
   demo:
     about: Seed one fixture posting and kick the chain without touching the network
+    system: ""
     commands:
       run:
         exec:
@@ -522,6 +585,7 @@ commands:
 
   interact:
     about: Manually send a unifier mailbox message or event to a running job agent
+    system: ""
     inputs:
       to:
         description: >

@@ -13,6 +13,7 @@
 #   jan lab stop
 
 about: Birthday gift planner — iCal sync, curator, planner, and digest over Unifier
+system: gifts
 requires: [unifier, jq]
 commands:
   help:
@@ -39,6 +40,9 @@ commands:
                  gifts/plans/<slug>      planner draft text
                  gifts/digest/url        last served digest URL
                  gifts/sync/last         last sync summary
+                 gifts/status/timeline   causal agent timeline
+                 gifts/status/summary    one-line health
+                 gifts/board/url         last served ops board URL
           sqlite gifts                   events / ideas / plans index
 
         Commands
@@ -48,13 +52,24 @@ commands:
           jan gifts gift-planner run         drain mailbox, draft a gift plan
           jan gifts gift-digest run          render + serve the HTML digest
           jan gifts notes run --person …     save notes for a person
-          jan gifts status run               row counts and last digest URL
+          jan gifts status run               health, wakeups, per-person board
+          jan gifts status run --json 1      same as JSON
+          jan gifts board run                serve HTML ops board
+          jan gifts show run                 dump gifts/status/* keys
           jan gifts demo run                 seed a fixture birthday and kick the chain
           jan gifts interact run             manually message/event a running agent
+
+        Observability
+          jan systems status gifts           schedule, mail, execution (no agent code)
+          jan systems show gifts             leaves tagged system=gifts
+          jan cron status / wakeups / watch  platform execution + future wakeups
+          unifier log tree                   spans from every gifts agent
+          jan gifts status / board           data state + joined ops view
 
         Isolated lab:
           eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
           jan gifts init run && jan gifts demo run
+          jan gifts board run && jan gifts status run
     tests:
       given_no_args_when_help_then_describes_flow:
         then: |
@@ -63,6 +78,7 @@ commands:
 
   init:
     about: Create the sqlite schema used by every gifts agent
+    system: ""
     commands:
       run:
         exec:
@@ -163,6 +179,20 @@ commands:
             set -euo pipefail
             MIN_SIGNAL="$1"; BUDGET="$2"; MODEL="${3:-}"; WAKE_ID="${4:-}"
 
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "${_obs:-}" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { FLOW_SPAN="$(unifier log start "$@" 2>/dev/null || true)"; }
+              flow_span_note() { [ -n "${FLOW_SPAN:-}" ] && unifier log event "$FLOW_SPAN" "$1" >/dev/null 2>&1 || true; }
+              flow_span_end() { [ -n "${FLOW_SPAN:-}" ] && unifier log end "$FLOW_SPAN" >/dev/null 2>&1 || true; FLOW_SPAN=""; }
+              flow_timeline_append() { :; }
+              flow_status_touch() { :; }
+            fi
+
             sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
             llm() {
               if [ -n "$MODEL" ]; then
@@ -173,9 +203,9 @@ commands:
             }
             json_only() { sed -e 's/```json//g' -e 's/```//g' | sed -n '/[{]/,$p' | jq -c '.' 2>/dev/null || true; }
 
-            span="$(unifier log start gift-curator -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
-            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
-            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+            flow_span_start gift-curator -f wakeup="${WAKE_ID:-cron}"
+            note() { flow_span_note "$1"; }
+            finish() { flow_span_end; }
 
             curated=0; forwarded=0
             while IFS= read -r envelope; do
@@ -216,6 +246,7 @@ commands:
 
               if [ -z "$verdict" ]; then
                 note "unparseable ideas for $slug"
+                flow_timeline_append gifts "curator failed parse $slug"
                 echo "gift-curator: could not parse ideas for $slug" >&2
                 continue
               fi
@@ -227,16 +258,19 @@ commands:
                 VALUES('$(sqlq "$slug")',$signal,'$(date -Is)')" >/dev/null
               curated=$((curated + 1))
               echo "gift-curator: $slug signal=$signal (${person:-$slug})"
+              flow_timeline_append gifts "curator signal=$signal $slug"
 
               if [ "$signal" -ge "$MIN_SIGNAL" ]; then
                 unifier message --from gift-curator gift-planner \
                   "$(jq -nc --arg s "$slug" --arg p "${person:-$slug}" --argjson n "$signal" \
                     '{person_slug: $s, person: $p, signal: $n}')" >/dev/null
                 forwarded=$((forwarded + 1))
+                flow_timeline_append gifts "curator forwarded $slug"
               fi
             done < <(unifier poll gift-curator --ack | grep '^{' || true)
 
             note "curated=$curated forwarded=$forwarded"
+            flow_status_touch gifts "curator curated=$curated forwarded=$forwarded"
             finish
             echo "gift-curator: curated $curated, forwarded $forwarded to gift-planner"
 
@@ -267,6 +301,20 @@ commands:
             set -euo pipefail
             BUDGET="$1"; MODEL="${2:-}"; WAKE_ID="${3:-}"
 
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "${_obs:-}" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { FLOW_SPAN="$(unifier log start "$@" 2>/dev/null || true)"; }
+              flow_span_note() { [ -n "${FLOW_SPAN:-}" ] && unifier log event "$FLOW_SPAN" "$1" >/dev/null 2>&1 || true; }
+              flow_span_end() { [ -n "${FLOW_SPAN:-}" ] && unifier log end "$FLOW_SPAN" >/dev/null 2>&1 || true; FLOW_SPAN=""; }
+              flow_timeline_append() { :; }
+              flow_status_touch() { :; }
+            fi
+
             sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
             llm() {
               if [ -n "$MODEL" ]; then
@@ -276,9 +324,9 @@ commands:
               fi
             }
 
-            span="$(unifier log start gift-planner -f wakeup="${WAKE_ID:-cron}" 2>/dev/null || true)"
-            note() { [ -n "$span" ] && unifier log event "$span" "$1" >/dev/null 2>&1 || true; }
-            finish() { [ -n "$span" ] && unifier log end "$span" >/dev/null 2>&1 || true; }
+            flow_span_start gift-planner -f wakeup="${WAKE_ID:-cron}"
+            note() { flow_span_note "$1"; }
+            finish() { flow_span_end; }
 
             planned=0
             while IFS= read -r envelope; do
@@ -313,6 +361,7 @@ commands:
 
               if [ -z "$draft" ]; then
                 note "empty plan for $slug"
+                flow_timeline_append gifts "planner empty $slug"
                 echo "gift-planner: LLM returned nothing for $slug" >&2
                 continue
               fi
@@ -322,15 +371,18 @@ commands:
                 INSERT OR REPLACE INTO plans(person,planned_at)
                 VALUES('$(sqlq "$slug")','$(date -Is)')" >/dev/null
               planned=$((planned + 1))
+              flow_timeline_append gifts "planner plan ready $slug"
               echo "gift-planner: plan ready for ${person:-$slug}"
             done < <(unifier poll gift-planner --ack | grep '^{' || true)
 
             if [ "$planned" -gt 0 ]; then
               unifier event "$(jq -nc --argjson n "$planned" \
                 '{name: "gift-digest", planned: $n}')" >/dev/null
+              flow_timeline_append gifts "planner fired gift-digest planned=$planned"
             fi
 
             note "planned=$planned"
+            flow_status_touch gifts "planner planned=$planned"
             finish
             echo "gift-planner: drafted $planned plan(s)"
 
@@ -361,15 +413,36 @@ commands:
             set -euo pipefail
             HORIZON="$1"; WAKE_ID="${2:-}"
 
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "${_obs:-}" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { FLOW_SPAN="$(unifier log start "$@" 2>/dev/null || true)"; }
+              flow_span_note() { [ -n "${FLOW_SPAN:-}" ] && unifier log event "$FLOW_SPAN" "$1" >/dev/null 2>&1 || true; }
+              flow_span_end() { [ -n "${FLOW_SPAN:-}" ] && unifier log end "$FLOW_SPAN" >/dev/null 2>&1 || true; FLOW_SPAN=""; }
+              flow_timeline_append() { :; }
+              flow_status_touch() { :; }
+            fi
+
             esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 
+            flow_span_start gift-digest -f wakeup="${WAKE_ID:-cron}" -f horizon="$HORIZON"
+
             # Prefer people who already have a plan; fall back to upcoming list.
+            # Keys may live only in the hot daemon until flush; `unifier list` is mail-only.
+            unifier daemon flush >/dev/null 2>&1 || true
+            KEYS_ROOT="${UNIFIER_HOME:-$HOME/.local/unifier}/keys"
             slugs="$( {
-              unifier list gifts/plans 2>/dev/null || true
-              unifier list gifts/upcoming 2>/dev/null || true
-            } | awk -F/ '/gifts\/(plans|upcoming)\// {print $NF}' | sed 's/\.txt$//' | sort -u )"
+              ls -1 "$KEYS_ROOT/gifts/plans" 2>/dev/null || true
+              ls -1 "$KEYS_ROOT/gifts/upcoming" 2>/dev/null || true
+            } | sed 's/\.txt$//' | sort -u )"
 
             if [ -z "$slugs" ]; then
+              flow_timeline_append gifts "digest empty"
+              flow_span_end
               echo "gift-digest: nothing upcoming yet"
               exit 0
             fi
@@ -414,6 +487,8 @@ commands:
             done <<< "$slugs"
 
             if [ "$count" -eq 0 ]; then
+              flow_timeline_append gifts "digest none in horizon=$HORIZON"
+              flow_span_end
               echo "gift-digest: no birthdays within $HORIZON days"
               exit 0
             fi
@@ -433,11 +508,16 @@ commands:
 
             url="$(cat /tmp/gift-digest-url.$$)"; rm -f /tmp/gift-digest-url.$$
             unifier put gifts/digest/url "$url" >/dev/null
+            flow_span_note "count=$count"
+            flow_timeline_append gifts "digest served count=$count"
+            flow_status_touch gifts "digest count=$count"
+            flow_span_end
             echo "gift-digest: $count plan(s) — $url"
 
   # ---------------------------------------------------------------- notes
   notes:
     about: Save freeform notes about a person for the curator
+    system: ""
     inputs:
       person:
         description: Person name or slug
@@ -467,27 +547,83 @@ commands:
 
   # ------------------------------------------------------------- utility
   status:
-    about: Row counts per stage and the last digest URL
+    about: Health, wakeups, per-person board, and timeline
+    system: ""
+    requires: [unifier, jq, python3]
+    inputs:
+      json:
+        description: If true, emit machine-readable JSON
+        type: bool
+        default: "false"
+    commands:
+      run:
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.json }}"
+          bash: |
+            set -euo pipefail
+            JSON="${1:-false}"
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            script="${_root}/scripts/gifts/status.py"
+            if [ ! -f "$script" ]; then
+              echo "gifts status: missing $script" >&2
+              exit 2
+            fi
+            case "$JSON" in
+              1|true|TRUE|yes|YES|on|ON) python3 "$script" --json ;;
+              *) python3 "$script" ;;
+            esac
+
+  board:
+    about: Serve an HTML ops board for the gifts flow
+    system: ""
+    requires: [unifier, jq, python3]
+    cron: "15 8 * * *"
     commands:
       run:
         exec:
           bash: |
             set -euo pipefail
-            for t in events ideas plans; do
-              n="$(unifier sql exec gifts "SELECT COUNT(*) FROM $t" 2>/dev/null | tail -n +2)"
-              printf '%-10s %s\n' "$t" "${n:-0}"
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            script="${_root}/scripts/gifts/status.py"
+            if [ ! -f "$script" ]; then
+              echo "gifts board: missing $script" >&2
+              exit 2
+            fi
+            _obs="${_root}/scripts/lib/flow_obs.sh"
+            if [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_timeline_append() { :; }
+            fi
+            html="$(python3 "$script" --html)"
+            url="$(printf '%s' "$html" | unifier serve gifts-board --wrap --title "Gifts flow")"
+            unifier put gifts/board/url "$url" >/dev/null
+            flow_timeline_append gifts "board served"
+            echo "gifts board: $url"
+
+  show:
+    about: Print gifts/status keys (summary, timeline, board url)
+    system: ""
+    requires: [unifier]
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            for k in gifts/status/summary gifts/status/updated_at gifts/status/timeline gifts/board/url gifts/digest/url gifts/sync/last; do
+              echo "## $k"
+              unifier get "$k" 2>/dev/null || echo "(missing)"
+              echo
             done
-            printf '%-10s %s\n' "birthdays" \
-              "$(unifier sql exec gifts "SELECT COUNT(*) FROM events WHERE is_birthday=1" 2>/dev/null | tail -n +2 || echo 0)"
-            printf '%-10s %s\n' "pending" \
-              "$(unifier list mailbox/gift-curator 2>/dev/null | grep -c '^{' || true)"
-            printf '%-10s %s\n' "sync" \
-              "$(unifier get gifts/sync/last 2>/dev/null || echo '(none yet)')"
-            printf '%-10s %s\n' "digest" \
-              "$(unifier get gifts/digest/url 2>/dev/null || echo '(none yet)')"
 
   demo:
     about: Seed one fixture birthday and kick the chain without touching the network
+    system: ""
     commands:
       run:
         exec:
@@ -530,12 +666,21 @@ commands:
             unifier message --from gift-sync gift-curator \
               "$(jq -nc --arg s "$slug" --arg p "Ada Lovelace" --arg t "$start" \
                 '{person_slug: $s, person: $p, uid: "demo-ada-birthday", start_time: $t, days_until: 12}')" >/dev/null
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            if [ -n "${_root:-}" ] && [ -f "$_root/scripts/lib/flow_obs.sh" ]; then
+              # shellcheck disable=SC1090
+              . "$_root/scripts/lib/flow_obs.sh"
+              flow_timeline_append gifts "demo seeded ada-lovelace"
+            fi
             echo "demo: seeded Ada Lovelace and mailed gift-curator"
             echo "demo: with jan cron listening the chain runs itself; otherwise:"
             echo "      jan gifts gift-curator run && jan gifts gift-planner run && jan gifts gift-digest run"
+            echo "demo: inspect with: jan gifts status run && jan gifts board run"
 
   interact:
     about: Manually send a unifier mailbox message or event to a gifts agent
+    system: ""
     inputs:
       to:
         description: Recipient leaf (gift-curator, gift-planner, …)

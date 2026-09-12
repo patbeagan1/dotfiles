@@ -1,0 +1,22 @@
+about: Passthrough wrapper for the ollama CLI (all args forwarded).
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        ollama-run
+
+        Forwards all arguments to the system `ollama` command.
+        Example: jan scripts misc ollama-run run gemma3:latest
+
+  run:
+    about: 'Run ollama; forwards args.'
+    exec:
+      zsh: |
+        set -euo pipefail
+        if ! command -v ollama >/dev/null 2>&1; then
+          echo "Error: ollama not found in PATH. Install from https://ollama.ai" >&2
+          exit 1
+        fi
+        exec ollama "$@"
+      passthrough: true

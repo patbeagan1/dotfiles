@@ -141,6 +141,12 @@ commands:
     include: scripts/misc/hl.yaml
   improve-prompt:
     include: scripts/misc/improve-prompt.yaml
+  incubator-fork:
+    include: scripts/misc/incubator-fork.yaml
+  incubator-s:
+    include: scripts/misc/incubator-s.yaml
+  incubator-tweet:
+    include: scripts/misc/incubator-tweet.yaml
   inspect:
     include: scripts/misc/inspect.yaml
   intensify:
@@ -223,6 +229,8 @@ commands:
     include: scripts/misc/nv.yaml
   nz:
     include: scripts/misc/nz.yaml
+  ollama-run:
+    include: scripts/misc/ollama-run.yaml
   oncron:
     include: scripts/misc/oncron.yaml
   open:
