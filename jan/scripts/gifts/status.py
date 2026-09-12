@@ -300,15 +300,35 @@ def render_html(data: dict) -> str:
     h = data["health"]
     rows_html = []
     for r in data["board"]:
+        slug = str(r["slug"])
         days = escape(str(r["days"] if r["days"] is not None else "?"))
         signal = escape(str(r["signal"] if r["signal"] is not None else "-"))
+        person = escape(str(r["person"]))
+        person_cell = (
+            f'<a href="/keys/gifts/upcoming/{escape(slug)}">{person}</a>'
+        )
+        notes_cell = (
+            f'<a href="/keys/gifts/notes/{escape(slug)}">yes</a>'
+            if r["notes"]
+            else "-"
+        )
+        signal_cell = (
+            f'<a href="/keys/gifts/ideas/{escape(slug)}">{signal}</a>'
+            if r["signal"] is not None
+            else signal
+        )
+        plan_cell = (
+            f'<a href="/keys/gifts/plans/{escape(slug)}">yes</a>'
+            if r["plan"]
+            else "-"
+        )
         rows_html.append(
             "<tr>"
-            f"<td>{escape(str(r['person']))}</td>"
+            f"<td>{person_cell}</td>"
             f"<td>{days}</td>"
-            f"<td>{'yes' if r['notes'] else '-'}</td>"
-            f"<td>{signal}</td>"
-            f"<td>{'yes' if r['plan'] else '-'}</td>"
+            f"<td>{notes_cell}</td>"
+            f"<td>{signal_cell}</td>"
+            f"<td>{plan_cell}</td>"
             f"<td><code>{escape(r['stage'])}</code></td>"
             "</tr>"
         )
