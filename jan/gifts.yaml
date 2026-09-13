@@ -60,11 +60,17 @@ commands:
           jan gifts interact run             manually message/event a running agent
 
         Observability
-          jan systems status gifts           schedule, mail, execution (no agent code)
-          jan systems show gifts             leaves tagged system=gifts
+          jan systems status gifts           schedule, mail, disabled, execution, board URL
+          jan systems show gifts             leaves + DISABLED state
           jan cron status / wakeups / watch  platform execution + future wakeups
           unifier log tree                   spans from every gifts agent
           jan gifts status / board           data state + joined ops view
+
+        Ops board (HTML in unifier www)
+          jan gifts board run                publish/refresh → prints URL
+          unifier get gifts/board/url        last served URL
+          jan systems status gifts           same URL under == links ==
+          open http://127.0.0.1:<port>/gifts-board  (port from unifier web status)
 
         Isolated lab:
           eval "$(jan lab <dotfiles/jan> --with-unifier --start)"

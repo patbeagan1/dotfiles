@@ -270,6 +270,8 @@ def render_text(data: dict) -> str:
         f"sync        {h['sync_last']}",
         f"digest      {h['digest_url']}",
         f"board       {h['board_url']}",
+        "             open: that URL in a browser (unifier www)",
+        "             refresh: jan gifts board run",
         "",
         "== wakeups ==",
     ]
@@ -362,6 +364,8 @@ def render_html(data: dict) -> str:
   th{{background:#f0ebe3;font-weight:600}}
   ul{{margin:.25rem 0;padding-left:1.2rem}}
   .timeline{{font-family:ui-monospace,monospace;font-size:.82rem;background:#fff;border:1px solid #e4dbcf;padding:.75rem;white-space:pre-wrap}}
+  .howto{{font-size:.88rem;color:#6b5c4c;margin:.75rem 0 0}}
+  .howto code{{font-size:.85em}}
   a{{color:#6b3f1f}}
 </style>
 </head>
@@ -376,7 +380,9 @@ def render_html(data: dict) -> str:
   <div><dt>Counts</dt><dd>events={h["counts"]["events"]} · ideas={h["counts"]["ideas"]} · plans={h["counts"]["plans"]}</dd></div>
   <div><dt>Sync</dt><dd>{escape(str(h["sync_last"]))}</dd></div>
   <div><dt>Digest</dt><dd><a href="{digest}">{digest}</a></dd></div>
+  <div><dt>This board</dt><dd>served as <code>gifts-board</code> · refresh with <code>jan gifts board run</code> · see also <code>jan systems status gifts</code></dd></div>
 </div>
+<p class="howto">Open path: <code>jan gifts board run</code> → copy the printed URL (also stored at <code>gifts/board/url</code>) → or <code>jan systems status gifts</code> under <strong>links</strong>.</p>
 <h2>Wakeups</h2>
 <ul>{wake_items}</ul>
 <h2>Board</h2>
