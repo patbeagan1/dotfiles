@@ -21,6 +21,8 @@ metadata:
       jan jobs help
       jan jobs interact run --to job-analyst --message '{"job_id":"…"}'
       jan gifts help
+      jan mapreduce help
+      jan mapreduce demo run
       jan config emit --shell zsh -o ~/.config/jan/config.zsh
       jan config deps
 commands:
@@ -36,3 +38,6 @@ commands:
   gifts:
     about: Birthday gift planner over Unifier + Google Calendar iCal
     include: gifts.yaml
+  mapreduce:
+    about: MapReduce word-count proof over Unifier (split → map → reduce → digest)
+    include: mapreduce.yaml

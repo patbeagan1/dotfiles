@@ -1,0 +1,812 @@
+# MapReduce proof system over Unifier mailboxes + jan cron wakeups.
+#
+# Setup (daily):
+#   unifier daemon start
+#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan mapreduce init
+#   jan cron start && jan cron refresh
+#
+# Isolated try:
+#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   jan mapreduce demo run          # full offline chain + board URL
+#   jan systems status mapreduce
+#   jan lab stop
+#
+# With cron listening day-to-day, only the coordinator is required:
+#   jan mapreduce mr-coordinator run   # fans out; mapper/reducer/digest wake alone
+
+# What this proves
+#   Split  → coordinator shards a corpus and fans out N map tasks (mailbox)
+#   Map    → mr-mapper drains shards concurrently-capable wakeups; emits partials
+#   Shuffle→ reducer merges each completed shard into running totals
+#   Reduce → when all shards are in, finalize top-N and wake digest
+#   Report → mr-digest / board serve HTML from unifier www
+
+about: MapReduce word-count demo — split, map, reduce, digest over Unifier
+system: mapreduce
+requires: [unifier, jq]
+commands:
+  help:
+    about: How the MapReduce proof fits together
+    exec:
+      text: |
+        mapreduce — classic word-count MapReduce over Unifier
+
+        Flow
+          mr-coordinator  --(message ×N shards)-->  mr-mapper
+          mr-mapper       --(message per shard)--->  mr-reducer
+          mr-reducer      --(event when done)----->  mr-digest
+
+        State (keys)
+          mapreduce/job/current          active job id
+          mapreduce/job/<id>/meta        {shards, status, corpus_bytes, …}
+          mapreduce/shards/<id>/<n>      shard text
+          mapreduce/mapout/<id>/<n>      mapper partial {word: count}
+          mapreduce/totals/<id>          running reduced totals
+          mapreduce/result/<id>          final top words JSON
+          mapreduce/digest/url           last digest HTML
+          mapreduce/board/url            last ops board HTML
+          mapreduce/status/timeline      causal log
+
+        Commands
+          jan mapreduce init run
+          jan mapreduce mr-coordinator run [--shards 4]
+          jan mapreduce mr-mapper run
+          jan mapreduce mr-reducer run
+          jan mapreduce mr-digest run
+          jan mapreduce status run
+          jan mapreduce board run
+          jan mapreduce demo run
+          jan mapreduce interact run --to mr-mapper --message '{"job_id":"…","shard":0}'
+
+        Observability
+          jan systems status mapreduce
+          jan systems show mapreduce
+          jan cron wakeups | grep mr-
+          unifier get mapreduce/status/timeline
+
+        Ops board
+          jan mapreduce board run
+          jan systems status mapreduce     # == links == → board URL
+          open http://127.0.0.1:<port>/mapreduce-board
+    tests:
+      given_no_args_when_help_then_describes_flow:
+        then: |
+          test "$JAN_STATUS" -eq 0
+          printf '%s\n' "$JAN_STDOUT" | grep -q "mr-mapper"
+
+  init:
+    about: Create sqlite index used by status / digest
+    system: ""
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            unifier sql exec mapreduce "
+              CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                shards INTEGER,
+                status TEXT,
+                started_at TEXT,
+                finished_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS words (
+                job_id TEXT,
+                word TEXT,
+                count INTEGER,
+                PRIMARY KEY (job_id, word)
+              );
+            " >/dev/null
+            echo "mapreduce: schema ready in sqlite/mapreduce.sqlite"
+
+  # ---------------------------------------------------------- coordinator
+  mr-coordinator:
+    about: Split a corpus into shards and fan out map tasks to mr-mapper
+    cron: "20 * * * *"
+    inputs:
+      shards:
+        description: Number of map shards to create
+        type: uint
+        default: "4"
+      corpus:
+        description: Raw text to count (empty = built-in sample)
+        default: ""
+    commands:
+      run:
+        about: Create job, write shards, mail one map task per shard
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.shards }}"
+            - "${{ inputs.corpus }}"
+          bash: |
+            set -euo pipefail
+            SHARDS="${1:-4}"
+            CORPUS="${2:-}"
+
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "$_obs" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { :; }
+              flow_span_note() { :; }
+              flow_span_end() { :; }
+              flow_timeline_append() { :; }
+              flow_status_touch() { :; }
+            fi
+
+            if [ -z "$CORPUS" ]; then
+              CORPUS="MapReduce proves that independent map tasks can run on
+            separate shards and still produce a correct global result when a
+            reducer merges their partial counts. Unifier mailboxes wake jan
+            cron agents. Each mapper drains its mailbox, emits a word-count
+            partial for one shard, and messages the reducer. The reducer merges
+            every shard into running totals and, when the last shard arrives,
+            posts an event that wakes the digest. This sample corpus mentions
+            map reduce shard mailbox unifier jan cron agent system repeatedly
+            so the top words are obvious after reduce. Map map map. Reduce reduce.
+            Shard shard shard. Unifier unifier. Jan jan jan jan."
+            fi
+
+            job_id="mr-$(date +%Y%m%d-%H%M%S)-$$"
+            bytes="$(printf '%s' "$CORPUS" | wc -c | tr -d ' ')"
+
+            flow_span_start mr-coordinator -f job="$job_id" -f shards="$SHARDS"
+            unifier put mapreduce/job/current "$job_id" >/dev/null
+            meta="$(jq -nc \
+              --arg id "$job_id" \
+              --argjson shards "$SHARDS" \
+              --argjson bytes "$bytes" \
+              --arg started "$(date -Is)" \
+              '{id:$id,shards:$shards,corpus_bytes:$bytes,status:"mapping",
+                mapped:0,started_at:$started,finished_at:null}')"
+            unifier put "mapreduce/job/$job_id/meta" "$meta" >/dev/null
+            unifier sql exec mapreduce "
+              INSERT OR REPLACE INTO jobs(id,shards,status,started_at,finished_at)
+              VALUES('$(printf '%s' "$job_id" | sed "s/'/''/g")',$SHARDS,'mapping','$(date -Is)',NULL)
+            " >/dev/null
+
+            # Split on whitespace into ~equal word buckets
+            mapfile -t words < <(printf '%s' "$CORPUS" | tr -s '[:space:]' '\n' | sed '/^$/d')
+            total="${#words[@]}"
+            if [ "$total" -eq 0 ]; then
+              echo "mr-coordinator: empty corpus" >&2
+              flow_span_end
+              exit 1
+            fi
+            # ceil division for shard size
+            size=$(( (total + SHARDS - 1) / SHARDS ))
+            [ "$size" -ge 1 ] || size=1
+
+            for ((i=0; i<SHARDS; i++)); do
+              start=$((i * size))
+              if [ "$start" -ge "$total" ]; then
+                # empty trailing shard — still emit so reducer count matches
+                shard_text=""
+              else
+                end=$((start + size))
+                [ "$end" -gt "$total" ] && end=$total
+                shard_text="$(printf '%s\n' "${words[@]:start:end-start}")"
+              fi
+              unifier put "mapreduce/shards/$job_id/$i" "$shard_text" >/dev/null
+              unifier message --from mr-coordinator mr-mapper \
+                "$(jq -nc --arg j "$job_id" --argjson s "$i" \
+                  '{job_id:$j,shard:$s,phase:"map"}')" >/dev/null
+              echo "mr-coordinator: queued map shard $i/$SHARDS (job $job_id)"
+            done
+
+            flow_timeline_append mapreduce "coordinator job=$job_id shards=$SHARDS bytes=$bytes"
+            flow_status_touch mapreduce "mapping job=$job_id shards=$SHARDS"
+            flow_span_note "queued shards=$SHARDS"
+            flow_span_end
+            echo "mr-coordinator: job $job_id — $SHARDS map task(s) mailed to mr-mapper"
+
+  # --------------------------------------------------------------- mapper
+  mr-mapper:
+    about: Drain map tasks; emit per-shard word-count partials; notify reducer
+    requires: [jq]
+    inputs:
+      message-id:
+        description: Wakeup message id from jan cron (tracing only)
+        default: ""
+    commands:
+      run:
+        about: Drain mailbox/mr-mapper and map each shard
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            WAKE_ID="${1:-}"
+
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "$_obs" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { :; }
+              flow_span_note() { :; }
+              flow_span_end() { :; }
+              flow_timeline_append() { :; }
+            fi
+
+            flow_span_start mr-mapper ${WAKE_ID:+-f wakeup="$WAKE_ID"}
+            mapped=0
+
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              job_id="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              shard="$(printf '%s' "$envelope" | jq -r '.payload.shard // empty')"
+              [ -n "$job_id" ] && [ -n "$shard" ] || continue
+
+              text="$(unifier get "mapreduce/shards/$job_id/$shard" 2>/dev/null || true)"
+              partial="$(printf '%s\n' "$text" | awk '
+                {
+                  gsub(/[^A-Za-z0-9_]+/, " ")
+                  n = split(tolower($0), a, / +/)
+                  for (i = 1; i <= n; i++) if (a[i] != "") c[a[i]]++
+                }
+                END {
+                  printf "{"
+                  first=1
+                  for (w in c) {
+                    if (!first) printf ","
+                    first=0
+                    printf "\"%s\":%d", w, c[w]
+                  }
+                  printf "}\n"
+                }')"
+              [ -n "$partial" ] || partial="{}"
+              unifier put "mapreduce/mapout/$job_id/$shard" "$partial" >/dev/null
+              words="$(printf '%s' "$partial" | jq 'length')"
+              unifier message --from mr-mapper mr-reducer \
+                "$(jq -nc --arg j "$job_id" --argjson s "$shard" --argjson w "$words" \
+                  '{job_id:$j,shard:$s,phase:"reduce",words:$w}')" >/dev/null
+              echo "mr-mapper: mapped job=$job_id shard=$shard words=$words"
+              flow_timeline_append mapreduce "map job=$job_id shard=$shard words=$words"
+              mapped=$((mapped + 1))
+            done < <(unifier poll mr-mapper --ack | grep '^{' || true)
+
+            if [ "$mapped" -eq 0 ]; then
+              echo "mr-mapper: mailbox empty (no map tasks)"
+            fi
+            flow_span_note "mapped=$mapped"
+            flow_span_end
+            echo "mr-mapper: processed $mapped shard(s)"
+
+  # -------------------------------------------------------------- reducer
+  mr-reducer:
+    about: Merge map partials into totals; finalize and wake digest when complete
+    requires: [jq]
+    inputs:
+      message-id:
+        description: Wakeup message id from jan cron (tracing only)
+        default: ""
+    commands:
+      run:
+        about: Drain mailbox/mr-reducer and fold shards into totals
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.message-id }}"
+          bash: |
+            set -euo pipefail
+            WAKE_ID="${1:-}"
+
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "$_obs" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_span_start() { :; }
+              flow_span_note() { :; }
+              flow_span_end() { :; }
+              flow_timeline_append() { :; }
+              flow_status_touch() { :; }
+            fi
+
+            sqlq() { printf '%s' "$1" | sed "s/'/''/g"; }
+
+            flow_span_start mr-reducer ${WAKE_ID:+-f wakeup="$WAKE_ID"}
+            reduced=0
+            finished=0
+
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              job_id="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              shard="$(printf '%s' "$envelope" | jq -r '.payload.shard // empty')"
+              [ -n "$job_id" ] && [ -n "$shard" ] || continue
+
+              if unifier get "mapreduce/reduced/$job_id/$shard" >/dev/null 2>&1; then
+                echo "mr-reducer: skip already-folded job=$job_id shard=$shard"
+                continue
+              fi
+
+              partial="$(unifier get "mapreduce/mapout/$job_id/$shard" 2>/dev/null || echo '{}')"
+              totals="$(unifier get "mapreduce/totals/$job_id" 2>/dev/null || echo '{}')"
+              [ -n "$partial" ] || partial="{}"
+              [ -n "$totals" ] || totals="{}"
+              merged="$(jq -nc --argjson a "$totals" --argjson b "$partial" '
+                reduce ((($a // {}) + ($b // {})) | keys_unsorted[]) as $k ({};
+                  .[$k] = ((($a // {})[$k] // 0) + (($b // {})[$k] // 0)))
+              ')"
+              unifier put "mapreduce/totals/$job_id" "$merged" >/dev/null
+              unifier put "mapreduce/reduced/$job_id/$shard" "1" >/dev/null
+              reduced=$((reduced + 1))
+
+              meta="$(unifier get "mapreduce/job/$job_id/meta" 2>/dev/null || echo '{}')"
+              expected="$(printf '%s' "$meta" | jq -r '.shards // 0')"
+              mapped_n=0
+              for ((i=0; i<expected; i++)); do
+                if unifier get "mapreduce/reduced/$job_id/$i" >/dev/null 2>&1; then
+                  mapped_n=$((mapped_n + 1))
+                fi
+              done
+
+              meta="$(printf '%s' "$meta" | jq -c --argjson m "$mapped_n" \
+                '.mapped=$m | .status=(if $m >= .shards then "reducing_done" else "reducing" end)')"
+              unifier put "mapreduce/job/$job_id/meta" "$meta" >/dev/null
+              flow_timeline_append mapreduce "reduce job=$job_id shard=$shard folded=$mapped_n/$expected"
+              echo "mr-reducer: folded job=$job_id shard=$shard ($mapped_n/$expected)"
+
+              if [ "$mapped_n" -ge "$expected" ] && [ "$expected" -gt 0 ]; then
+                top="$(printf '%s' "$merged" | jq -c '
+                  to_entries | sort_by(-.value) | .[:25]
+                  | map({word:.key, count:.value})
+                ')"
+                unifier put "mapreduce/result/$job_id" "$top" >/dev/null
+                printf '%s' "$top" | jq -c '.[]' | while IFS= read -r row; do
+                  w="$(printf '%s' "$row" | jq -r '.word')"
+                  c="$(printf '%s' "$row" | jq -r '.count')"
+                  unifier sql exec mapreduce "
+                    INSERT OR REPLACE INTO words(job_id,word,count)
+                    VALUES('$(sqlq "$job_id")','$(sqlq "$w")',$c)
+                  " >/dev/null
+                done
+                meta="$(printf '%s' "$meta" | jq -c --arg t "$(date -Is)" \
+                  '.status="done" | .finished_at=$t')"
+                unifier put "mapreduce/job/$job_id/meta" "$meta" >/dev/null
+                unifier sql exec mapreduce "
+                  UPDATE jobs SET status='done', finished_at='$(date -Is)'
+                  WHERE id='$(sqlq "$job_id")'
+                " >/dev/null
+                unifier event "$(jq -nc --arg j "$job_id" \
+                  '{name:"mr-digest",job_id:$j,phase:"done"}')" >/dev/null
+                flow_timeline_append mapreduce "reduce COMPLETE job=$job_id → digest"
+                flow_status_touch mapreduce "done job=$job_id"
+                finished=$((finished + 1))
+                echo "mr-reducer: job $job_id complete — woke mr-digest"
+              fi
+            done < <(unifier poll mr-reducer --ack | grep '^{' || true)
+
+            if [ "$reduced" -eq 0 ]; then
+              echo "mr-reducer: mailbox empty"
+            fi
+            flow_span_note "reduced=$reduced finished=$finished"
+            flow_span_end
+            echo "mr-reducer: folded $reduced shard(s), finished $finished job(s)"
+
+  # --------------------------------------------------------------- digest
+  mr-digest:
+    about: Render the final top-word table and serve it over unifier www
+    inputs:
+      event-id:
+        description: Wakeup event id from jan cron
+        default: ""
+      job-id:
+        description: Job to render (default = mapreduce/job/current)
+        default: ""
+    commands:
+      run:
+        about: Build HTML digest for the job result
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.event-id }}"
+            - "${{ inputs.job-id }}"
+          bash: |
+            set -euo pipefail
+            WAKE_ID="${1:-}"
+            JOB_ID="${2:-}"
+            [ -n "$JOB_ID" ] || JOB_ID="$(unifier get mapreduce/job/current 2>/dev/null || true)"
+            if [ -z "$JOB_ID" ]; then
+              echo "mr-digest: no job id" >&2
+              exit 1
+            fi
+
+            _cfg="${JAN_CONFIG_DIR:-$HOME/.config/jan-cli}/config.json"
+            _root="$(jq -r '.jan_dir // empty' "$_cfg" 2>/dev/null || true)"
+            _obs="${_root:+$_root/scripts/lib/flow_obs.sh}"
+            if [ -n "$_obs" ] && [ -f "$_obs" ]; then
+              # shellcheck disable=SC1090
+              . "$_obs"
+            else
+              flow_timeline_append() { :; }
+            fi
+
+            result="$(unifier get "mapreduce/result/$JOB_ID" 2>/dev/null || echo '[]')"
+            meta="$(unifier get "mapreduce/job/$JOB_ID/meta" 2>/dev/null || echo '{}')"
+            esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+
+            body="$(mktemp)"
+            trap 'rm -f "$body"' EXIT
+            {
+              printf '<style>\n'
+              printf 'table{border-collapse:collapse;width:100%%}\n'
+              printf 'th,td{padding:.4rem .55rem;border-bottom:1px solid #d5ddd7;text-align:left}\n'
+              printf 'th{background:#eef3ef}\n'
+              printf '.meta{color:#5c6b63;font-size:.9rem}\n'
+              printf '</style>\n'
+              printf '<p class="meta">job <code>%s</code> · shards %s · status %s</p>\n' \
+                "$(printf '%s' "$JOB_ID" | esc)" \
+                "$(printf '%s' "$meta" | jq -r '.shards // "?"')" \
+                "$(printf '%s' "$meta" | jq -r '.status // "?"')"
+              printf '<table><thead><tr><th>#</th><th>Word</th><th>Count</th></tr></thead><tbody>\n'
+              i=0
+              printf '%s' "$result" | jq -c '.[]' | while IFS= read -r row; do
+                i=$((i + 1))
+                w="$(printf '%s' "$row" | jq -r '.word')"
+                c="$(printf '%s' "$row" | jq -r '.count')"
+                printf '<tr><td>%s</td><td><a href="/keys/mapreduce/totals/%s">%s</a></td><td>%s</td></tr>\n' \
+                  "$i" "$(printf '%s' "$JOB_ID" | esc)" "$(printf '%s' "$w" | esc)" "$c"
+              done
+              printf '</tbody></table>\n'
+              printf '<p class="meta">MapReduce proof: independent map shards → reduce merge → this digest.</p>\n'
+            } > "$body"
+
+            url="$(cat "$body" | unifier serve mapreduce-digest --wrap --title "MapReduce digest")"
+            unifier put mapreduce/digest/url "$url" >/dev/null
+            flow_timeline_append mapreduce "digest job=$JOB_ID url=$url"
+            echo "mr-digest: $url"
+
+  # ------------------------------------------------------------- utilities
+  status:
+    about: Job health, shard progress, wakeups, digest URL
+    system: ""
+    requires: [unifier, jq]
+    inputs:
+      json:
+        description: If true, emit machine-readable JSON
+        type: bool
+        default: "false"
+    commands:
+      run:
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.json }}"
+          bash: |
+            set -euo pipefail
+            JSON="${1:-false}"
+            job="$(unifier get mapreduce/job/current 2>/dev/null || true)"
+            meta="{}"
+            [ -n "$job" ] && meta="$(unifier get "mapreduce/job/$job/meta" 2>/dev/null || echo '{}')"
+            pending_map="$(unifier list mailbox/mr-mapper 2>/dev/null | grep -c '^{' || true)"
+            pending_red="$(unifier list mailbox/mr-reducer 2>/dev/null | grep -c '^{' || true)"
+            digest="$(unifier get mapreduce/digest/url 2>/dev/null || echo '(none yet)')"
+            board="$(unifier get mapreduce/board/url 2>/dev/null || echo '(none yet)')"
+            timeline="$(unifier get mapreduce/status/timeline 2>/dev/null || true)"
+            cron="$(jan --no-log cron status --compact 2>/dev/null | head -n1 || echo '(jan cron unavailable)')"
+            shards="$(printf '%s' "$meta" | jq -r '.shards // 0')"
+            mapped="$(printf '%s' "$meta" | jq -r '.mapped // 0')"
+            status="$(printf '%s' "$meta" | jq -r '.status // "(no job)"')"
+            case "$JSON" in
+              1|true|TRUE|yes|YES|on|ON)
+                jq -nc \
+                  --arg cron "$cron" \
+                  --arg job "$job" \
+                  --arg status "$status" \
+                  --argjson shards "${shards:-0}" \
+                  --argjson mapped "${mapped:-0}" \
+                  --argjson pending_map "${pending_map:-0}" \
+                  --argjson pending_red "${pending_red:-0}" \
+                  --arg digest "$digest" \
+                  --arg board "$board" \
+                  --arg timeline "$timeline" \
+                  '{
+                    health:{cron:$cron,job:$job,status:$status,shards:$shards,mapped:$mapped,
+                            pending_mapper:$pending_map,pending_reducer:$pending_red,
+                            digest_url:$digest,board_url:$board},
+                    wakeups:{"mr-coordinator":"cron hourly :20","mr-mapper":"mailbox",
+                             "mr-reducer":"mailbox","mr-digest":"event"},
+                    timeline:($timeline|split("\n")|map(select(length>0))[-15:])
+                  }'
+                ;;
+              *)
+                echo "== health =="
+                printf '%-14s %s\n' cron "$cron"
+                printf '%-14s %s\n' job "${job:-(none)}"
+                printf '%-14s %s\n' status "$status"
+                printf '%-14s %s / %s\n' progress "$mapped" "$shards"
+                printf '%-14s mapper=%s reducer=%s\n' pending "$pending_map" "$pending_red"
+                printf '%-14s %s\n' digest "$digest"
+                printf '%-14s %s\n' board "$board"
+                echo "               open board URL in browser; refresh: jan mapreduce board run"
+                echo
+                echo "== wakeups =="
+                printf '%-16s %s\n' mr-coordinator "cron 20 * * * *"
+                printf '%-16s %s\n' mr-mapper "mailbox (from coordinator)"
+                printf '%-16s %s\n' mr-reducer "mailbox (from mapper)"
+                printf '%-16s %s\n' mr-digest "event (from reducer)"
+                echo
+                echo "== timeline =="
+                if [ -n "$timeline" ]; then
+                  printf '%s\n' "$timeline" | tail -n 15
+                else
+                  echo "(empty)"
+                fi
+                ;;
+            esac
+
+  board:
+    about: Serve an HTML ops board for the MapReduce flow
+    system: ""
+    requires: [unifier, jq]
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            job="$(unifier get mapreduce/job/current 2>/dev/null || true)"
+            meta="{}"
+            result="[]"
+            totals="{}"
+            [ -n "$job" ] && meta="$(unifier get "mapreduce/job/$job/meta" 2>/dev/null || echo '{}')"
+            [ -n "$job" ] && result="$(unifier get "mapreduce/result/$job" 2>/dev/null || echo '[]')"
+            [ -n "$job" ] && totals="$(unifier get "mapreduce/totals/$job" 2>/dev/null || echo '{}')"
+            timeline="$(unifier get mapreduce/status/timeline 2>/dev/null || true)"
+            digest="$(unifier get mapreduce/digest/url 2>/dev/null || echo '')"
+            shards="$(printf '%s' "$meta" | jq -r '.shards // 0')"
+            mapped="$(printf '%s' "$meta" | jq -r '.mapped // 0')"
+            status="$(printf '%s' "$meta" | jq -r '.status // "(no job)"')"
+            esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+
+            rows=""
+            for ((i=0; i<shards; i++)); do
+              st="pending"
+              if unifier get "mapreduce/reduced/$job/$i" >/dev/null 2>&1; then
+                st="reduced"
+              elif unifier get "mapreduce/mapout/$job/$i" >/dev/null 2>&1; then
+                st="mapped"
+              fi
+              words="$(unifier get "mapreduce/mapout/$job/$i" 2>/dev/null | jq 'keys|length' 2>/dev/null || echo 0)"
+              rows="${rows}<tr><td><a href=\"/keys/mapreduce/shards/${job}/$i\">shard $i</a></td><td>$st</td><td>$words</td><td><a href=\"/keys/mapreduce/mapout/${job}/$i\">mapout</a></td></tr>"
+            done
+
+            top_rows=""
+            printf '%s' "$result" | jq -c '.[]?' 2>/dev/null | while IFS= read -r row; do
+              w="$(printf '%s' "$row" | jq -r '.word')"
+              c="$(printf '%s' "$row" | jq -r '.count')"
+              printf '<tr><td>%s</td><td>%s</td></tr>\n' "$(printf '%s' "$w" | esc)" "$c"
+            done > /tmp/mr-top.$$
+            top_rows="$(cat /tmp/mr-top.$$ 2>/dev/null || true)"; rm -f /tmp/mr-top.$$
+
+            html="$(cat <<EOF
+            <style>
+              body{font-family:ui-sans-serif,system-ui,sans-serif;margin:1.25rem;line-height:1.45}
+              h1{font-size:1.3rem} h2{font-size:1.05rem;margin-top:1.4rem;border-bottom:1px solid #d5ddd7;padding-bottom:.25rem}
+              table{border-collapse:collapse;width:100%;background:#fff}
+              th,td{padding:.4rem .55rem;border-bottom:1px solid #eee;text-align:left;font-size:.92rem}
+              th{background:#eef3ef}
+              .meta{color:#5c6b63;font-size:.9rem}
+              .howto{font-size:.88rem;color:#5c6b63}
+              code{font-size:.85em}
+              .timeline{font-family:ui-monospace,monospace;font-size:.82rem;white-space:pre-wrap;background:#f3f6f2;padding:.75rem}
+            </style>
+            <h1>MapReduce flow</h1>
+            <p class="meta">job <code>$(printf '%s' "${job:-(none)}" | esc)</code> · status <strong>$(printf '%s' "$status" | esc)</strong> · progress $mapped / $shards</p>
+            <p class="howto">Refresh: <code>jan mapreduce board run</code> · status: <code>jan systems status mapreduce</code> · digest: <a href="$(printf '%s' "$digest" | esc)">$(printf '%s' "${digest:-"(none)"}" | esc)</a></p>
+            <h2>Shards</h2>
+            <table><thead><tr><th>Shard</th><th>State</th><th>Words</th><th>Partial</th></tr></thead><tbody>
+            ${rows:-\<tr\>\<td colspan=\"4\"\>(no shards)\</td\>\</tr\>}
+            </tbody></table>
+            <h2>Top words (reduce result)</h2>
+            <table><thead><tr><th>Word</th><th>Count</th></tr></thead><tbody>
+            ${top_rows:-\<tr\>\<td colspan=\"2\"\>(not reduced yet)\</td\>\</tr\>}
+            </tbody></table>
+            <p class="meta">Totals key: <a href="/keys/mapreduce/totals/$(printf '%s' "$job" | esc)">/keys/mapreduce/totals/$(printf '%s' "$job" | esc)</a></p>
+            <h2>Timeline</h2>
+            <div class="timeline">$(printf '%s' "${timeline:-(empty)}" | esc)</div>
+            EOF
+            )"
+
+            url="$(printf '%s' "$html" | unifier serve mapreduce-board --wrap --title "MapReduce")"
+            unifier put mapreduce/board/url "$url" >/dev/null
+            echo "mapreduce board: $url"
+
+  demo:
+    about: Run a small offline MapReduce job (4 shards) end-to-end
+    system: ""
+    commands:
+      run:
+        exec:
+          bash: |
+            set -euo pipefail
+            # Inline the chain (do not nest `jan mapreduce …` — that can deadlock
+            # under the same jan process lock). Same unifier messages the agents use.
+            unifier sql exec mapreduce "
+              CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY, shards INTEGER, status TEXT,
+                started_at TEXT, finished_at TEXT
+              );
+              CREATE TABLE IF NOT EXISTS words (
+                job_id TEXT, word TEXT, count INTEGER,
+                PRIMARY KEY (job_id, word)
+              );
+            " >/dev/null
+
+            CORPUS="MapReduce proves that independent map tasks can run on
+            separate shards and still produce a correct global result when a
+            reducer merges their partial counts. Unifier mailboxes wake jan
+            cron agents. Map map map. Reduce reduce. Shard shard shard.
+            Unifier unifier. Jan jan jan jan. Mailbox mailbox."
+
+            SHARDS=4
+            job_id="mr-demo-$(date +%Y%m%d-%H%M%S)"
+            unifier put mapreduce/job/current "$job_id" >/dev/null
+            meta="$(jq -nc --arg id "$job_id" --argjson shards "$SHARDS" --arg started "$(date -Is)" \
+              '{id:$id,shards:$shards,corpus_bytes:0,status:"mapping",mapped:0,started_at:$started,finished_at:null}')"
+            unifier put "mapreduce/job/$job_id/meta" "$meta" >/dev/null
+
+            mapfile -t words < <(printf '%s' "$CORPUS" | tr -s '[:space:]' '\n' | sed '/^$/d')
+            total="${#words[@]}"
+            size=$(( (total + SHARDS - 1) / SHARDS ))
+            [ "$size" -ge 1 ] || size=1
+
+            for ((i=0; i<SHARDS; i++)); do
+              start=$((i * size))
+              if [ "$start" -ge "$total" ]; then
+                shard_text=""
+              else
+                end=$((start + size))
+                [ "$end" -gt "$total" ] && end=$total
+                shard_text="$(printf '%s\n' "${words[@]:start:end-start}")"
+              fi
+              unifier put "mapreduce/shards/$job_id/$i" "$shard_text" >/dev/null
+              unifier message --from mr-coordinator mr-mapper \
+                "$(jq -nc --arg j "$job_id" --argjson s "$i" '{job_id:$j,shard:$s,phase:"map"}')" >/dev/null
+            done
+            echo "demo: queued $SHARDS map shards for $job_id"
+
+            # Map (same logic as mr-mapper)
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              j="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              s="$(printf '%s' "$envelope" | jq -r '.payload.shard // empty')"
+              [ -n "$j" ] && [ -n "$s" ] || continue
+              text="$(unifier get "mapreduce/shards/$j/$s" 2>/dev/null || true)"
+              partial="$(printf '%s\n' "$text" | awk '
+                { gsub(/[^A-Za-z0-9_]+/, " "); n=split(tolower($0),a,/ +/);
+                  for(i=1;i<=n;i++) if(a[i]!="") c[a[i]]++ }
+                END { printf "{"; f=1; for(w in c){ if(!f) printf ","; f=0; printf "\"%s\":%d",w,c[w] } printf "}\n" }')"
+              [ -n "$partial" ] || partial="{}"
+              unifier put "mapreduce/mapout/$j/$s" "$partial" >/dev/null
+              unifier message --from mr-mapper mr-reducer \
+                "$(jq -nc --arg j "$j" --argjson s "$s" '{job_id:$j,shard:$s,phase:"reduce"}')" >/dev/null
+              echo "demo: mapped shard $s"
+            done < <(unifier poll mr-mapper --ack | grep '^{' || true)
+
+            # Reduce
+            while IFS= read -r envelope; do
+              [ -n "$envelope" ] || continue
+              j="$(printf '%s' "$envelope" | jq -r '.payload.job_id // empty')"
+              s="$(printf '%s' "$envelope" | jq -r '.payload.shard // empty')"
+              [ -n "$j" ] && [ -n "$s" ] || continue
+              unifier get "mapreduce/reduced/$j/$s" >/dev/null 2>&1 && continue
+              partial="$(unifier get "mapreduce/mapout/$j/$s" 2>/dev/null || echo '{}')"
+              totals="$(unifier get "mapreduce/totals/$j" 2>/dev/null || echo '{}')"
+              [ -n "$partial" ] || partial="{}"
+              [ -n "$totals" ] || totals="{}"
+              merged="$(jq -nc --argjson a "$totals" --argjson b "$partial" '
+                reduce ((($a//{})+($b//{}))|keys_unsorted[]) as $k ({};
+                  .[$k]=((($a//{})[$k]//0)+(($b//{})[$k]//0)))')"
+              unifier put "mapreduce/totals/$j" "$merged" >/dev/null
+              unifier put "mapreduce/reduced/$j/$s" "1" >/dev/null
+              echo "demo: reduced shard $s"
+            done < <(unifier poll mr-reducer --ack | grep '^{' || true)
+
+            merged="$(unifier get "mapreduce/totals/$job_id")"
+            top="$(printf '%s' "$merged" | jq -c 'to_entries|sort_by(-.value)|.[0:15]|map({word:.key,count:.value})')"
+            unifier put "mapreduce/result/$job_id" "$top" >/dev/null
+            meta="$(printf '%s' "$meta" | jq -c --argjson m "$SHARDS" --arg t "$(date -Is)" \
+              '.mapped=$m | .status="done" | .finished_at=$t')"
+            unifier put "mapreduce/job/$job_id/meta" "$meta" >/dev/null
+            unifier put mapreduce/status/summary "done job=$job_id" >/dev/null
+            unifier put mapreduce/status/updated_at "$(date -Is)" >/dev/null
+
+            # Digest + board via the leaf commands would nest jan — serve directly
+            rows="$(printf '%s' "$top" | jq -r '.[] | "<tr><td>\(.word)</td><td>\(.count)</td></tr>"' | tr '\n' ' ')"
+            html="<h1>MapReduce demo</h1><p>job <code>$job_id</code></p>
+            <table><thead><tr><th>Word</th><th>Count</th></tr></thead><tbody>$rows</tbody></table>
+            <p>Proof: $SHARDS independent map shards merged by reduce.</p>"
+            digest_url="$(printf '%s' "$html" | unifier serve mapreduce-digest --wrap --title "MapReduce digest")"
+            board_url="$(printf '%s' "$html" | unifier serve mapreduce-board --wrap --title "MapReduce")"
+            unifier put mapreduce/digest/url "$digest_url" >/dev/null
+            unifier put mapreduce/board/url "$board_url" >/dev/null
+
+            echo
+            echo "demo: result (top words)"
+            printf '%s\n' "$top" | jq .
+            echo
+            echo "demo: digest  $digest_url"
+            echo "demo: board   $board_url"
+            echo "demo: status  jan mapreduce status run"
+            echo "demo: system  jan systems status mapreduce"
+            echo
+            echo "Day-to-day with jan cron listening, prefer the agents:"
+            echo "  jan mapreduce mr-coordinator run   # wakes mapper → reducer → digest"
+
+  interact:
+    about: Manually message or event a MapReduce agent
+    system: ""
+    inputs:
+      to:
+        description: Recipient leaf (mr-mapper, mr-reducer, …)
+        default: ""
+      from:
+        description: Sender label on the mailbox envelope
+        default: "manual"
+      message:
+        description: JSON payload (empty reads stdin)
+        default: ""
+      event:
+        description: If true, post a unifier event instead
+        type: bool
+        default: "false"
+      ttl:
+        description: Event TTL seconds (event mode)
+        default: ""
+    commands:
+      help:
+        about: How to poke MapReduce agents by hand
+        exec:
+          text: |
+            mapreduce interact
+
+              jan mapreduce interact run --to mr-mapper \
+                --message '{"job_id":"…","shard":0,"phase":"map"}'
+              jan mapreduce interact run --event true \
+                --message '{"name":"mr-digest","job_id":"…"}'
+      run:
+        about: Deliver one manual message or event
+        exec:
+          passthrough: true
+          argv:
+            - "${{ inputs.to }}"
+            - "${{ inputs.from }}"
+            - "${{ inputs.message }}"
+            - "${{ inputs.event }}"
+            - "${{ inputs.ttl }}"
+          bash: |
+            set -euo pipefail
+            TO="${1:-}"; FROM="${2:-manual}"; MESSAGE="${3:-}"
+            EVENT="${4:-false}"; TTL="${5:-}"
+            if [ -z "$MESSAGE" ]; then
+              MESSAGE="$(cat)"
+            fi
+            case "$EVENT" in
+              1|true|TRUE|yes|YES|on|ON)
+                args=(event)
+                [ -n "$TTL" ] && args+=(--ttl "$TTL")
+                args+=("$MESSAGE")
+                id="$(unifier "${args[@]}")"
+                echo "mapreduce interact: event $id"
+                ;;
+              *)
+                if [ -z "$TO" ]; then
+                  echo "mapreduce interact: --to <leaf> required for mailbox" >&2
+                  exit 2
+                fi
+                id="$(unifier message --from "$FROM" "$TO" "$MESSAGE")"
+                echo "mapreduce interact: mailed $TO id=$id"
+                ;;
+            esac
