@@ -1,0 +1,22 @@
+about: Encrypt a password for restic-framework-backup config.yaml.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-encrypt
+
+        Encrypt a password for manual editing of config.yaml
+        (uses ~/.restic.key).
+
+        Examples:
+          restic-encrypt
+  run:
+    about: Encrypt a password
+    exec:
+      bash: scripts/misc/restic-backup/encrypt.sh

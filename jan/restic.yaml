@@ -1,0 +1,30 @@
+# Restic backup utilities. Command names use a `restic-` prefix so
+# `jan alias` installs a coherent autocomplete family (restic-<tab>).
+about: Restic backups (1TB hourly + Framework Backups archive)
+commands:
+  restic-backup:
+    include: scripts/restic/restic-backup.yaml
+  restic-backup-archive:
+    include: scripts/restic/restic-backup-archive.yaml
+  restic-snapshots:
+    include: scripts/restic/restic-snapshots.yaml
+  restic-ls:
+    include: scripts/restic/restic-ls.yaml
+  restic-stats:
+    include: scripts/restic/restic-stats.yaml
+  restic-find:
+    include: scripts/restic/restic-find.yaml
+  restic-check:
+    include: scripts/restic/restic-check.yaml
+  restic-repo:
+    include: scripts/restic/restic-repo.yaml
+  restic-estimate:
+    include: scripts/restic/restic-estimate.yaml
+  restic-init:
+    include: scripts/restic/restic-init.yaml
+  restic-migrate:
+    include: scripts/restic/restic-migrate.yaml
+  restic-setup:
+    include: scripts/restic/restic-setup.yaml
+  restic-encrypt:
+    include: scripts/restic/restic-encrypt.yaml

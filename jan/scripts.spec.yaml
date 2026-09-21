@@ -18,11 +18,12 @@ metadata:
       jan scripts git gd help
       jan scripts system lsof-port run --port 443
       jan scripts network api-get run --url 'https://api.example.com/v1/me'
-      jan jobs help
-      jan jobs interact run --to job-analyst --message '{"job_id":"…"}'
-      jan gifts help
-      jan mapreduce help
-      jan mapreduce demo run
+      jan scripts pentest scan-ports run --target 192.168.1.1
+      jan scripts pentest scan-subnet run --cidr 192.168.1.0/24
+      # Agent systems are separate trees:
+      #   jan systems use ~/…/dotfiles/jan-gifts
+      #   jan systems use ~/…/dotfiles/jan-jobs
+      #   jan gifts help
       jan config emit --shell zsh -o ~/.config/jan/config.zsh
       jan config deps
 commands:
@@ -32,12 +33,3 @@ commands:
   config:
     about: host configuration (emit / link / apply)
     include: config.yaml
-  jobs:
-    about: Job pipeline agents over Unifier (scout → analyst → responder → digest)
-    include: jobs.yaml
-  gifts:
-    about: Birthday gift planner over Unifier + Google Calendar iCal
-    include: gifts.yaml
-  mapreduce:
-    about: MapReduce word-count proof over Unifier (split → map → reduce → digest)
-    include: mapreduce.yaml

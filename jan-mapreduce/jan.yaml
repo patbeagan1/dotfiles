@@ -1,0 +1,10 @@
+# Agent system tree for `mapreduce` (activated via `jan systems use`).
+# Setup:
+#   jan systems use /home/patrick/Documents/Github/dotfiles/jan-mapreduce
+#   jan systems status mapreduce
+metadata:
+  name: jan-mapreduce
+  description: mapreduce agent system over Unifier
+commands:
+  mapreduce:
+    include: mapreduce.yaml

@@ -1,0 +1,11 @@
+# Agent system tree for `agents` (activated via `jan systems use`).
+# Setup:
+#   jan systems use <this-dir>
+#   jan systems status agents
+# Commands: jan agents ping-agent run | jan agents report run | …
+metadata:
+  name: jan-agents
+  description: Watcher and report agents over Unifier
+commands:
+  agents:
+    include: agents.yaml

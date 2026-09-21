@@ -1,0 +1,51 @@
+about: |
+  Hourly restic backup of ~/Documents to the 1TB drive (when mounted).
+  Scheduled via jan cron. For the Framework Backups archive, see restic-backup-archive.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+cron: "0 * * * *"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-backup
+
+        Hourly backup of ~/Documents to the 1TB drive:
+          /run/media/patrick/1TB/restic-documents
+
+        Skips quietly when the drive is not mounted (safe for jan cron).
+
+        Scheduled: every hour (`cron: 0 * * * *`). Start the jan cron daemon:
+          jan cron start
+
+        Related (restic-<tab>):
+          restic-backup-archive   monthly archive
+          restic-snapshots        list snapshots
+          restic-ls               list files in a snapshot
+          restic-stats            repo / snapshot size
+          restic-find             find files by name
+          restic-check            verify repo integrity
+          restic-repo             passthrough any restic subcommand
+          restic-estimate         dry-run size estimate
+          restic-init             initialize a repository
+          restic-migrate          copy 1TB → Framework Backups
+          restic-setup / restic-encrypt   config helpers
+
+        Examples:
+          restic-backup
+          restic-estimate
+          restic-init
+          restic-migrate
+
+        Environment:
+          RESTIC_BACKUP_CONFIG  override config path
+  run:
+    about: Run hourly backup to 1TB drive
+    exec:
+      bash: scripts/misc/restic-backup/run.sh
+      argv:
+        - hourly

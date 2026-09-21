@@ -1,0 +1,32 @@
+about: Show restic repository or snapshot stats.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-stats
+
+        Show repository / snapshot statistics.
+
+        Examples:
+          restic-stats
+          restic-stats --mode raw-data
+          restic-stats --target monthly
+  run:
+    about: Show stats
+    exec:
+      bash: scripts/misc/restic-backup/restic-cmd.sh
+      argv:
+        - "${{ inputs.target }}"
+        - stats
+      passthrough: true

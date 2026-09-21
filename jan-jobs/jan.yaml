@@ -1,0 +1,10 @@
+# Agent system tree for `jobs` (activated via `jan systems use`).
+# Setup:
+#   jan systems use /home/patrick/Documents/Github/dotfiles/jan-jobs
+#   jan systems status jobs
+metadata:
+  name: jan-jobs
+  description: jobs agent system over Unifier
+commands:
+  jobs:
+    include: jobs.yaml

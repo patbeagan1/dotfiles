@@ -1,4 +1,5 @@
-about: A script for automated tasks.
+about: Serve the current directory over HTTP on port 8000 (python3 http.server).
+requires: [python3]
 commands:
   help:
     about: Describe this script.
@@ -6,27 +7,55 @@ commands:
       text: |
         server
 
-        A script for automated tasks.
+        Serve the current directory with python3 -m http.server on port 8000.
+        Diagnostic lines go to stderr (prefix: server:).
 
+        Usage:
+          jan scripts system server run
+          server                  # shell alias → same
+
+        Note: uses a cold python3 spawn (not jan's warm shell pool) so logs and
+        the server stay attached to your terminal.
   run:
-    about: 'Run the linked script; forwards args.'
+    about: Start python3 http.server on port 8000 with diagnostic logging.
     exec:
-      bash: |
-        # (c) 2022 Pat Beagan: MIT License
+      # Plain argv (not exec.bash) so jan cold-spawns and streams stderr live.
+      # Warm shell workers capture_output until exit, which hides logs for servers.
+      argv:
+        - python3
+        - -u
+        - -c
+        - |
+          import os, shutil, socket, sys
 
-        server () 
-        { 
-            if [ $# -lt 2 ]; then
-                port="$1";
-                if [ -z "$port" ]; then
-                    port="8000";
-                fi;
-                echo Running server on "$port";
-                python -m SimpleHTTPServer "$port";
-            else
-                echo Too many arguments.;
-            fi
-        }
+          def log(msg: str) -> None:
+              print(f"server: {msg}", file=sys.stderr, flush=True)
 
-        server "$@"
-      passthrough: true
+          def die(msg: str) -> None:
+              log(f"error: {msg}")
+              sys.exit(1)
+
+          port, bind = 8000, "0.0.0.0"
+          cwd = os.getcwd()
+          log(f"cwd={cwd}")
+          log(f"uid={os.getuid()} pid={os.getpid()}")
+          log(f"executable={sys.executable}")
+          log(f"version={sys.version.split()[0]}")
+
+          py = shutil.which("python3")
+          if not py:
+              die("python3 not found on PATH")
+          log(f"python3={py}")
+
+          # Fail fast if the port is taken.
+          with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+              s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+              try:
+                  s.bind((bind, port))
+              except OSError as e:
+                  die(f"cannot bind {bind}:{port} — {e} (is another server running?)")
+
+          log(f"starting: {py} -u -m http.server --bind {bind} {port}")
+          log(f"open: http://127.0.0.1:{port}/")
+          log("(Ctrl-C to stop; request lines follow)")
+          os.execv(py, [py, "-u", "-m", "http.server", "--bind", bind, str(port)])

@@ -1,0 +1,26 @@
+about: Copy snapshots from the 1TB repo to the Framework Backups archive repo.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-migrate
+
+        One-time (or occasional) copy of snapshots from the 1TB hourly repo
+        to the Framework Backups monthly repo. Both drives must be mounted.
+
+        Environment:
+          RESTIC_MIGRATE_FROM   source repo (default: 1TB path)
+          RESTIC_MIGRATE_TO     destination repo (default: monthly profile)
+
+        Examples:
+          restic-migrate
+  run:
+    about: Copy snapshots 1TB → Framework Backups
+    exec:
+      bash: scripts/misc/restic-backup/migrate.sh

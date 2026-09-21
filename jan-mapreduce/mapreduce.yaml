@@ -1,13 +1,12 @@
 # MapReduce proof system over Unifier mailboxes + jan cron wakeups.
 #
 # Setup (daily):
-#   unifier daemon start
-#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan systems use <dotfiles/jan-mapreduce>
 #   jan mapreduce init
-#   jan cron start && jan cron refresh
+#   jan cron start   # auto-refreshes when YAML changes
 #
 # Isolated try:
-#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   eval "$(jan lab <dotfiles/jan-mapreduce> --with-unifier --start)"
 #   jan mapreduce demo run          # full offline chain + board URL
 #   jan systems status mapreduce
 #   jan lab stop

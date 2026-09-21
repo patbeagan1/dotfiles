@@ -1,0 +1,30 @@
+about: Initialize a restic repository (hourly 1TB by default).
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-init
+
+        Initialize the restic repository for the selected profile.
+        Drive must be mounted.
+
+        Examples:
+          restic-init
+          restic-init --target monthly
+  run:
+    about: Initialize repository
+    exec:
+      bash: scripts/misc/restic-backup/init.sh
+      argv:
+        - "${{ inputs.target }}"

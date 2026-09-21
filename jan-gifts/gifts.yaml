@@ -2,13 +2,12 @@
 #
 # Daily setup:
 #   pass insert jan-ical          # secret Google Calendar .ics URL (first line)
-#   unifier daemon start
-#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan systems use <dotfiles/jan-gifts>
 #   jan gifts init
-#   jan cron start && jan cron refresh
+#   jan cron start   # auto-refreshes when YAML changes
 #
 # Isolated try (does not touch daily jan use / systemd):
-#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   eval "$(jan lab <dotfiles/jan-gifts> --with-unifier --start)"
 #   jan gifts init && jan gifts demo run
 #   jan lab stop
 
@@ -73,7 +72,7 @@ commands:
           open http://127.0.0.1:<port>/gifts-board  (port from unifier web status)
 
         Isolated lab:
-          eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+          eval "$(jan lab <dotfiles/jan-gifts> --with-unifier --start)"
           jan gifts init run && jan gifts demo run
           jan gifts board run && jan gifts status run
     tests:

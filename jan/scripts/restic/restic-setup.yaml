@@ -1,0 +1,21 @@
+about: Create restic-framework-backup config.yaml with a generated encrypted password.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-setup
+
+        Create config.yaml from the example, with a generated encrypted password.
+
+        Examples:
+          restic-setup
+  run:
+    about: Create config.yaml
+    exec:
+      bash: scripts/misc/restic-backup/setup.sh

@@ -1,0 +1,34 @@
+about: List files in a restic snapshot (latest by default).
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-ls
+
+        List files in a snapshot (defaults to `ls latest`).
+
+        Examples:
+          restic-ls
+          restic-ls /home/patrick/Documents/Github
+          restic-ls latest /home/patrick/Documents/Github/Incubator
+          restic-ls --target monthly
+  run:
+    about: List snapshot files
+    exec:
+      bash: scripts/misc/restic-backup/restic-cmd.sh
+      argv:
+        - "${{ inputs.target }}"
+        - ls
+        - latest
+      passthrough: true

@@ -1,0 +1,10 @@
+# Agent system tree for `gifts` (activated via `jan systems use`).
+# Setup:
+#   jan systems use /home/patrick/Documents/Github/dotfiles/jan-gifts
+#   jan systems status gifts
+metadata:
+  name: jan-gifts
+  description: gifts agent system over Unifier
+commands:
+  gifts:
+    include: gifts.yaml

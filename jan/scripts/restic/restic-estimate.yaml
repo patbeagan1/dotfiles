@@ -1,0 +1,29 @@
+about: Dry-run estimate of a restic backup (hourly by default).
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-estimate
+
+        Dry-run size estimate for the selected backup profile.
+
+        Examples:
+          restic-estimate
+          restic-estimate --target monthly
+  run:
+    about: Estimate backup size
+    exec:
+      bash: scripts/misc/restic-backup/estimate.sh
+      argv:
+        - "${{ inputs.target }}"

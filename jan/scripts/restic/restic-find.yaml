@@ -1,0 +1,32 @@
+about: Find files in restic snapshots by name.
+requires: [restic, uv]
+packages:
+  uv:
+    project: deps/restic-framework-backup
+    python: ">=3.10"
+inputs:
+  target:
+    description: "Repository profile: hourly (1TB) or monthly (Framework Backups)"
+    default: hourly
+    choices: [hourly, monthly]
+commands:
+  help:
+    about: Describe this script.
+    exec:
+      text: |
+        restic-find
+
+        Find files across snapshots (wraps `restic find`).
+
+        Examples:
+          restic-find --name '*.pdf'
+          restic-find --name 'config.yaml'
+          restic-find --target monthly --name '*.ods'
+  run:
+    about: Find files
+    exec:
+      bash: scripts/misc/restic-backup/restic-cmd.sh
+      argv:
+        - "${{ inputs.target }}"
+        - find
+      passthrough: true

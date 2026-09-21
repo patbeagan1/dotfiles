@@ -2,13 +2,12 @@
 # Canonical home: dotfiles/jan (moved from Incubator/unifier/examples/job-pipeline.yaml).
 #
 # Setup (daily):
-#   unifier daemon start
-#   jan use <dotfiles/jan> --root scripts.spec.yaml
+#   jan systems use <dotfiles/jan-jobs>
 #   jan jobs init
-#   jan cron start && jan cron refresh
+#   jan cron start   # auto-refreshes when YAML changes
 #
 # Isolated try (does not touch daily jan use / systemd):
-#   eval "$(jan lab <dotfiles/jan> --with-unifier --start)"
+#   eval "$(jan lab <dotfiles/jan-jobs> --with-unifier --start)"
 #   jan jobs demo run
 #   jan lab stop
 #

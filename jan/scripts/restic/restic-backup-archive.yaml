@@ -22,26 +22,14 @@ commands:
         Scheduled: 04:00 on the 1st of each month (`cron: 0 4 1 * *`).
 
         Examples:
-          restic-backup-archive run
-          restic-backup-archive estimate
-          restic-backup-archive init
+          restic-backup-archive
+          restic-estimate --target monthly
+          restic-init --target monthly
 
-        Hourly backup (1TB drive): restic-backup run
+        Hourly backup (1TB drive): restic-backup
   run:
     about: Run monthly archive to Framework Backups drive
     exec:
       bash: scripts/misc/restic-backup/run.sh
-      argv:
-        - monthly
-  estimate:
-    about: Dry-run monthly archive estimate
-    exec:
-      bash: scripts/misc/restic-backup/estimate.sh
-      argv:
-        - monthly
-  init:
-    about: Initialize the Framework Backups restic repository
-    exec:
-      bash: scripts/misc/restic-backup/init.sh
       argv:
         - monthly
