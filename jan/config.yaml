@@ -4,11 +4,12 @@ about: host configuration (emit / link / apply / deps)
 commands:
   zsh:
     include: config/zsh.yaml
-  # Late inits: keys after `zsh` so they run after OMZ + zsh fragments.
+  # Late inits: keys after `zsh` so they wrap the prompt / PATH.
   zsh-atuin:
     include: config/atuin.yaml
   zsh-sdkman:
     include: config/sdkman.yaml
+  # Prompt + z/dotenv/extract (replaces Oh My Zsh). Key name kept for emit stability.
   omzsh:
     include: config/omzsh.yaml
   pnpm:

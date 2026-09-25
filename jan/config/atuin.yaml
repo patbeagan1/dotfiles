@@ -1,4 +1,4 @@
-about: Atuin shell history (load after OMZ / zsh so it wraps the prompt)
+about: Atuin shell history (load after zsh / prompt so it wraps the prompt)
 config:
   shell: |
     # BOTTLENECK (small, ~7ms / LIBBEAGAN_TRACE): atuin init forks `atuin`.

@@ -14,6 +14,14 @@ commands:
     about: 'Run the linked script; forwards args.'
     exec:
       zsh: |
-        z -l | cut -d'/' -f2-100 | sed 's:^:/:g' | fzf -1
+        if command -v zoxide >/dev/null 2>&1; then
+          zoxide query -l | fzf -1
+        elif typeset -f zshz >/dev/null 2>&1; then
+          # zsh-z exposes `z` as an alias for `zshz`
+          zshz -l | cut -d'/' -f2-100 | sed 's:^:/:g' | fzf -1
+        else
+          echo "z-cd: need zoxide or zsh-z (z)" >&2
+          return 1
+        fi
 
       passthrough: true

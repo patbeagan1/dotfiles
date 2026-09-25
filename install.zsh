@@ -188,8 +188,13 @@ load_configurations() {
     print_info "📁 Loading configurations (legacy configs/*.zsh; run install with jan for emit)..."
     safe_source "$LIBBEAGAN_HOME/configs/config-zsh.zsh" "ZSH configuration"
     _libbeagan_trace "legacy config-zsh"
-    safe_source "$LIBBEAGAN_HOME/configs/config-omzsh.zsh" "Oh My Zsh configuration"
-    _libbeagan_trace "legacy config-omzsh"
+    safe_source "$LIBBEAGAN_HOME/zsh/prompt.zsh" "standalone prompt (legacy path)"
+    _libbeagan_trace "legacy zsh prompt"
+    if [[ -r "$LIBBEAGAN_HOME/zsh/z.plugin.zsh" ]]; then
+        # shellcheck disable=SC1090
+        source "$LIBBEAGAN_HOME/zsh/z.plugin.zsh"
+    fi
+    _libbeagan_trace "legacy zsh-z"
     safe_source "$LIBBEAGAN_HOME/configs/config-golang.zsh" "Go configuration"
     _libbeagan_trace "legacy config-golang"
     safe_source "$LIBBEAGAN_HOME/configs/config-android.zsh" "Android configuration"
